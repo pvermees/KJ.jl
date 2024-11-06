@@ -11,7 +11,7 @@ installed on your system by downloading it from
 at the Julia REPL:
 
 ```
-import Pkg; Pkg.add(url="https://github.com/pvermees/Plasmatrace.git")
+import Pkg; Pkg.add(url="https://github.com/pvermees/Plasmatrace.jl.git")
 ```
 
 There are four ways to interact with Plasmatrace:
