@@ -11,6 +11,7 @@ function TUIwelcomeMessage(ctrl::AbstractDict)
     "o: Options\n"*
     "u: Update\n"*
     "c: Clear\n"*
+    "a: Extra\n"*
     "x: Exit\n"*
     "?: Help"
     return msg

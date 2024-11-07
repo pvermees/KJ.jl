@@ -130,6 +130,7 @@ function getPTree()
                 "e" => "export",
                 "l" => "log",
                 "o" => "options",
+                "a" => "extra",
                 "u" => TUIrefresh!,
                 "c" => TUIclear!
             )
@@ -706,6 +707,15 @@ function getPTree()
                 "g" => "addGlass",
                 "n" => "head2name"
             )
+        ),
+        "extra" => (
+            message =
+            "x: Exit\n"*
+            "?: Help",
+            help =
+            "If you supplied any extensions when starting Plasmatrace, " *
+            "they will tend to put their options in this menu",
+            action = Dict()
         ),
         "setNblank" => (
             message = TUIsetNblankMessage,
