@@ -14,11 +14,11 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-CSV = "0.10.15"
-DataFrames = "1.7.0"
-Optim = "1.9.4"
-Plots = "1.40.8"
-Statistics = "1.11.1"
+CSV = "0.10"
+DataFrames = "1.7"
+Optim = "1.9"
+Plots = "1.40"
+Statistics = "1.11"
 
 [extras]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
