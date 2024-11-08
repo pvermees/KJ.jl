@@ -339,7 +339,7 @@ function TUIgeochronPlotter(ctrl::AbstractDict,samp::Sample)
             analog = isAnalog(samp,ctrl["channels"],ctrl["PAcutoff"])
             par = analog ? ctrl["par"].analog : ctrl["par"].pulse
         end
-        anchors = getAnchors(ctrl["method"],standards,ctrl["glass"])
+        anchors = getAnchors(ctrl["method"],ctrl["standards"],ctrl["glass"])
         p = plot(samp,ctrl["method"],ctrl["channels"],ctrl["blank"],
                  par,ctrl["standards"],ctrl["glass"];
                  den=ctrl["den"],transformation=ctrl["transformation"],i=ctrl["i"])
