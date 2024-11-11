@@ -85,6 +85,7 @@ function TUIloadICPdir!(ctrl::AbstractDict,
     ctrl["priority"]["load"] = false
     ctrl["multifile"] = true
     ctrl["ICPpath"] = response
+    println("Done")
     if ctrl["template"]
         TUIsetGroups!(ctrl,"standards")
         TUIsetGroups!(ctrl,"glass")
