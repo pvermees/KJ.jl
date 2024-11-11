@@ -33,7 +33,7 @@ end
 
 function standardtest(verbose=false)
     myrun, blk = blanktest()
-    standards = Dict("BP" => "BP")
+    standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     anchors = getAnchors("Lu-Hf",standards)
     if verbose
@@ -50,7 +50,7 @@ function predictest()
                     "P" => "Lu175 -> 175")
     glass = Dict("NIST612" => "NIST612p")
     setGroup!(myrun,glass)
-    standards = Dict("BP" => "BP")
+    standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     fit = (drift=[4.2670587703673934],
            down=[0.0, 0.05197296298083967],
@@ -74,7 +74,7 @@ function fractionationtest(all=true)
                     "P" => "Lu175 -> 175")
     glass = Dict("NIST612" => "NIST612p")
     setGroup!(myrun,glass)
-    standards = Dict("BP" => "BP")
+    standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     if all
         print("two separate steps: ")
@@ -103,7 +103,7 @@ end
 function histest()
     myrun, blk, fit, channels, standards, glass, anchors = fractionationtest(false)
     pooled = pool(myrun;signal=true,group="BP")
-    anchor = anchors["BP"]
+    anchor = anchors["BP_gt"]
     pred = predict(pooled,fit,blk,channels,anchor)
     misfit = @. pooled[:,channels["d"]] - pred[:,"d"]
     p = Plots.histogram(misfit;legend=false)
@@ -124,7 +124,7 @@ function processtest()
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
                     "P"=>"Lu175 -> 175")
-    standards = Dict("Hogsbo" => "hogsbo")
+    standards = Dict("Hogsbo_gt" => "hogsbo")
     glass = Dict("NIST612" => "NIST612p")
     blk, fit = process!(myrun,method,channels,standards,glass,
                         nblank=2,ndrift=2,ndown=2)
@@ -139,7 +139,7 @@ function PAtest(verbose=false)
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
                     "P"=>"Lu175 -> 175")
-    standards = Dict("Hogsbo" => "hogsbo")
+    standards = Dict("Hogsbo_gt" => "hogsbo")
     glass = Dict("NIST612" => "NIST612p")
     cutoff = 1e7
     blk, fit = process!(myrun,method,channels,standards,glass;
@@ -162,7 +162,7 @@ function RbSrtest()
     channels = Dict("d"=>"Sr86 -> 102",
                     "D"=>"Sr87 -> 103",
                     "P"=>"Rb85 -> 85")
-    standards = Dict("MDC" => "MDC -")
+    standards = Dict("MDC_bt" => "MDC -")
     setGroup!(myrun,standards)
     blank = fitBlanks(myrun,nblank=2)
     fit = fractionation(myrun,method,blank,channels,standards,1.0;
@@ -176,8 +176,8 @@ end
 function UPbtest()
     myrun = load("data/U-Pb",instrument="Agilent",head2name=false)
     method = "U-Pb"
-    standards = Dict("Plesovice" => "STDCZ",
-                     "91500" => "91500")
+    standards = Dict("Plesovice_zr" => "STDCZ",
+                     "91500_zr" => "91500")
     glass = Dict("NIST610" => "610",
                  "NIST612" => "612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
@@ -196,7 +196,7 @@ end
 function carbonatetest(verbose=false)
     method = "U-Pb"
     myrun = load("data/carbonate",instrument="Agilent")
-    standards = Dict("WC1"=>"WC1")
+    standards = Dict("WC1_cc"=>"WC1")
     glass = Dict("NIST612"=>"NIST612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
     blk, fit = process!(myrun,method,channels,standards,glass,
