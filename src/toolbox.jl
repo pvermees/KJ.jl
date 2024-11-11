@@ -220,7 +220,7 @@ end
 
 function prefix2subset(run::Vector{Sample},
                        prefix::AbstractString)
-    selection = findall(contains(prefix),getGroups(run))
+    selection = findall(contains(prefix),getSnames(run))
     return run[selection]
 end
 function prefix2subset(ratios::AbstractDataFrame,

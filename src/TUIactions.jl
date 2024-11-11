@@ -139,7 +139,7 @@ function TUImethod!(ctrl::AbstractDict,
 end
 
 function TUItabulate(ctrl::AbstractDict)
-    summarise(ctrl["run"])
+    summarise(ctrl["run"];verbose=true)
     return nothing
 end
 
