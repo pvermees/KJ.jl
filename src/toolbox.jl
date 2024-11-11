@@ -94,7 +94,7 @@ end
 export polyFac
 
 function summarise(run::Vector{Sample};
-                   verbose=true,n=length(run))
+                   verbose=false,n=length(run))
     ns = length(run)
     snames = getSnames(run)
     groups = fill("sample",ns)

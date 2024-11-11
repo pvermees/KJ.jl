@@ -274,5 +274,6 @@ if true
     @testset "extension test" begin extensiontest() end
     @testset "TUI test" begin TUItest() end
 else
-    PT()
+    using PTgui, PTpost
+    PT(PTgui,PTpost)
 end
