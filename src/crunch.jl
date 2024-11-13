@@ -16,10 +16,10 @@ end
 export getp
 
 # isotopic ratios in matrix matched mineral standards
-function SS(t,T,Pm,Dm,dm,x0,y0,y1,pa,drift,down,mfrac,bP,bD,bd;
+function SS(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
             PAcutoff=nothing,pa=0.0)
-    pred = predict(t,T,Pm,Dm,dm,x0,y0,y1,pa,drift,down,mfrac,bP,bD,bd;
-                   PAcutoff=Pacutoff,pa=pa)
+    pred = predict(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
+                   PAcutoff=PAcutoff,pa=pa)
     S = @. (pred[:,"P"]-Pm)^2 + (pred[:,"D"]-Dm)^2 + (pred[:,"d"]-dm)^2
     return sum(S)
 end
@@ -40,7 +40,7 @@ function predict(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
     if !isnothing(PAcutoff)
-        ft[Pm >. PAcutoff] *= exp.(pa)
+        ft[Pm .> PAcutoff] *= exp.(pa)
     end
     D = getD(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     p = getp(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)

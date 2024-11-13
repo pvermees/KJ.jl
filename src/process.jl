@@ -154,7 +154,8 @@ function fractionation(run::Vector{Sample},
                        verbose::Bool=false)
     mf = fractionation(run,method,blank,channels,glass;verbose=verbose)
     out = fractionation(run,method,blank,channels,standards,mf;
-                        ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff,verbose=verbose)
+                        ndrift=ndrift,ndown=ndown,
+                        PAcutoff=PAcutoff,verbose=verbose)
     return out
 end
 function fractionation(run::Vector{Sample},
@@ -376,6 +377,9 @@ function atomic(samp::Sample,
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
     ft = polyFac(pars.drift,dat.t)
+    if !isnothing(pars.PAcutoff)
+        ft[Pm .> pars.PAcutoff] *= exp.(pars.pa)
+    end
     FT = polyFac(pars.down,dat.T)
     mf = exp(pars.mfrac)
     bPt = polyVal(blank[:,channels["P"]],dat.t)
@@ -447,18 +451,10 @@ function averat(run::Vector{Sample},
     ns = length(run)
     nul = fill(0.0,ns)
     out = DataFrame(name=fill("",ns),x=nul,sx=nul,y=nul,sy=nul,rxy=nul)
-    analog = isAnalog(run,channels,PAcutoff)
     for i in 1:ns
         samp = run[i]
         out[i,1] = samp.sname
-        if length(pars)==3
-            samp_pars = pars
-        elseif analog[i]
-            samp_pars = pars.analog
-        else
-            samp_pars = pars.pulse
-        end
-        out[i,2:end] = averat(samp,channels,blank,samp_pars)
+        out[i,2:end] = averat(samp,channels,blank,pars)
     end
     return out
 end

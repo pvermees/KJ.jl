@@ -229,24 +229,6 @@ function prefix2subset(ratios::AbstractDataFrame,
 end
 export prefix2subset
 
-function isAnalog(samp::Sample,channels::AbstractDict,cutoff=nothing)
-    out = true
-    if !isnothing(cutoff)
-        dat = getSignals(samp,channels)
-        out = true in Matrix(dat .> cutoff)
-    end
-    return out
-end
-function isAnalog(run::Vector{Sample},channels::AbstractDict,cutoff=nothing)
-    ns = length(run)
-    A = fill(true,ns)
-    for i in eachindex(A)
-        A[i] = isAnalog(run[i],channels,cutoff)
-    end
-    return A
-end
-export isAnalog
-
 function automatic_datetime(datetime_string::AbstractString)
     if occursin(r"-", datetime_string)
         date_delim = '-'
