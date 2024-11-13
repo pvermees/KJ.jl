@@ -557,8 +557,7 @@ function TUIexport2csv(ctrl::AbstractDict,
     if ctrl["method"]=="concentrations"
         out = concentrations(ctrl["run"],ctrl["blank"],ctrl["par"],ctrl["internal"])
     else
-        out = averat(ctrl["run"],ctrl["channels"],ctrl["blank"],ctrl["par"];
-                     PAcutoff=ctrl["PAcutoff"])
+        out = averat(ctrl["run"],ctrl["channels"],ctrl["blank"],ctrl["par"])
     end
     fname = splitext(response)[1]*".csv"
     CSV.write(fname,out[ctrl["cache"],:])
@@ -571,8 +570,7 @@ end
 
 function TUIexport2json(ctrl::AbstractDict,
                         response::AbstractString)
-    ratios = averat(ctrl["run"],ctrl["channels"],ctrl["blank"],ctrl["par"];
-                    PAcutoff=ctrl["PAcutoff"])
+    ratios = averat(ctrl["run"],ctrl["channels"],ctrl["blank"],ctrl["par"])
     fname = splitext(response)[1]*".json"
     export2IsoplotR(ratios[ctrl["cache"],:],ctrl["method"];fname=fname)
     return "xxx"

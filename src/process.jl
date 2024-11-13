@@ -446,8 +446,7 @@ end
 function averat(run::Vector{Sample},
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
-                pars::NamedTuple;
-                PAcutoff=nothing)
+                pars::NamedTuple)
     ns = length(run)
     nul = fill(0.0,ns)
     out = DataFrame(name=fill("",ns),x=nul,sx=nul,y=nul,sy=nul,rxy=nul)
