@@ -237,9 +237,12 @@ function plot(samp::Sample,
               channels::AbstractVector;
               num=nothing,den=nothing,
               transformation=nothing,offset=nothing,
-              seriestype=:scatter,titlefontsize=10,
-              ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-              i::Union{Nothing,Integer}=nothing)
+              seriestype=:scatter,ms=2,ma=0.5,
+              xlim=:auto,ylim=:auto,
+              i::Union{Nothing,Integer}=nothing,
+              legend=:topleft,
+              show_title=true,
+              titlefontsize=10)
     xlab = names(samp.dat)[1]
     x = samp.dat[:,xlab]
     meas = samp.dat[:,channels]
@@ -252,14 +255,16 @@ function plot(samp::Sample,
     ylab = isnothing(transformation) ? ratsig : transformation*"("*ratsig*")"
     p = Plots.plot(x,Matrix(ty);
                    ms=ms,ma=ma,seriestype=seriestype,label=permutedims(names(y)),
-                   legend=:topleft,xlimits=xlim,ylimits=ylim)
+                   legend=legend,xlimits=xlim,ylimits=ylim)
     Plots.xlabel!(xlab)
     Plots.ylabel!(ylab)
-    title = samp.sname*" ["*samp.group*"]"
-    if !isnothing(i)
-        title = string(i) * ". " * title
+    if show_title
+        title = samp.sname*" ["*samp.group*"]"
+        if !isnothing(i)
+            title = string(i) * ". " * title
+        end
+        Plots.title!(title;titlefontsize=titlefontsize)
     end
-    Plots.title!(title;titlefontsize=titlefontsize)
     dy = Plots.ylims(p)
     # plot t0:
     Plots.plot!(p,[samp.t0,samp.t0],collect(dy[[1,2]]);
