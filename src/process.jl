@@ -186,70 +186,64 @@ function fractionation(run::Vector{Sample},
                        verbose::Bool=false)
 
     anchors = getAnchors(method,standards,false)
+    
+    if ndrift<1 PTerror("ndriftzero") end
 
-    if isnothing(PAcutoff)
-        
-        if ndrift<1 PTerror("ndriftzero") end
-
-        dats = Dict()
-        for (refmat,anchor) in anchors
-            dats[refmat] = pool(run;signal=true,group=refmat)
-        end
-
-        bD = blank[:,channels["D"]]
-        bd = blank[:,channels["d"]]
-        bP = blank[:,channels["P"]]
-
-        function misfit(par)
-            drift = par[1:ndrift]
-            down = vcat(0.0,par[ndrift+1:ndrift+ndown])
-            mfrac = isnothing(mf) ? par[end] : log(mf)
-            out = 0.0
-            for (refmat,dat) in dats
-                t = dat.t
-                T = dat.T 
-                Pm = dat[:,channels["P"]]
-                Dm = dat[:,channels["D"]]
-                dm = dat[:,channels["d"]]
-                (x0,y0,y1) = anchors[refmat]
-                out += SS(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd)
-            end
-            return out
-        end
-
-        init = fill(0.0,ndrift)
-        if (ndown>0) init = vcat(init,fill(0.0,ndown)) end
-        if isnothing(mf) init = vcat(init,0.0) end
-        if length(init)>0
-            fit = Optim.optimize(misfit,init)
-            if verbose
-                println("Drift and downhole fractionation correction:\n")
-                println(fit)
-            else
-                if fit.iteration_converged
-                    @warn "Reached the maximum number of iterations before achieving " *
-                        "convergence. Reduce the order of the polynomials or fix the " *
-                        "mass fractionation and try again."
-                end
-            end
-            pars = Optim.minimizer(fit)
-        else
-            pars = 0.0
-        end
-        drift = pars[1:ndrift]
-        down = vcat(0.0,pars[ndrift+1:ndrift+ndown])
-
-        mfrac = isnothing(mf) ? pars[end] : log(mf)
-
-        out = (drift=drift,down=down,mfrac=mfrac)
-    else
-        analog = isAnalog(run,channels,PAcutoff)
-        out = (analog = fractionation(run[analog],method,blank,channels,standards,mf;
-                                      ndrift=ndrift,ndown=ndown,verbose=verbose),
-               pulse = fractionation(run[.!analog],method,blank,channels,standards,mf;
-                                     ndrift=ndrift,ndown=ndown,verbose=verbose))
+    dats = Dict()
+    for (refmat,anchor) in anchors
+        dats[refmat] = pool(run;signal=true,group=refmat)
     end
-    return out
+
+    bD = blank[:,channels["D"]]
+    bd = blank[:,channels["d"]]
+    bP = blank[:,channels["P"]]
+
+    function misfit(par)
+        drift = par[1:ndrift]
+        down = vcat(0.0,par[ndrift+1:ndrift+ndown])
+        mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
+        pa = isnothing(PAcutoff) ? 0.0 : par[end]
+        out = 0.0
+        for (refmat,dat) in dats
+            t = dat.t
+            T = dat.T 
+            Pm = dat[:,channels["P"]]
+            Dm = dat[:,channels["D"]]
+            dm = dat[:,channels["d"]]
+            (x0,y0,y1) = anchors[refmat]
+            out += SS(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
+                      PAcutoff=PAcutoff,pa=pa)
+        end
+        return out
+    end
+
+    init = fill(0.0,ndrift)
+    if (ndown>0) init = vcat(init,fill(0.0,ndown)) end
+    if isnothing(mf) init = vcat(init,0.0) end
+    if !isnothing(PAcutoff) init = vcat(init,0.0) end
+    if length(init)>0
+        fit = Optim.optimize(misfit,init)
+        if verbose
+            println("Drift and downhole fractionation correction:\n")
+            println(fit)
+        else
+            if fit.iteration_converged
+                @warn "Reached the maximum number of iterations before achieving " *
+                    "convergence. Reduce the order of the polynomials or fix the " *
+                    "mass fractionation and try again."
+            end
+        end
+        pars = Optim.minimizer(fit)
+    else
+        pars = 0.0
+    end
+    drift = pars[1:ndrift]
+    down = vcat(0.0,pars[ndrift+1:ndrift+ndown])
+    mfrac = isnothing(mf) ? pars[ndrift+ndown+1] : log(mf)
+    pa = isnothing(PAcutoff) ? 0.0 : pars[end]
+
+    return (drift=drift,down=down,mfrac=mfrac,
+            PAcutoff=PAcutoff,pa=pa)
 end
 function fractionation(run::Vector{Sample},
                        method::AbstractString,
