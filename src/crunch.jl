@@ -16,8 +16,10 @@ end
 export getp
 
 # isotopic ratios in matrix matched mineral standards
-function SS(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd)
-    pred = predict(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd)
+function SS(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
+            PAcutoff=nothing,pa=0.0)
+    pred = predict(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
+                   PAcutoff=PAcutoff,pa=pa)
     S = @. (pred[:,"P"]-Pm)^2 + (pred[:,"D"]-Dm)^2 + (pred[:,"d"]-dm)^2
     return sum(S)
 end
@@ -29,13 +31,17 @@ function SS(t,Dm,dm,y0,mfrac,bD,bd)
 end
 
 # isotopic ratios
-function predict(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd)
+function predict(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
+                 PAcutoff=nothing,pa=0.0)
     ft = polyFac(drift,t)
     FT = polyFac(down,T)
     mf = exp(mfrac)
     bPt = polyVal(bP,t)
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
+    if !isnothing(PAcutoff)
+        ft[Pm .> PAcutoff] *= exp.(pa)
+    end
     D = getD(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     p = getp(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     Pf = @. D*x0*(1-p)*ft*FT + bPt
@@ -92,8 +98,8 @@ function predict(dat::AbstractDataFrame,
     bd = blank[:,channels["d"]]
     return predict(t,T,Pm,Dm,dm,
                    anchor.x0,anchor.y0,anchor.y1,
-                   pars.drift,pars.down,pars.mfrac,
-                   bP,bD,bd)    
+                   pars.drift,pars.down,pars.mfrac,bP,bD,bd;
+                   PAcutoff=pars.PAcutoff,pa=pars.pa)
 end
 # glass
 function predict(dat::AbstractDataFrame,

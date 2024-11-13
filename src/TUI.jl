@@ -685,7 +685,7 @@ function getPTree()
             "d: Set the polynomial order of the drift correction\n"*
             "h: Set the polynomial order of the down hole fractionation correction\n"*
             "p: Subset the data by P/A cutoff\n"*
-            "l: List the available age standardss\n"*
+            "l: List the available age standards\n"*
             "a: Define new age standards\n"*
             "r: List the available reference glasses\n"*
             "g: Define new reference glasses\n"*
