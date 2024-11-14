@@ -265,7 +265,7 @@ function export2IsoplotR(run::Vector{Sample},
                          PAcutoff=nothing,
                          prefix=nothing,
                          fname::AbstractString="PT.json")
-    ratios = averat(run,channels,blank,pars;PAcutoff=PAcutoff)
+    ratios = averat(run,channels,blank,pars)
     if isnothing(prefix)
         export2IsoplotR(ratios,method;fname=fname)
     else

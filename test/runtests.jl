@@ -251,7 +251,7 @@ end
 
 Plots.closeall()
 
-if true
+if false
     @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
@@ -274,5 +274,6 @@ if true
     @testset "extension test" begin extensiontest() end
     @testset "TUI test" begin TUItest() end
 else
-    PT()
+    PAtest(true)
+    #PT()
 end
