@@ -203,7 +203,7 @@ function fractionation(run::Vector{Sample},
         drift = par[1:ndrift]
         down = vcat(0.0,par[ndrift+1:ndrift+ndown])
         mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
-        pa = isnothing(PAcutoff) ? 0.0 : par[end]
+        adrift = isnothing(PAcutoff) ? drift : par[end-ndrift+1:end]
         out = 0.0
         for (refmat,dat) in dats
             t = dat.t
@@ -213,7 +213,7 @@ function fractionation(run::Vector{Sample},
             dm = dat[:,channels["d"]]
             (x0,y0,y1) = anchors[refmat]
             out += SS(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
-                      PAcutoff=PAcutoff,pa=pa)
+                      PAcutoff=PAcutoff,adrift=adrift)
         end
         return out
     end
@@ -221,7 +221,7 @@ function fractionation(run::Vector{Sample},
     init = fill(0.0,ndrift)
     if (ndown>0) init = vcat(init,fill(0.0,ndown)) end
     if isnothing(mf) init = vcat(init,0.0) end
-    if !isnothing(PAcutoff) init = vcat(init,0.0) end
+    if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
     if length(init)>0
         fit = Optim.optimize(misfit,init)
         if verbose
@@ -241,10 +241,10 @@ function fractionation(run::Vector{Sample},
     drift = pars[1:ndrift]
     down = vcat(0.0,pars[ndrift+1:ndrift+ndown])
     mfrac = isnothing(mf) ? pars[ndrift+ndown+1] : log(mf)
-    pa = isnothing(PAcutoff) ? 0.0 : pars[end]
+    adrift = isnothing(PAcutoff) ? drift : pars[end-ndrift+1:end]
 
     return (drift=drift,down=down,mfrac=mfrac,
-            PAcutoff=PAcutoff,pa=pa)
+            PAcutoff=PAcutoff,adrift=adrift)
 end
 function fractionation(run::Vector{Sample},
                        method::AbstractString,
@@ -376,10 +376,7 @@ function atomic(samp::Sample,
     Pm = dat[:,channels["P"]]
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
-    ft = polyFac(pars.drift,dat.t)
-    if !isnothing(pars.PAcutoff)
-        ft[Pm .> pars.PAcutoff] *= exp.(pars.pa)
-    end
+    ft = get_drift(Pm,dat.t,pars)
     FT = polyFac(pars.down,dat.T)
     mf = exp(pars.mfrac)
     bPt = polyVal(blank[:,channels["P"]],dat.t)

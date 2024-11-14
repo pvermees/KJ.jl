@@ -754,8 +754,9 @@ function getPTree()
             "intensity ion beams are measured in 'analog' (A) mode. "*
             "The intercalibration of these two modes is not always "*
             "perfect. Here you can set or remove the cutoff value "*
-            "between P and A mode, so that you can group samples "*
-            "and standards according to them.",
+            "between P and A mode, so that Plasmatrace can use the "*
+            "standards to estimate a correction factor between the "*
+            "two modes.",
             action = Dict(
                 "l" => TUIPAlist,
                 "a" => "setPAcutoff",
