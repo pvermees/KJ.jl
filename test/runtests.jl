@@ -52,9 +52,9 @@ function predictest()
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[4.2670587703673934],
-           down=[0.0, 0.05197296298083967],
-           mfrac=0.3838697441780825)
+    fit = (drift=[3.889],
+           down=[0.0,0.030851],
+           mfrac=-0.384094)
     samp = myrun[4]
     if samp.group == "sample"
         println("Not a standard")
@@ -251,17 +251,17 @@ end
 
 Plots.closeall()
 
-if false
-    @testset "load" begin loadtest(true) end
+if true
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
     @testset "fit fractionation" begin fractionationtest() end
-    @testset "hist" begin histest() end
+    @testset "hist" begin histest() end=#
     @testset "average sample ratios" begin averatest() end
-    @testset "process run" begin processtest() end
+    #=@testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
     @testset "Rb-Sr" begin RbSrtest() end
@@ -272,8 +272,7 @@ if false
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "TUI test" begin TUItest() end=#
 else
-    PAtest(true)
-    #PT()
+    PT()
 end
