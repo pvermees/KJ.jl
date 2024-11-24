@@ -169,32 +169,3 @@ function predict(samp::Sample,
     end
 end
 export predict
-
-function get_covmat_averat(P,D,d,x,y)
-    S = @. (d*y^2+((d+P)*x+d+D)*y+P*x^2+(P+D)*x+D)/(y^2+x^2+1)
-    z = @. 1 + x + y
-    dSSdS = @. ((2*y*(S*y/z-d)) + (2*x*(S*x/z-P)) + (2*(D-S/z)))/z
-    dSSdx = sum( @. (2*S*y*(d-(S*y)/z))/z^2 + 2*((S*x)/z^2-S/z)*(P-(S*x)/z) + (2*S*(D-S/z))/z^2 )
-    dSSdy = sum( @. (2*S*x*(P-(S*x)/z))/z^2 + 2*((S*y)/z^2-S/z)*(d-(S*y)/z) + (2*S*(D-S/z))/z^2 )
-    d2SSdS2 = @. 2*(y^2+x^2+1)/z^2
-    d2SSdSdx = @. (2*y*(d-(S*y)/z))/z^2-(2*(P-(S*x)/z))/z+(2*x*(P-(S*x)/z))/z^2-(2*x*((S*x)/z^2-S/z))/z+(2*(D-S/z))/z^2-(2*S*y^2)/z^3-(2*S)/z^3
-    d2SSdSdy = @. (-(2*(d-(S*y)/z))/z)+(2*y*(d-(S*y)/z))/z^2+(2*x*(P-(S*x)/z))/z^2-(2*y*((S*y)/z^2-S/z))/z+(2*(D-S/z))/z^2-(2*S*x^2)/z^3-(2*S)/z^3
-    d2SSdx2 = sum( @. 2*((S*x)/z^2-S/z)^2-(4*S*y*(d-(S*y)/z))/z^3+2*((2*S)/z^2-(2*S*x)/z^3)*(P-(S*x)/z)-(4*S*(D-S/z))/z^3+(2*S^2*y^2)/z^4+(2*S^2)/z^4 )
-    d2SSdy2 = sum( @. 2*((S*y)/z^2-S/z)^2+2*((2*S)/z^2-(2*S*y)/z^3)*(d-(S*y)/z)-(4*S*x*(P-(S*x)/z))/z^3-(4*S*(D-S/z))/z^3+(2*S^2*x^2)/z^4+(2*S^2)/z^4 )
-    d2SSdxdy = sum( @. (2*S*(d-(S*y)/z))/z^2-(4*S*y*(d-(S*y)/z))/z^3+2*(S/z^2-(2*S*x)/z^3)*(P-(S*x)/z)+(2*S*y*((S*y)/z^2-S/z))/z^2+(2*S*x*((S*x)/z^2-S/z))/z^2-(4*S*(D-S/z))/z^3+(2*S^2)/z^4 )
-    ns = length(P)
-    J = zeros(1,ns+2)
-    J[1,1:ns] .= dSSdS
-    J[1,ns+1] = dSSdx
-    J[1,ns+2] = dSSdy
-    H = zeros(ns+2,ns+2)
-    H[diagind(H)[1:ns]] .= d2SSdS2
-    H[ns+1,1:ns] .= d2SSdSdx
-    H[ns+2,1:ns] .= d2SSdSdy
-    H[ns+1,ns+1] = d2SSdx2
-    H[ns+2,ns+2] = d2SSdy2
-    H[ns+1,ns+2] = d2SSdxdy
-    H[ns+2,ns+1] = d2SSdxdy
-    covmat = inv(-transpose(J)*J*H)
-    return covmat
-end
