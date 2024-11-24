@@ -382,9 +382,9 @@ function atomic(samp::Sample,
     bPt = polyVal(blank[:,channels["P"]],dat.t)
     bDt = polyVal(blank[:,channels["D"]],dat.t)
     bdt = polyVal(blank[:,channels["d"]],dat.t)
-    D = @. (Dm-bDt)
+    D = @. (Dm-bDt)/mf
     P = @. (Pm-bPt)/(ft*FT)
-    d = @. (dm-bdt)/mf
+    d = @. (dm-bdt)
     return P, D, d
 end
 export atomic
@@ -419,25 +419,26 @@ function averat(samp::Sample,
                 blank::AbstractDataFrame,
                 pars::NamedTuple)
     P, D, d = atomic(samp,channels,blank,pars)
-    nr = length(P)
+    function misfit(par)
+        x = par[1]
+        y = par[2]
+        z = 1 + x + y
+        S = @. (d*y^2+((d+P)*x+d+D)*y+P*x^2+(P+D)*x+D)/(y^2+x^2+1)
+        dP = @. P - S*x/z
+        dD = @. D - S/z
+        dd = @. d - S*y/z
+        return sum( @. dP^2 + dD^2 + dd^2 )
+    end
     muP = Statistics.mean(P)
     muD = Statistics.mean(D)
     mud = Statistics.mean(d)
-    E = Statistics.cov(hcat(P,D,d))
-    if mud < 0.0
-        mud = 0.0
-        E[1,3] = E[3,1] = sum((P.-muP).*d)/(nr-1)
-        E[2,3] = E[3,2] = sum((D.-muD).*d)/(nr-1)
-        E[3,3] = Statistics.mean(d.^2)
-    end
-    x = muP/muD
-    y = mud/muD
-    J = [1/muD -muP/muD^2 0;
-         0 -mud/muD^2 1/muD]
-    covmat = J * (E/nr) * transpose(J)
-    sx = sqrt(covmat[1,1])
-    sy = sqrt(covmat[2,2])
-    rxy = covmat[1,2]/(sx*sy)
+    init = [muP/muD,mud/muD]
+    fit = Optim.optimize(misfit,init)
+    x,y = Optim.minimizer(fit)
+    covmat = get_covmat_averat(D,P,d,x,y)
+    sx = 0.0
+    sy = 0.0
+    rxy = 0.0
     return [x sx y sy rxy]
 end
 function averat(run::Vector{Sample},
