@@ -52,9 +52,9 @@ function predictest()
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[4.2670587703673934],
-           down=[0.0, 0.05197296298083967],
-           mfrac=0.3838697441780825)
+    fit = (drift=[3.889],
+           down=[0.0,0.030851],
+           mfrac=-0.384094)
     samp = myrun[4]
     if samp.group == "sample"
         println("Not a standard")
@@ -251,7 +251,7 @@ end
 
 Plots.closeall()
 
-if false
+if true
     @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
@@ -274,6 +274,5 @@ if false
     @testset "extension test" begin extensiontest() end
     @testset "TUI test" begin TUItest() end
 else
-    PAtest(true)
-    #PT()
+    PT()
 end
