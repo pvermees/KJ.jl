@@ -441,9 +441,8 @@ function averat(samp::Sample,
     pars = Optim.minimizer(fit)
     ns = length(P)
     s2 = misfit(pars)/(2*ns-2)
-    J = ForwardDiff.jacobian(residuals,pars)
-    #J = averat_jacobian(P,D,d,x,y)
-    covmat = s2 * inv(transpose(J)*J)
+    J = averat_jacobian(P,D,d,x,y)
+    covmat = s2 * inv(J*transpose(J))
     x = pars[1]
     y = pars[2]
     sx = sqrt(covmat[1,1])
@@ -466,24 +465,6 @@ function averat(run::Vector{Sample},
     return out
 end
 export averat
-
-function averat_jacobian(P,D,d,x,y)
-    S = @. (d*y^2+((d+P)*x+d+D)*y+P*x^2+(P+D)*x+D)/(y^2+x^2+1)
-    z = @. 1 + x + y
-    dSSdx = sum( @. (2*S*y*(d-(S*y)/z))/z^2 +
-                 2*((S*x)/z^2-S/z)*(P-(S*x)/z) +
-                 (2*S*(D-S/z))/z^2 )
-    dSSdy = sum( @. (2*S*x*(P-(S*x)/z))/z^2 +
-                 2*((S*y)/z^2-S/z)*(d-(S*y)/z) +
-                 (2*S*(D-S/z))/z^2 )
-    dSSdS = @. ((2*y*(S*y/z-d)) + (2*x*(S*x/z-P)) + (2*(D-S/z)))/z
-    ns = length(P)
-    J = zeros(1,ns+2)
-    J[1,1] = dSSdx
-    J[1,2] = dSSdy
-    J[1,3:end] .= dSSdS
-    return J
-end
 
 """
 concentrations

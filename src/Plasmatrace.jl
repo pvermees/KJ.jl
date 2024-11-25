@@ -1,6 +1,6 @@
 module Plasmatrace
 
-using Dates, DataFrames, Printf, Infiltrator, LinearAlgebra, ForwardDiff
+using Dates, DataFrames, Printf, Infiltrator, LinearAlgebra
 import Plots, Statistics, Optim, CSV
 
 include("errors.jl")
