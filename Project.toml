@@ -16,8 +16,8 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 Dates = "1.10"
-Infiltrator = "1.8.3"
-LinearAlgebra = "1.11.0"
+Infiltrator = "1.8"
+LinearAlgebra = "1.10"
 Printf = "1.10"
 Statistics = "1.10"
 julia = "1.10"
