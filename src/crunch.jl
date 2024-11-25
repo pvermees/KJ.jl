@@ -169,3 +169,29 @@ function predict(samp::Sample,
     end
 end
 export predict
+
+function averat_jacobian(P,D,d,x,y)
+    ns = length(P)
+    z = @. 1 + x + y
+    S = @. (D+x*P+y*d)*z/(1 + x^2 + y^2)
+    dPdS = fill(x/z,ns)
+    dDdS = fill(1/z,ns)
+    dddS = fill(y/z,ns)
+    dPdx = @. S/z - S*x/z^2
+    dDdx = @. - S/z^2
+    dddx = @. - S*y/z^2
+    dPdy = @. - S*x/z^2
+    dDdy = @. - S/z^2
+    dddy = @. S/z - S*y/z^2
+    J = zeros(ns+2,3*ns)
+    J[1,1:ns] .= dPdx
+    J[1,ns+1:2*ns] .= dDdx
+    J[1,2*ns+1:3*ns] .= dddx
+    J[2,1:ns] .= dPdy
+    J[2,ns+1:2*ns] .= dDdy
+    J[2,2*ns+1:3*ns] .= dddy
+    J[3:end,1:ns] .= diagm(dPdS)
+    J[3:end,ns+1:2*ns] .= diagm(dDdS)
+    J[3:end,2*ns+1:3*ns] .= diagm(dddS)
+    return J
+end
