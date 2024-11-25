@@ -105,8 +105,13 @@ function histest()
     pooled = pool(myrun;signal=true,group="BP")
     anchor = anchors["BP_gt"]
     pred = predict(pooled,fit,blk,channels,anchor)
-    misfit = @. pooled[:,channels["d"]] - pred[:,"d"]
-    p = Plots.histogram(misfit;legend=false)
+    Pmisfit = @. pooled[:,channels["P"]] - pred[:,"P"]
+    Dmisfit = @. pooled[:,channels["D"]] - pred[:,"D"]
+    dmisfit = @. pooled[:,channels["d"]] - pred[:,"d"]
+    pP = Plots.histogram(Pmisfit,title="P")
+    pD = Plots.histogram(Dmisfit,title="D")
+    pd = Plots.histogram(dmisfit,title="d")
+    p = Plots.plot(pP,pD,pd;legend=false)
     @test display(p) != NaN
 end
 
@@ -115,6 +120,7 @@ function averatest()
     P, D, d = atomic(myrun[1],channels,blk,fit)
     ratios = averat(myrun,channels,blk,fit)
     println(first(ratios,5))
+    CSV.write("/home/pvermees/temp/ratio_of_means.csv",ratios)
     return ratios
 end
 
@@ -258,10 +264,10 @@ if true
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
-    @testset "fit fractionation" begin fractionationtest() end
-    @testset "hist" begin histest() end=#
-    @testset "average sample ratios" begin averatest() end
-    #=@testset "process run" begin processtest() end
+    @testset "fit fractionation" begin fractionationtest() end=#
+    @testset "hist" begin histest() end
+    #=@testset "average sample ratios" begin averatest() end
+    @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
     @testset "Rb-Sr" begin RbSrtest() end
