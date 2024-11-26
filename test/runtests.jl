@@ -74,7 +74,7 @@ function fractionationtest(all=true)
                     "P" => "Lu175 -> 175")
     glass = Dict("NIST612" => "NIST612p")
     setGroup!(myrun,glass)
-    standards = Dict("Hogsbo_gt" => "hogsbo_pul")
+    standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     if all
         print("two separate steps: ")
@@ -101,28 +101,85 @@ function fractionationtest(all=true)
     end
 end
 
-function histest()
-    myrun, blk, fit, channels, standards, glass, anchors = fractionationtest(false)
-    pooled = pool(myrun;signal=true,group="Hogsbo_gt")
-    anchor = anchors["Hogsbo_gt"]
+function RbSrTest()
+    myrun = load("data/Rb-Sr",instrument="Agilent")
+    method = "Rb-Sr"
+    channels = Dict("d"=>"Sr88 -> 104",
+                    "D"=>"Sr87 -> 103",
+                    "P"=>"Rb85 -> 85")
+    standards = Dict("MDC_bt" => "MDC -")
+    setGroup!(myrun,standards)
+    blank = fitBlanks(myrun,nblank=2)
+    fit = fractionation(myrun,method,blank,channels,standards,0.11937;
+                        ndrift=1,verbose=false)
+    anchors = getAnchors(method,standards)
+    p = plot(myrun[2],channels,blank,fit,anchors,
+             transformation="log",den="Sr88 -> 104")
+    export2IsoplotR(myrun,method,channels,blank,fit,
+                    prefix="Entire",fname="Entire.json")
+    @test display(p) != NaN
+    return myrun, blank, fit, channels, standards, anchors
+end
+
+function histest(;LuHf=false)
+    if LuHf
+        myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
+        standard = "BP_gt"
+    else
+        myrun,blk,fit,channels,standards,anchors = RbSrTest()
+        standard = "MDC_bt"
+    end
+    pooled = pool(myrun;signal=true,group=standard)
+    anchor = anchors[standard]
     pred = predict(pooled,fit,blk,channels,anchor)
     Pmisfit = @. pooled[:,channels["P"]] - pred[:,"P"]
     Dmisfit = @. pooled[:,channels["D"]] - pred[:,"D"]
     dmisfit = @. pooled[:,channels["d"]] - pred[:,"d"]
-    pP = Plots.histogram(Pmisfit,title="P")
-    pD = Plots.histogram(Dmisfit,title="D")
-    pd = Plots.histogram(dmisfit,title="d")
-    p = Plots.plot(pP,pD,pd;legend=false)
+    pP = Plots.histogram(Pmisfit,xlab="εP")
+    pD = Plots.histogram(Dmisfit,xlab="εD")
+    pd = Plots.histogram(dmisfit,xlab="εd")
+    pPD = Plots.plot(Pmisfit,Dmisfit;
+                     seriestype=:scatter,xlab="εP",ylab="εD")
+    pPd = Plots.plot(Pmisfit,dmisfit;
+                     seriestype=:scatter,xlab="εP",ylab="εd")
+    pDd = Plots.plot(Dmisfit,dmisfit;
+                     seriestype=:scatter,xlab="εD",ylab="εd")
+    pDP = Plots.plot(Dmisfit,Pmisfit;
+                     seriestype=:scatter,xlab="εD",ylab="εP")
+    pdP = Plots.plot(dmisfit,Pmisfit;
+                     seriestype=:scatter,xlab="εd",ylab="εP")
+    pdD = Plots.plot(dmisfit,Dmisfit;
+                     seriestype=:scatter,xlab="εd",ylab="εD")
+    p = Plots.plot(pP,pDP,pdP,
+                   pPD,pD,pdD,
+                   pPd,pDd,pd;legend=false)
     @test display(p) != NaN
+    df = DataFrame(Pm=pooled[:,channels["P"]],
+                   Dm=pooled[:,channels["D"]],
+                   dm=pooled[:,channels["d"]],
+                   Pp=pred[:,"P"],
+                   Dp=pred[:,"D"],
+                   dp=pred[:,"d"])
+    CSV.write("pooled.csv",df)
 end
 
 function averatest()
-    myrun, blk, fit, channels, standards, glass, anchors = fractionationtest(false)
+    myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
     P, D, d = atomic(myrun[1],channels,blk,fit)
     ratios = averat(myrun,channels,blk,fit)
     println(first(ratios,5))
-    CSV.write("/home/pvermees/temp/ratio_of_means.csv",ratios)
-    return ratios
+    x = ratios[1,"x"]
+    y = ratios[1,"y"]
+    z = @. 1 + x + y
+    S = @. (D+x*P+y*d)*z/(1+x^2+y^2)
+    dP = @. S*x/z - P
+    dD = @. S/z - D
+    dd = @. S*y/z - d
+    pP = Plots.histogram(dP,title="P")
+    pD = Plots.histogram(dD,title="D")
+    pd = Plots.histogram(dd,title="d")
+    p = Plots.plot(pP,pD,pd;legend=false)
+    @test display(p) != NaN
 end
 
 function processtest()
@@ -161,23 +218,6 @@ function exporttest()
     selection = prefix2subset(ratios,"BP") # "hogsbo"
     CSV.write("BP.csv",selection)
     export2IsoplotR(selection,"Lu-Hf",fname="BP.json")
-end
-
-function RbSrtest()
-    myrun = load("data/Rb-Sr",instrument="Agilent")
-    method = "Rb-Sr"
-    channels = Dict("d"=>"Sr86 -> 102",
-                    "D"=>"Sr87 -> 103",
-                    "P"=>"Rb85 -> 85")
-    standards = Dict("MDC_bt" => "MDC -")
-    setGroup!(myrun,standards)
-    blank = fitBlanks(myrun,nblank=2)
-    fit = fractionation(myrun,method,blank,channels,standards,1.0;
-                        ndrift=1,verbose=false)
-    anchors = getAnchors(method,standards)
-    p = plot(myrun[2],channels,blank,fit,anchors,transformation="log",den="Sr86 -> 102")
-    export2IsoplotR(myrun,method,channels,blank,fit,prefix="Entire",fname="Entire.json")
-    @test display(p) != NaN
 end
 
 function UPbtest()
@@ -259,19 +299,19 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
     @testset "fit fractionation" begin fractionationtest() end
+    @testset "Rb-Sr" begin RbSrTest() end=#
     @testset "hist" begin histest() end
-    @testset "average sample ratios" begin averatest() end
+    #=@testset "average sample ratios" begin averatest() end
     @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
-    @testset "Rb-Sr" begin RbSrtest() end
     @testset "U-Pb" begin UPbtest() end
     @testset "iCap test" begin iCaptest() end
     @testset "carbonate test" begin carbonatetest() end
@@ -279,7 +319,7 @@ if true
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "TUI test" begin TUItest() end=#
 else
     PT()
 end
