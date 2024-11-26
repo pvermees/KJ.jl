@@ -437,7 +437,7 @@ function averat(samp::Sample,
     muD = Statistics.mean(D)
     mud = Statistics.mean(d)
     ns = length(P)
-    if true
+    if false
         init = [muP/muD,mud/muD]
         fit = Optim.optimize(misfit,init)
         pars = Optim.minimizer(fit)
