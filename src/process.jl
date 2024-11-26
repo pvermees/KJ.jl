@@ -382,8 +382,8 @@ function atomic(samp::Sample,
     bPt = polyVal(blank[:,channels["P"]],dat.t)
     bDt = polyVal(blank[:,channels["D"]],dat.t)
     bdt = polyVal(blank[:,channels["d"]],dat.t)
-    D = @. (Dm-bDt)/mf
     P = @. (Pm-bPt)/(ft*FT)
+    D = @. (Dm-bDt)/mf
     d = @. (dm-bdt)
     return P, D, d
 end
@@ -423,10 +423,10 @@ function averat(samp::Sample,
         x = par[1]
         y = par[2]
         z = 1 + x + y
-        S = @. (d*y^2+((d+P)*x+d+D)*y+P*x^2+(P+D)*x+D)/(y^2+x^2+1)
-        dP = @. P - S*x/z
-        dD = @. D - S/z
-        dd = @. d - S*y/z
+        S = @. (D+x*P+y*d)*z/(1+x^2+y^2)
+        dP = @. S*x/z - P
+        dD = @. S/z - D
+        dd = @. S*y/z - d
         return [dP;dD;dd]
     end
     function misfit(par)
@@ -436,15 +436,24 @@ function averat(samp::Sample,
     muP = Statistics.mean(P)
     muD = Statistics.mean(D)
     mud = Statistics.mean(d)
-    init = [muP/muD,mud/muD]
-    fit = Optim.optimize(misfit,init)
-    pars = Optim.minimizer(fit)
     ns = length(P)
-    s2 = misfit(pars)/(2*ns-2)
-    J = averat_jacobian(P,D,d,x,y)
-    covmat = s2 * inv(J*transpose(J))
-    x = pars[1]
-    y = pars[2]
+    if false
+        init = [muP/muD,mud/muD]
+        fit = Optim.optimize(misfit,init)
+        pars = Optim.minimizer(fit)
+        s2 = misfit(pars)/(2*ns-2)
+        J = averat_jacobian(P,D,d,x,y)
+        covmat = s2 * inv(J*transpose(J))
+        x = pars[1]
+        y = pars[2]
+    else 
+        E = Statistics.cov(hcat(P,D,d))
+        x = muP/muD
+        y = mud/muD
+        J = [1/muD -muP/muD^2 0;
+             0 -mud/muD^2 1/muD]
+        covmat = J * (E/ns) * transpose(J)
+    end
     sx = sqrt(covmat[1,1])
     sy = sqrt(covmat[2,2])
     rxy = covmat[1,2]/(sx*sy)
