@@ -121,20 +121,10 @@ function RbSrTest()
     return myrun, blank, fit, channels, standards, anchors
 end
 
-function histest(;LuHf=false)
-    if LuHf
-        myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
-        standard = "BP_gt"
-    else
-        myrun,blk,fit,channels,standards,anchors = RbSrTest()
-        standard = "MDC_bt"
-    end
-    pooled = pool(myrun;signal=true,group=standard)
-    anchor = anchors[standard]
-    pred = predict(pooled,fit,blk,channels,anchor)
-    Pmisfit = @. pooled[:,channels["P"]] - pred[:,"P"]
-    Dmisfit = @. pooled[:,channels["D"]] - pred[:,"D"]
-    dmisfit = @. pooled[:,channels["d"]] - pred[:,"d"]
+function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
+    Pmisfit = Pm.-Pp
+    Dmisfit = Dm.-Dp
+    dmisfit = dm.-dp
     pP = Plots.histogram(Pmisfit,xlab="εP")
     pD = Plots.histogram(Dmisfit,xlab="εD")
     pd = Plots.histogram(dmisfit,xlab="εd")
@@ -153,17 +143,39 @@ function histest(;LuHf=false)
     p = Plots.plot(pP,pDP,pdP,
                    pPD,pD,pdD,
                    pPd,pDd,pd;legend=false)
-    @test display(p) != NaN
-    df = DataFrame(Pm=pooled[:,channels["P"]],
-                   Dm=pooled[:,channels["D"]],
-                   dm=pooled[:,channels["d"]],
-                   Pp=pred[:,"P"],
-                   Dp=pred[:,"D"],
-                   dp=pred[:,"d"])
+    @test display(p) != NaN    
+end
+
+function histest(;LuHf=false)
+    if LuHf
+        myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
+        standard = "BP_gt"
+    else
+        myrun,blk,fit,channels,standards,anchors = RbSrTest()
+        standard = "MDC_bt"
+    end
+    pooled = pool(myrun;signal=true,group=standard)
+    anchor = anchors[standard]
+    pred = predict(pooled,fit,blk,channels,anchor)
+    Pm = pooled[:,channels["P"]]
+    Dm = pooled[:,channels["D"]]
+    dm = pooled[:,channels["d"]]
+    Pp = pred[:,"P"]
+    Dp = pred[:,"D"]
+    dp = pred[:,"d"]
+    plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
+    df = DataFrame(Pm=Pm,Dm=Dm,dm=dm,Pp=Pp,Dp=Dp,dp=dp)
     CSV.write("pooled.csv",df)
 end
 
-function averatest()
+function averatest(;LuHf=false)
+    if LuHf
+        myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
+        standard = "BP_gt"
+    else
+        myrun,blk,fit,channels,standards,anchors = RbSrTest()
+        standard = "MDC_bt"
+    end
     myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
     P, D, d = atomic(myrun[1],channels,blk,fit)
     ratios = averat(myrun,channels,blk,fit)
@@ -172,14 +184,13 @@ function averatest()
     y = ratios[1,"y"]
     z = @. 1 + x + y
     S = @. (D+x*P+y*d)*z/(1+x^2+y^2)
-    dP = @. S*x/z - P
-    dD = @. S/z - D
-    dd = @. S*y/z - d
-    pP = Plots.histogram(dP,title="P")
-    pD = Plots.histogram(dD,title="D")
-    pd = Plots.histogram(dd,title="d")
-    p = Plots.plot(pP,pD,pd;legend=false)
+    Pp = @. S*x/z
+    Dp = @. S/z
+    dp = @. S*y/z
+    p = plot_residuals(P,D,d,Pp,Dp,dp)
     @test display(p) != NaN
+    df = DataFrame(Phat=P,Dhat=D,dhat=d,Pp=Pp,Dp=Dp,dp=dp)
+    CSV.write("section5.csv",df)
 end
 
 function processtest()
@@ -306,10 +317,10 @@ if true
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
     @testset "fit fractionation" begin fractionationtest() end
-    @testset "Rb-Sr" begin RbSrTest() end=#
-    @testset "hist" begin histest() end
-    #=@testset "average sample ratios" begin averatest() end
-    @testset "process run" begin processtest() end
+    @testset "Rb-Sr" begin RbSrTest() end
+    @testset "hist" begin histest() end=#
+    @testset "average sample ratios" begin averatest() end
+    #=@testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end
