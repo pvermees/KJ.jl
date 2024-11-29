@@ -53,9 +53,11 @@ function predictest()
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     fit = (drift=[3.889],
-           down=[0.0,0.030851],
-           mfrac=-0.384094)
-    samp = myrun[4]
+           down=[0.0,0.03],
+           mfrac=-0.384094,
+           PAcutoff=nothing,
+           adrift=[3.889])
+    samp = myrun[105]
     if samp.group == "sample"
         println("Not a standard")
     else
@@ -63,7 +65,45 @@ function predictest()
         p = plot(samp,method,channels,blk,fit,standards,glass;transformation="log")
         @test display(p) != NaN
     end
-    return pred
+    return samp,method,fit,blk,channels,standards,glass,p
+end
+
+function partest(parname,paroffsetfact)
+    samp,method,fit,blk,channels,standards,glass,p = predictest()
+    drift = fit.drift[1]
+    down = fit.down[2]
+    mfrac = fit.mfrac[1]
+    for paroffset in paroffsetfact .* [-1,1]
+        if parname=="drift"
+            drift = fit.drift[1] + paroffset
+        elseif parname=="down"
+            down = fit.down[2] + paroffset
+        elseif parname=="mfrac"
+            mfrac = fit.mfrac[1] + paroffset
+        end
+        adjusted_fit = (drift=[drift],
+                        down=[0.0,down],
+                        mfrac=mfrac,
+                        PAcutoff=nothing,
+                        adrift=[drift])
+        anchors = getAnchors(method,standards,false)
+        offset = getOffset(samp,channels,blk,adjusted_fit,anchors,"log")
+        plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
+                    offset=offset,transformation="log",linecolor="red")
+    end
+    @test display(p) != NaN
+end
+
+function driftest()
+    partest("drift",1.0)
+end
+
+function downtest()
+    partest("down",4.0)
+end
+
+function mfractest()
+    partest("mfrac",0.2)
 end
 
 function fractionationtest(all=true)
@@ -111,7 +151,7 @@ function RbSrTest()
     setGroup!(myrun,standards)
     blank = fitBlanks(myrun,nblank=2)
     fit = fractionation(myrun,method,blank,channels,standards,0.11937;
-                        ndrift=1,verbose=false)
+                        ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     p = plot(myrun[2],channels,blank,fit,anchors,
              transformation="log",den="Sr88 -> 104")
@@ -146,7 +186,7 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
     @test display(p) != NaN    
 end
 
-function histest(;LuHf=false)
+function histest(;LuHf=true)
     if LuHf
         myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
         standard = "BP_gt"
@@ -154,6 +194,7 @@ function histest(;LuHf=false)
         myrun,blk,fit,channels,standards,anchors = RbSrTest()
         standard = "MDC_bt"
     end
+    print(fit)
     pooled = pool(myrun;signal=true,group=standard)
     anchor = anchors[standard]
     pred = predict(pooled,fit,blk,channels,anchor)
@@ -310,17 +351,20 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
+    @testset "predict" begin driftest() end
+    @testset "predict" begin downtest() end
+    @testset "predict" begin mfractest() end
     @testset "fit fractionation" begin fractionationtest() end
     @testset "Rb-Sr" begin RbSrTest() end
-    @testset "hist" begin histest() end=#
+    @testset "hist" begin histest() end
     @testset "average sample ratios" begin averatest() end
-    #=@testset "process run" begin processtest() end
+    @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end
@@ -330,7 +374,7 @@ if true
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end=#
+    @testset "TUI test" begin TUItest() end
 else
     PT()
 end

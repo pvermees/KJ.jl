@@ -82,14 +82,15 @@ export polyVal
 function polyFac(p::AbstractVector,t::AbstractVector)
     np = length(p)
     nt = length(t)
-    out = fill(1.0,nt)
     if np>0
         out = fill(0.0,nt)
         for i in 1:np
             out .+= p[i].*t.^(i-1)
         end
+        return exp.(out)
+    else
+        return fill(1.0,nt)
     end
-    exp.(out)
 end
 export polyFac
 
@@ -365,6 +366,7 @@ function getOffset(samp::Sample,
     end
     return out
 end
+export getOffset
     
 function transformeer(df::AbstractDataFrame;transformation=nothing,offset::AbstractDict)
     if isnothing(transformation)

@@ -364,3 +364,4 @@ function plotFitted!(p,
         Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
     end   
 end
+export plotFitted!
