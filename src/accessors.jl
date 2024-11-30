@@ -1,5 +1,5 @@
 """
-getPTctrl
+getKJctrl
 
 Access the control parameters of a TUI session
 
@@ -9,41 +9,41 @@ A dictionary with control parameters
 
 # Examples
 
-See [`PT`](@ref).
+See [`KJ`](@ref).
 
-See also [`setPTctrl!`](@ref).
+See also [`setKJctrl!`](@ref).
 """
-function getPTctrl()
-    return _PT["ctrl"]
+function getKJctrl()
+    return _KJ["ctrl"]
 end
-export getPTctrl
+export getKJctrl
 
 """
-setPTctrl
+setKJctrl
 
 Set the control parameters of a TUI session
 
 # Examples
 ```julia
-PT(logbook="logs/test.log")
-ctrl = getPTctrl()
+TUI(logbook="logs/test.log")
+ctrl = getKJctrl()
 ctrl["transformation"] = "log"
-setPTctrl!(ctrl)
-PT()
+setKJctrl!(ctrl)
+TUI()
 ```
 
-See also [`getPTctrl`](@ref).
+See also [`getKJctrl`](@ref).
 """
-function setPTctrl!(ctrl::AbstractDict)
-    _PT["ctrl"] = ctrl
+function setKJctrl!(ctrl::AbstractDict)
+    _KJ["ctrl"] = ctrl
 end
-export setPTctrl!
+export setKJctrl!
 
 function getExt(instrument)
     if instrument in ["Agilent","ThermoFisher"]
         return ".csv"
     else
-        PTerror("unknownInstrument")
+        KJerror("unknownInstrument")
     end
 end
 
@@ -155,28 +155,28 @@ export sett0!
 # mineral
 function getx0y0y1(method::AbstractString,
                    refmat::AbstractString)
-    t = _PT["refmat"][method][refmat].t[1]
+    t = _KJ["refmat"][method][refmat].t[1]
     if method=="U-Pb"
-        L8 = _PT["lambda"]["U238-Pb206"][1]
-        L5 = _PT["lambda"]["U235-Pb207"][1]
-        U58 = _PT["iratio"]["U-Pb"].U235/_PT["iratio"]["U-Pb"].U238
+        L8 = _KJ["lambda"]["U238-Pb206"][1]
+        L5 = _KJ["lambda"]["U235-Pb207"][1]
+        U58 = _KJ["iratio"]["U-Pb"].U235/_KJ["iratio"]["U-Pb"].U238
         x0 = 1/(exp(L8*t)-1)
         y1 = U58*(exp(L5*t)-1)/(exp(L8*t)-1)
     else
-        L = _PT["lambda"][method][1]
+        L = _KJ["lambda"][method][1]
         x0 = 1/(exp(L*t)-1)
         y1 = 0.0
     end
-    y0 = _PT["refmat"][method][refmat].y0[1]
+    y0 = _KJ["refmat"][method][refmat].y0[1]
     return (x0=x0,y0=y0,y1=y1)
 end
 # glass
 function gety0(method::AbstractString,
                refmat::AbstractString)
     x0 = y1 = missing
-    i = findfirst(==(method),_PT["methods"][:,"method"])
-    ratio = _PT["methods"][i,"d"] * _PT["methods"][i,"D"]
-    return _PT["glass"][refmat][ratio]
+    i = findfirst(==(method),_KJ["methods"][:,"method"])
+    ratio = _KJ["methods"][i,"d"] * _KJ["methods"][i,"D"]
+    return _KJ["glass"][refmat][ratio]
 end
 
 function getAnchors(method::AbstractString,standards::AbstractVector,glass::AbstractVector)
@@ -212,8 +212,8 @@ end
 export getSignals
 
 function getPDd(method::AbstractString)
-    i = findfirst(==(method),_PT["methods"][:,"method"])
-    PDd = _PT["methods"][i,2:end]
+    i = findfirst(==(method),_KJ["methods"][:,"method"])
+    PDd = _KJ["methods"][i,2:end]
     return PDd.P, PDd.D, PDd.d
 end
 export getPDd
@@ -277,7 +277,7 @@ function getStoichiometry(csv::AbstractString=joinpath(@__DIR__,"../settings/sto
 end
 export getStoichiometry
 function setStoichiometry(csv::AbstractString=joinpath(@__DIR__,"../settings/stoichiometry.csv"))
-    _PT["stoichiometry"] = getStoichiometry(csv)
+    _KJ["stoichiometry"] = getStoichiometry(csv)
 end
 export setStoichiometry
 function getGlass(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv"))
@@ -290,7 +290,7 @@ function getGlass(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv")
 end
 export getGlass
 function setGlass!(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv"))
-    _PT["glass"] = getGlass(csv)
+    _KJ["glass"] = getGlass(csv)
 end
 function getReferenceMaterials(csv::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"))
     tab = CSV.read(csv, DataFrame)
@@ -307,12 +307,12 @@ function getReferenceMaterials(csv::AbstractString=joinpath(@__DIR__,"../setting
 end
 export getReferenceMaterials
 function setReferenceMaterials!(csv::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"))
-    _PT["refmat"] = getReferenceMaterials(csv)
+    _KJ["refmat"] = getReferenceMaterials(csv)
 end
 export setReferenceMaterials!
 function getInternal(mineral::AbstractString,channel::AbstractString)
-    element = channel2element(channel,collect(keys(_PT["nuclides"])))
-    concentration = _PT["stoichiometry"][mineral][element[1]] * 1e5
+    element = channel2element(channel,collect(keys(_KJ["nuclides"])))
+    concentration = _KJ["stoichiometry"][mineral][element[1]] * 1e5
     return (channel,concentration)
 end
 export getInternal

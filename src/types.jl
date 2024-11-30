@@ -12,18 +12,18 @@ mutable struct Sample
 end
 export Sample
 
-_PT::AbstractDict = Dict()
+_KJ::AbstractDict = Dict()
 
-function init_PT!()
-    _PT["methods"] = getMethods()
-    _PT["lambda"] = getLambdas()
-    _PT["iratio"] = getiratios()
-    _PT["nuclides"] = getNuclides()
-    _PT["refmat"] = getReferenceMaterials()
-    _PT["glass"] = getGlass()
-    _PT["stoichiometry"] = getStoichiometry()
-    _PT["tree"] = getPTree()
-    _PT["ctrl"] = nothing
-    _PT["extensions"] = nothing
+function init_KJ!()
+    _KJ["methods"] = getMethods()
+    _KJ["lambda"] = getLambdas()
+    _KJ["iratio"] = getiratios()
+    _KJ["nuclides"] = getNuclides()
+    _KJ["refmat"] = getReferenceMaterials()
+    _KJ["glass"] = getGlass()
+    _KJ["stoichiometry"] = getStoichiometry()
+    _KJ["tree"] = getKJtree()
+    _KJ["ctrl"] = nothing
+    _KJ["extensions"] = nothing
 end
-export init_PT!
+export init_KJ!

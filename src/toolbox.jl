@@ -400,7 +400,7 @@ end
 function channels2elements(samp::Sample)
     channels = getChannels(samp)
     out = DataFrame()
-    elements = collect(keys(_PT["nuclides"]))
+    elements = collect(keys(_KJ["nuclides"]))
     for channel in channels
         out[!,channel] = channel2element(channel,elements)
     end
@@ -416,7 +416,7 @@ function channel2element(channel::AbstractString,
     matches = findall(occursin.(elements,channel))
     if length(matches)>1 # e.g. "B" and "Be"
         for element in elements[matches]
-            isotopes = string.(_PT["nuclides"][element])
+            isotopes = string.(_KJ["nuclides"][element])
             hasisotope = findall(occursin.(isotopes,channel))
             if !isempty(hasisotope)
                 return [element]
@@ -429,7 +429,7 @@ function channel2element(channel::AbstractString,
     return nothing
 end
 function channel2element(channel::AbstractString)
-    elements = collect(keys(_PT["nuclides"]))
+    elements = collect(keys(_KJ["nuclides"]))
     return channel2element(channel,elements)
 end
 
@@ -438,7 +438,7 @@ end
 # returns a 1-row dataframe with the concentrations
 function elements2concs(elements::AbstractDataFrame,
                         SRM::AbstractString)
-    refconc = _PT["glass"][SRM]
+    refconc = _KJ["glass"][SRM]
     out = copy(elements)
     for col in names(elements)
         element = elements[1,col]

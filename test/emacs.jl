@@ -1,9 +1,9 @@
 if !(@isdefined rerun)
     using Revise, Pkg
-    Pkg.activate("/home/pvermees/git/Plasmatrace.jl")
+    Pkg.activate("/home/pvermees/git/KJ.jl")
     Pkg.instantiate()
     Pkg.precompile()
-    cd("/home/pvermees/git/Plasmatrace.jl/test")
+    cd("/home/pvermees/git/KJ.jl/test")
 end
 
 rerun = true

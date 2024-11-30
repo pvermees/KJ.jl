@@ -1,5 +1,5 @@
 function TUIinit!()
-    _PT["ctrl"] = TUIinit()
+    _KJ["ctrl"] = TUIinit()
     return nothing
 end
 function TUIinit()
@@ -34,7 +34,7 @@ function TUIinit()
 end
 
 function TUI(key::AbstractString)
-    return _PT["ctrl"][key]
+    return _KJ["ctrl"][key]
 end
 export TUI
 
@@ -123,7 +123,7 @@ end
 
 function TUImethod!(ctrl::AbstractDict,
                     response::AbstractString)
-    methods = _PT["methods"].method
+    methods = _KJ["methods"].method
     if response=="c"
         ctrl["method"] = "concentrations"
         return "internal"
@@ -166,7 +166,7 @@ function TUIchooseMineral!(ctrl::AbstractDict,
         return "stoichiometry"
     else
         i = parse(Int,response)
-        mineral = collect(keys(_PT["stoichiometry"]))[i]
+        mineral = collect(keys(_KJ["stoichiometry"]))[i]
         channel = ctrl["cache"]
         ctrl["internal"] = getInternal(mineral,channel)
         ctrl["priority"]["method"] = false
@@ -188,7 +188,7 @@ end
 function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)
-    standards = collect(keys(_PT["refmat"][ctrl["method"]]))
+    standards = collect(keys(_KJ["refmat"][ctrl["method"]]))
     ctrl["cache"] = standards[i]
     ctrl["standards"][standards[i]] = nothing
     return "addStandardGroup"
@@ -232,7 +232,7 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIrefmatTab(ctrl::AbstractDict)
-    for (key, value) in _PT["refmat"][ctrl["method"]]
+    for (key, value) in _KJ["refmat"][ctrl["method"]]
         print(key)
         print(": ")
         if !ismissing(value.t[1])
@@ -250,7 +250,7 @@ end
 function TUIchooseGlass!(ctrl::AbstractDict,
                          response::AbstractString)
     i = parse(Int,response)
-    glass = collect(keys(_PT["glass"]))
+    glass = collect(keys(_KJ["glass"]))
     ctrl["cache"] = glass[i]
     ctrl["glass"][glass[i]] = nothing
     return "addGlassGroup"
@@ -294,7 +294,7 @@ function TUIremoveGlassByNumber!(ctrl::AbstractDict,
 end
 
 function TUIglassTab(ctrl::AbstractDict)
-    for (key, value) in _PT["glass"]
+    for (key, value) in _KJ["glass"]
         println(key)
     end
     return "x"
@@ -744,8 +744,8 @@ function TUIclear!(ctrl::AbstractDict)
     for (k,v) in default
         ctrl[k] = v
     end
-    for (i, extension) in enumerate(_PT["extensions"])
-        extension.extend!(_PT)
+    for (i, extension) in enumerate(_KJ["extensions"])
+        extension.extend!(_KJ)
     end
     return nothing
 end

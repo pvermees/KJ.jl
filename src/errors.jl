@@ -1,4 +1,4 @@
-function PTerror(key)
+function KJerror(key)
     errormessages = Dict(
         "ndriftzero" => "ndrift must be >0",
         "notStandard" => "The sample has not been marked as a standard",

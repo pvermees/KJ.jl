@@ -105,7 +105,7 @@ function predict(samp::Sample,
                  channels::AbstractDict,
                  anchors::AbstractDict)
     if samp.group == "sample"
-        PTerror("notStandard")
+        KJerror("notStandard")
     else
         dat = windowData(samp;signal=true)
         anchor = anchors[samp.group]
@@ -150,7 +150,7 @@ function predict(samp::Sample,
                  blank::AbstractDataFrame,
                  elements::AbstractDataFrame,
                  internal::AbstractString)
-    if samp.group in collect(keys(_PT["glass"]))
+    if samp.group in collect(keys(_KJ["glass"]))
         dat = windowData(samp;signal=true)
         sig = getSignals(dat)
         Xm = sig[:,Not(internal)]
@@ -165,7 +165,7 @@ function predict(samp::Sample,
         out[!,Not(internal)] = @. (R*ef)'*S + bXt
         return out
     else
-        PTerror("notStandard")
+        KJerror("notStandard")
     end
 end
 export predict

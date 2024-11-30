@@ -188,7 +188,7 @@ function fractionation(run::Vector{Sample},
 
     anchors = getAnchors(method,standards,false)
     
-    if ndrift<1 PTerror("ndriftzero") end
+    if ndrift<1 KJerror("ndriftzero") end
 
     dats = Dict()
     for (refmat,anchor) in anchors
