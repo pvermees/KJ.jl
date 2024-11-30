@@ -427,11 +427,11 @@ function averat(samp::Sample,
         dP = @. S*x/z - P
         dD = @. S/z - D
         dd = @. S*y/z - d
-        return [dP;dD;dd]
+        return dP, dD, dd
     end
     function misfit(par)
-        r = residuals(par)
-        return sum(r.^2)
+        dP, dD, dd = residuals(par)
+        return sum([dP; dD; dd].^2)
     end
     muP = Statistics.mean(P)
     muD = Statistics.mean(D)
@@ -444,6 +444,9 @@ function averat(samp::Sample,
         s2 = misfit(pars)/(2*ns-2)
         J = averat_jacobian(P,D,d,x,y)
         covmat = s2 * inv(J*transpose(J))
+        #dP, dD, dd = residuals(pars)        
+        #E = Statistics.cov(vcat(dP,dD,dd))
+        #covmat = E * inv(J*transpose(J))
         x = pars[1]
         y = pars[2]
     else 
