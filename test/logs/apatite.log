@@ -3,7 +3,7 @@ top,c
 top,r
 instrument,a
 dir|file,d
-loadICPdir,/home/pvermees/git/Plasmatrace/test/data/apatite
+loadICPdir,/home/pvermees/git/KJ.jl/test/data/apatite
 top,m
 method,c
 internal,2

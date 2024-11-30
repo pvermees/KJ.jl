@@ -1,4 +1,4 @@
-using Plasmatrace, Test, CSV, Infiltrator, DataFrames, Statistics
+using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
 import Plots
 
 function loadtest(verbose=false)
@@ -333,19 +333,19 @@ function concentrationtest()
 end
 
 module test
-function extend!(_PT::AbstractDict)
-    old = _PT["tree"]["top"]
-    _PT["tree"]["top"] = (message = "test", help = "test", action = old.action)
+function extend!(_KJ::AbstractDict)
+    old = _KJ["tree"]["top"]
+    _KJ["tree"]["top"] = (message = "test", help = "test", action = old.action)
 end
-export PTree!
+export KJtree!
 end
 using .test
 function extensiontest(verbose=true)
-    PT(test,logbook="logs/extension.log")
+    TUI(test,logbook="logs/extension.log")
 end
 
 function TUItest()
-    PT(logbook="logs/test.log",reset=true)
+    TUI(logbook="logs/test.log",reset=true)
 end
 
 Plots.closeall()
@@ -376,5 +376,5 @@ if true
     @testset "extension test" begin extensiontest() end
     @testset "TUI test" begin TUItest() end
 else
-    PT()
+    TUI()
 end

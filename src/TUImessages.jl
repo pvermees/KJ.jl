@@ -17,7 +17,7 @@ function TUIwelcomeMessage(ctrl::AbstractDict)
     return msg
 end
 function TUIshowMethods(ctrl::AbstractDict)
-    methods = _PT["methods"].method
+    methods = _KJ["methods"].method
     msg = ""
     for i in eachindex(methods)
         msg *= string(i)*": "*methods[i]*"\n"
@@ -39,7 +39,7 @@ end
 function TUImineralMessage(ctrl::AbstractDict)
     msg = "Automatically set the concentration of the internal standard " *
         "by selecting one of the following minerals, or specify a value manually:\n"
-    minerals = collect(keys(_PT["stoichiometry"]))
+    minerals = collect(keys(_KJ["stoichiometry"]))
     for i in eachindex(minerals)
         msg *= string(i)*". "*minerals[i]*"\n"
     end
@@ -70,7 +70,7 @@ end
 
 function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg = "Choose one of the following standards:\n"
-    standards = collect(keys(_PT["refmat"][ctrl["method"]]))
+    standards = collect(keys(_KJ["refmat"][ctrl["method"]]))
     for i in eachindex(standards)
         msg *= string(i)*": "*standards[i]*"\n"
     end
@@ -80,7 +80,7 @@ end
 
 function TUIchooseGlassMessage(ctrl::AbstractDict)
     msg = "Choose one of the following reference glasses:\n"
-    glasses = collect(keys(_PT["glass"]))
+    glasses = collect(keys(_KJ["glass"]))
     for i in eachindex(glasses)
         msg *= string(i)*": "*glasses[i]*"\n"
     end

@@ -1,7 +1,7 @@
 """
-PT(extensions...;logbook::AbstractString="",reset=false)
+KJ(extensions...;logbook::AbstractString="",reset=false)
 
-Plasmatrace TUI
+KJ TUI
 
 # Arguments
 
@@ -11,40 +11,40 @@ Plasmatrace TUI
 
 # Examples
 ```julia
-PT(logbook="logs/test.log")
-ctrl = getPTctrl()
+TUI(logbook="logs/test.log")
+ctrl = getKJctrl()
 samp = ctrl["run"][1]
 p = plot(samp)
 display(p)
 ```
 """
-function PT(extensions...;logbook::AbstractString="",reset=false)
+function TUI(extensions...;logbook::AbstractString="",reset=false)
     if reset
-        init_PT!()
+        init_KJ!()
     end
-    _PT["extensions"] = extensions
+    _KJ["extensions"] = extensions
     TUIwelcome()
-    if isnothing(_PT["ctrl"])
+    if isnothing(_KJ["ctrl"])
         TUIinit!()
     else
-        _PT["ctrl"]["chain"] = ["top"]
+        _KJ["ctrl"]["chain"] = ["top"]
     end
-    for (i, extension) in enumerate(_PT["extensions"])
-        extension.extend!(_PT)
+    for (i, extension) in enumerate(_KJ["extensions"])
+        extension.extend!(_KJ)
     end
     if logbook != ""
-        TUIimportLog!(_PT["ctrl"],logbook)
+        TUIimportLog!(_KJ["ctrl"],logbook)
     end
     while true
-        if length(_PT["ctrl"]["chain"])<1 return end
+        if length(_KJ["ctrl"]["chain"])<1 return end
         try
-            dispatch!(_PT["ctrl"],verbose=false)
+            dispatch!(_KJ["ctrl"],verbose=false)
         catch e
             println(e)
         end
     end
 end
-export PT
+export TUI
 
 function dispatch!(ctrl::AbstractDict;
                    key=nothing,response=nothing,verbose=false)
@@ -52,7 +52,7 @@ function dispatch!(ctrl::AbstractDict;
         println(ctrl["chain"])
     end
     if isnothing(key) key = ctrl["chain"][end] end
-    (message,help,action) = _PT["tree"][key]
+    (message,help,action) = _KJ["tree"][key]
     if isa(message,Function)
         println("\n" * message(ctrl))
     else
@@ -103,16 +103,16 @@ function dispatch!(ctrl::AbstractDict;
     end
 end
 
-function PTree!(tree::AbstractDict)
-    _PT["tree"] = tree
+function KJtree!(tree::AbstractDict)
+    _KJ["tree"] = tree
 end
-export PTree!
-function PTree()
-    return _PT["tree"]
+export KJtree!
+function KJtree()
+    return _KJ["tree"]
 end
-export PTree
+export KJtree
 
-function getPTree()
+function getKJtree()
     Dict(
         "top" => (
             message = TUIwelcomeMessage,

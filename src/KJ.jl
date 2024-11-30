@@ -1,4 +1,4 @@
-module Plasmatrace
+module KJ
 
 using Dates, DataFrames, Printf, Infiltrator, LinearAlgebra
 import Plots, Statistics, Optim, CSV
@@ -16,6 +16,6 @@ include("TUImessages.jl")
 include("TUIactions.jl")
 include("TUI.jl")
 
-init_PT!()
+init_KJ!()
 
 end

@@ -112,7 +112,7 @@ function readDat(fname::AbstractString,
         sname, datetime, header, skipto, footerskip =
             readThermoFisher(fname,head2name)
     else
-        PTerror("unknownInstrument")
+        KJerror("unknownInstrument")
     end
     dat = CSV.read(
         fname,
@@ -226,10 +226,10 @@ Export isotopic ratio data to an IsoplotRgui json file
                    blank::AbstractDataFrame,
                    pars::NamedTuple;
                    PAcutoff=nothing,prefix=nothing,
-                   fname::AbstractString="PT.json")`
+                   fname::AbstractString="KJ.json")`
 - `export2IsoplotR(ratios::AbstractDataFrame,
                    method::AbstractString;
-                   fname::AbstractString="PT.json")`
+                   fname::AbstractString="KJ.json")`
 
 # Arguments
 
@@ -264,7 +264,7 @@ function export2IsoplotR(run::Vector{Sample},
                          pars::NamedTuple;
                          PAcutoff=nothing,
                          prefix=nothing,
-                         fname::AbstractString="PT.json")
+                         fname::AbstractString="KJ.json")
     ratios = averat(run,channels,blank,pars)
     if isnothing(prefix)
         export2IsoplotR(ratios,method;fname=fname)
@@ -274,7 +274,7 @@ function export2IsoplotR(run::Vector{Sample},
 end
 function export2IsoplotR(ratios::AbstractDataFrame,
                          method::AbstractString;
-                         fname::AbstractString="PT.json")
+                         fname::AbstractString="KJ.json")
     json = jsonTemplate()
 
     P, D, d = getPDd(method)
