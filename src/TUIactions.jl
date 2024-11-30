@@ -40,7 +40,7 @@ export TUI
 
 function TUIwelcome()
     version = string(pkgversion(@__MODULE__))
-    title = " Plasmatrace "*version*" \n"
+    title = " KJ "*version*" \n"
     width = Base.length(title)-1
     println('-'^width*"\n"*title*'-'^width)
 end
@@ -502,7 +502,7 @@ function TUItransformation!(ctrl::AbstractDict,
     elseif response=="s"
         ctrl["transformation"] = "sqrt"
     else
-        ctrl["transformation"] = ""
+        ctrl["transformation"] = nothing
     end
     TUIplotter(ctrl)
     return "x"
