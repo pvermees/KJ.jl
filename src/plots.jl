@@ -24,14 +24,14 @@ Plot selected channels for a sample or a vector of samples
         num=nothing,den=nothing,
         transformation=nothing,offset=nothing,
         seriestype=:scatter,ms=2,ma=0.5,
-        xlim=:auto,ylim=:auto,display=true,
+        xlim=:auto,ylim=:auto,
         legend=:topleft,show_title=true,
         titlefontsize=10)`
 - `plot(samp::Sample;
         num=nothing,den=nothing,
         transformation=nothing,offset=nothing,
         seriestype=:scatter,ms=2,ma=0.5,
-        xlim=:auto,ylim=:auto,display=true,
+        xlim=:auto,ylim=:auto,
         legend=:topleft,show_title=true,
         titlefontsize=10)`
 - `plot(samp::Sample,
@@ -152,26 +152,22 @@ function plot(samp::Sample,
               transformation=nothing,offset=nothing,
               seriestype=:scatter,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-              display=true,i=nothing,
-              legend=:topleft,
-              show_title=true,
-              titlefontsize=10)
+              i=nothing,legend=:topleft,
+              show_title=true,titlefontsize=10)
     return plot(samp,collect(values(channels));
                 num=num,den=den,transformation=transformation,
                 offset=offset,seriestype=seriestype,
                 ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
                 legend=legend,show_title=show_title,
-                titlefontsize=titlefontsize,)
+                titlefontsize=titlefontsize)
 end
 function plot(samp::Sample;
               num=nothing,den=nothing,
               transformation=nothing,offset=nothing,
               seriestype=:scatter,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-              display=true,i=nothing,
-              legend=:topleft,
-              show_title=true,
-              titlefontsize=10)
+              i=nothing,legend=:topleft,
+              show_title=true,titlefontsize=10)
     return plot(samp,getChannels(samp);
                 num=num,den=den,transformation=transformation,
                 offset=offset,seriestype=seriestype,
@@ -202,7 +198,7 @@ function plot(samp::Sample,
         p = plot(samp,channels;
                  num=num,den=den,transformation=transformation,
                  seriestype=seriestype,ms=ms,ma=ma,
-                 xlim=xlim,ylim=ylim,display=display,i=i,
+                 xlim=xlim,ylim=ylim,i=i,
                  legend=legend,show_title=show_title,
                  titlefontsize=titlefontsize)
         
@@ -214,7 +210,7 @@ function plot(samp::Sample,
         p = plot(samp,channels;
                  num=num,den=den,transformation=transformation,offset=offset,
                  seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
-                 display=display,i=i,legend=legend,show_title=show_title,
+                 i=i,legend=legend,show_title=show_title,
                  titlefontsize=titlefontsize)
 
         plotFitted!(p,samp,blank,pars,channels,anchors;
@@ -241,7 +237,7 @@ function plot(samp::Sample,
         p = plot(samp;
                  num=num,den=den,transformation=transformation,
                  seriestype=seriestype,ms=ms,ma=ma,
-                 xlim=xlim,ylim=ylim,display=display,i=i,
+                 xlim=xlim,ylim=ylim,i=i,
                  legend=legend,show_title=show_title,
                  titlefontsize=titlefontsize)
         
@@ -253,7 +249,7 @@ function plot(samp::Sample,
         p = plot(samp;
                  num=num,den=den,transformation=transformation,offset=offset,
                  seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
-                 display=display,i=i,legend=legend,show_title=show_title,
+                 i=i,legend=legend,show_title=show_title,
                  titlefontsize=titlefontsize)
 
         plotFitted!(p,samp,blank,pars,elements,internal;
@@ -274,12 +270,12 @@ function plot(samp::Sample,
               linecol="black",linestyle=:solid,i=nothing,
               legend=:topleft,show_title=true,titlefontsize=10)
     elements = channels2elements(samp)
-    plot(samp,blank,pars,elements,internal;
-         num=num,den=den,transformation=transformation,
-         seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
-         linecol=linecol,linestyle=linestyle,i=i,
-         legend=legend,show_title=show_title,
-         titlefontsize=titlefontsize)
+    return plot(samp,blank,pars,elements,internal;
+                num=num,den=den,transformation=transformation,
+                seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
+                linecol=linecol,linestyle=linestyle,i=i,
+                legend=legend,show_title=show_title,
+                titlefontsize=titlefontsize)
 end
 function plot(samp::Sample,
               channels::AbstractVector;
