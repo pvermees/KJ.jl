@@ -186,7 +186,7 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
     @test display(p) != NaN    
 end
 
-function histest(;LuHf=true)
+function histest(;LuHf=false,plot=true)
     if LuHf
         myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
         standard = "BP_gt"
@@ -204,9 +204,12 @@ function histest(;LuHf=true)
     Pp = pred[:,"P"]
     Dp = pred[:,"D"]
     dp = pred[:,"d"]
-    plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
-    df = DataFrame(Pm=Pm,Dm=Dm,dm=dm,Pp=Pp,Dp=Dp,dp=dp)
-    CSV.write("pooled.csv",df)
+    if plot
+        plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
+        df = DataFrame(Pm=Pm,Dm=Dm,dm=dm,Pp=Pp,Dp=Dp,dp=dp)
+        CSV.write("pooledRbSr.csv",df)
+    end
+    return anchors, fit, Pm, Dm, dm
 end
 
 function averatest(;LuHf=false)
@@ -350,7 +353,7 @@ end
 
 Plots.closeall()
 
-if false
+if true
     @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
