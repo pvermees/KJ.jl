@@ -339,14 +339,11 @@ function plotFitted!(p,
                      anchors::AbstractDict;
                      num=nothing,den=nothing,transformation=nothing,
                      offset::AbstractDict,linecolor="black",linestyle=:solid)
-    x = windowData(samp,signal=true)[:,1]
     pred = predict(samp,pars,blank,channels,anchors)
     rename!(pred,[channels[i] for i in names(pred)])
-    y = formRatios(pred,num,den)
-    ty = transformeer(y;transformation=transformation,offset=offset)
-    for tyi in eachcol(ty)
-        Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
-    end
+    plotFitted!(p,samp,pred;
+                num=num,den=den,transformation=transformation,
+                offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
 function plotFitted!(p,
                      samp::Sample,
@@ -356,12 +353,21 @@ function plotFitted!(p,
                      internal::AbstractString;
                      num=nothing,den=nothing,transformation=nothing,
                      offset::AbstractDict,linecolor="black",linestyle=:solid)
-    x = windowData(samp,signal=true)[:,1]
     pred = predict(samp,pars,blank,elements,internal)
+    plotFitted!(p,samp,pred;
+                num=num,den=den,transformation=transformation,
+                offset=offset,linecolor=linecolor,linestyle=linestyle)
+end
+function plotFitted!(p,
+                     samp::Sample,
+                     pred::AbstractDataFrame;
+                     num=nothing,den=nothing,transformation=nothing,
+                     offset::AbstractDict,linecolor="black",linestyle=:solid)
+    x = windowData(samp,signal=true)[:,1]
     y = formRatios(pred,num,den)
     ty = transformeer(y;transformation=transformation,offset=offset)
     for tyi in eachcol(ty)
         Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
-    end   
+    end
 end
 export plotFitted!
