@@ -33,7 +33,7 @@ function TUI(extensions...;logbook::AbstractString="",reset=false)
         extension.extend!(_KJ)
     end
     if logbook != ""
-        TUIimportLog!(_KJ["ctrl"],logbook)
+        _KJ["tree"]["importLog"].action(_KJ["ctrl"],logbook)
     end
     while true
         if length(_KJ["ctrl"]["chain"])<1 return end

@@ -292,7 +292,7 @@ function export2IsoplotR(ratios::AbstractDataFrame,
                    "\""*method*"\":{"*datastring*"}}")
 
     
-    if method in ["Lu-Hf","Rb-Sr"]
+    if method in ["Lu-Hf","Rb-Sr","K-Ca"]
                         
         old = "\"geochronometer\":\"U-Pb\",\"plotdevice\":\"concordia\""
         new = "\"geochronometer\":\""*method*"\",\"plotdevice\":\"isochron\""
