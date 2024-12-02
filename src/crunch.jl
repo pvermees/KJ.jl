@@ -59,7 +59,7 @@ end
 
 # isotopic ratios
 function predict(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
-                 PAcutoff=nothing,adrift=drift)
+                 PAcutoff=nothing,adrift=drift,debug::Bool=false)
     ft = get_drift(Pm,t,drift;PAcutoff=PAcutoff,adrift=adrift)
     FT = polyFac(down,T)
     mf = exp(mfrac)
@@ -74,10 +74,13 @@ function predict(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
     Pf = @. S*ft*FT*x/z + bPt
     Df = @. S*mf/z + bDt
     df = @. S*y/z + bdt
+    if debug
+        @infiltrate
+    end
     return DataFrame(P=Pf,D=Df,d=df)
 end
 # isotopic ratios for glass
-function predict(t,Dm,dm,y0,mfrac,bD,bd)
+function predict(t,Dm,dm,y0,mfrac,bD,bd;debug::Bool=false)
     mf = exp(mfrac)
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
@@ -95,21 +98,23 @@ function predict(samp::Sample,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  standards::AbstractDict,
-                 glass::AbstractDict)
+                 glass::AbstractDict;
+                 debug::Bool=false)
     anchors = getAnchors(method,standards,glass)
-    return predict(samp,pars,blank,channels,anchors)
+    return predict(samp,pars,blank,channels,anchors;debug=debug)
 end
 function predict(samp::Sample,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
-                 anchors::AbstractDict)
+                 anchors::AbstractDict;
+                 debug::Bool=false)
     if samp.group == "sample"
         KJerror("notStandard")
     else
         dat = windowData(samp;signal=true)
         anchor = anchors[samp.group]
-        return predict(dat,pars,blank,channels,anchor)
+        return predict(dat,pars,blank,channels,anchor;debug=debug)
     end
 end
 # minerals
@@ -117,7 +122,8 @@ function predict(dat::AbstractDataFrame,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
-                 anchor::NamedTuple)
+                 anchor::NamedTuple;
+                 debug::Bool=false)
     t = dat.t
     T = dat.T
     Pm = dat[:,channels["P"]]
@@ -129,27 +135,30 @@ function predict(dat::AbstractDataFrame,
     return predict(t,T,Pm,Dm,dm,
                    anchor.x0,anchor.y0,anchor.y1,
                    pars.drift,pars.down,pars.mfrac,bP,bD,bd;
-                   PAcutoff=pars.PAcutoff,adrift=pars.adrift)
+                   PAcutoff=pars.PAcutoff,adrift=pars.adrift,
+                   debug=debug)
 end
 # glass
 function predict(dat::AbstractDataFrame,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
-                 y0::AbstractFloat)
+                 y0::AbstractFloat;
+                 debug::Bool=false)
     t = dat.t
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
-    return predict(t,Dm,dm,y0,pars.mfrac,bD,bd)
+    return predict(t,Dm,dm,y0,pars.mfrac,bD,bd;debug=debug)
 end
 # concentrations
 function predict(samp::Sample,
                  ef::AbstractVector,
                  blank::AbstractDataFrame,
                  elements::AbstractDataFrame,
-                 internal::AbstractString)
+                 internal::AbstractString;
+                 debug::Bool=debug)
     if samp.group in collect(keys(_KJ["glass"]))
         dat = windowData(samp;signal=true)
         sig = getSignals(dat)

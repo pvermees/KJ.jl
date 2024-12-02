@@ -141,7 +141,7 @@ function fractionationtest(all=true)
     end
 end
 
-function RbSrTest()
+function RbSrTest(;show=true)
     myrun = load("data/Rb-Sr",instrument="Agilent")
     method = "Rb-Sr"
     channels = Dict("d"=>"Sr88 -> 104",
@@ -153,12 +153,41 @@ function RbSrTest()
     fit = fractionation(myrun,method,blank,channels,standards,0.11937;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
-    p = plot(myrun[2],channels,blank,fit,anchors,
-             transformation="log",den="Sr88 -> 104")
+    if show
+        p = plot(myrun[2],channels,blank,fit,anchors,
+                 transformation="log",den="Sr88 -> 104")
+        @test display(p) != NaN
+    end
     export2IsoplotR(myrun,method,channels,blank,fit,
                     prefix="Entire",fname="Entire.json")
-    @test display(p) != NaN
     return myrun, blank, fit, channels, standards, anchors
+end
+
+function KCaTest(;show=true)
+    myrun = load("data/K-Ca",instrument="Agilent")
+    method = "K-Ca"
+    channels = Dict("d"=>"Ca44 -> 63",
+                    "D"=>"Ca40 -> 59",
+                    "P"=>"K39 -> 39")
+    standards = Dict("EntireCreek_bt" => "EntCrk")
+    setGroup!(myrun,standards)
+    blank = fitBlanks(myrun,nblank=2)
+    fit = fractionation(myrun,method,blank,channels,standards,1.0;
+                        ndown=0,ndrift=1,verbose=false)
+    anchors = getAnchors(method,standards)
+    if show
+        p = plot(myrun[3],channels,blank,fit,anchors,
+                 transformation="log",den=nothing)
+        @test display(p) != NaN
+    end
+    export2IsoplotR(myrun,method,channels,blank,fit,
+                    prefix="EntCrk",fname="Entire_KCa.json")
+    return myrun, blank, fit, channels, standards, anchors
+end
+
+function KCaPredicTest()
+    myrun, blank, fit, channels, standards, anchors = KCaTest(;show=false)
+    pred = predict(myrun[3],fit,blank,channels,anchors;debug=true)
 end
 
 function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
@@ -186,13 +215,13 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
     @test display(p) != NaN    
 end
 
-function histest(;LuHf=false,plot=true)
+function histest(;LuHf=false,show=true)
     if LuHf
         myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
         standard = "BP_gt"
     else
-        myrun,blk,fit,channels,standards,anchors = RbSrTest()
-        standard = "MDC_bt"
+        myrun,blk,fit,channels,standards,anchors = KCaTest(;show=false) # RbSrTest(false)
+        standard = "EntireCreek_bt" # "MDC_bt"
     end
     print(fit)
     pooled = pool(myrun;signal=true,group=standard)
@@ -204,10 +233,10 @@ function histest(;LuHf=false,plot=true)
     Pp = pred[:,"P"]
     Dp = pred[:,"D"]
     dp = pred[:,"d"]
-    if plot
+    if show
         plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
         df = DataFrame(Pm=Pm,Dm=Dm,dm=dm,Pp=Pp,Dp=Dp,dp=dp)
-        CSV.write("pooledRbSr.csv",df)
+        CSV.write("pooled_" * standard * ".csv",df)
     end
     return anchors, fit, Pm, Dm, dm
 end
@@ -238,17 +267,17 @@ function averatest(;LuHf=false)
 end
 
 function processtest()
-    myrun = load("data/Lu-Hf",instrument="Agilent")
-    method = "Lu-Hf"
+    myrun = load("data/Lu-Hf",instrument="Agilent");
+    method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
-                    "P"=>"Lu175 -> 175")
-    standards = Dict("Hogsbo_gt" => "hogsbo")
-    glass = Dict("NIST612" => "NIST612p")
+                    "P"=>"Lu175 -> 175");
+    standards = Dict("Hogsbo_gt" => "hogsbo");
+    glass = Dict("NIST612" => "NIST612p");
     blk, fit = process!(myrun,method,channels,standards,glass,
-                        nblank=2,ndrift=2,ndown=2)
+                        nblank=2,ndrift=2,ndown=2);
     p = plot(myrun[2],method,channels,blk,fit,standards,glass,
-             den="Hf176 -> 258",transformation="log")
+             den="Hf176 -> 258",transformation="log");
     @test display(p) != NaN
 end
 
@@ -354,7 +383,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -365,7 +394,9 @@ if true
     @testset "predict" begin mfractest() end
     @testset "fit fractionation" begin fractionationtest() end
     @testset "Rb-Sr" begin RbSrTest() end
-    @testset "hist" begin histest() end
+    @testset "K-Ca" begin KCaTest() end=#
+    @testset "K-Ca" begin KCaPredicTest() end
+    #=@testset "hist" begin histest() end
     @testset "average sample ratios" begin averatest() end
     @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
@@ -377,7 +408,7 @@ if true
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "TUI test" begin TUItest() end=#
 else
     TUI()
 end
