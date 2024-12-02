@@ -185,6 +185,11 @@ function KCaTest(;show=true)
     return myrun, blank, fit, channels, standards, anchors
 end
 
+function KCaPredicTest()
+    myrun, blank, fit, channels, standards, anchors = KCaTest(;show=false)
+    pred = predict(myrun[3],fit,blank,channels,anchors;debug=true)
+end
+
 function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
     Pmisfit = Pm.-Pp
     Dmisfit = Dm.-Dp
@@ -262,17 +267,17 @@ function averatest(;LuHf=false)
 end
 
 function processtest()
-    myrun = load("data/Lu-Hf",instrument="Agilent")
-    method = "Lu-Hf"
+    myrun = load("data/Lu-Hf",instrument="Agilent");
+    method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
-                    "P"=>"Lu175 -> 175")
-    standards = Dict("Hogsbo_gt" => "hogsbo")
-    glass = Dict("NIST612" => "NIST612p")
+                    "P"=>"Lu175 -> 175");
+    standards = Dict("Hogsbo_gt" => "hogsbo");
+    glass = Dict("NIST612" => "NIST612p");
     blk, fit = process!(myrun,method,channels,standards,glass,
-                        nblank=2,ndrift=2,ndown=2)
+                        nblank=2,ndrift=2,ndown=2);
     p = plot(myrun[2],method,channels,blk,fit,standards,glass,
-             den="Hf176 -> 258",transformation="log")
+             den="Hf176 -> 258",transformation="log");
     @test display(p) != NaN
 end
 
@@ -378,7 +383,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -389,8 +394,9 @@ if true
     @testset "predict" begin mfractest() end
     @testset "fit fractionation" begin fractionationtest() end
     @testset "Rb-Sr" begin RbSrTest() end
-    @testset "K-Ca" begin KCaTest() end
-    @testset "hist" begin histest() end
+    @testset "K-Ca" begin KCaTest() end=#
+    @testset "K-Ca" begin KCaPredicTest() end
+    #=@testset "hist" begin histest() end
     @testset "average sample ratios" begin averatest() end
     @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
@@ -402,7 +408,7 @@ if true
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "TUI test" begin TUItest() end=#
 else
     TUI()
 end

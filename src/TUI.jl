@@ -5,8 +5,8 @@ KJ TUI
 
 # Arguments
 
-- `extensions...`: a comma separated list of Plasmatrace extensions
-- `logbook`: the file path to a Plasmatrace log
+- `extensions...`: a comma separated list of KJ extensions
+- `logbook`: the file path to a KJ log
 - `reset`: hard reset of all inherited settings
 
 # Examples
@@ -165,7 +165,7 @@ function getKJtree()
             "Enter the full path of the data directory " * 
             "(? for help, x to exit):",
             help =
-            "Plasmatrace will read all the files in this folder. " * 
+            "KJ will read all the files in this folder. " * 
             "You don't need to select the files, just the folder.",
             action = TUIloadICPdir!
         ),
@@ -174,7 +174,7 @@ function getKJtree()
             "Enter the full path of the ICP-MS data file " * 
             "(? for help, x to exit):",
             help =
-            "Plasmatrace will read the pooled data in this file and " * 
+            "KJ will read the pooled data in this file and " * 
             "parse it using a laser log file, which is to be provided next.",
             action = TUIloadICPfile!
         ),
@@ -183,7 +183,7 @@ function getKJtree()
             "Enter the full path of the laser log file " * 
             "(? for help, x to exit):",
             help =
-            "Plasmatrace will parse the ICP-MS data provided in the " * 
+            "KJ will parse the ICP-MS data provided in the " * 
             "previous step using this log file.",
             action = TUIloadLAfile!
         ),
@@ -448,7 +448,7 @@ function getKJtree()
             "?: Help",
             help =
             "Specify the blank (background signal) as pairs of time " * 
-            "stamps (in seconds) or trust Plasmatrace to choose the " * 
+            "stamps (in seconds) or trust KJ to choose the " * 
             "blank windows automatically. The blanks of all the " * 
             "analyses (samples + blanks) will be combined and " * 
             "interpolated under the signal.",
@@ -518,7 +518,7 @@ function getKJtree()
             "?: Help",
             help = 
             "Specify the signal as pairs of time stamps (in seconds) " * 
-            "or trust Plasmatrace to choose the signal windows " * 
+            "or trust KJ to choose the signal windows " * 
             "automatically. The signals of the reference materials " * 
             "are used to define the drift and fractionation " * 
             "corrections, which are then applied to the samples.",
@@ -661,7 +661,7 @@ function getKJtree()
         "exportLog" => (
             message = "Enter the path and name of the log " * 
             "file (? for help, x to exit):",
-            help = "Save the current Plasmatrace session so that you " * 
+            help = "Save the current KJ session so that you " * 
             "can replicate your results later",
             action = TUIexportLog
         ),
@@ -675,7 +675,7 @@ function getKJtree()
         "saveTemplate" => (
             message = "Enter the path and name of the template " * 
             "file (? for help, x to exit):",
-            help = "Save the current Plasmatrace method for use " * 
+            help = "Save the current KJ method for use " * 
             "in a future session.",
             action = TUIsaveTemplate
         ),
@@ -694,7 +694,7 @@ function getKJtree()
             "?: Help",
             help =
             "Advanced settings to override the default behaviour " * 
-            "of Plasmatrace. See the individual options for " * 
+            "of KJ. See the individual options for " * 
             "further information.",
             action = Dict(
                 "b" => "setNblank",
@@ -713,7 +713,7 @@ function getKJtree()
             "x: Exit\n" * 
             "?: Help",
             help =
-            "If you supplied any extensions when starting Plasmatrace, " *
+            "If you supplied any extensions when starting KJ, " *
             "they will tend to put their options in this menu",
             action = Dict()
         ),
@@ -754,7 +754,7 @@ function getKJtree()
             "intensity ion beams are measured in 'analog' (A) mode. " * 
             "The intercalibration of these two modes is not always " * 
             "perfect. Here you can set or remove the cutoff value " * 
-            "between P and A mode, so that Plasmatrace can use the " * 
+            "between P and A mode, so that KJ can use the " * 
             "standards to estimate a correction factor between the " * 
             "two modes.",
             action = Dict(
@@ -778,7 +778,7 @@ function getKJtree()
             message =
             "Enter the path to the standards file (? for help, x to exit)",
             help =
-            "Add new isotopic reference materials to Plasmatrace " * 
+            "Add new isotopic reference materials to KJ " * 
             "by specifying the path to a .csv file that is " * 
             "formatted as follows:\n\n" * 
             "method,name,t,st,y0,sy0\n" * 
@@ -794,7 +794,7 @@ function getKJtree()
             message =
             "Enter the path to the glass file (? for help, x to exit)",
             help =
-            "Add new concentration standards to Plasmatrace " * 
+            "Add new concentration standards to KJ " * 
             "by specifying the path to a .csv file that is " * 
             "formatted as follows:\n\n" * 
             "SRM,Be,B,F,Mg,...,Bi,Th,U,Hf177Hf176,Rb87Rb86,Pb207Pb206\n" * 
