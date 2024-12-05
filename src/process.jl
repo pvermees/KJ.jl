@@ -199,31 +199,17 @@ function fractionation(run::Vector{Sample},
     bd = blank[:,channels["d"]]
     bP = blank[:,channels["P"]]
 
-    function misfit(par)
-        drift = par[1:ndrift]
-        down = vcat(0.0,par[ndrift+1:ndrift+ndown])
-        mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
-        adrift = isnothing(PAcutoff) ? drift : par[end-ndrift+1:end]
-        out = 0.0
-        for (refmat,dat) in dats
-            t = dat.t
-            T = dat.T 
-            Pm = dat[:,channels["P"]]
-            Dm = dat[:,channels["D"]]
-            dm = dat[:,channels["d"]]
-            (x0,y0,y1) = anchors[refmat]
-            out += SS(t,T,Pm,Dm,dm,x0,y0,y1,drift,down,mfrac,bP,bD,bd;
-                      PAcutoff=PAcutoff,adrift=adrift)
-        end
-        return out
-    end
-
     init = fill(0.0,ndrift)
     if (ndown>0) init = vcat(init,fill(0.0,ndown)) end
     if isnothing(mf) init = vcat(init,0.0) end
     if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
+
+    objective = (par) -> SS(par,bP,bD,bd,dats,channels,anchors,mf;
+                            ndrift=ndrift,ndown=ndown,
+                            PAcutoff=PAcutoff,verbose=verbose)
+
     if length(init)>0
-        fit = Optim.optimize(misfit,init)
+        fit = Optim.optimize(objective,init)
         if verbose
             println("Drift and downhole fractionation correction:\n")
             println(fit)
@@ -238,6 +224,7 @@ function fractionation(run::Vector{Sample},
     else
         pars = 0.0
     end
+    
     drift = pars[1:ndrift]
     down = vcat(0.0,pars[ndrift+1:ndrift+ndown])
     mfrac = isnothing(mf) ? pars[ndrift+ndown+1] : log(mf)
@@ -279,27 +266,15 @@ function fractionation(run::Vector{Sample},
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
 
-    function misfit(par)
-        mfrac = par[1]
-        out = 0.0
-        for (refmat,dat) in dats
-            t = dat.t
-            Dm = dat[:,channels["D"]]
-            dm = dat[:,channels["d"]]
-            y0 = anchors[refmat]
-            out += SS(t,Dm,dm,y0,mfrac,bD,bd)
-        end
-        return out
-    end
-
-    fit = Optim.optimize(misfit,[0.0])
+    objective = (par) -> SS(par,bD,bd,dats,channels,anchors)
+    fit = Optim.optimize(objective,[0.0])
     if verbose
         println("Mass fractionation correction:\n")
         println(fit)
     end
 
     mfrac = Optim.minimizer(fit)[1]
-    
+        
     return exp(mfrac)
 end
 function fractionation(run::Vector{Sample},

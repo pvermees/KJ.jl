@@ -117,16 +117,19 @@ function fractionationtest(all=true)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     if all
-        print("two separate steps: ")
+        println("two separate steps: ")
+        @infiltrate
         mf = fractionation(myrun,method,blk,channels,glass)
+        @infiltrate
         fit = fractionation(myrun,method,blk,channels,standards,mf;
                             ndrift=1,ndown=1)
+        @infiltrate
         println(fit)
         print("no glass: ")
         fit = fractionation(myrun,method,blk,channels,standards,nothing;
                             ndrift=1,ndown=1)
         println(fit)
-        print("two joint steps: ")
+        println("two joint steps: ")
     end
     fit = fractionation(myrun,"Lu-Hf",blk,channels,standards,glass;
                         ndrift=1,ndown=1)
@@ -391,12 +394,12 @@ if true
     @testset "predict" begin predictest() end
     @testset "predict" begin driftest() end
     @testset "predict" begin downtest() end
-    @testset "predict" begin mfractest() end
-    @testset "fit fractionation" begin fractionationtest() end
-    @testset "Rb-Sr" begin RbSrTest() end
-    @testset "K-Ca" begin KCaTest() end=#
+    @testset "predict" begin mfractest() end=#
+    @testset "fit fractionation" begin fractionationtest(true) end
+    #=@testset "Rb-Sr" begin RbSrTest() end
+    @testset "K-Ca" begin KCaTest() end
     @testset "K-Ca" begin KCaPredicTest() end
-    #=@testset "hist" begin histest() end
+    @testset "hist" begin histest() end
     @testset "average sample ratios" begin averatest() end
     @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
