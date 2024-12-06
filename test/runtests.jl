@@ -52,17 +52,18 @@ function predictest()
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[3.889],
-           down=[0.0,0.03],
-           mfrac=-0.384094,
+    fit = (drift=[4.4418],
+           down=[0.0,0.0844],
+           mfrac=0.0,
            PAcutoff=nothing,
-           adrift=[3.889])
+           adrift=[4.4418])
     samp = myrun[105]
     if samp.group == "sample"
         println("Not a standard")
     else
         pred = predict(samp,method,fit,blk,channels,standards,glass)
-        p = plot(samp,method,channels,blk,fit,standards,glass;transformation="log")
+        p = plot(samp,method,channels,blk,fit,standards,glass;
+                 transformation="log")
         @test display(p) != NaN
     end
     return samp,method,fit,blk,channels,standards,glass,p
@@ -118,12 +119,9 @@ function fractionationtest(all=true)
     setGroup!(myrun,standards)
     if all
         println("two separate steps: ")
-        @infiltrate
         mf = fractionation(myrun,method,blk,channels,glass)
-        @infiltrate
         fit = fractionation(myrun,method,blk,channels,standards,mf;
                             ndrift=1,ndown=1)
-        @infiltrate
         println(fit)
         print("no glass: ")
         fit = fractionation(myrun,method,blk,channels,standards,nothing;
@@ -390,13 +388,13 @@ if true
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
-    @testset "assign standards" begin standardtest(true) end
+    @testset "assign standards" begin standardtest(true) end=#
     @testset "predict" begin predictest() end
-    @testset "predict" begin driftest() end
-    @testset "predict" begin downtest() end
-    @testset "predict" begin mfractest() end=#
+    #=@testset "predict drift" begin driftest() end
+    @testset "predict down" begin downtest() end
+    @testset "predict mfrac" begin mfractest() end
     @testset "fit fractionation" begin fractionationtest(true) end
-    #=@testset "Rb-Sr" begin RbSrTest() end
+    @testset "Rb-Sr" begin RbSrTest() end
     @testset "K-Ca" begin KCaTest() end
     @testset "K-Ca" begin KCaPredicTest() end
     @testset "hist" begin histest() end
