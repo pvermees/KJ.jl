@@ -42,7 +42,7 @@ function standardtest(verbose=false)
     end
 end
 
-function predictest()
+function fixedLuHf()
     myrun, blk = blanktest()
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
@@ -52,11 +52,33 @@ function predictest()
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[4.4418],
-           down=[0.0,0.0844],
-           mfrac=0.0,
+    fit = (drift=[3.87838],
+           down=[0.0,0.06451],
+           mfrac=-0.384042,
            PAcutoff=nothing,
-           adrift=[4.4418])
+           adrift=[3.87838])
+    return myrun, blk, method, channels, glass, standards, fit
+end
+
+function wtest()
+    myrun, blank, method, channels, glass, standards, fit = fixedLuHf()
+    dat = pool(myrun;signal=true)
+    t = dat.t
+    Dm = dat[:,channels["D"]]
+    dm = dat[:,channels["d"]]
+    anchors = getAnchors(method,standards,glass)
+    (x0,y0,y1) = anchors["BP_gt"]
+    bD = blank[:,channels["D"]]
+    bd = blank[:,channels["d"]]
+    bDt = polyVal(bD,t)
+    bdt = polyVal(bd,t)
+    mf = 1.0
+    w = get_w(Dm,dm,y0,mf,bDt,bdt)
+    println(w)
+end
+
+function predictest()
+    myrun, blk, method, channels, glass, standards, fit = fixedLuHf()
     samp = myrun[105]
     if samp.group == "sample"
         println("Not a standard")
@@ -68,7 +90,7 @@ function predictest()
     end
     return samp,method,fit,blk,channels,standards,glass,p
 end
-
+    
 function partest(parname,paroffsetfact)
     samp,method,fit,blk,channels,standards,glass,p = predictest()
     drift = fit.drift[1]
@@ -388,13 +410,14 @@ if true
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
-    @testset "assign standards" begin standardtest(true) end=#
+    @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
-    #=@testset "predict drift" begin driftest() end
+    @testset "w test" begin wtest() end
+    @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
-    @testset "predict mfrac" begin mfractest() end
+    @testset "predict mfrac" begin mfractest() end=#
     @testset "fit fractionation" begin fractionationtest(true) end
-    @testset "Rb-Sr" begin RbSrTest() end
+    #=@testset "Rb-Sr" begin RbSrTest() end
     @testset "K-Ca" begin KCaTest() end
     @testset "K-Ca" begin KCaPredicTest() end
     @testset "hist" begin histest() end

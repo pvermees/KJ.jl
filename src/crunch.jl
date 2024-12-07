@@ -13,7 +13,7 @@ function w2S(wP::AbstractFloat,
              bPt::AbstractVector,
              bDt::AbstractVector,
              bdt::AbstractVector)
-    return @. (((dm-bdt)*mf^2+(Dm-bDt)*mf)*wd*y1^2+((((FT*bPt-FT*Pm)*ft*wP+(bDt-Dm)*mf)*wd*x0+((2*bdt-2*dm)*mf^2+(2*bDt-2*Dm)*mf)*wd)*y0+((dm-bdt)*mf^2*wd+(FT*Pm-FT*bPt)*ft*mf^2*wP)*x0)*y1+(((FT^2*dm-FT^2*bdt)*ft^2+(FT*Pm-FT*bPt)*ft)*wP*wd*x0^2+((FT*Pm-FT*bPt)*ft*wP+(Dm-bDt)*mf)*wd*x0+((dm-bdt)*mf^2+(Dm-bDt)*mf)*wd)*y0^2+(((FT^2*dm-FT^2*bdt)*ft^2*wP*wd+(Dm*FT^2-FT^2*bDt)*ft^2*mf*wP)*x0^2+((bdt-dm)*mf^2*wd+(FT*bPt-FT*Pm)*ft*mf^2*wP)*x0)*y0+((FT*Pm-FT*bPt)*ft*mf^2+(Dm*FT^2-FT^2*bDt)*ft^2*mf)*wP*x0^2)/(mf^2*wd*y1^2-2*mf^2*wd*y0*y1+(FT^2*ft^2*wP*wd*x0^2+mf^2*wd)*y0^2+FT^2*ft^2*mf^2*wP*x0^2)
+    return @. (((dm-bdt)*mf^2+(Dm-bDt)*mf)*wd*y1^2+((((FT*bPt*ft-FT*ft*Pm)*wP+(bDt-Dm)*mf)*wd*x0+((2*bdt-2*dm)*mf^2+(2*bDt-2*Dm)*mf)*wd)*y0+((dm-bdt)*mf^2*wd+(FT*ft*Pm-FT*bPt*ft)*mf^2*wP)*x0)*y1+((FT^2*ft^2*dm+FT*ft*Pm-FT^2*bdt*ft^2-FT*bPt*ft)*wP*wd*x0^2+((FT*ft*Pm-FT*bPt*ft)*wP+(Dm-bDt)*mf)*wd*x0+((dm-bdt)*mf^2+(Dm-bDt)*mf)*wd)*y0^2+(((FT^2*ft^2*dm-FT^2*bdt*ft^2)*wP*wd+(FT^2*ft^2*Dm-FT^2*bDt*ft^2)*mf*wP)*x0^2+((bdt-dm)*mf^2*wd+(FT*bPt*ft-FT*ft*Pm)*mf^2*wP)*x0)*y0+((FT*ft*Pm-FT*bPt*ft)*mf^2+(FT^2*ft^2*Dm-FT^2*bDt*ft^2)*mf)*wP*x0^2)/(mf^2*wd*y1^2-2*mf^2*wd*y0*y1+(FT^2*ft^2*wP*wd*x0^2+mf^2*wd)*y0^2+FT^2*ft^2*mf^2*wP*x0^2)
 end
 function w2p(wP::AbstractFloat,
              wd::AbstractFloat,
@@ -29,7 +29,7 @@ function w2p(wP::AbstractFloat,
              bPt::AbstractVector,
              bDt::AbstractVector,
              bdt::AbstractVector)
-    return @. ((bDt-Dm)*mf*wd*y1^2+(((FT*Pm-FT*bPt)*ft*wP*wd*x0+(Dm-bDt)*mf*wd)*y0+(dm-bdt)*mf^2*wd)*y1+((FT^2*bdt-FT^2*dm)*ft^2*wP*wd*x0^2+(bdt-dm)*mf^2*wd)*y0+(FT^2*bDt-Dm*FT^2)*ft^2*mf*wP*x0^2+(FT*Pm-FT*bPt)*ft*mf^2*wP*x0)/((bDt-Dm)*mf*wd*y1^2+((FT*Pm-FT*bPt)*ft*wP*wd*x0+(2*Dm-2*bDt)*mf*wd)*y0*y1+((FT*bPt-FT*Pm)*ft*wP*wd*x0+(bDt-Dm)*mf*wd)*y0^2+(FT^2*bdt-FT^2*dm)*ft^2*wP*wd*x0^2*y0+(FT^2*bDt-Dm*FT^2)*ft^2*mf*wP*x0^2)
+    return @. ((Dm-bDt)*mf*wd*y1^2+(((FT*bPt*ft-FT*ft*Pm)*wP*wd*x0+(bDt-Dm)*mf*wd)*y0+(bdt-dm)*mf^2*wd)*y1+((FT^2*ft^2*dm-FT^2*bdt*ft^2)*wP*wd*x0^2+(dm-bdt)*mf^2*wd)*y0+(FT^2*ft^2*Dm-FT^2*bDt*ft^2)*mf*wP*x0^2+(FT*bPt*ft-FT*ft*Pm)*mf^2*wP*x0)/((Dm-bDt)*mf*wd*y1^2+((FT*bPt*ft-FT*ft*Pm)*wP*wd*x0+(2*bDt-2*Dm)*mf*wd)*y0*y1+((FT*ft*Pm-FT*bPt*ft)*wP*wd*x0+(Dm-bDt)*mf*wd)*y0^2+(FT^2*ft^2*dm-FT^2*bdt*ft^2)*wP*wd*x0^2*y0+(FT^2*ft^2*Dm-FT^2*bDt*ft^2)*mf*wP*x0^2)
 end
 # for glass
 function w2S(wd::AbstractFloat,
@@ -64,6 +64,7 @@ function get_w(Pm::AbstractVector,
     wd = pars[2]
     return wP, wd
 end
+export get_w
 function SSw(wP::AbstractFloat,
              wd::AbstractFloat,
              Pm::AbstractVector,
@@ -79,8 +80,8 @@ function SSw(wP::AbstractFloat,
              bDt::AbstractVector,
              bdt::AbstractVector)
     pred = predict(wP,wd,Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    dP2 = @. ( (pred[:,"P"]-Pm)^2 - (pred[:,"D"]-Dm)^2 )^2
-    dD2 = @. ( (pred[:,"D"]-Pm)^2 - (pred[:,"d"]-dm)^2 )^2
+    dP2 = @. abs( (pred[:,"P"]-Pm)^2 - (pred[:,"D"]-Dm)^2 )
+    dD2 = @. abs( (pred[:,"D"]-Dm)^2 - (pred[:,"d"]-dm)^2 )
     ss = @. dP2 + dD2
     return sum(ss)
 end
@@ -106,7 +107,7 @@ function SSw(wd::AbstractFloat,
              bdt::AbstractVector)
     S = w2S(wd,Dm,dm,y0,mf,bDt,bdt)
     pred = predict(S,y0,mf,bDt,bdt)
-    ss = @. ( (pred[:,"D"]-Dm)^2 - (pred[:,"d"]-dm)^2 )^2
+    ss = @. abs( (pred[:,"D"]-Dm)^2 - (pred[:,"d"]-dm)^2 )
     return sum(ss)
 end
 
@@ -160,7 +161,7 @@ function SS(par::AbstractVector,
             dats::AbstractDict,
             channels::AbstractDict,
             anchors::AbstractDict)
-    mf = par[1]
+    mf = exp(par[1])
     out = 0.0
     for (refmat,dat) in dats
         t = dat.t
@@ -337,17 +338,6 @@ function predict(samp::Sample,
     end
 end
 export predict
-function predict(samp::Sample,
-                 method::AbstractString,
-                 pars::NamedTuple,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 standards::AbstractDict,
-                 glass::AbstractDict;
-                 debug::Bool=false)
-    anchors = getAnchors(method,standards,glass)
-    return predict(samp,pars,blank,channels,anchors;debug=debug)
-end
 
 function averat_jacobian(P,D,d,x,y)
     ns = length(P)
