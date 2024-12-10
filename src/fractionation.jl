@@ -255,17 +255,19 @@ function iterative_least_squares(init::AbstractVector,
                                  channels::AbstractDict,
                                  anchors::AbstractDict;
                                  verbose::Bool=false)
-
-    wd = 1.0
     
     objective = (par) -> SS(par,wd,bD,bd,dats,channels,anchors)
-    
-    fit = Optim.optimize(objective,[0.0])
+
+    wd = 1.0    
+    init = [0.0]
+
+    fit = Optim.optimize(objective,init)
+
     if verbose
         println("Mass fractionation correction:\n")
         println(fit)
     end
-
+    
     mfrac = Optim.minimizer(fit)[1]
         
     return exp(mfrac), wd

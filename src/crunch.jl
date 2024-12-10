@@ -100,12 +100,8 @@ function SS(par::AbstractVector,
     mf = exp(par[1])
     out = 0.0
     for (refmat,dat) in dats
-        t = dat.t
-        Dm = dat[:,channels["D"]]
-        dm = dat[:,channels["d"]]
         y0 = anchors[refmat]
-        bDt = polyVal(bD,t)
-        bdt = polyVal(bd,t)
+        Dm,dm,bDt,bdt = SSprep(bD,bd,dat,channels)
         out += SS(wd,Dm,dm,y0,mf,bDt,bdt)
     end
     return out
@@ -123,6 +119,7 @@ function SS(wd::AbstractFloat,
 end
 export SS
 
+# minerals
 function SSprep(bP,bD,bd,dat,channels,mfrac,drift,down;
                 PAcutoff=nothing,adrift=drift)
     t = dat.t
@@ -138,6 +135,15 @@ function SSprep(bP,bD,bd,dat,channels,mfrac,drift,down;
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
     return Pm,Dm,dm,ft,FT,mf,bPt,bDt,bdt
+end
+# glass
+function SSprep(bD,bd,dat,channels)
+    t = dat.t
+    Dm = dat[:,channels["D"]]
+    dm = dat[:,channels["d"]]
+    bDt = polyVal(bD,t)
+    bdt = polyVal(bd,t)
+    return Dm,dm,bDt,bdt
 end
 
 # minerals
@@ -290,6 +296,13 @@ end
 
 function get_drift(Pm::AbstractVector,
                    t::AbstractVector,
+                   pars::NamedTuple)
+    return get_drift(Pm,t,pars.drift;
+                     PAcutoff=pars.PAcutoff,
+                     adrift=pars.adrift)
+end
+function get_drift(Pm::AbstractVector,
+                   t::AbstractVector,
                    drift::AbstractVector;
                    PAcutoff=nothing,adrift=drift)
     if isnothing(PAcutoff)
@@ -306,11 +319,4 @@ function get_drift(Pm::AbstractVector,
         end
     end
     return ft
-end
-function get_drift(Pm::AbstractVector,
-                   t::AbstractVector,
-                   pars::NamedTuple)
-    return get_drift(Pm,t,pars.drift;
-                     PAcutoff=pars.PAcutoff,
-                     adrift=pars.adrift)
 end
