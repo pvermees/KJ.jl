@@ -55,26 +55,11 @@ function fixedLuHf()
     fit = (drift=[3.87838],
            down=[0.0,0.06451],
            mfrac=-0.384042,
+           wP=1.0,
+           wd=1.0,
            PAcutoff=nothing,
            adrift=[3.87838])
     return myrun, blk, method, channels, glass, standards, fit
-end
-
-function wtest()
-    myrun, blank, method, channels, glass, standards, fit = fixedLuHf()
-    dat = pool(myrun;signal=true)
-    t = dat.t
-    Dm = dat[:,channels["D"]]
-    dm = dat[:,channels["d"]]
-    anchors = getAnchors(method,standards,glass)
-    (x0,y0,y1) = anchors["BP_gt"]
-    bD = blank[:,channels["D"]]
-    bd = blank[:,channels["d"]]
-    bDt = polyVal(bD,t)
-    bdt = polyVal(bd,t)
-    mf = 1.0
-    w = get_w(Dm,dm,y0,mf,bDt,bdt)
-    println(w)
 end
 
 function predictest()
@@ -107,6 +92,8 @@ function partest(parname,paroffsetfact)
         adjusted_fit = (drift=[drift],
                         down=[0.0,down],
                         mfrac=mfrac,
+                        wP=fit.wP,
+                        wd=fit.wd,
                         PAcutoff=nothing,
                         adrift=[drift])
         anchors = getAnchors(method,standards,false)
@@ -141,9 +128,9 @@ function fractionationtest(all=true)
     setGroup!(myrun,standards)
     if all
         println("two separate steps: ")
-        mf = fractionation(myrun,method,blk,channels,glass)
+        mf, wd = fractionation(myrun,method,blk,channels,glass)
         fit = fractionation(myrun,method,blk,channels,standards,mf;
-                            ndrift=1,ndown=1)
+                            wd=wd,ndrift=1,ndown=1)
         println(fit)
         print("no glass: ")
         fit = fractionation(myrun,method,blk,channels,standards,nothing;
@@ -406,18 +393,17 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
-    @testset "w test" begin wtest() end
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
-    @testset "predict mfrac" begin mfractest() end=#
+    @testset "predict mfrac" begin mfractest() end
     @testset "fit fractionation" begin fractionationtest(true) end
-    #=@testset "Rb-Sr" begin RbSrTest() end
+    @testset "Rb-Sr" begin RbSrTest() end
     @testset "K-Ca" begin KCaTest() end
     @testset "K-Ca" begin KCaPredicTest() end
     @testset "hist" begin histest() end
@@ -432,7 +418,7 @@ if true
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end=#
+    @testset "TUI test" begin TUItest() end
 else
     TUI()
 end

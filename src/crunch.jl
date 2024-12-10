@@ -42,77 +42,10 @@ function w2S(wd::AbstractFloat,
     return @. ((dm-bdt)*wd*y0^2+((dm-bdt)*wd+(Dm-bDt)*mf)*y0+(Dm-bDt)*mf)/(wd*y0^2+mf^2)
 end
 
-# minerals
-function get_w(Pm::AbstractVector,
-               Dm::AbstractVector,
-               dm::AbstractVector,
-               x0::AbstractFloat,
-               y0::AbstractFloat,
-               y1::AbstractFloat,
-               ft::AbstractVector,
-               FT::AbstractVector,
-               mf::AbstractFloat,
-               bPt::AbstractVector,
-               bDt::AbstractVector,
-               bdt::AbstractVector)
-    init = [1.0,1.0]
-    objective = (p) -> SSw(p[1],p[2],
-                           Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    fit = Optim.optimize(objective,init)
-    pars = Optim.minimizer(fit)
-    wP = pars[1]
-    wd = pars[2]
-    return wP, wd
-end
-export get_w
-function SSw(wP::AbstractFloat,
-             wd::AbstractFloat,
-             Pm::AbstractVector,
-             Dm::AbstractVector,
-             dm::AbstractVector,
-             x0::AbstractFloat,
-             y0::AbstractFloat,
-             y1::AbstractFloat,
-             ft::AbstractVector,
-             FT::AbstractVector,
-             mf::AbstractFloat,
-             bPt::AbstractVector,
-             bDt::AbstractVector,
-             bdt::AbstractVector)
-    pred = predict(wP,wd,Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    dP2 = @. abs( (pred[:,"P"]-Pm)^2 - (pred[:,"D"]-Dm)^2 )
-    dD2 = @. abs( (pred[:,"D"]-Dm)^2 - (pred[:,"d"]-dm)^2 )
-    ss = @. dP2 + dD2
-    return sum(ss)
-end
-# glass
-function get_w(Dm::AbstractVector,
-               dm::AbstractVector,
-               y0::AbstractFloat,
-               mf::AbstractFloat,
-               bDt::AbstractVector,
-               bdt::AbstractVector)
-    init = [1.0]
-    objective = (p) -> SSw(p[1],Dm,dm,y0,mf,bDt,bdt)
-    fit = Optim.optimize(objective,init)
-    wd = Optim.minimizer(fit)
-    return wd[1]
-end
-function SSw(wd::AbstractFloat,
-             Dm::AbstractVector,
-             dm::AbstractVector,
-             y0::AbstractFloat,
-             mf::AbstractFloat,
-             bDt::AbstractVector,
-             bdt::AbstractVector)
-    S = w2S(wd,Dm,dm,y0,mf,bDt,bdt)
-    pred = predict(S,y0,mf,bDt,bdt)
-    ss = @. abs( (pred[:,"D"]-Dm)^2 - (pred[:,"d"]-dm)^2 )
-    return sum(ss)
-end
-
 # mineral
 function SS(par::AbstractVector,
+            wP::AbstractFloat,
+            wd::AbstractFloat,
             bP::AbstractVector,
             bD::AbstractVector,
             bd::AbstractVector,
@@ -134,11 +67,13 @@ function SS(par::AbstractVector,
         Pm,Dm,dm,ft,FT,mf,bPt,bDt,bdt =
             SSprep(bP,bD,bd,dat,channels,mfrac,drift,down;
                    PAcutoff=PAcutoff,adrift=adrift)
-        out += SS(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+        out += SS(wP,wd,Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     end
     return out
 end
-function SS(Pm::AbstractVector,
+function SS(wP::AbstractFloat,
+            wd::AbstractFloat,
+            Pm::AbstractVector,
             Dm::AbstractVector,
             dm::AbstractVector,
             x0::AbstractFloat,
@@ -150,12 +85,13 @@ function SS(Pm::AbstractVector,
             bPt::AbstractVector,
             bDt::AbstractVector,
             bdt::AbstractVector)
-    pred = predict(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    ss = @. (pred[:,"P"]-Pm)^2 + (pred[:,"D"]-Dm)^2 + (pred[:,"d"]-dm)^2
+    pred = predict(wP,wd,Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    ss = @. wP*(pred[:,"P"]-Pm)^2 + (pred[:,"D"]-Dm)^2 + wd*(pred[:,"d"]-dm)^2
     return sum(ss)
 end
 # glass
 function SS(par::AbstractVector,
+            wd::AbstractFloat,
             bD::AbstractVector,
             bd::AbstractVector,
             dats::AbstractDict,
@@ -170,20 +106,19 @@ function SS(par::AbstractVector,
         y0 = anchors[refmat]
         bDt = polyVal(bD,t)
         bdt = polyVal(bd,t)
-        out += SS(Dm,dm,y0,mf,bDt,bdt)
+        out += SS(wd,Dm,dm,y0,mf,bDt,bdt)
     end
     return out
 end
-function SS(Dm::AbstractVector,
+function SS(wd::AbstractFloat,
+            Dm::AbstractVector,
             dm::AbstractVector,
             y0::AbstractFloat,
             mf::AbstractFloat,
             bDt::AbstractVector,
             bdt::AbstractVector)
-    wd = get_w(Dm,dm,y0,mf,bDt,bdt)
-    S = w2S(wd,Dm,dm,y0,mf,bDt,bdt)
-    pred = predict(S,y0,mf,bDt,bdt)
-    ss = @. (pred[:,"D"]-Dm)^2 + (pred[:,"d"]-dm)^2
+    pred = predict(wd,Dm,dm,y0,mf,bDt,bdt)
+    ss = @. (pred[:,"D"]-Dm)^2 + wd*(pred[:,"d"]-dm)^2
     return sum(ss)
 end
 export SS
@@ -244,24 +179,9 @@ function predict(dat::AbstractDataFrame,
         SSprep(bP,bD,bd,dat,channels,
                pars.mfrac,pars.drift,pars.down;
                PAcutoff=pars.PAcutoff,adrift=pars.adrift)
-    return predict(Pm,Dm,dm,
+    return predict(pars.wP,pars.wd,Pm,Dm,dm,
                    anchor.x0,anchor.y0,anchor.y1,
                    ft,FT,mf,bPt,bDt,bdt)
-end
-function predict(Pm::AbstractVector,
-                 Dm::AbstractVector,
-                 dm::AbstractVector,
-                 x0::AbstractFloat,
-                 y0::AbstractFloat,
-                 y1::AbstractFloat,
-                 ft::AbstractVector,
-                 FT::AbstractVector,
-                 mf::AbstractFloat,
-                 bPt::AbstractVector,
-                 bDt::AbstractVector,
-                 bdt::AbstractVector)
-    wP, wd = get_w(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    pred = predict(wP,wd,Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
 end
 function predict(wP::AbstractFloat,
                  wd::AbstractFloat,
@@ -301,11 +221,14 @@ function predict(S::AbstractVector,
     return DataFrame(P=Pf,D=Df,d=df)
 end
 # glass
-function predict(S::AbstractVector,
+function predict(wd::AbstractFloat,
+                 Dm::AbstractVector,
+                 dm::AbstractVector,
                  y0::AbstractFloat,
                  mf::AbstractFloat,
                  bDt::AbstractVector,
                  bdt::AbstractVector)
+    S = w2S(wd,Dm,dm,y0,mf,bDt,bdt)
     y = @. y0
     z = @. 1+y
     Df = @. S*mf/z + bDt
@@ -318,7 +241,7 @@ function predict(samp::Sample,
                  blank::AbstractDataFrame,
                  elements::AbstractDataFrame,
                  internal::AbstractString;
-                 debug::Bool=debug)
+                 debug::Bool=false)
     if samp.group in collect(keys(_KJ["glass"]))
         dat = windowData(samp;signal=true)
         sig = getSignals(dat)
