@@ -222,7 +222,7 @@ function iterative_least_squares(init::AbstractVector,
     if isnothing(wd) wd = 1.0 end # only update if wd is nothing
     objective = (par) -> SS(par,wP,wd,bP,bD,bd,dats,channels,anchors,mf;
                             ndrift=ndrift,ndown=ndown,
-                            PAcutoff=PAcutoff,verbose=verbose)
+                            PAcutoff=PAcutoff)
 
     fit = Optim.optimize(objective,init)
 

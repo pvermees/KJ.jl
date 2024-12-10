@@ -43,6 +43,93 @@ function w2S(wd::AbstractFloat,
 end
 
 # mineral
+function residuals(par::AbstractVector,
+                   wP::AbstractFloat,
+                   wd::AbstractFloat,
+                   bP::AbstractVector,
+                   bD::AbstractVector,
+                   bd::AbstractVector,
+                   dats::AbstractDict,
+                   channels::AbstractDict,
+                   anchors::AbstractDict,
+                   mf::Union{AbstractFloat,Nothing};
+                   ndrift::Integer=1,
+                   ndown::Integer=0,
+                   PAcutoff=nothing)
+    drift = par[1:ndrift]
+    down = vcat(0.0,par[ndrift+1:ndrift+ndown])
+    mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
+    adrift = isnothing(PAcutoff) ? drift : par[end-ndrift+1:end]
+    dP = Float64[]
+    dD = Float64[]
+    dd = Float64[]
+    for (refmat,dat) in dats
+        (x0,y0,y1) = anchors[refmat]
+        Pm,Dm,dm,ft,FT,mf,bPt,bDt,bdt =
+            SSprep(bP,bD,bd,dat,channels,mfrac,drift,down;
+                   PAcutoff=PAcutoff,adrift=adrift)
+        dPnew, dDnew, ddnew = residuals(wP,wd,Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+        append!(dP,dPnew)
+        append!(dD,dDnew)
+        append!(dd,ddnew)
+    end
+    return dP,dD,dd
+end
+function residuals(wP::AbstractFloat,
+                   wd::AbstractFloat,
+                   Pm::AbstractVector,
+                   Dm::AbstractVector,
+                   dm::AbstractVector,
+                   x0::AbstractFloat,
+                   y0::AbstractFloat,
+                   y1::AbstractFloat,
+                   ft::AbstractVector,
+                   FT::AbstractVector,
+                   mf::AbstractFloat,
+                   bPt::AbstractVector,
+                   bDt::AbstractVector,
+                   bdt::AbstractVector)
+    pred = predict(wP,wd,Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    dP = pred[:,"P"] .- Pm
+    dD = pred[:,"D"] .- Dm
+    dd = pred[:,"d"] .- dm
+    return dP, dD, dd
+end
+# glass
+function residuals(par::AbstractVector,
+                   wd::AbstractFloat,
+                   bD::AbstractVector,
+                   bd::AbstractVector,
+                   dats::AbstractDict,
+                   channels::AbstractDict,
+                   anchors::AbstractDict)
+    mf = exp(par[1])
+    out = 0.0
+    dD = Float64[]
+    dd = Float64[]
+    for (refmat,dat) in dats
+        y0 = anchors[refmat]
+        Dm,dm,bDt,bdt = SSprep(bD,bd,dat,channels)
+        dDnew, ddnew = residuals(wd,Dm,dm,y0,mf,bDt,bdt)
+        append!(dD,dDnew)
+        append!(dd,ddnew)
+    end
+    return dD, dd
+end
+function residuals(wd::AbstractFloat,
+                   Dm::AbstractVector,
+                   dm::AbstractVector,
+                   y0::AbstractFloat,
+                   mf::AbstractFloat,
+                   bDt::AbstractVector,
+                   bdt::AbstractVector)
+    pred = predict(wd,Dm,dm,y0,mf,bDt,bdt)
+    dD = pred[:,"D"] .- Dm
+    dd = pred[:,"d"] .- dm
+    return dD, dd
+end
+
+# mineral
 function SS(par::AbstractVector,
             wP::AbstractFloat,
             wd::AbstractFloat,
@@ -55,21 +142,10 @@ function SS(par::AbstractVector,
             mf::Union{AbstractFloat,Nothing};
             ndrift::Integer=1,
             ndown::Integer=0,
-            PAcutoff=nothing,
-            verbose::Bool=false)
-    drift = par[1:ndrift]
-    down = vcat(0.0,par[ndrift+1:ndrift+ndown])
-    mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
-    adrift = isnothing(PAcutoff) ? drift : par[end-ndrift+1:end]
-    out = 0.0
-    for (refmat,dat) in dats
-        (x0,y0,y1) = anchors[refmat]
-        Pm,Dm,dm,ft,FT,mf,bPt,bDt,bdt =
-            SSprep(bP,bD,bd,dat,channels,mfrac,drift,down;
-                   PAcutoff=PAcutoff,adrift=adrift)
-        out += SS(wP,wd,Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    end
-    return out
+            PAcutoff=nothing)
+    dP, dD, dd = residuals(par,wP,wd,bP,bD,bd,dats,channels,anchors,mf;
+                           ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
+    return wP*sum(dP.^2) + sum(dD.^2) + wd*sum(dd.^2)
 end
 function SS(wP::AbstractFloat,
             wd::AbstractFloat,
@@ -85,9 +161,8 @@ function SS(wP::AbstractFloat,
             bPt::AbstractVector,
             bDt::AbstractVector,
             bdt::AbstractVector)
-    pred = predict(wP,wd,Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    ss = @. wP*(pred[:,"P"]-Pm)^2 + (pred[:,"D"]-Dm)^2 + wd*(pred[:,"d"]-dm)^2
-    return sum(ss)
+    dP, dD, dd = residuals(wP,wd,Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    return wP*sum(dP.^2) + sum(dD.^2) + wd*sum(dd.^2)
 end
 # glass
 function SS(par::AbstractVector,
@@ -97,14 +172,8 @@ function SS(par::AbstractVector,
             dats::AbstractDict,
             channels::AbstractDict,
             anchors::AbstractDict)
-    mf = exp(par[1])
-    out = 0.0
-    for (refmat,dat) in dats
-        y0 = anchors[refmat]
-        Dm,dm,bDt,bdt = SSprep(bD,bd,dat,channels)
-        out += SS(wd,Dm,dm,y0,mf,bDt,bdt)
-    end
-    return out
+    dD, dd = residuals(par,wd,bD,bd,dats,channels,anchors)
+    return sum(dD.^2) + wd*sum(dd.^2)
 end
 function SS(wd::AbstractFloat,
             Dm::AbstractVector,
@@ -113,9 +182,8 @@ function SS(wd::AbstractFloat,
             mf::AbstractFloat,
             bDt::AbstractVector,
             bdt::AbstractVector)
-    pred = predict(wd,Dm,dm,y0,mf,bDt,bdt)
-    ss = @. (pred[:,"D"]-Dm)^2 + wd*(pred[:,"d"]-dm)^2
-    return sum(ss)
+    dD, dd = residuals(wd,Dm,dm,y0,mf,bDt,bdt)
+    return sum(dD.^2) + wd*sum(dd.^2)
 end
 export SS
 
