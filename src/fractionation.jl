@@ -229,17 +229,15 @@ function iterative_least_squares(init::AbstractVector,
                             ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 
     fit = Optim.optimize(objective,init)
-    
-    for i in 1:5
-        pars = Optim.minimizer(fit)
-        dP, dD, dd = residuals(pars,wP,wd,bP,bD,bd,dats,channels,anchors,mf;
-                               ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
-        wP *= Statistics.var(dP)/Statistics.var(dD)
-        if update_wd
-            wd *= Statistics.var(dD)/Statistics.var(dd)
-        end
-        fit = Optim.optimize(objective,pars)
+    pars = Optim.minimizer(fit)
+    dP, dD, dd = residuals(pars,wP,wd,bP,bD,bd,dats,channels,anchors,mf;
+                           ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
+    wP *= Statistics.std(dP)/Statistics.std(dD)
+    if update_wd
+        wd *= Statistics.std(dd)/Statistics.std(dD)
     end
+    fit = Optim.optimize(objective,pars)
+    pars = Optim.minimizer(fit)
 
     if verbose
         println("Drift and downhole fractionation correction:\n")
@@ -273,14 +271,14 @@ function iterative_least_squares(init::AbstractVector,
 
     wd = 1.0    
     init = [0.0]
-
-    for i in 1:5
-        objective = (par) -> SS(par,wd,bD,bd,dats,channels,anchors)
-        fit = Optim.optimize(objective,init)
-        pars = Optim.minimizer(fit)
-        dD, dd = residuals(pars,wd,bD,bd,dats,channels,anchors)
-        wd *= Statistics.var(dD)/Statistics.var(dd)
-    end
+    objective = (par) -> SS(par,wd,bD,bd,dats,channels,anchors)
+    
+    fit = Optim.optimize(objective,init)
+    pars = Optim.minimizer(fit)
+    dD, dd = residuals(pars,wd,bD,bd,dats,channels,anchors)
+    wd *= Statistics.std(dd)/Statistics.std(dD)
+    fit = Optim.optimize(objective,init)
+    pars = Optim.minimizer(fit)
 
     if verbose
         println("Mass fractionation correction:\n")

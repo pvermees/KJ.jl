@@ -151,7 +151,7 @@ function fractionationtest(all=true)
     end
 end
 
-function RbSrTest(;show=true)
+function RbSrTest(show=true)
     myrun = load("data/Rb-Sr",instrument="Agilent")
     method = "Rb-Sr"
     channels = Dict("d"=>"Sr88 -> 104",
@@ -173,7 +173,7 @@ function RbSrTest(;show=true)
     return myrun, blank, fit, channels, standards, anchors
 end
 
-function KCaTest(;show=true)
+function KCaTest(show=true)
     myrun = load("data/K-Ca",instrument="Agilent")
     method = "K-Ca"
     channels = Dict("d"=>"Ca44 -> 63",
@@ -196,7 +196,7 @@ function KCaTest(;show=true)
 end
 
 function KCaPredicTest()
-    myrun, blank, fit, channels, standards, anchors = KCaTest(;show=false)
+    myrun, blank, fit, channels, standards, anchors = KCaTest(false)
     pred = predict(myrun[3],fit,blank,channels,anchors;debug=true)
 end
 
@@ -230,8 +230,8 @@ function histest(;LuHf=false,show=true)
         myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
         standard = "BP_gt"
     else
-        myrun,blk,fit,channels,standards,anchors = KCaTest(;show=false) # RbSrTest(false)
-        standard = "EntireCreek_bt" # "MDC_bt"
+        myrun,blk,fit,channels,standards,anchors = RbSrTest(false)
+        standard = "MDC_bt"
     end
     print(fit)
     pooled = pool(myrun;signal=true,group=standard)
@@ -393,7 +393,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -401,9 +401,9 @@ if true
     @testset "predict" begin predictest() end
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
-    @testset "predict mfrac" begin mfractest() end=#
-    @testset "fit fractionation" begin fractionationtest(true) end
-    #=@testset "Rb-Sr" begin RbSrTest() end
+    @testset "predict mfrac" begin mfractest() end
+    @testset "fit fractionation" begin fractionationtest(false) end
+    @testset "Rb-Sr" begin RbSrTest() end
     @testset "K-Ca" begin KCaTest() end
     @testset "K-Ca" begin KCaPredicTest() end
     @testset "hist" begin histest() end
@@ -418,7 +418,7 @@ if true
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end=#
+    @testset "TUI test" begin TUItest() end
 else
     TUI()
 end
