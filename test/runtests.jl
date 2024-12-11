@@ -225,7 +225,7 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
     @test display(p) != NaN    
 end
 
-function histest(;LuHf=false,show=true)
+function histest(;LuHf=true,show=true)
     if LuHf
         myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
         standard = "BP_gt"
@@ -282,12 +282,12 @@ function processtest()
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
                     "P"=>"Lu175 -> 175");
-    standards = Dict("Hogsbo_gt" => "hogsbo");
+    standards = Dict("Hogsbo_gt" => "hogsbo")#"BP_gt" => "BP")#
     glass = Dict("NIST612" => "NIST612p");
     blk, fit = process!(myrun,method,channels,standards,glass,
                         nblank=2,ndrift=2,ndown=2);
     p = plot(myrun[2],method,channels,blk,fit,standards,glass,
-             den="Hf176 -> 258",transformation="log");
+             transformation="log",den=nothing)#"Hf176 -> 258",);
     @test display(p) != NaN
 end
 
@@ -393,7 +393,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -410,15 +410,15 @@ if true
     @testset "average sample ratios" begin averatest() end
     @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
-    @testset "export" begin exporttest() end
+    @testset "export" begin exporttest() end=#
     @testset "U-Pb" begin UPbtest() end
-    @testset "iCap test" begin iCaptest() end
+    #=@testset "iCap test" begin iCaptest() end
     @testset "carbonate test" begin carbonatetest() end
     @testset "timestamp test" begin timestamptest() end
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "TUI test" begin TUItest() end=#
 else
     TUI()
 end

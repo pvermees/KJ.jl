@@ -230,6 +230,7 @@ function iterative_least_squares(init::AbstractVector,
 
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)
+
     dP, dD, dd = residuals(pars,wP,wd,bP,bD,bd,dats,channels,anchors,mf;
                            ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
     wP *= Statistics.std(dP)/Statistics.std(dD)
@@ -238,7 +239,6 @@ function iterative_least_squares(init::AbstractVector,
     end
     fit = Optim.optimize(objective,pars)
     pars = Optim.minimizer(fit)
-
     if verbose
         println("Drift and downhole fractionation correction:\n")
         println(fit)
@@ -275,6 +275,7 @@ function iterative_least_squares(init::AbstractVector,
     
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)
+
     dD, dd = residuals(pars,wd,bD,bd,dats,channels,anchors)
     wd *= Statistics.std(dd)/Statistics.std(dD)
     fit = Optim.optimize(objective,init)
