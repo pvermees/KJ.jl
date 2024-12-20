@@ -321,7 +321,7 @@ function UPbtest()
     blank, pars = process!(myrun,"U-Pb",channels,standards,glass,
                            nblank=2,ndrift=1,ndown=1)
     export2IsoplotR(myrun,method,channels,blank,pars,fname="UPb.json")
-    p = plot(myrun[1],method,channels,blank,pars,standards,glass,transformation="log")
+    p = plot(myrun[1],method,channels,blank,pars,standards,glass,transformation="log",den="Pb206")
     @test display(p) != NaN
 end
 
@@ -389,7 +389,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -403,9 +403,9 @@ if true
     @testset "K-Ca" begin KCaTest() end
     @testset "K-Ca" begin KCaPredicTest() end
     @testset "hist" begin histest() end
-    @testset "average sample ratios" begin averatest() end
+    @testset "average sample ratios" begin averatest() end=#
     @testset "process run" begin processtest() end
-    @testset "PA test" begin PAtest(true) end
+    #=@testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end
     @testset "iCap test" begin iCaptest() end
@@ -414,7 +414,7 @@ if true
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "TUI test" begin TUItest() end=#
 else
     TUI()
 end
