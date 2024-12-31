@@ -7,6 +7,12 @@ function loadtest(verbose=false)
     return myrun
 end
 
+function dwelltimetest(verbose=false)
+    myrun = loadtest()
+    dt = dwelltime(myrun)
+    println(dt)
+end
+
 function plottest()
     myrun = loadtest()
     p = plot(myrun[1],["Hf176 -> 258","Hf178 -> 260"])
@@ -389,8 +395,9 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
-    @testset "plot raw data" begin plottest() end
+    #=@testset "load" begin loadtest(true) end=#
+    @testset "calculate dwell times" begin dwelltimetest() end
+    #=@testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
@@ -403,9 +410,9 @@ if true
     @testset "K-Ca" begin KCaTest() end
     @testset "K-Ca" begin KCaPredicTest() end
     @testset "hist" begin histest() end
-    @testset "average sample ratios" begin averatest() end=#
+    @testset "average sample ratios" begin averatest() end
     @testset "process run" begin processtest() end
-    #=@testset "PA test" begin PAtest(true) end
+    @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end
     @testset "iCap test" begin iCaptest() end

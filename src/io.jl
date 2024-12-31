@@ -213,6 +213,22 @@ function parseData(data::AbstractDataFrame,
     return run
 end
 
+function dwelltime(run::Vector{Sample})
+    channels = getChannels(run)
+    out = Dict(channel => 1.0 for channel in channels)
+    for sample in run
+        for channel in channels
+            values = sort(unique(sample.dat[:,channel]))
+            if length(values)>1
+                dcps = minimum(values[2:end] .- values[1:end-1])
+                out[channel] = minimum([1/dcps,out[channel]])
+            end
+        end
+    end
+    return out
+end
+export dwelltime
+
 """
 export2IsoplotR
 
