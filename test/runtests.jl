@@ -7,6 +7,12 @@ function loadtest(verbose=false)
     return myrun
 end
 
+function dwelltimetest(verbose=false)
+    myrun = loadtest()
+    dt = dwelltime(myrun)
+    println(dt)
+end
+
 function plottest()
     myrun = loadtest()
     p = plot(myrun[1],["Hf176 -> 258","Hf178 -> 260"])
@@ -55,8 +61,6 @@ function fixedLuHf()
     fit = (drift=[3.87838],
            down=[0.0,0.06451],
            mfrac=-0.384042,
-           wP=1.0,
-           wd=1.0,
            PAcutoff=nothing,
            adrift=[3.87838])
     return myrun, blk, method, channels, glass, standards, fit
@@ -92,8 +96,6 @@ function partest(parname,paroffsetfact)
         adjusted_fit = (drift=[drift],
                         down=[0.0,down],
                         mfrac=mfrac,
-                        wP=fit.wP,
-                        wd=fit.wd,
                         PAcutoff=nothing,
                         adrift=[drift])
         anchors = getAnchors(method,standards,false)
@@ -128,9 +130,9 @@ function fractionationtest(all=true)
     setGroup!(myrun,standards)
     if all
         println("two separate steps: ")
-        mf, wd = fractionation(myrun,method,blk,channels,glass)
+        mf = fractionation(myrun,method,blk,channels,glass)
         fit = fractionation(myrun,method,blk,channels,standards,mf;
-                            wd=wd,ndrift=1,ndown=1)
+                            ndrift=1,ndown=1)
         println(fit)
         print("no glass: ")
         fit = fractionation(myrun,method,blk,channels,standards,nothing;
@@ -160,7 +162,7 @@ function RbSrTest(show=true)
     standards = Dict("MDC_bt" => "MDC -")
     setGroup!(myrun,standards)
     blank = fitBlanks(myrun,nblank=2)
-    fit = fractionation(myrun,method,blank,channels,standards,0.11937;
+    fit = fractionation(myrun,method,blank,channels,standards,1/0.11937;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     if show
@@ -225,7 +227,7 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
     @test display(p) != NaN    
 end
 
-function histest(;LuHf=true,show=true)
+function histest(;LuHf=false,show=true)
     if LuHf
         myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
         standard = "BP_gt"
@@ -325,7 +327,7 @@ function UPbtest()
     blank, pars = process!(myrun,"U-Pb",channels,standards,glass,
                            nblank=2,ndrift=1,ndown=1)
     export2IsoplotR(myrun,method,channels,blank,pars,fname="UPb.json")
-    p = plot(myrun[1],method,channels,blank,pars,standards,glass,transformation="log")
+    p = plot(myrun[1],method,channels,blank,pars,standards,glass,transformation="log",den="Pb206")
     @test display(p) != NaN
 end
 
@@ -393,8 +395,9 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
-    @testset "plot raw data" begin plottest() end
+    #=@testset "load" begin loadtest(true) end=#
+    @testset "calculate dwell times" begin dwelltimetest() end
+    #=@testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
@@ -410,9 +413,9 @@ if true
     @testset "average sample ratios" begin averatest() end
     @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
-    @testset "export" begin exporttest() end=#
+    @testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end
-    #=@testset "iCap test" begin iCaptest() end
+    @testset "iCap test" begin iCaptest() end
     @testset "carbonate test" begin carbonatetest() end
     @testset "timestamp test" begin timestamptest() end
     @testset "stoichiometry test" begin mineraltest() end

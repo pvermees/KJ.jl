@@ -73,11 +73,10 @@ function fractionation(run::Vector{Sample},
                        ndown::Integer=0,
                        PAcutoff=nothing,
                        verbose::Bool=false)
-    mf, wd = fractionation(run,method,blank,channels,glass;verbose=verbose)
-    out = fractionation(run,method,blank,channels,standards,mf;
-                        wd=wd,ndrift=ndrift,ndown=ndown,
-                        PAcutoff=PAcutoff,verbose=verbose)
-    return out
+    mf = fractionation(run,method,blank,channels,glass;verbose=verbose)
+    return fractionation(run,method,blank,channels,standards,mf;
+                         ndrift=ndrift,ndown=ndown,
+                         PAcutoff=PAcutoff,verbose=verbose)
 end
 # one-step isotope fractionation using mineral standards
 function fractionation(run::Vector{Sample},
@@ -86,14 +85,13 @@ function fractionation(run::Vector{Sample},
                        channels::AbstractDict,
                        standards::AbstractDict,
                        mf::Union{AbstractFloat,Nothing};
-                       wd=nothing,
                        ndrift::Integer=1,
                        ndown::Integer=0,
                        PAcutoff=nothing,
                        verbose::Bool=false)
     return fractionation(run,method,blank,channels,
                          collect(keys(standards)),mf;
-                         wd=wd,ndrift=ndrift,ndown=ndown,
+                         ndrift=ndrift,ndown=ndown,
                          PAcutoff=PAcutoff,verbose=verbose)
 end
 function fractionation(run::Vector{Sample},
@@ -102,7 +100,6 @@ function fractionation(run::Vector{Sample},
                        channels::AbstractDict,
                        standards::AbstractVector,
                        mf::Union{AbstractFloat,Nothing};
-                       wd=nothing,
                        ndrift::Integer=1,
                        ndown::Integer=0,
                        PAcutoff=nothing,
@@ -126,9 +123,9 @@ function fractionation(run::Vector{Sample},
     if isnothing(mf) init = vcat(init,0.0) end
     if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
 
-    return iterative_least_squares(init,bP,bD,bd,dats,channels,anchors,mf;
-                                   wd=wd,ndrift=ndrift,ndown=ndown,
-                                   PAcutoff=PAcutoff,verbose=verbose)
+    return least_squares(init,bP,bD,bd,dats,channels,anchors,mf;
+                         ndrift=ndrift,ndown=ndown,
+                         PAcutoff=PAcutoff,verbose=verbose)
 
 end
 # isotopic mass fractionation using glass
@@ -159,8 +156,8 @@ function fractionation(run::Vector{Sample},
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
 
-    return iterative_least_squares([0.0],bD,bd,dats,channels,anchors;
-                                   verbose=verbose)
+    return least_squares([0.0],bD,bd,dats,channels,anchors;
+                         verbose=verbose)
     
 end
 # for concentration measurements:
@@ -205,40 +202,26 @@ function fractionation(run::Vector{Sample},
 end
 export fractionation
 
-function iterative_least_squares(init::AbstractVector,
-                                 bP::AbstractVector,
-                                 bD::AbstractVector,
-                                 bd::AbstractVector,
-                                 dats::AbstractDict,
-                                 channels::AbstractDict,
-                                 anchors::AbstractDict,
-                                 mf::Union{AbstractFloat,Nothing};
-                                 wd=nothing,
-                                 ndrift::Integer=1,
-                                 ndown::Integer=0,
-                                 PAcutoff=nothing,
-                                 verbose::Bool=false)
-    if isnothing(wd)
-        update_wd = true
-        wd = 1.0
-    else
-        update_wd = false
-    end
-    wP = 1.0
-    objective = (par) -> SS(par,wP,wd,bP,bD,bd,dats,channels,anchors,mf;
+# minerals
+function least_squares(init::AbstractVector,
+                       bP::AbstractVector,
+                       bD::AbstractVector,
+                       bd::AbstractVector,
+                       dats::AbstractDict,
+                       channels::AbstractDict,
+                       anchors::AbstractDict,
+                       mf::Union{AbstractFloat,Nothing};
+                       ndrift::Integer=1,
+                       ndown::Integer=0,
+                       PAcutoff=nothing,
+                       verbose::Bool=false)
+    
+    objective = (par) -> SS(par,bP,bD,bd,dats,channels,anchors,mf;
                             ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)
 
-    dP, dD, dd = residuals(pars,wP,wd,bP,bD,bd,dats,channels,anchors,mf;
-                           ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
-    wP *= Statistics.std(dP)/Statistics.std(dD)
-    if update_wd
-        wd *= Statistics.std(dd)/Statistics.std(dD)
-    end
-    fit = Optim.optimize(objective,pars)
-    pars = Optim.minimizer(fit)
     if verbose
         println("Drift and downhole fractionation correction:\n")
         println(fit)
@@ -248,36 +231,30 @@ function iterative_least_squares(init::AbstractVector,
                 "convergence. Reduce the order of the polynomials or fix the " *
                 "mass fractionation and try again."
         end
+        if !fit.g_converged
+            @warn "Least squares algorithm did not converge."
+        end
     end
-    
-    pars = Optim.minimizer(fit)
-
     drift = pars[1:ndrift]
     down = vcat(0.0,pars[ndrift+1:ndrift+ndown])
     mfrac = isnothing(mf) ? pars[ndrift+ndown+1] : log(mf)
     adrift = isnothing(PAcutoff) ? drift : pars[end-ndrift+1:end]
 
-    return (drift=drift,down=down,mfrac=mfrac,wP=wP,wd=wd,
+    return (drift=drift,down=down,mfrac=mfrac,
             PAcutoff=PAcutoff,adrift=adrift)
-    
+
 end
-function iterative_least_squares(init::AbstractVector,
-                                 bD::AbstractVector,
-                                 bd::AbstractVector,
-                                 dats::AbstractDict,
-                                 channels::AbstractDict,
-                                 anchors::AbstractDict;
-                                 verbose::Bool=false)
+# glass
+function least_squares(init::AbstractVector,
+                       bD::AbstractVector,
+                       bd::AbstractVector,
+                       dats::AbstractDict,
+                       channels::AbstractDict,
+                       anchors::AbstractDict;
+                       verbose::Bool=false)
 
-    wd = 1.0    
-    init = [0.0]
-    objective = (par) -> SS(par,wd,bD,bd,dats,channels,anchors)
+    objective = (par) -> SS(par,bD,bd,dats,channels,anchors)
     
-    fit = Optim.optimize(objective,init)
-    pars = Optim.minimizer(fit)
-
-    dD, dd = residuals(pars,wd,bD,bd,dats,channels,anchors)
-    wd *= Statistics.std(dd)/Statistics.std(dD)
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)
 
@@ -288,6 +265,6 @@ function iterative_least_squares(init::AbstractVector,
     
     mfrac = Optim.minimizer(fit)[1]
         
-    return exp(mfrac), wd
+    return exp(mfrac)
     
 end
