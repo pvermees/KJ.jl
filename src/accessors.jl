@@ -83,7 +83,7 @@ end
 function setGroup!(run::Vector{Sample},prefix::AbstractString,refmat::AbstractString)
     snames = getSnames(run)
     selection = findall(contains(prefix),snames)
-    setGroup!(run::Vector{Sample},selection,refmat)
+    setGroup!(run,selection,refmat)
 end
 function setGroup!(run::Vector{Sample},standards::AbstractDict)
     for (refmat,prefix) in standards

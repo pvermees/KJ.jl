@@ -48,6 +48,7 @@ Fit the drift and down hole fractionation
 """
 # two-step isotope fractionation
 function fractionation(run::Vector{Sample},
+                       dt::AbstractDict,
                        method::AbstractString,
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
@@ -57,13 +58,14 @@ function fractionation(run::Vector{Sample},
                        ndown::Integer=0,
                        PAcutoff=nothing,
                        verbose::Bool=false)
-    return fractionation(run,method,blank,channels,
+    return fractionation(run,dt,method,blank,channels,
                          collect(keys(standards)),
                          collect(keys(glass));
                          ndrift=ndrift,ndown=ndown,
                          PAcutoff=PAcutoff,verbose=verbose)
 end
 function fractionation(run::Vector{Sample},
+                       dt::AbstractDict,
                        method::AbstractString,
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
@@ -73,13 +75,14 @@ function fractionation(run::Vector{Sample},
                        ndown::Integer=0,
                        PAcutoff=nothing,
                        verbose::Bool=false)
-    mf = fractionation(run,method,blank,channels,glass;verbose=verbose)
-    return fractionation(run,method,blank,channels,standards,mf;
+    mf = fractionation(run,dt,method,blank,channels,glass;verbose=verbose)
+    return fractionation(run,dt,method,blank,channels,standards,mf;
                          ndrift=ndrift,ndown=ndown,
                          PAcutoff=PAcutoff,verbose=verbose)
 end
 # one-step isotope fractionation using mineral standards
 function fractionation(run::Vector{Sample},
+                       dt::AbstractDict,
                        method::AbstractString,
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
@@ -89,12 +92,13 @@ function fractionation(run::Vector{Sample},
                        ndown::Integer=0,
                        PAcutoff=nothing,
                        verbose::Bool=false)
-    return fractionation(run,method,blank,channels,
+    return fractionation(run,dt,method,blank,channels,
                          collect(keys(standards)),mf;
                          ndrift=ndrift,ndown=ndown,
                          PAcutoff=PAcutoff,verbose=verbose)
 end
 function fractionation(run::Vector{Sample},
+                       dt::AbstractDict,
                        method::AbstractString,
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
@@ -123,23 +127,25 @@ function fractionation(run::Vector{Sample},
     if isnothing(mf) init = vcat(init,0.0) end
     if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
 
-    return least_squares(init,bP,bD,bd,dats,channels,anchors,mf;
+    return least_squares(init,bP,bD,bd,dats,dt,channels,anchors,mf;
                          ndrift=ndrift,ndown=ndown,
                          PAcutoff=PAcutoff,verbose=verbose)
 
 end
 # isotopic mass fractionation using glass
 function fractionation(run::Vector{Sample},
+                       dt::AbstractDict,
                        method::AbstractString,
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
                        glass::AbstractDict;
                        verbose::Bool=false)
-    return fractionation(run,method,blank,channels,
+    return fractionation(run,dt,method,blank,channels,
                          collect(keys(glass));
                          verbose=verbose)
 end
 function fractionation(run::Vector{Sample},
+                       dt::AbstractDict,
                        method::AbstractString,
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
@@ -156,7 +162,7 @@ function fractionation(run::Vector{Sample},
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
 
-    return least_squares([0.0],bD,bd,dats,channels,anchors;
+    return least_squares([0.0],bD,bd,dats,dt,channels,anchors;
                          verbose=verbose)
     
 end
@@ -208,6 +214,7 @@ function least_squares(init::AbstractVector,
                        bD::AbstractVector,
                        bd::AbstractVector,
                        dats::AbstractDict,
+                       dt::AbstractDict,
                        channels::AbstractDict,
                        anchors::AbstractDict,
                        mf::Union{AbstractFloat,Nothing};
@@ -216,7 +223,7 @@ function least_squares(init::AbstractVector,
                        PAcutoff=nothing,
                        verbose::Bool=false)
     
-    objective = (par) -> SS(par,bP,bD,bd,dats,channels,anchors,mf;
+    objective = (par) -> SS(par,bP,bD,bd,dats,dt,channels,anchors,mf;
                             ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 
     fit = Optim.optimize(objective,init)
@@ -249,11 +256,12 @@ function least_squares(init::AbstractVector,
                        bD::AbstractVector,
                        bd::AbstractVector,
                        dats::AbstractDict,
+                       dt::AbstractDict,
                        channels::AbstractDict,
                        anchors::AbstractDict;
                        verbose::Bool=false)
 
-    objective = (par) -> SS(par,bD,bd,dats,channels,anchors)
+    objective = (par) -> SS(par,bD,bd,dats,dt,channels,anchors)
     
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)

@@ -291,7 +291,8 @@ function rle(v::AbstractVector{T}) where T
     return (vals, lens)
 end
 
-function getOffset(df::AbstractDataFrame,transformation=nothing)
+function getOffset(df::AbstractDataFrame,
+                   transformation=nothing)
     colnames = names(df)
     nc = length(colnames)
     if isnothing(transformation)
@@ -313,6 +314,7 @@ function getOffset(df::AbstractDataFrame,transformation=nothing)
     return out
 end
 function getOffset(samp::Sample,
+                   dt::AbstractDict,
                    channels::AbstractDict,
                    blank::AbstractDataFrame,
                    pars::NamedTuple,
@@ -324,9 +326,10 @@ function getOffset(samp::Sample,
     yobs = formRatios(obs,num,den)
     offset_obs = getOffset(yobs,transformation)
     
-    pred = predict(samp,pars,blank,channels,anchors)
+    pred = predict(samp,dt,pars,blank,channels,anchors)
     prednames = [channels[i] for i in names(pred)]
     rename!(pred,prednames)
+    counts2cps!(pred,dt)
     ypred = formRatios(pred,num,den)
     offset_pred = getOffset(ypred,transformation)
     
@@ -445,4 +448,11 @@ function elements2concs(elements::AbstractDataFrame,
         out[!,col] = DataFrame(refconc)[:,element]
     end
     return out
+end
+
+function counts2cps!(cps::AbstractDataFrame,
+                     dt::AbstractDict)
+    for colname in names(cps)
+        cps[:,colname] ./= dt[colname]
+    end
 end

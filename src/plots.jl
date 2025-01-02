@@ -98,6 +98,7 @@ display(p)
 ```
 """
 function plot(samp::Sample,
+              dt::AbstractDict,
               method::AbstractString,
               channels::AbstractDict,
               blank::AbstractDataFrame,
@@ -115,7 +116,7 @@ function plot(samp::Sample,
     Sanchors = getAnchors(method,standards,false)
     Ganchors = getAnchors(method,glass,true)
     anchors = merge(Sanchors,Ganchors)
-    return plot(samp,channels,blank,pars,anchors;
+    return plot(samp,dt,channels,blank,pars,anchors;
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,
                 ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
@@ -123,6 +124,7 @@ function plot(samp::Sample,
                 titlefontsize=titlefontsize)
 end
 function plot(samp::Sample,
+              dt::AbstractDict,
               method::AbstractString,
               channels::AbstractDict,
               blank::AbstractDataFrame,
@@ -137,7 +139,7 @@ function plot(samp::Sample,
               legend=:topleft,
               show_title=true,
               titlefontsize=10)
-    return plot(samp,method,channels,blank,pars,
+    return plot(samp,dt,method,channels,blank,pars,
                 collect(keys(standards)),collect(keys(glass));
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,ms=ms,ma=ma,
@@ -177,6 +179,7 @@ function plot(samp::Sample;
                 titlefontsize=titlefontsize)
 end
 function plot(samp::Sample,
+              dt::AbstractDict,
               channels::AbstractDict,
               blank::AbstractDataFrame,
               pars::NamedTuple,
@@ -204,7 +207,7 @@ function plot(samp::Sample,
         
     else
 
-        offset = getOffset(samp,channels,blank,pars,anchors,transformation;
+        offset = getOffset(samp,dt,channels,blank,pars,anchors,transformation;
                            num=num,den=den)
 
         p = plot(samp,channels;
@@ -213,7 +216,7 @@ function plot(samp::Sample,
                  i=i,legend=legend,show_title=show_title,
                  titlefontsize=titlefontsize)
 
-        plotFitted!(p,samp,blank,pars,channels,anchors;
+        plotFitted!(p,samp,dt,blank,pars,channels,anchors;
                     num=num,den=den,transformation=transformation,
                     offset=offset,linecolor=linecol,linestyle=linestyle)
         
@@ -222,6 +225,7 @@ function plot(samp::Sample,
 end
 # concentrations
 function plot(samp::Sample,
+              dt::AbstractDict,
               blank::AbstractDataFrame,
               pars::AbstractVector,
               elements::AbstractDataFrame,
@@ -243,7 +247,7 @@ function plot(samp::Sample,
         
     else
 
-        offset = getOffset(samp,blank,pars,elements,internal,transformation;
+        offset = getOffset(samp,dt,blank,pars,elements,internal,transformation;
                            num=num,den=den)
 
         p = plot(samp;
@@ -252,7 +256,7 @@ function plot(samp::Sample,
                  i=i,legend=legend,show_title=show_title,
                  titlefontsize=titlefontsize)
 
-        plotFitted!(p,samp,blank,pars,elements,internal;
+        plotFitted!(p,samp,dt,blank,pars,elements,internal;
                      num=num,den=den,transformation=transformation,
                      offset=offset,linecolor=linecol,linestyle=linestyle)
         
@@ -260,6 +264,7 @@ function plot(samp::Sample,
     return p
 end
 function plot(samp::Sample,
+              dt::AbstractDict,
               blank::AbstractDataFrame,
               pars::AbstractVector,
               internal::AbstractString;
@@ -270,7 +275,7 @@ function plot(samp::Sample,
               linecol="black",linestyle=:solid,i=nothing,
               legend=:topleft,show_title=true,titlefontsize=10)
     elements = channels2elements(samp)
-    return plot(samp,blank,pars,elements,internal;
+    return plot(samp,dt,blank,pars,elements,internal;
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
                 linecol=linecol,linestyle=linestyle,i=i,
@@ -329,27 +334,31 @@ export plot
 
 function plotFitted!(p,
                      samp::Sample,
+                     dt::AbstractDict,
                      blank::AbstractDataFrame,
                      pars::NamedTuple,
                      channels::AbstractDict,
                      anchors::AbstractDict;
                      num=nothing,den=nothing,transformation=nothing,
                      offset::AbstractDict,linecolor="black",linestyle=:solid)
-    pred = predict(samp,pars,blank,channels,anchors)
+    pred = predict(samp,dt,pars,blank,channels,anchors)
     rename!(pred,[channels[i] for i in names(pred)])
+    counts2cps!(pred,dt)
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
 function plotFitted!(p,
                      samp::Sample,
+                     dt::AbstractDict,
                      blank::AbstractDataFrame,
                      pars::AbstractVector,
                      elements::AbstractDataFrame,
                      internal::AbstractString;
                      num=nothing,den=nothing,transformation=nothing,
                      offset::AbstractDict,linecolor="black",linestyle=:solid)
-    pred = predict(samp,pars,blank,elements,internal)
+    pred = predict(samp,dt,pars,blank,elements,internal)
+    counts2cps!(pred,dt)
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)

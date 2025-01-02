@@ -3,18 +3,13 @@ import Plots
 
 function loadtest(verbose=false)
     myrun = load("data/Lu-Hf";instrument="Agilent")
-    if verbose summarise(myrun;verbose=true,n=5) end
-    return myrun
-end
-
-function dwelltimetest(verbose=false)
-    myrun = loadtest()
     dt = dwelltime(myrun)
-    println(dt)
+    if verbose summarise(myrun;verbose=true,n=5) end
+    return myrun, dt
 end
 
 function plottest()
-    myrun = loadtest()
+    myrun, dt = loadtest()
     p = plot(myrun[1],["Hf176 -> 258","Hf178 -> 260"])
     @test display(p) != NaN
     p = plot(myrun[1],["Hf176 -> 258","Hf178 -> 260"], den="Hf178 -> 260")
@@ -22,7 +17,7 @@ function plottest()
 end
 
 function windowtest()
-    myrun = loadtest()
+    myrun, dt = loadtest()
     i = 2
     setSwin!(myrun[i],[(70,90),(100,140)])
     setBwin!(myrun[i],[(0,22)];seconds=true)
@@ -32,13 +27,13 @@ function windowtest()
 end
 
 function blanktest()
-    myrun = loadtest()
+    myrun, dt = loadtest()
     blk = fitBlanks(myrun;nblank=2)
-    return myrun, blk
+    return myrun, dt, blk
 end
 
 function standardtest(verbose=false)
-    myrun, blk = blanktest()
+    myrun, dt, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     anchors = getAnchors("Lu-Hf",standards)
@@ -49,7 +44,7 @@ function standardtest(verbose=false)
 end
 
 function fixedLuHf()
-    myrun, blk = blanktest()
+    myrun, dt, blk = blanktest()
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
                     "D" => "Hf176 -> 258",
@@ -58,22 +53,22 @@ function fixedLuHf()
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[3.87838],
-           down=[0.0,0.06451],
-           mfrac=-0.384042,
+    fit = (drift=[0.0],
+           down=[0.0,0.0],
+           mfrac=0.0,
            PAcutoff=nothing,
-           adrift=[3.87838])
-    return myrun, blk, method, channels, glass, standards, fit
+           adrift=[0.0])
+    return myrun, dt, blk, method, channels, glass, standards, fit
 end
 
 function predictest()
-    myrun, blk, method, channels, glass, standards, fit = fixedLuHf()
+    myrun, dt, blk, method, channels, glass, standards, fit = fixedLuHf()
     samp = myrun[105]
     if samp.group == "sample"
         println("Not a standard")
     else
-        pred = predict(samp,method,fit,blk,channels,standards,glass)
-        p = plot(samp,method,channels,blk,fit,standards,glass;
+        pred = predict(samp,dt,method,fit,blk,channels,standards,glass)
+        p = plot(samp,dt,method,channels,blk,fit,standards,glass;
                  transformation="log")
         @test display(p) != NaN
     end
@@ -395,14 +390,13 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end=#
-    @testset "calculate dwell times" begin dwelltimetest() end
-    #=@testset "plot raw data" begin plottest() end
+    @testset "load" begin loadtest(true) end
+    @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
-    @testset "predict drift" begin driftest() end
+    #=@testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
     @testset "predict mfrac" begin mfractest() end
     @testset "fit fractionation" begin fractionationtest(false) end
