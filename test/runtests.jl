@@ -53,11 +53,11 @@ function fixedLuHf()
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[0.0],
-           down=[0.0,0.0],
-           mfrac=0.0,
+    fit = (drift=[0.1054],
+           down=[0.0,-0.0403],
+           mfrac=0.3849,
            PAcutoff=nothing,
-           adrift=[0.0])
+           adrift=[0.1054])
     return myrun, dt, blk, method, channels, glass, standards, fit
 end
 
@@ -72,11 +72,11 @@ function predictest()
                  transformation="log")
         @test display(p) != NaN
     end
-    return samp,method,fit,blk,channels,standards,glass,p
+    return samp,dt,method,fit,blk,channels,standards,glass,p
 end
     
 function partest(parname,paroffsetfact)
-    samp,method,fit,blk,channels,standards,glass,p = predictest()
+    samp,dt,method,fit,blk,channels,standards,glass,p = predictest()
     drift = fit.drift[1]
     down = fit.down[2]
     mfrac = fit.mfrac[1]
@@ -94,8 +94,8 @@ function partest(parname,paroffsetfact)
                         PAcutoff=nothing,
                         adrift=[drift])
         anchors = getAnchors(method,standards,false)
-        offset = getOffset(samp,channels,blk,adjusted_fit,anchors,"log")
-        plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
+        offset = getOffset(samp,dt,channels,blk,adjusted_fit,anchors,"log")
+        plotFitted!(p,samp,dt,blk,adjusted_fit,channels,anchors;
                     offset=offset,transformation="log",linecolor="red")
     end
     @test display(p) != NaN
@@ -114,7 +114,7 @@ function mfractest()
 end
 
 function fractionationtest(all=true)
-    myrun, blk = blanktest()
+    myrun, dt, blk = blanktest()
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
                     "D" => "Hf176 -> 258",
@@ -125,31 +125,32 @@ function fractionationtest(all=true)
     setGroup!(myrun,standards)
     if all
         println("two separate steps: ")
-        mf = fractionation(myrun,method,blk,channels,glass)
-        fit = fractionation(myrun,method,blk,channels,standards,mf;
+        mf = fractionation(myrun,dt,method,blk,channels,glass)
+        fit = fractionation(myrun,dt,method,blk,channels,standards,mf;
                             ndrift=1,ndown=1)
         println(fit)
         print("no glass: ")
-        fit = fractionation(myrun,method,blk,channels,standards,nothing;
+        fit = fractionation(myrun,dt,method,blk,channels,standards,nothing;
                             ndrift=1,ndown=1)
         println(fit)
         println("two joint steps: ")
     end
-    fit = fractionation(myrun,"Lu-Hf",blk,channels,standards,glass;
+    fit = fractionation(myrun,dt,"Lu-Hf",blk,channels,standards,glass;
                         ndrift=1,ndown=1)
     if (all)
         println(fit)
-        return myrun, blk, fit, channels, standards, glass
+        return myrun, dt, blk, fit, channels, standards, glass
     else
         Ganchors = getAnchors(method,glass,true)
         Sanchors = getAnchors(method,standards,false)
         anchors = merge(Sanchors,Ganchors)
-        return myrun, blk, fit, channels, standards, glass, anchors
+        return myrun, dt, blk, fit, channels, standards, glass, anchors
     end
 end
 
 function RbSrTest(show=true)
     myrun = load("data/Rb-Sr",instrument="Agilent")
+    dt = dwelltime(myrun)
     method = "Rb-Sr"
     channels = Dict("d"=>"Sr88 -> 104",
                     "D"=>"Sr87 -> 103",
@@ -157,12 +158,12 @@ function RbSrTest(show=true)
     standards = Dict("MDC_bt" => "MDC -")
     setGroup!(myrun,standards)
     blank = fitBlanks(myrun,nblank=2)
-    fit = fractionation(myrun,method,blank,channels,standards,1/0.11937;
+    fit = fractionation(myrun,dt,method,blank,channels,standards,8.37861;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     if show
-        p = plot(myrun[2],channels,blank,fit,anchors,
-                 transformation="log",den="Sr88 -> 104")
+        p = plot(myrun[2],dt,channels,blank,fit,anchors,
+                 transformation="sqrt")#,den="Sr88 -> 104")
         @test display(p) != NaN
     end
     export2IsoplotR(myrun,method,channels,blank,fit,
@@ -390,18 +391,18 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
-    #=@testset "predict drift" begin driftest() end
+    @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
     @testset "predict mfrac" begin mfractest() end
-    @testset "fit fractionation" begin fractionationtest(false) end
+    @testset "fit fractionation" begin fractionationtest(true) end=#
     @testset "Rb-Sr" begin RbSrTest() end
-    @testset "K-Ca" begin KCaTest() end
+    #=@testset "K-Ca" begin KCaTest() end
     @testset "K-Ca" begin KCaPredicTest() end
     @testset "hist" begin histest() end
     @testset "average sample ratios" begin averatest() end

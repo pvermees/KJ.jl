@@ -127,9 +127,9 @@ function fractionation(run::Vector{Sample},
     if isnothing(mf) init = vcat(init,0.0) end
     if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
 
-    return least_squares(init,bP,bD,bd,dats,dt,channels,anchors,mf;
-                         ndrift=ndrift,ndown=ndown,
-                         PAcutoff=PAcutoff,verbose=verbose)
+    return LLfit(init,bP,bD,bd,dats,dt,channels,anchors,mf;
+                 ndrift=ndrift,ndown=ndown,
+                 PAcutoff=PAcutoff,verbose=verbose)
 
 end
 # isotopic mass fractionation using glass
@@ -162,8 +162,8 @@ function fractionation(run::Vector{Sample},
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
 
-    return least_squares([0.0],bD,bd,dats,dt,channels,anchors;
-                         verbose=verbose)
+    return LLfit([0.0],bD,bd,dats,dt,channels,anchors;
+                 verbose=verbose)
     
 end
 # for concentration measurements:
@@ -209,21 +209,21 @@ end
 export fractionation
 
 # minerals
-function least_squares(init::AbstractVector,
-                       bP::AbstractVector,
-                       bD::AbstractVector,
-                       bd::AbstractVector,
-                       dats::AbstractDict,
-                       dt::AbstractDict,
-                       channels::AbstractDict,
-                       anchors::AbstractDict,
-                       mf::Union{AbstractFloat,Nothing};
-                       ndrift::Integer=1,
-                       ndown::Integer=0,
-                       PAcutoff=nothing,
-                       verbose::Bool=false)
+function LLfit(init::AbstractVector,
+               bP::AbstractVector,
+               bD::AbstractVector,
+               bd::AbstractVector,
+               dats::AbstractDict,
+               dt::AbstractDict,
+               channels::AbstractDict,
+               anchors::AbstractDict,
+               mf::Union{AbstractFloat,Nothing};
+               ndrift::Integer=1,
+               ndown::Integer=0,
+               PAcutoff=nothing,
+               verbose::Bool=false)
     
-    objective = (par) -> SS(par,bP,bD,bd,dats,dt,channels,anchors,mf;
+    objective = (par) -> LL(par,bP,bD,bd,dats,dt,channels,anchors,mf;
                             ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 
     fit = Optim.optimize(objective,init)
@@ -252,16 +252,16 @@ function least_squares(init::AbstractVector,
 
 end
 # glass
-function least_squares(init::AbstractVector,
-                       bD::AbstractVector,
-                       bd::AbstractVector,
-                       dats::AbstractDict,
-                       dt::AbstractDict,
-                       channels::AbstractDict,
-                       anchors::AbstractDict;
-                       verbose::Bool=false)
+function LLfit(init::AbstractVector,
+               bD::AbstractVector,
+               bd::AbstractVector,
+               dats::AbstractDict,
+               dt::AbstractDict,
+               channels::AbstractDict,
+               anchors::AbstractDict;
+               verbose::Bool=false)
 
-    objective = (par) -> SS(par,bD,bd,dats,dt,channels,anchors)
+    objective = (par) -> LL(par,bD,bd,dats,dt,channels,anchors)
     
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)
