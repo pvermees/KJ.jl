@@ -109,7 +109,7 @@ function LL(Pm::AbstractVector,
             bDt::AbstractVector,
             bdt::AbstractVector)
     dP, dD, dd = residuals(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    return sum(@. log((Pm)*(dm)*(Dm)) + (dP^2)/Pm + (dd^2)/dm + (dD^2)/Dm )/2
+    return sum(@. log(Pm*dm*Dm) + (dP^2)/Pm + (dd^2)/dm + (dD^2)/Dm )/2
 end
 # glass
 function LL(par::AbstractVector,
@@ -135,7 +135,7 @@ function LL(Dm::AbstractVector,
             bDt::AbstractVector,
             bdt::AbstractVector)
     dD, dd = residuals(Dm,dm,y0,mf,bDt,bdt)
-    return sum(@. log((dm)*(Dm)) + (dd^2)/dm + (dD^2)/Dm )/2
+    return sum(@. log(dm*Dm) + (dd^2)/dm + (dD^2)/Dm )/2
 end
 export LL
 
@@ -271,6 +271,7 @@ function predict(Dm::AbstractVector,
 end
 # concentrations
 function predict(samp::Sample,
+                 dt::AbstractDict,
                  ef::AbstractVector,
                  blank::AbstractDataFrame,
                  elements::AbstractDataFrame,

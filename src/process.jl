@@ -51,28 +51,30 @@ blk, fit = process!(myrun,method,channels,standards,glass)
 ```
 """
 function process!(run::Vector{Sample},
+                  dt::AbstractDict,
                   method::AbstractString,
                   channels::AbstractDict,
                   standards::AbstractDict,
                   glass::AbstractDict;
                   nblank::Integer=2,ndrift::Integer=1,ndown::Integer=1,
                   PAcutoff=nothing,verbose::Bool=false)
-    blank = fitBlanks(run;nblank=nblank)
+    blank = fitBlanks(run,dt;nblank=nblank)
     setGroup!(run,glass)
     setGroup!(run,standards)
-    fit = fractionation(run,method,blank,channels,standards,glass;
+    fit = fractionation(run,dt,method,blank,channels,standards,glass;
                         ndrift=ndrift,ndown=ndown,
                         PAcutoff=PAcutoff,verbose=verbose)
     return blank, fit
 end
 # concentrations:
 function process!(run::Vector{Sample},
+                  dt::AbstractDict,
                   internal::Tuple,
                   glass::AbstractDict;
                   nblank::Integer=2)
-    blank = fitBlanks(run;nblank=nblank)
+    blank = fitBlanks(run,dt;nblank=nblank)
     setGroup!(run,glass)
-    fit = fractionation(run,blank,internal,glass)
+    fit = fractionation(run,dt,blank,internal,glass)
     return blank, fit
 end
 export process!
@@ -81,13 +83,16 @@ export process!
 fitBlanks(run::Vector{Sample};nblank=2):
 Fit a dataframe of blank parameters to a run of multiple samples
 """
-function fitBlanks(run::Vector{Sample};nblank=2)
+function fitBlanks(run::Vector{Sample},
+                   dt::AbstractDict;
+                   nblank=2)
     blk = pool(run;blank=true)
     channels = getChannels(run)
     nc = length(channels)
     bpar = DataFrame(zeros(nblank,nc),channels)
     for channel in channels
-        bpar[:,channel] = polyFit(blk.t,blk[:,channel],nblank)
+        counts = blk[:,channel] .* dt[channel]
+        bpar[:,channel] = polyFit(blk.t,counts,nblank)
     end
     return bpar
 end
