@@ -43,7 +43,9 @@ function formRatios(df::AbstractDataFrame,
 end
 
 # polynomial fit with logarithmic coefficients
-function polyFit(t::AbstractVector,y::AbstractVector,n::Integer)
+function polyFit(t::AbstractVector,
+                 y::AbstractVector,
+                 n::Integer)
     
     function misfit(par)
         pred = polyVal(par,t)
@@ -57,7 +59,8 @@ function polyFit(t::AbstractVector,y::AbstractVector,n::Integer)
 
 end
 
-function polyVal(p::AbstractVector,t::AbstractVector)
+function polyVal(p::AbstractVector,
+                 t::AbstractVector)
     np = length(p)
     nt = length(t)
     out = fill(0.0,nt)
@@ -68,7 +71,8 @@ function polyVal(p::AbstractVector,t::AbstractVector)
     end
     out
 end
-function polyVal(p::AbstractDataFrame,t::AbstractVector)
+function polyVal(p::AbstractDataFrame,
+                 t::AbstractVector)
     nc = size(p,2)
     nr = length(t)
     out = DataFrame(fill(0.0,(nr,nc)),names(p))
@@ -79,7 +83,8 @@ function polyVal(p::AbstractDataFrame,t::AbstractVector)
 end
 export polyVal
 
-function polyFac(p::AbstractVector,t::AbstractVector)
+function polyFac(p::AbstractVector,
+                 t::AbstractVector)
     np = length(p)
     nt = length(t)
     if np>0
@@ -291,7 +296,8 @@ function rle(v::AbstractVector{T}) where T
     return (vals, lens)
 end
 
-function getOffset(df::AbstractDataFrame,transformation=nothing)
+function getOffset(df::AbstractDataFrame,
+                   transformation=nothing)
     colnames = names(df)
     nc = length(colnames)
     if isnothing(transformation)
@@ -313,6 +319,7 @@ function getOffset(df::AbstractDataFrame,transformation=nothing)
     return out
 end
 function getOffset(samp::Sample,
+                   dt::AbstractDict,
                    channels::AbstractDict,
                    blank::AbstractDataFrame,
                    pars::NamedTuple,
@@ -324,7 +331,7 @@ function getOffset(samp::Sample,
     yobs = formRatios(obs,num,den)
     offset_obs = getOffset(yobs,transformation)
     
-    pred = predict(samp,pars,blank,channels,anchors)
+    pred = predict(samp,dt,pars,blank,channels,anchors)
     prednames = [channels[i] for i in names(pred)]
     rename!(pred,prednames)
     ypred = formRatios(pred,num,den)
@@ -368,7 +375,9 @@ function getOffset(samp::Sample,
 end
 export getOffset
     
-function transformeer(df::AbstractDataFrame;transformation=nothing,offset::AbstractDict)
+function transformeer(df::AbstractDataFrame;
+                      transformation=nothing,
+                      offset::AbstractDict)
     if isnothing(transformation)
         out = df
     else
@@ -446,3 +455,12 @@ function elements2concs(elements::AbstractDataFrame,
     end
     return out
 end
+
+function var_cps(cps::AbstractVector,
+                 dt::AbstractFloat,
+                 dead::AbstractFloat)
+    out = @. (cps/dt)*(1+cps*dead)/(1-cps*dead)
+    out[cps .<= 0.0] .= 1.0/dt^2
+    return out
+end
+export var_cps

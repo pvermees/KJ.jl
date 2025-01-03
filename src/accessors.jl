@@ -65,7 +65,8 @@ function getGroups(run::Vector{Sample})
 end
 export getGroups
 
-function getAttr(run::Vector{Sample},attr::Symbol)
+function getAttr(run::Vector{Sample},
+                 attr::Symbol)
     ns = length(run)
     first = getproperty(run[1],attr)
     out = fill(first,ns)
@@ -75,17 +76,22 @@ function getAttr(run::Vector{Sample},attr::Symbol)
     return out
 end
 
-function setGroup!(run::Vector{Sample},selection::Vector{Int},refmat::AbstractString)
+function setGroup!(run::Vector{Sample},
+                   selection::Vector{Int},
+                   refmat::AbstractString)
     for i in selection
         run[i].group = refmat
     end
 end
-function setGroup!(run::Vector{Sample},prefix::AbstractString,refmat::AbstractString)
+function setGroup!(run::Vector{Sample},
+                   prefix::AbstractString,
+                   refmat::AbstractString)
     snames = getSnames(run)
     selection = findall(contains(prefix),snames)
-    setGroup!(run::Vector{Sample},selection,refmat)
+    setGroup!(run,selection,refmat)
 end
-function setGroup!(run::Vector{Sample},standards::AbstractDict)
+function setGroup!(run::Vector{Sample},
+                   standards::AbstractDict)
     for (refmat,prefix) in standards
         setGroup!(run,prefix,refmat)
     end

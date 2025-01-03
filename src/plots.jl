@@ -6,6 +6,7 @@ Plot selected channels for a sample or a vector of samples
 # Methods
 
 - `plot(samp::Sample,
+        dt::AbstractDict,
         method::AbstractString,
         channels::Union{AbstractVector,AbstractDict},
         blank::AbstractDataFrame,
@@ -35,6 +36,7 @@ Plot selected channels for a sample or a vector of samples
         legend=:topleft,show_title=true,
         titlefontsize=10)`
 - `plot(samp::Sample,
+        dt::AbstractDict,
         channels::AbstractDict,
         blank::AbstractDataFrame,
         pars::NamedTuple,
@@ -77,6 +79,7 @@ Plot selected channels for a sample or a vector of samples
               or a vector of channel names (e.g., the keys of a channels Dict)
 - `blank`: the output of fitBlanks()p
 - `pars`: the output of fractionation() or process!()
+- `dt`: the dwell times (in seconds) of the mass channels
 - `standards`: dictionary of the type Dict("prefix" => "mineral standard")
 - `glass`: dictionary of the type Dict("prefix" => "reference glass")
 - `num`: optional vector of name of the data column to use as the numerator
@@ -98,6 +101,7 @@ display(p)
 ```
 """
 function plot(samp::Sample,
+              dt::AbstractDict,
               method::AbstractString,
               channels::AbstractDict,
               blank::AbstractDataFrame,
@@ -115,7 +119,7 @@ function plot(samp::Sample,
     Sanchors = getAnchors(method,standards,false)
     Ganchors = getAnchors(method,glass,true)
     anchors = merge(Sanchors,Ganchors)
-    return plot(samp,channels,blank,pars,anchors;
+    return plot(samp,dt,channels,blank,pars,anchors;
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,
                 ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
@@ -123,6 +127,7 @@ function plot(samp::Sample,
                 titlefontsize=titlefontsize)
 end
 function plot(samp::Sample,
+              dt::AbstractDict,
               method::AbstractString,
               channels::AbstractDict,
               blank::AbstractDataFrame,
@@ -137,7 +142,7 @@ function plot(samp::Sample,
               legend=:topleft,
               show_title=true,
               titlefontsize=10)
-    return plot(samp,method,channels,blank,pars,
+    return plot(samp,dt,method,channels,blank,pars,
                 collect(keys(standards)),collect(keys(glass));
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,ms=ms,ma=ma,
@@ -177,6 +182,7 @@ function plot(samp::Sample;
                 titlefontsize=titlefontsize)
 end
 function plot(samp::Sample,
+              dt::AbstractDict,
               channels::AbstractDict,
               blank::AbstractDataFrame,
               pars::NamedTuple,
@@ -204,7 +210,7 @@ function plot(samp::Sample,
         
     else
 
-        offset = getOffset(samp,channels,blank,pars,anchors,transformation;
+        offset = getOffset(samp,dt,channels,blank,pars,anchors,transformation;
                            num=num,den=den)
 
         p = plot(samp,channels;
@@ -213,7 +219,7 @@ function plot(samp::Sample,
                  i=i,legend=legend,show_title=show_title,
                  titlefontsize=titlefontsize)
 
-        plotFitted!(p,samp,blank,pars,channels,anchors;
+        plotFitted!(p,samp,dt,blank,pars,channels,anchors;
                     num=num,den=den,transformation=transformation,
                     offset=offset,linecolor=linecol,linestyle=linestyle)
         
@@ -327,20 +333,23 @@ function plot(samp::Sample,
 end
 export plot
 
+# minerals
 function plotFitted!(p,
                      samp::Sample,
+                     dt::AbstractDict,
                      blank::AbstractDataFrame,
                      pars::NamedTuple,
                      channels::AbstractDict,
                      anchors::AbstractDict;
                      num=nothing,den=nothing,transformation=nothing,
                      offset::AbstractDict,linecolor="black",linestyle=:solid)
-    pred = predict(samp,pars,blank,channels,anchors)
+    pred = predict(samp,dt,pars,blank,channels,anchors)
     rename!(pred,[channels[i] for i in names(pred)])
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
+# concentrations
 function plotFitted!(p,
                      samp::Sample,
                      blank::AbstractDataFrame,
@@ -354,6 +363,7 @@ function plotFitted!(p,
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
+# helper
 function plotFitted!(p,
                      samp::Sample,
                      pred::AbstractDataFrame;

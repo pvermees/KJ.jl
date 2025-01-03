@@ -28,7 +28,8 @@ end
 function blanktest()
     myrun = loadtest()
     blk = fitBlanks(myrun;nblank=2)
-    return myrun, blk
+    dt = dwelltime(myrun)
+    return myrun, dt, blk
 end
 
 function standardtest(verbose=false)
@@ -42,8 +43,8 @@ function standardtest(verbose=false)
     end
 end
 
-function predictest()
-    myrun, blk = blanktest()
+function fixedLuHf()
+    myrun, dt, blk = blanktest()
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
                     "D" => "Hf176 -> 258",
@@ -52,24 +53,30 @@ function predictest()
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[3.889],
-           down=[0.0,0.03],
-           mfrac=-0.384094,
+    fit = (drift=[-3.9225],
+           down=[0.0,0.03362],
+           mfrac=0.38426,
            PAcutoff=nothing,
-           adrift=[3.889])
+           adrift=[-3.9225])
+    return myrun, dt, blk, method, channels, glass, standards, fit
+end
+
+function predictest()
+    myrun, dt, blk, method, channels, glass, standards, fit = fixedLuHf()
     samp = myrun[105]
     if samp.group == "sample"
         println("Not a standard")
     else
-        pred = predict(samp,method,fit,blk,channels,standards,glass)
-        p = plot(samp,method,channels,blk,fit,standards,glass;transformation="log")
+        pred = predict(samp,dt,method,fit,blk,channels,standards,glass)
+        p = plot(samp,dt,method,channels,blk,fit,standards,glass;
+                 transformation="log")
         @test display(p) != NaN
     end
-    return samp,method,fit,blk,channels,standards,glass,p
+    return samp,dt,method,fit,blk,channels,standards,glass,p
 end
-
+    
 function partest(parname,paroffsetfact)
-    samp,method,fit,blk,channels,standards,glass,p = predictest()
+    samp,dt,method,fit,blk,channels,standards,glass,p = predictest()
     drift = fit.drift[1]
     down = fit.down[2]
     mfrac = fit.mfrac[1]
@@ -87,8 +94,8 @@ function partest(parname,paroffsetfact)
                         PAcutoff=nothing,
                         adrift=[drift])
         anchors = getAnchors(method,standards,false)
-        offset = getOffset(samp,channels,blk,adjusted_fit,anchors,"log")
-        plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
+        offset = getOffset(samp,dt,channels,blk,adjusted_fit,anchors,"log")
+        plotFitted!(p,samp,dt,blk,adjusted_fit,channels,anchors;
                     offset=offset,transformation="log",linecolor="red")
     end
     @test display(p) != NaN
@@ -107,7 +114,7 @@ function mfractest()
 end
 
 function fractionationtest(all=true)
-    myrun, blk = blanktest()
+    myrun, dt, blk = blanktest()
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
                     "D" => "Hf176 -> 258",
@@ -117,31 +124,31 @@ function fractionationtest(all=true)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     if all
-        print("two separate steps: ")
-        mf = fractionation(myrun,method,blk,channels,glass)
-        fit = fractionation(myrun,method,blk,channels,standards,mf;
+        println("two separate steps: ")
+        mf = fractionation(myrun,dt,method,blk,channels,glass)
+        fit = fractionation(myrun,dt,method,blk,channels,standards,mf;
                             ndrift=1,ndown=1)
         println(fit)
         print("no glass: ")
-        fit = fractionation(myrun,method,blk,channels,standards,nothing;
+        fit = fractionation(myrun,dt,method,blk,channels,standards,nothing;
                             ndrift=1,ndown=1)
         println(fit)
-        print("two joint steps: ")
+        println("two joint steps: ")
     end
-    fit = fractionation(myrun,"Lu-Hf",blk,channels,standards,glass;
+    fit = fractionation(myrun,dt,"Lu-Hf",blk,channels,standards,glass;
                         ndrift=1,ndown=1)
     if (all)
         println(fit)
-        return myrun, blk, fit, channels, standards, glass
+        return myrun, dt, blk, fit, channels, standards, glass
     else
         Ganchors = getAnchors(method,glass,true)
         Sanchors = getAnchors(method,standards,false)
         anchors = merge(Sanchors,Ganchors)
-        return myrun, blk, fit, channels, standards, glass, anchors
+        return myrun, dt, blk, fit, channels, standards, glass, anchors
     end
 end
 
-function RbSrTest(;show=true)
+function RbSrTest(show=true)
     myrun = load("data/Rb-Sr",instrument="Agilent")
     method = "Rb-Sr"
     channels = Dict("d"=>"Sr88 -> 104",
@@ -149,21 +156,22 @@ function RbSrTest(;show=true)
                     "P"=>"Rb85 -> 85")
     standards = Dict("MDC_bt" => "MDC -")
     setGroup!(myrun,standards)
-    blank = fitBlanks(myrun,nblank=2)
-    fit = fractionation(myrun,method,blank,channels,standards,0.11937;
+    blank = fitBlanks(myrun;nblank=2)
+    dt = dwelltime(myrun)
+    fit = fractionation(myrun,dt,method,blank,channels,standards,8.37861;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     if show
-        p = plot(myrun[2],channels,blank,fit,anchors,
-                 transformation="log",den="Sr88 -> 104")
+        p = plot(myrun[2],dt,channels,blank,fit,anchors,
+                 transformation="log")#,den="Sr88 -> 104")
         @test display(p) != NaN
     end
-    export2IsoplotR(myrun,method,channels,blank,fit,
+    export2IsoplotR(myrun,dt,method,channels,blank,fit;
                     prefix="Entire",fname="Entire.json")
-    return myrun, blank, fit, channels, standards, anchors
+    return myrun, dt, blank, fit, channels, standards, anchors
 end
 
-function KCaTest(;show=true)
+function KCaTest(show=true)
     myrun = load("data/K-Ca",instrument="Agilent")
     method = "K-Ca"
     channels = Dict("d"=>"Ca44 -> 63",
@@ -171,23 +179,19 @@ function KCaTest(;show=true)
                     "P"=>"K39 -> 39")
     standards = Dict("EntireCreek_bt" => "EntCrk")
     setGroup!(myrun,standards)
-    blank = fitBlanks(myrun,nblank=2)
-    fit = fractionation(myrun,method,blank,channels,standards,1.0;
+    blank = fitBlanks(myrun;nblank=2)
+    dt = dwelltime(myrun)
+    fit = fractionation(myrun,dt,method,blank,channels,standards,nothing;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     if show
-        p = plot(myrun[3],channels,blank,fit,anchors,
+        p = plot(myrun[3],dt,channels,blank,fit,anchors,
                  transformation="log",den=nothing)
         @test display(p) != NaN
     end
-    export2IsoplotR(myrun,method,channels,blank,fit,
+    export2IsoplotR(myrun,dt,method,channels,blank,fit,
                     prefix="EntCrk",fname="Entire_KCa.json")
-    return myrun, blank, fit, channels, standards, anchors
-end
-
-function KCaPredicTest()
-    myrun, blank, fit, channels, standards, anchors = KCaTest(;show=false)
-    pred = predict(myrun[3],fit,blank,channels,anchors;debug=true)
+    return myrun, dt, blank, fit, channels, standards, anchors
 end
 
 function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
@@ -217,16 +221,17 @@ end
 
 function histest(;LuHf=false,show=true)
     if LuHf
-        myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
+        myrun,dt,blk,fit,channels,standards,glass,anchors =
+            fractionationtest(false)
         standard = "BP_gt"
     else
-        myrun,blk,fit,channels,standards,anchors = KCaTest(;show=false) # RbSrTest(false)
-        standard = "EntireCreek_bt" # "MDC_bt"
+        myrun,dt,blk,fit,channels,standards,anchors = RbSrTest(false)
+        standard = "MDC_bt"
     end
     print(fit)
     pooled = pool(myrun;signal=true,group=standard)
     anchor = anchors[standard]
-    pred = predict(pooled,fit,blk,channels,anchor)
+    pred = predict(pooled,dt,fit,blk,channels,anchor)
     Pm = pooled[:,channels["P"]]
     Dm = pooled[:,channels["D"]]
     dm = pooled[:,channels["d"]]
@@ -241,48 +246,25 @@ function histest(;LuHf=false,show=true)
     return anchors, fit, Pm, Dm, dm
 end
 
-function averatest(;LuHf=false)
-    if LuHf
-        myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
-        standard = "BP_gt"
-    else
-        myrun,blk,fit,channels,standards,anchors = RbSrTest()
-        standard = "MDC_bt"
-    end
-    myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
-    P, D, d = atomic(myrun[1],channels,blk,fit)
-    ratios = averat(myrun,channels,blk,fit)
-    println(first(ratios,5))
-    x = ratios[1,"x"]
-    y = ratios[1,"y"]
-    z = @. 1 + x + y
-    S = @. (D+x*P+y*d)*z/(1+x^2+y^2)
-    Pp = @. S*x/z
-    Dp = @. S/z
-    dp = @. S*y/z
-    p = plot_residuals(P,D,d,Pp,Dp,dp)
-    @test display(p) != NaN
-    df = DataFrame(Phat=P,Dhat=D,dhat=d,Pp=Pp,Dp=Dp,dp=dp)
-    CSV.write("section5.csv",df)
-end
-
 function processtest()
-    myrun = load("data/Lu-Hf",instrument="Agilent");
+    myrun = load("data/Lu-Hf",instrument="Agilent")
+    dt = dwelltime(myrun)
     method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
                     "P"=>"Lu175 -> 175");
-    standards = Dict("Hogsbo_gt" => "hogsbo");
-    glass = Dict("NIST612" => "NIST612p");
-    blk, fit = process!(myrun,method,channels,standards,glass,
-                        nblank=2,ndrift=2,ndown=2);
-    p = plot(myrun[2],method,channels,blk,fit,standards,glass,
-             den="Hf176 -> 258",transformation="log");
+    standards = Dict("Hogsbo_gt" => "hogsbo")#"BP_gt" => "BP")#
+    glass = Dict("NIST612" => "NIST612p")
+    blk, fit = process!(myrun,dt,method,channels,standards,glass,
+                        nblank=2,ndrift=1,ndown=1);
+    p = plot(myrun[2],dt,method,channels,blk,fit,standards,glass,
+             transformation="log",den=nothing)#"Hf176 -> 258",);
     @test display(p) != NaN
 end
 
 function PAtest(verbose=false)
     myrun = load("data/Lu-Hf",instrument="Agilent")
+    dt = dwelltime(myrun)
     method = "Lu-Hf"
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -290,9 +272,9 @@ function PAtest(verbose=false)
     standards = Dict("Hogsbo_gt" => "hogsbo")
     glass = Dict("NIST612" => "NIST612p")
     cutoff = 1e7
-    blk, fit = process!(myrun,method,channels,standards,glass;
+    blk, fit = process!(myrun,dt,method,channels,standards,glass;
                         PAcutoff=cutoff,nblank=2,ndrift=1,ndown=1)
-    ratios = averat(myrun,channels,blk,fit)
+    ratios = averat(myrun,dt,channels,blk,fit)
     if verbose println(first(ratios,5)) end
     return ratios
 end
@@ -306,16 +288,18 @@ end
 
 function UPbtest()
     myrun = load("data/U-Pb",instrument="Agilent",head2name=false)
+    dt = dwelltime(myrun)
     method = "U-Pb"
     standards = Dict("Plesovice_zr" => "STDCZ",
                      "91500_zr" => "91500")
     glass = Dict("NIST610" => "610",
                  "NIST612" => "612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blank, pars = process!(myrun,"U-Pb",channels,standards,glass,
+    blank, pars = process!(myrun,dt,"U-Pb",channels,standards,glass,
                            nblank=2,ndrift=1,ndown=1)
-    export2IsoplotR(myrun,method,channels,blank,pars,fname="UPb.json")
-    p = plot(myrun[1],method,channels,blank,pars,standards,glass,transformation="log")
+    export2IsoplotR(myrun,dt,method,channels,blank,pars,fname="UPb.json")
+    p = plot(myrun[1],dt,method,channels,blank,pars,
+             standards,glass,transformation="log",den="Pb206")
     @test display(p) != NaN
 end
 
@@ -327,13 +311,15 @@ end
 function carbonatetest(verbose=false)
     method = "U-Pb"
     myrun = load("data/carbonate",instrument="Agilent")
+    dt = dwelltime(myrun)
     standards = Dict("WC1_cc"=>"WC1")
     glass = Dict("NIST612"=>"NIST612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blk, fit = process!(myrun,method,channels,standards,glass,
+    blk, fit = process!(myrun,dt,method,channels,standards,glass,
                         nblank=2,ndrift=1,ndown=1,verbose=verbose)
-    export2IsoplotR(myrun,method,channels,blk,fit,prefix="Duff",fname="Duff.json")
-    p = plot(myrun[3],method,channels,blk,fit,standards,glass,
+    export2IsoplotR(myrun,dt,method,channels,blk,fit;
+                    prefix="Duff",fname="Duff.json")
+    p = plot(myrun[3],dt,method,channels,blk,fit,standards,glass;
              transformation=nothing,num=["Pb207"],den="Pb206",ylim=[-0.02,0.3])
     @test display(p) != NaN
 end
@@ -383,21 +369,19 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
-    @testset "predict" begin driftest() end
-    @testset "predict" begin downtest() end
-    @testset "predict" begin mfractest() end
-    @testset "fit fractionation" begin fractionationtest() end
+    @testset "predict drift" begin driftest() end
+    @testset "predict down" begin downtest() end
+    @testset "predict mfrac" begin mfractest() end
+    @testset "fit fractionation" begin fractionationtest(true) end
     @testset "Rb-Sr" begin RbSrTest() end
-    @testset "K-Ca" begin KCaTest() end=#
-    @testset "K-Ca" begin KCaPredicTest() end
-    #=@testset "hist" begin histest() end
-    @testset "average sample ratios" begin averatest() end
+    @testset "K-Ca" begin KCaTest() end
+    @testset "hist" begin histest() end
     @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
@@ -408,7 +392,7 @@ if true
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end=#
+    @testset "TUI test" begin TUItest() end
 else
     TUI()
 end

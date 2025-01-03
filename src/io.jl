@@ -213,6 +213,21 @@ function parseData(data::AbstractDataFrame,
     return run
 end
 
+function dwelltime(run::Vector{Sample})
+    channels = getChannels(run)
+    out = Dict(channel => 1.0 for channel in channels)
+    blk = pool(run;blank=true)
+    for channel in channels
+        values = sort(unique(blk[:,channel]))
+        if length(values)>1
+            dcps = minimum(values[2:end] .- values[1:end-1])
+            out[channel] = minimum([1/dcps,out[channel]])
+        end
+    end
+    return out
+end
+export dwelltime
+
 """
 export2IsoplotR
 
@@ -221,6 +236,7 @@ Export isotopic ratio data to an IsoplotRgui json file
 # Methods
 
 - `export2IsoplotR(run::Vector{Sample},
+                   dt::AbstractDict,
                    method::AbstractString,
                    channels::AbstractDict,
                    blank::AbstractDataFrame,
@@ -234,6 +250,7 @@ Export isotopic ratio data to an IsoplotRgui json file
 # Arguments
 
 - `run`: the output of `load`
+- `dt`: the dwell times (in seconds) of the mass channels
 - `method`: a geochronometer (e.g., `Lu-Hf`, `Rb-Sr`, `U-Pb`)
 - `channels`: dictionary of the type Dict("P" => "parent", "D" => "daughter", "d" => "sister")
 - `blank`: the output of fitBlanks()
@@ -244,6 +261,7 @@ Export isotopic ratio data to an IsoplotRgui json file
 # Examples
 ```julia
 myrun = load("data/Lu-Hf",instrument="Agilent")
+dt = dwelltime(myrun)
 method = "Lu-Hf"
 channels = Dict("d"=>"Hf178 -> 260",
                 "D"=>"Hf176 -> 258",
@@ -251,13 +269,14 @@ channels = Dict("d"=>"Hf178 -> 260",
 standards = Dict("Hogsbo" => "hogsbo")
 glass = Dict("NIST612" => "NIST612p")
 cutoff = 1e7
-blk, fit = process!(myrun,method,channels,standards,glass;
+blk, fit = process!(myrun,dt,method,channels,standards,glass;
                     PAcutoff=cutoff,nblank=2,ndrift=1,ndown=1)
 selection = prefix2subset(ratios,"BP")
 export2IsoplotR(selection,"Lu-Hf",fname="BP.json")
 ```
 """
 function export2IsoplotR(run::Vector{Sample},
+                         dt::AbstractDict,
                          method::AbstractString,
                          channels::AbstractDict,
                          blank::AbstractDataFrame,
@@ -265,7 +284,7 @@ function export2IsoplotR(run::Vector{Sample},
                          PAcutoff=nothing,
                          prefix=nothing,
                          fname::AbstractString="KJ.json")
-    ratios = averat(run,channels,blank,pars)
+    ratios = averat(run,dt,channels,blank,pars)
     if isnothing(prefix)
         export2IsoplotR(ratios,method;fname=fname)
     else
