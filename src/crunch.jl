@@ -2,6 +2,9 @@
 function getP(Pm::AbstractVector,
               Dm::AbstractVector,
               dm::AbstractVector,
+              vP::AbstractFloat,
+              vD::AbstractFloat,
+              vd::AbstractFloat,
               x0::AbstractFloat,
               y0::AbstractFloat,
               y1::AbstractFloat,
@@ -11,11 +14,14 @@ function getP(Pm::AbstractVector,
               bPt::AbstractVector,
               bDt::AbstractVector,
               bdt::AbstractVector)
-    return @. (((FT*Pm*bDt-Dm*FT*Pm)*ft*mf*x0*y0+(FT*Pm*dm-FT*Pm*bDt)*ft*x0)*y1+((Dm*Pm-Dm*bPt)*mf^2*x0^2+(Dm*FT*Pm-FT*Pm*bDt)*ft*mf*x0)*y0^2+(FT*Pm*bDt-FT*Pm*dm)*ft*x0*y0+(Pm-bPt)*dm*x0^2)/(FT^2*Pm*ft^2*y1^2-2*FT^2*Pm*ft^2*y0*y1+(Dm*mf^2*x0^2+FT^2*Pm*ft^2)*y0^2+dm*x0^2)
+    return @. ((FT*(bDt-Dm)*ft*mf*vP*x0*y0+(FT*dm-FT*bdt)*ft*vP*x0)*y1+(mf^2*(Pm*vD-bPt*vD)*x0^2+FT*(Dm-bDt)*ft*mf*vP*x0)*y0^2+(FT*bdt-FT*dm)*ft*vP*x0*y0+(Pm-bPt)*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
 end
 function getD(Pm::AbstractVector,
               Dm::AbstractVector,
               dm::AbstractVector,
+              vP::AbstractFloat,
+              vD::AbstractFloat,
+              vd::AbstractFloat,
               x0::AbstractFloat,
               y0::AbstractFloat,
               y1::AbstractFloat,
@@ -25,48 +31,18 @@ function getD(Pm::AbstractVector,
               bPt::AbstractVector,
               bDt::AbstractVector,
               bdt::AbstractVector)
-    return @. -((FT^2*Pm*bDt-Dm*FT^2*Pm)*ft^2*y1^2+((Dm*FT*Pm-Dm*FT*bPt)*ft*mf*x0+(2*Dm*FT^2*Pm-2*FT^2*Pm*bDt)*ft^2)*y0*y1+((Dm*FT*bPt-Dm*FT*Pm)*ft*mf*x0+(FT^2*Pm*bDt-Dm*FT^2*Pm)*ft^2)*y0^2+(Dm*bDt-Dm*dm)*mf*x0^2*y0+(bDt-Dm)*dm*x0^2)/(FT^2*Pm*ft^2*y1^2-2*FT^2*Pm*ft^2*y0*y1+(Dm*mf^2*x0^2+FT^2*Pm*ft^2)*y0^2+dm*x0^2)
+    return @. -(FT^2*(bDt-Dm)*ft^2*vP*y1^2+(ft*mf*(FT*Pm*vD-FT*bPt*vD)*x0+FT^2*(2*Dm-2*bDt)*ft^2*vP)*y0*y1+(ft*mf*(FT*bPt*vD-FT*Pm*vD)*x0+FT^2*(bDt-Dm)*ft^2*vP)*y0^2+mf*(bdt*vD-dm*vD)*x0^2*y0+(bDt-Dm)*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
 end
 # glass
 function getD(Dm::AbstractVector,
               dm::AbstractVector,
+              vD::AbstractFloat,
+              vd::AbstractFloat,
               y0::AbstractFloat,
               mf::AbstractFloat,
               bDt::AbstractVector,
               bdt::AbstractVector)
-    return @. ((Dm*dm-Dm*bDt)*mf*y0+(Dm-bDt)*dm)/(Dm*mf^2*y0^2+dm)
-end
-
-# mineral
-function residuals(Pm::AbstractVector,
-                   Dm::AbstractVector,
-                   dm::AbstractVector,
-                   x0::AbstractFloat,
-                   y0::AbstractFloat,
-                   y1::AbstractFloat,
-                   ft::AbstractVector,
-                   FT::AbstractVector,
-                   mf::AbstractFloat,
-                   bPt::AbstractVector,
-                   bDt::AbstractVector,
-                   bdt::AbstractVector)
-    pred = predict(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    dP = @. (pred[:,"P"]-Pm)
-    dD = @. (pred[:,"D"]-Dm)
-    dd = @. (pred[:,"d"]-dm)
-    return dP, dD, dd
-end
-# glass
-function residuals(Dm::AbstractVector,
-                   dm::AbstractVector,
-                   y0::AbstractFloat,
-                   mf::AbstractFloat,
-                   bDt::AbstractVector,
-                   bdt::AbstractVector)
-    pred = predict(Dm,dm,y0,mf,bDt,bdt)
-    dD = @. (pred[:,"D"]-Dm)
-    dd = @. (pred[:,"d"]-dm)
-    return dD, dd
+    return @. ((dm-bdt)*mf*vD*y0+(Dm-bDt)*vd)/(mf^2*vD*y0^2+vd)
 end
 
 # mineral
@@ -81,7 +57,8 @@ function LL(par::AbstractVector,
             mf::Union{AbstractFloat,Nothing};
             ndrift::Integer=1,
             ndown::Integer=0,
-            PAcutoff::Union{AbstractFloat,Nothing}=nothing)
+            PAcutoff::Union{AbstractFloat,Nothing}=nothing,
+            dead::AbstractFloat=0.0)
     drift = par[1:ndrift]
     down = vcat(0.0,par[ndrift+1:ndrift+ndown])
     mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
@@ -89,16 +66,19 @@ function LL(par::AbstractVector,
     out = 0.0
     for (refmat,dat) in dats
         (x0,y0,y1) = anchors[refmat]
-        Pm,Dm,dm,ft,FT,mf,bPt,bDt,bdt =
+        Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
             LLprep(bP,bD,bd,dat,dt,channels,mfrac,drift,down;
-                   PAcutoff=PAcutoff,adrift=adrift)
-        out += LL(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+                   PAcutoff=PAcutoff,adrift=adrift,dead=dead)
+       out += LL(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     end
     return out
 end
 function LL(Pm::AbstractVector,
             Dm::AbstractVector,
             dm::AbstractVector,
+            vP::AbstractFloat,
+            vD::AbstractFloat,
+            vd::AbstractFloat,
             x0::AbstractFloat,
             y0::AbstractFloat,
             y1::AbstractFloat,
@@ -108,8 +88,11 @@ function LL(Pm::AbstractVector,
             bPt::AbstractVector,
             bDt::AbstractVector,
             bdt::AbstractVector)
-    dP, dD, dd = residuals(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    return sum(@. log(Pm*dm*Dm) + (dP^2)/Pm + (dd^2)/dm + (dD^2)/Dm )/2
+    pred = predict(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    dP = @. pred[:,"P"] - Pm
+    dD = @. pred[:,"D"] - Dm
+    dd = @. pred[:,"d"] - dm
+    return sum(@. log(vP*vD*vd) + (dP^2)/vP + (dD^2)/vD + (dd^2)/vd )/2 
 end
 # glass
 function LL(par::AbstractVector,
@@ -118,24 +101,29 @@ function LL(par::AbstractVector,
             dats::AbstractDict,
             dt::AbstractDict,
             channels::AbstractDict,
-            anchors::AbstractDict)
+            anchors::AbstractDict;
+            dead::AbstractFloat=0.0)
     mf = exp(par[1])
     out = 0.0
     for (refmat,dat) in dats
         y0 = anchors[refmat]
-        Dm,dm,bDt,bdt = LLprep(bD,bd,dat,dt,channels)
-        out += LL(Dm,dm,y0,mf,bDt,bdt)
+        Dm,dm,vD,vd,bDt,bdt = LLprep(bD,bd,dat,dt,channels;dead=dead)
+        out += LL(Dm,dm,vD,vd,y0,mf,bDt,bdt)
     end
     return out
 end
 function LL(Dm::AbstractVector,
             dm::AbstractVector,
+            vD::AbstractFloat,
+            vd::AbstractFloat,
             y0::AbstractFloat,
             mf::AbstractFloat,
             bDt::AbstractVector,
             bdt::AbstractVector)
-    dD, dd = residuals(Dm,dm,y0,mf,bDt,bdt)
-    return sum(@. log(dm*Dm) + (dd^2)/dm + (dD^2)/Dm )/2
+    pred = predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
+    dD = @. pred[:,"D"] - Dm
+    dd = @. pred[:,"d"] - dm
+    return sum(@. log(vD*vd) + (dD^2)/vD + (dd^2)/vd )/2
 end
 export LL
 
@@ -150,12 +138,16 @@ function LLprep(bP::AbstractVector,
                 drift::AbstractVector,
                 down::AbstractVector;
                 PAcutoff::Union{AbstractFloat,Nothing}=nothing,
-                adrift=drift)
+                adrift::AbstractVector=drift,
+                dead::AbstractFloat=0.0)
     t = dat.t
     T = dat.T 
-    Pm = dat[:,channels["P"]] .* dt[channels["P"]]
-    Dm = dat[:,channels["D"]] .* dt[channels["D"]]
-    dm = dat[:,channels["d"]] .* dt[channels["d"]]
+    Pm = dat[:,channels["P"]]
+    Dm = dat[:,channels["D"]]
+    dm = dat[:,channels["d"]]
+    vP = var_cps(Pm,dt[channels["P"]],dead)
+    vD = var_cps(Dm,dt[channels["D"]],dead)
+    vd = var_cps(dm,dt[channels["d"]],dead)
     ft = get_drift(Pm,t,drift;
                    PAcutoff=PAcutoff,adrift=adrift)
     FT = polyFac(down,T)
@@ -163,20 +155,23 @@ function LLprep(bP::AbstractVector,
     bPt = polyVal(bP,t)
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
-    return Pm,Dm,dm,ft,FT,mf,bPt,bDt,bdt
+    return Pm,Dm,dm,dP,dD,dd,ft,FT,mf,bPt,bDt,bdt
 end
 # glass
 function LLprep(bD::AbstractVector,
                 bd::AbstractVector,
                 dat::AbstractDataFrame,
                 dt::AbstractDict,
-                channels::AbstractDict)
+                channels::AbstractDict;
+                dead::AbstractFloat=0.0)
     t = dat.t
-    Dm = dat[:,channels["D"]] .* dt[channels["D"]]
-    dm = dat[:,channels["d"]] .* dt[channels["d"]]
+    Dm = dat[:,channels["D"]]
+    dm = dat[:,channels["d"]]
+    vD = var_cps(Dm,dt[channels["D"]],dead)
+    vd = var_cps(dm,dt[channels["d"]],dead)
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
-    return Dm,dm,bDt,bdt
+    return Dm,dm,vD,vd,bDt,bdt
 end
 
 # minerals
@@ -217,17 +212,20 @@ function predict(dat::AbstractDataFrame,
     bP = blank[:,channels["P"]]
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
-    Pm,Dm,dm,ft,FT,mf,bPt,bDt,bdt =
+    Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
         LLprep(bP,bD,bd,dat,dt,channels,
                pars.mfrac,pars.drift,pars.down;
                PAcutoff=pars.PAcutoff,adrift=pars.adrift)
-    return predict(Pm,Dm,dm,
+    return predict(Pm,Dm,dm,vP,vD,vd,
                    anchor.x0,anchor.y0,anchor.y1,
                    ft,FT,mf,bPt,bDt,bdt)
 end
 function predict(Pm::AbstractVector,
                  Dm::AbstractVector,
                  dm::AbstractVector,
+                 vP::AbstractFloat,
+                 vD::AbstractFloat,
+                 vd::AbstractFloat,
                  x0::AbstractFloat,
                  y0::AbstractFloat,
                  y1::AbstractFloat,
@@ -237,8 +235,8 @@ function predict(Pm::AbstractVector,
                  bPt::AbstractVector,
                  bDt::AbstractVector,
                  bdt::AbstractVector)
-    P = getP(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    D = getD(Pm,Dm,dm,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    P = getP(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    D = getD(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     return predict(P,D,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
 end
 function predict(P::AbstractVector,
@@ -260,11 +258,13 @@ end
 # glass
 function predict(Dm::AbstractVector,
                  dm::AbstractVector,
+                 vD::AbstractFloat,
+                 vd::AbstractFloat,
                  y0::AbstractFloat,
                  mf::AbstractFloat,
                  bDt::AbstractVector,
                  bdt::AbstractVector)
-    D = getD(Dm,dm,y0,mf,bDt,bdt)
+    D = getD(Dm,dm,vD,vd,y0,mf,bDt,bdt)
     Df = @. D + bDt
     df = @. D*mf*y0 + bdt
     return DataFrame(D=Df,d=df)

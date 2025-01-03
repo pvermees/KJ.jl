@@ -91,8 +91,7 @@ function fitBlanks(run::Vector{Sample},
     nc = length(channels)
     bpar = DataFrame(zeros(nblank,nc),channels)
     for channel in channels
-        counts = blk[:,channel] .* dt[channel]
-        bpar[:,channel] = polyFit(blk.t,counts,nblank)
+        bpar[:,channel] = polyFit(blk.t,blk[:,channel],nblank)
     end
     return bpar
 end
@@ -113,22 +112,21 @@ atomic(samp::Sample,
 See [`process!`](@ref).
 """
 function atomic(samp::Sample,
+                dt::AbstractDict,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
                 pars::NamedTuple)
-    dat = windowData(samp,signal=true)
-    Pm = dat[:,channels["P"]]
-    Dm = dat[:,channels["D"]]
-    dm = dat[:,channels["d"]]
-    ft = get_drift(Pm,dat.t,pars)
-    FT = polyFac(pars.down,dat.T)
-    mf = exp(pars.mfrac)
-    bPt = polyVal(blank[:,channels["P"]],dat.t)
-    bDt = polyVal(blank[:,channels["D"]],dat.t)
-    bdt = polyVal(blank[:,channels["d"]],dat.t)
-    P = @. (Pm-bPt)/(ft*FT)
-    D = @. (Dm-bDt)/mf
-    d = @. (dm-bdt)
+    Pm,Dm,dm,ft,FT,mf,bPt,bDt,bdt =  LLprep(blank[:,channels["P"]],
+                                            blank[:,channels["D"]],
+                                            blank[:,channels["d"]],
+                                            windowData(samp,signal=true),
+                                            dt,channels,
+                                            pars.mfrac,pars.drift,pars.down;
+                                            PAcutoff=pars.PAcutoff,
+                                            adrift=pars.adrift)
+    P = @. (Pm-bPt)/(dt[channels["P"]]*ft*FT)
+    D = @. (Dm-bDt)/(dt[channels["D"]]*mf)
+    d = @. (dm-bdt)/dt[channels["d"]]
     return P, D, d
 end
 export atomic
@@ -159,10 +157,11 @@ Average the 'atomic' isotopic ratios for a sample
 See [`process!`](@ref).
 """
 function averat(samp::Sample,
+                dt::AbstractDict,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
                 pars::NamedTuple)
-    P, D, d = atomic(samp,channels,blank,pars)
+    P, D, d = atomic(samp,dt,channels,blank,pars)
     function residuals(par)
         x = par[1]
         y = par[2]
@@ -188,9 +187,6 @@ function averat(samp::Sample,
         s2 = misfit(pars)/(2*ns-2)
         J = averat_jacobian(P,D,d,x,y)
         covmat = s2 * inv(J*transpose(J))
-        #dP, dD, dd = residuals(pars)        
-        #E = Statistics.cov(vcat(dP,dD,dd))
-        #covmat = E * inv(J*transpose(J))
         x = pars[1]
         y = pars[2]
     else 

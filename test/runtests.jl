@@ -28,7 +28,7 @@ end
 
 function blanktest()
     myrun, dt = loadtest()
-    blk = fitBlanks(myrun;nblank=2)
+    blk = fitBlanks(myrun,dt;nblank=2)
     return myrun, dt, blk
 end
 
@@ -157,45 +157,46 @@ function RbSrTest(show=true)
                     "P"=>"Rb85 -> 85")
     standards = Dict("MDC_bt" => "MDC -")
     setGroup!(myrun,standards)
-    blank = fitBlanks(myrun,nblank=2)
-    fit = fractionation(myrun,dt,method,blank,channels,standards,8.37861;
+    blank = fitBlanks(myrun,dt;nblank=2)
+    fit = fractionation(myrun,dt,method,blank,channels,standards,nothing;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     if show
         p = plot(myrun[2],dt,channels,blank,fit,anchors,
-                 transformation="sqrt")#,den="Sr88 -> 104")
+                 transformation="log",den="Sr88 -> 104")
         @test display(p) != NaN
     end
     export2IsoplotR(myrun,method,channels,blank,fit,
                     prefix="Entire",fname="Entire.json")
-    return myrun, blank, fit, channels, standards, anchors
+    return myrun, dt, blank, fit, channels, standards, anchors
 end
 
 function KCaTest(show=true)
     myrun = load("data/K-Ca",instrument="Agilent")
+    dt = dwelltime(myrun)
     method = "K-Ca"
     channels = Dict("d"=>"Ca44 -> 63",
                     "D"=>"Ca40 -> 59",
                     "P"=>"K39 -> 39")
     standards = Dict("EntireCreek_bt" => "EntCrk")
     setGroup!(myrun,standards)
-    blank = fitBlanks(myrun,nblank=2)
-    fit = fractionation(myrun,method,blank,channels,standards,1.0;
+    blank = fitBlanks(myrun,dt,nblank=2)
+    fit = fractionation(myrun,dt,method,blank,channels,standards,nothing;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     if show
-        p = plot(myrun[3],channels,blank,fit,anchors,
+        p = plot(myrun[3],dt,channels,blank,fit,anchors,
                  transformation="log",den=nothing)
         @test display(p) != NaN
     end
     export2IsoplotR(myrun,method,channels,blank,fit,
                     prefix="EntCrk",fname="Entire_KCa.json")
-    return myrun, blank, fit, channels, standards, anchors
+    return myrun, dt, blank, fit, channels, standards, anchors
 end
 
 function KCaPredicTest()
-    myrun, blank, fit, channels, standards, anchors = KCaTest(false)
-    pred = predict(myrun[3],fit,blank,channels,anchors;debug=true)
+    myrun, dt, blank, fit, channels, standards, anchors = KCaTest(false)
+    pred = predict(myrun[3],dt,fit,blank,channels,anchors;debug=true)
 end
 
 function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
@@ -225,16 +226,17 @@ end
 
 function histest(;LuHf=false,show=true)
     if LuHf
-        myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
+        myrun,dt,blk,fit,channels,standards,glass,anchors =
+            fractionationtest(false)
         standard = "BP_gt"
     else
-        myrun,blk,fit,channels,standards,anchors = RbSrTest(false)
+        myrun,dt,blk,fit,channels,standards,anchors = RbSrTest(false)
         standard = "MDC_bt"
     end
     print(fit)
     pooled = pool(myrun;signal=true,group=standard)
     anchor = anchors[standard]
-    pred = predict(pooled,fit,blk,channels,anchor)
+    pred = predict(pooled,dt,fit,blk,channels,anchor)
     Pm = pooled[:,channels["P"]]
     Dm = pooled[:,channels["D"]]
     dm = pooled[:,channels["d"]]
@@ -251,13 +253,14 @@ end
 
 function averatest(;LuHf=false)
     if LuHf
-        myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
+        myrun,dt,blk,fit,channels,standards,glass,anchors =
+            fractionationtest(false)
         standard = "BP_gt"
     else
-        myrun,blk,fit,channels,standards,anchors = RbSrTest()
+        myrun,dt,blk,fit,channels,standards,anchors = RbSrTest()
         standard = "MDC_bt"
     end
-    myrun,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
+    myrun,dt,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
     P, D, d = atomic(myrun[1],channels,blk,fit)
     ratios = averat(myrun,channels,blk,fit)
     println(first(ratios,5))
@@ -391,8 +394,8 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
-    @testset "plot raw data" begin plottest() end
+    @testset "load" begin loadtest(true) end
+    #=@testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
@@ -400,9 +403,9 @@ if true
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
     @testset "predict mfrac" begin mfractest() end
-    @testset "fit fractionation" begin fractionationtest(true) end=#
+    @testset "fit fractionation" begin fractionationtest(true) end
     @testset "Rb-Sr" begin RbSrTest() end
-    #=@testset "K-Ca" begin KCaTest() end
+    @testset "K-Ca" begin KCaTest() end
     @testset "K-Ca" begin KCaPredicTest() end
     @testset "hist" begin histest() end
     @testset "average sample ratios" begin averatest() end

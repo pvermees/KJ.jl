@@ -274,6 +274,7 @@ export2IsoplotR(selection,"Lu-Hf",fname="BP.json")
 ```
 """
 function export2IsoplotR(run::Vector{Sample},
+                         dt::AbstractDict,
                          method::AbstractString,
                          channels::AbstractDict,
                          blank::AbstractDataFrame,
@@ -281,7 +282,7 @@ function export2IsoplotR(run::Vector{Sample},
                          PAcutoff=nothing,
                          prefix=nothing,
                          fname::AbstractString="KJ.json")
-    ratios = averat(run,channels,blank,pars)
+    ratios = averat(run,dt,channels,blank,pars)
     if isnothing(prefix)
         export2IsoplotR(ratios,method;fname=fname)
     else

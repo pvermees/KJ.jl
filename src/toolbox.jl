@@ -43,7 +43,9 @@ function formRatios(df::AbstractDataFrame,
 end
 
 # polynomial fit with logarithmic coefficients
-function polyFit(t::AbstractVector,y::AbstractVector,n::Integer)
+function polyFit(t::AbstractVector,
+                 y::AbstractVector,
+                 n::Integer)
     
     function misfit(par)
         pred = polyVal(par,t)
@@ -57,7 +59,8 @@ function polyFit(t::AbstractVector,y::AbstractVector,n::Integer)
 
 end
 
-function polyVal(p::AbstractVector,t::AbstractVector)
+function polyVal(p::AbstractVector,
+                 t::AbstractVector)
     np = length(p)
     nt = length(t)
     out = fill(0.0,nt)
@@ -68,7 +71,8 @@ function polyVal(p::AbstractVector,t::AbstractVector)
     end
     out
 end
-function polyVal(p::AbstractDataFrame,t::AbstractVector)
+function polyVal(p::AbstractDataFrame,
+                 t::AbstractVector)
     nc = size(p,2)
     nr = length(t)
     out = DataFrame(fill(0.0,(nr,nc)),names(p))
@@ -79,7 +83,8 @@ function polyVal(p::AbstractDataFrame,t::AbstractVector)
 end
 export polyVal
 
-function polyFac(p::AbstractVector,t::AbstractVector)
+function polyFac(p::AbstractVector,
+                 t::AbstractVector)
     np = length(p)
     nt = length(t)
     if np>0
@@ -450,9 +455,9 @@ function elements2concs(elements::AbstractDataFrame,
     return out
 end
 
-function counts2cps!(cps::AbstractDataFrame,
-                     dt::AbstractDict)
-    for colname in names(cps)
-        cps[:,colname] ./= dt[colname]
-    end
+function var_cps(cps::AbstractVector,
+                 dt::AbstractDict,
+                 dead::AbstractFloat)
+    @. (cps/dt)*(1+cps*dead)/(1-cps*dead)
 end
+export var_cps
