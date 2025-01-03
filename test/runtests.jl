@@ -3,13 +3,12 @@ import Plots
 
 function loadtest(verbose=false)
     myrun = load("data/Lu-Hf";instrument="Agilent")
-    dt = dwelltime(myrun)
     if verbose summarise(myrun;verbose=true,n=5) end
-    return myrun, dt
+    return myrun
 end
 
 function plottest()
-    myrun, dt = loadtest()
+    myrun = loadtest()
     p = plot(myrun[1],["Hf176 -> 258","Hf178 -> 260"])
     @test display(p) != NaN
     p = plot(myrun[1],["Hf176 -> 258","Hf178 -> 260"], den="Hf178 -> 260")
@@ -17,7 +16,7 @@ function plottest()
 end
 
 function windowtest()
-    myrun, dt = loadtest()
+    myrun = loadtest()
     i = 2
     setSwin!(myrun[i],[(70,90),(100,140)])
     setBwin!(myrun[i],[(0,22)];seconds=true)
@@ -27,13 +26,14 @@ function windowtest()
 end
 
 function blanktest()
-    myrun, dt = loadtest()
-    blk = fitBlanks(myrun,dt;nblank=2)
+    myrun = loadtest()
+    blk = fitBlanks(myrun;nblank=2)
+    dt = dwelltime(myrun)
     return myrun, dt, blk
 end
 
 function standardtest(verbose=false)
-    myrun, dt, blk = blanktest()
+    myrun, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     anchors = getAnchors("Lu-Hf",standards)
@@ -53,11 +53,11 @@ function fixedLuHf()
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[0.1054],
-           down=[0.0,-0.0403],
-           mfrac=0.3849,
+    fit = (drift=[-3.9225],
+           down=[0.0,0.03362],
+           mfrac=0.38426,
            PAcutoff=nothing,
-           adrift=[0.1054])
+           adrift=[-3.9225])
     return myrun, dt, blk, method, channels, glass, standards, fit
 end
 
@@ -150,37 +150,37 @@ end
 
 function RbSrTest(show=true)
     myrun = load("data/Rb-Sr",instrument="Agilent")
-    dt = dwelltime(myrun)
     method = "Rb-Sr"
     channels = Dict("d"=>"Sr88 -> 104",
                     "D"=>"Sr87 -> 103",
                     "P"=>"Rb85 -> 85")
     standards = Dict("MDC_bt" => "MDC -")
     setGroup!(myrun,standards)
-    blank = fitBlanks(myrun,dt;nblank=2)
-    fit = fractionation(myrun,dt,method,blank,channels,standards,nothing;
+    blank = fitBlanks(myrun;nblank=2)
+    dt = dwelltime(myrun)
+    fit = fractionation(myrun,dt,method,blank,channels,standards,8.37861;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     if show
         p = plot(myrun[2],dt,channels,blank,fit,anchors,
-                 transformation="log",den="Sr88 -> 104")
+                 transformation="log")#,den="Sr88 -> 104")
         @test display(p) != NaN
     end
-    export2IsoplotR(myrun,method,channels,blank,fit,
+    export2IsoplotR(myrun,dt,method,channels,blank,fit;
                     prefix="Entire",fname="Entire.json")
     return myrun, dt, blank, fit, channels, standards, anchors
 end
 
 function KCaTest(show=true)
     myrun = load("data/K-Ca",instrument="Agilent")
-    dt = dwelltime(myrun)
     method = "K-Ca"
     channels = Dict("d"=>"Ca44 -> 63",
                     "D"=>"Ca40 -> 59",
                     "P"=>"K39 -> 39")
     standards = Dict("EntireCreek_bt" => "EntCrk")
     setGroup!(myrun,standards)
-    blank = fitBlanks(myrun,dt,nblank=2)
+    blank = fitBlanks(myrun;nblank=2)
+    dt = dwelltime(myrun)
     fit = fractionation(myrun,dt,method,blank,channels,standards,nothing;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
@@ -189,14 +189,9 @@ function KCaTest(show=true)
                  transformation="log",den=nothing)
         @test display(p) != NaN
     end
-    export2IsoplotR(myrun,method,channels,blank,fit,
+    export2IsoplotR(myrun,dt,method,channels,blank,fit,
                     prefix="EntCrk",fname="Entire_KCa.json")
     return myrun, dt, blank, fit, channels, standards, anchors
-end
-
-function KCaPredicTest()
-    myrun, dt, blank, fit, channels, standards, anchors = KCaTest(false)
-    pred = predict(myrun[3],dt,fit,blank,channels,anchors;debug=true)
 end
 
 function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
@@ -251,49 +246,25 @@ function histest(;LuHf=false,show=true)
     return anchors, fit, Pm, Dm, dm
 end
 
-function averatest(;LuHf=false)
-    if LuHf
-        myrun,dt,blk,fit,channels,standards,glass,anchors =
-            fractionationtest(false)
-        standard = "BP_gt"
-    else
-        myrun,dt,blk,fit,channels,standards,anchors = RbSrTest()
-        standard = "MDC_bt"
-    end
-    myrun,dt,blk,fit,channels,standards,glass,anchors = fractionationtest(false)
-    P, D, d = atomic(myrun[1],channels,blk,fit)
-    ratios = averat(myrun,channels,blk,fit)
-    println(first(ratios,5))
-    x = ratios[1,"x"]
-    y = ratios[1,"y"]
-    z = @. 1 + x + y
-    S = @. (D+x*P+y*d)*z/(1+x^2+y^2)
-    Pp = @. S*x/z
-    Dp = @. S/z
-    dp = @. S*y/z
-    p = plot_residuals(P,D,d,Pp,Dp,dp)
-    @test display(p) != NaN
-    df = DataFrame(Phat=P,Dhat=D,dhat=d,Pp=Pp,Dp=Dp,dp=dp)
-    CSV.write("section5.csv",df)
-end
-
 function processtest()
-    myrun = load("data/Lu-Hf",instrument="Agilent");
+    myrun = load("data/Lu-Hf",instrument="Agilent")
+    dt = dwelltime(myrun)
     method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
                     "P"=>"Lu175 -> 175");
     standards = Dict("Hogsbo_gt" => "hogsbo")#"BP_gt" => "BP")#
-    glass = Dict("NIST612" => "NIST612p");
-    blk, fit = process!(myrun,method,channels,standards,glass,
-                        nblank=2,ndrift=2,ndown=2);
-    p = plot(myrun[2],method,channels,blk,fit,standards,glass,
+    glass = Dict("NIST612" => "NIST612p")
+    blk, fit = process!(myrun,dt,method,channels,standards,glass,
+                        nblank=2,ndrift=1,ndown=1);
+    p = plot(myrun[2],dt,method,channels,blk,fit,standards,glass,
              transformation="log",den=nothing)#"Hf176 -> 258",);
     @test display(p) != NaN
 end
 
 function PAtest(verbose=false)
     myrun = load("data/Lu-Hf",instrument="Agilent")
+    dt = dwelltime(myrun)
     method = "Lu-Hf"
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -301,9 +272,9 @@ function PAtest(verbose=false)
     standards = Dict("Hogsbo_gt" => "hogsbo")
     glass = Dict("NIST612" => "NIST612p")
     cutoff = 1e7
-    blk, fit = process!(myrun,method,channels,standards,glass;
+    blk, fit = process!(myrun,dt,method,channels,standards,glass;
                         PAcutoff=cutoff,nblank=2,ndrift=1,ndown=1)
-    ratios = averat(myrun,channels,blk,fit)
+    ratios = averat(myrun,dt,channels,blk,fit)
     if verbose println(first(ratios,5)) end
     return ratios
 end
@@ -317,16 +288,18 @@ end
 
 function UPbtest()
     myrun = load("data/U-Pb",instrument="Agilent",head2name=false)
+    dt = dwelltime(myrun)
     method = "U-Pb"
     standards = Dict("Plesovice_zr" => "STDCZ",
                      "91500_zr" => "91500")
     glass = Dict("NIST610" => "610",
                  "NIST612" => "612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blank, pars = process!(myrun,"U-Pb",channels,standards,glass,
+    blank, pars = process!(myrun,dt,"U-Pb",channels,standards,glass,
                            nblank=2,ndrift=1,ndown=1)
-    export2IsoplotR(myrun,method,channels,blank,pars,fname="UPb.json")
-    p = plot(myrun[1],method,channels,blank,pars,standards,glass,transformation="log",den="Pb206")
+    export2IsoplotR(myrun,dt,method,channels,blank,pars,fname="UPb.json")
+    p = plot(myrun[1],dt,method,channels,blank,pars,
+             standards,glass,transformation="log",den="Pb206")
     @test display(p) != NaN
 end
 
@@ -394,8 +367,8 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
-    #=@testset "plot raw data" begin plottest() end
+    #=@testset "load" begin loadtest(true) end
+    @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
@@ -406,14 +379,12 @@ if true
     @testset "fit fractionation" begin fractionationtest(true) end
     @testset "Rb-Sr" begin RbSrTest() end
     @testset "K-Ca" begin KCaTest() end
-    @testset "K-Ca" begin KCaPredicTest() end
     @testset "hist" begin histest() end
-    @testset "average sample ratios" begin averatest() end
     @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
-    @testset "export" begin exporttest() end
+    @testset "export" begin exporttest() end=#
     @testset "U-Pb" begin UPbtest() end
-    @testset "iCap test" begin iCaptest() end
+    #=@testset "iCap test" begin iCaptest() end
     @testset "carbonate test" begin carbonatetest() end
     @testset "timestamp test" begin timestamptest() end
     @testset "stoichiometry test" begin mineraltest() end

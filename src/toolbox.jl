@@ -334,7 +334,6 @@ function getOffset(samp::Sample,
     pred = predict(samp,dt,pars,blank,channels,anchors)
     prednames = [channels[i] for i in names(pred)]
     rename!(pred,prednames)
-    counts2cps!(pred,dt)
     ypred = formRatios(pred,num,den)
     offset_pred = getOffset(ypred,transformation)
     
@@ -456,8 +455,10 @@ function elements2concs(elements::AbstractDataFrame,
 end
 
 function var_cps(cps::AbstractVector,
-                 dt::AbstractDict,
+                 dt::AbstractFloat,
                  dead::AbstractFloat)
-    @. (cps/dt)*(1+cps*dead)/(1-cps*dead)
+    out = @. (cps/dt)*(1+cps*dead)/(1-cps*dead)
+    out[cps .<= 0.0] .= 1.0/dt^2
+    return out
 end
 export var_cps

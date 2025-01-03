@@ -343,7 +343,6 @@ function plotFitted!(p,
                      offset::AbstractDict,linecolor="black",linestyle=:solid)
     pred = predict(samp,dt,pars,blank,channels,anchors)
     rename!(pred,[channels[i] for i in names(pred)])
-    counts2cps!(pred,dt)
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
@@ -358,7 +357,6 @@ function plotFitted!(p,
                      num=nothing,den=nothing,transformation=nothing,
                      offset::AbstractDict,linecolor="black",linestyle=:solid)
     pred = predict(samp,dt,pars,blank,elements,internal)
-    counts2cps!(pred,dt)
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)

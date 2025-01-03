@@ -2,9 +2,9 @@
 function getP(Pm::AbstractVector,
               Dm::AbstractVector,
               dm::AbstractVector,
-              vP::AbstractFloat,
-              vD::AbstractFloat,
-              vd::AbstractFloat,
+              vP::AbstractVector,
+              vD::AbstractVector,
+              vd::AbstractVector,
               x0::AbstractFloat,
               y0::AbstractFloat,
               y1::AbstractFloat,
@@ -19,9 +19,9 @@ end
 function getD(Pm::AbstractVector,
               Dm::AbstractVector,
               dm::AbstractVector,
-              vP::AbstractFloat,
-              vD::AbstractFloat,
-              vd::AbstractFloat,
+              vP::AbstractVector,
+              vD::AbstractVector,
+              vd::AbstractVector,
               x0::AbstractFloat,
               y0::AbstractFloat,
               y1::AbstractFloat,
@@ -36,8 +36,8 @@ end
 # glass
 function getD(Dm::AbstractVector,
               dm::AbstractVector,
-              vD::AbstractFloat,
-              vd::AbstractFloat,
+              vD::AbstractVector,
+              vd::AbstractVector,
               y0::AbstractFloat,
               mf::AbstractFloat,
               bDt::AbstractVector,
@@ -69,16 +69,16 @@ function LL(par::AbstractVector,
         Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
             LLprep(bP,bD,bd,dat,dt,channels,mfrac,drift,down;
                    PAcutoff=PAcutoff,adrift=adrift,dead=dead)
-       out += LL(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+        out += LL(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     end
     return out
 end
 function LL(Pm::AbstractVector,
             Dm::AbstractVector,
             dm::AbstractVector,
-            vP::AbstractFloat,
-            vD::AbstractFloat,
-            vd::AbstractFloat,
+            vP::AbstractVector,
+            vD::AbstractVector,
+            vd::AbstractVector,
             x0::AbstractFloat,
             y0::AbstractFloat,
             y1::AbstractFloat,
@@ -114,8 +114,8 @@ function LL(par::AbstractVector,
 end
 function LL(Dm::AbstractVector,
             dm::AbstractVector,
-            vD::AbstractFloat,
-            vd::AbstractFloat,
+            vD::AbstractVector,
+            vd::AbstractVector,
             y0::AbstractFloat,
             mf::AbstractFloat,
             bDt::AbstractVector,
@@ -155,7 +155,7 @@ function LLprep(bP::AbstractVector,
     bPt = polyVal(bP,t)
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
-    return Pm,Dm,dm,dP,dD,dd,ft,FT,mf,bPt,bDt,bdt
+    return Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt
 end
 # glass
 function LLprep(bD::AbstractVector,
@@ -223,9 +223,9 @@ end
 function predict(Pm::AbstractVector,
                  Dm::AbstractVector,
                  dm::AbstractVector,
-                 vP::AbstractFloat,
-                 vD::AbstractFloat,
-                 vd::AbstractFloat,
+                 vP::AbstractVector,
+                 vD::AbstractVector,
+                 vd::AbstractVector,
                  x0::AbstractFloat,
                  y0::AbstractFloat,
                  y1::AbstractFloat,
@@ -258,8 +258,8 @@ end
 # glass
 function predict(Dm::AbstractVector,
                  dm::AbstractVector,
-                 vD::AbstractFloat,
-                 vd::AbstractFloat,
+                 vD::AbstractVector,
+                 vd::AbstractVector,
                  y0::AbstractFloat,
                  mf::AbstractFloat,
                  bDt::AbstractVector,

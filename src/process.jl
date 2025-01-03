@@ -58,7 +58,7 @@ function process!(run::Vector{Sample},
                   glass::AbstractDict;
                   nblank::Integer=2,ndrift::Integer=1,ndown::Integer=1,
                   PAcutoff=nothing,verbose::Bool=false)
-    blank = fitBlanks(run,dt;nblank=nblank)
+    blank = fitBlanks(run;nblank=nblank)
     setGroup!(run,glass)
     setGroup!(run,standards)
     fit = fractionation(run,dt,method,blank,channels,standards,glass;
@@ -83,8 +83,7 @@ export process!
 fitBlanks(run::Vector{Sample};nblank=2):
 Fit a dataframe of blank parameters to a run of multiple samples
 """
-function fitBlanks(run::Vector{Sample},
-                   dt::AbstractDict;
+function fitBlanks(run::Vector{Sample};
                    nblank=2)
     blk = pool(run;blank=true)
     channels = getChannels(run)
@@ -116,17 +115,18 @@ function atomic(samp::Sample,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
                 pars::NamedTuple)
-    Pm,Dm,dm,ft,FT,mf,bPt,bDt,bdt =  LLprep(blank[:,channels["P"]],
-                                            blank[:,channels["D"]],
-                                            blank[:,channels["d"]],
-                                            windowData(samp,signal=true),
-                                            dt,channels,
-                                            pars.mfrac,pars.drift,pars.down;
-                                            PAcutoff=pars.PAcutoff,
-                                            adrift=pars.adrift)
-    P = @. (Pm-bPt)/(dt[channels["P"]]*ft*FT)
-    D = @. (Dm-bDt)/(dt[channels["D"]]*mf)
-    d = @. (dm-bdt)/dt[channels["d"]]
+    Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
+        LLprep(blank[:,channels["P"]],
+               blank[:,channels["D"]],
+               blank[:,channels["d"]],
+               windowData(samp,signal=true),
+               dt,channels,
+               pars.mfrac,pars.drift,pars.down;
+               PAcutoff=pars.PAcutoff,
+               adrift=pars.adrift)
+    P = @. (Pm-bPt)*(ft*FT)
+    D = @. (Dm-bDt)*mf
+    d = @. (dm-bdt)
     return P, D, d
 end
 export atomic
@@ -162,47 +162,23 @@ function averat(samp::Sample,
                 blank::AbstractDataFrame,
                 pars::NamedTuple)
     P, D, d = atomic(samp,dt,channels,blank,pars)
-    function residuals(par)
-        x = par[1]
-        y = par[2]
-        z = 1 + x + y
-        S = @. (D+x*P+y*d)*z/(1+x^2+y^2)
-        dP = @. S*x/z - P
-        dD = @. S/z - D
-        dd = @. S*y/z - d
-        return dP, dD, dd
-    end
-    function misfit(par)
-        dP, dD, dd = residuals(par)
-        return sum([dP; dD; dd].^2)
-    end
     muP = Statistics.mean(P)
     muD = Statistics.mean(D)
     mud = Statistics.mean(d)
     ns = length(P)
-    if false
-        init = [muP/muD,mud/muD]
-        fit = Optim.optimize(misfit,init)
-        pars = Optim.minimizer(fit)
-        s2 = misfit(pars)/(2*ns-2)
-        J = averat_jacobian(P,D,d,x,y)
-        covmat = s2 * inv(J*transpose(J))
-        x = pars[1]
-        y = pars[2]
-    else 
-        E = Statistics.cov(hcat(P,D,d))
-        x = muP/muD
-        y = mud/muD
-        J = [1/muD -muP/muD^2 0;
-             0 -mud/muD^2 1/muD]
-        covmat = J * (E/ns) * transpose(J)
-    end
+    E = Statistics.cov(hcat(P,D,d))
+    x = muP/muD
+    y = mud/muD
+    J = [1/muD -muP/muD^2 0;
+         0 -mud/muD^2 1/muD]
+    covmat = J * (E/ns) * transpose(J)
     sx = sqrt(covmat[1,1])
     sy = sqrt(covmat[2,2])
     rxy = covmat[1,2]/(sx*sy)
     return [x sx y sy rxy]
 end
 function averat(run::Vector{Sample},
+                dt::AbstractDict,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
                 pars::NamedTuple)
@@ -212,7 +188,7 @@ function averat(run::Vector{Sample},
     for i in 1:ns
         samp = run[i]
         out[i,1] = samp.sname
-        out[i,2:end] = averat(samp,channels,blank,pars)
+        out[i,2:end] = averat(samp,dt,channels,blank,pars)
     end
     return out
 end
