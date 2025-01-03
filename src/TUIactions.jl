@@ -25,6 +25,7 @@ function TUIinit()
         "options" => Dict("blank" => 2, "drift" => 1, "down" => 1),
         "PAcutoff" => nothing,
         "blank" => nothing,
+        "dwell" => nothing,
         "par" => nothing,
         "cache" => nothing,
         "transformation" => "sqrt",
@@ -335,7 +336,7 @@ function TUIgeochronPlotter(ctrl::AbstractDict,samp::Sample)
                  den=ctrl["den"],transformation=ctrl["transformation"],i=ctrl["i"])
     else
         anchors = getAnchors(ctrl["method"],ctrl["standards"],ctrl["glass"])
-        p = plot(samp,ctrl["method"],ctrl["channels"],ctrl["blank"],
+        p = plot(samp,ctrl["dwell"],ctrl["method"],ctrl["channels"],ctrl["blank"],
                  ctrl["par"],ctrl["standards"],ctrl["glass"];
                  den=ctrl["den"],transformation=ctrl["transformation"],i=ctrl["i"])
     end
@@ -518,8 +519,10 @@ function TUIprocess!(ctrl::AbstractDict)
                                     ctrl["internal"],
                                     ctrl["glass"])
     else
+        ctrl["dwell"] = dwelltime(ctrl["run"])
         ctrl["anchors"] = getAnchors(ctrl["method"],ctrl["standards"],ctrl["glass"])
         ctrl["par"] = fractionation(ctrl["run"],
+                                    ctrl["dwell"],
                                     ctrl["method"],
                                     ctrl["blank"],
                                     ctrl["channels"],
@@ -557,7 +560,7 @@ function TUIexport2csv(ctrl::AbstractDict,
     if ctrl["method"]=="concentrations"
         out = concentrations(ctrl["run"],ctrl["blank"],ctrl["par"],ctrl["internal"])
     else
-        out = averat(ctrl["run"],ctrl["channels"],ctrl["blank"],ctrl["par"])
+        out = averat(ctrl["run"],ctrl["dwell"],ctrl["channels"],ctrl["blank"],ctrl["par"])
     end
     fname = splitext(response)[1]*".csv"
     CSV.write(fname,out[ctrl["cache"],:])
@@ -570,7 +573,7 @@ end
 
 function TUIexport2json(ctrl::AbstractDict,
                         response::AbstractString)
-    ratios = averat(ctrl["run"],ctrl["channels"],ctrl["blank"],ctrl["par"])
+    ratios = averat(ctrl["run"],ctrl["dwell"],ctrl["channels"],ctrl["blank"],ctrl["par"])
     fname = splitext(response)[1]*".json"
     export2IsoplotR(ratios[ctrl["cache"],:],ctrl["method"];fname=fname)
     return "xxx"

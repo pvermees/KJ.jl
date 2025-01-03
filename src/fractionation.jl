@@ -6,6 +6,7 @@ Fit the drift and down hole fractionation
 # Methods
 
 - `fractionation(run::Vector{Sample},
+                 dt::AbstractDict,
                  method::AbstractString,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
@@ -16,6 +17,7 @@ Fit the drift and down hole fractionation
                  PAcutoff=nothing,
                  verbose::Bool=false)`
 - `fractionation(run::Vector{Sample},
+                 dt::AbstractDict,
                  method::AbstractString,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
@@ -26,6 +28,7 @@ Fit the drift and down hole fractionation
                  PAcutoff=nothing,
                  verbose::Bool=false)`
 - `fractionation(run::Vector{Sample},
+                 dt::AbstractDict,
                  method::AbstractString,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,

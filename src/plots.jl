@@ -6,6 +6,7 @@ Plot selected channels for a sample or a vector of samples
 # Methods
 
 - `plot(samp::Sample,
+        dt::AbstractDict,
         method::AbstractString,
         channels::Union{AbstractVector,AbstractDict},
         blank::AbstractDataFrame,
@@ -35,6 +36,7 @@ Plot selected channels for a sample or a vector of samples
         legend=:topleft,show_title=true,
         titlefontsize=10)`
 - `plot(samp::Sample,
+        dt::AbstractDict,
         channels::AbstractDict,
         blank::AbstractDataFrame,
         pars::NamedTuple,
@@ -77,6 +79,7 @@ Plot selected channels for a sample or a vector of samples
               or a vector of channel names (e.g., the keys of a channels Dict)
 - `blank`: the output of fitBlanks()p
 - `pars`: the output of fractionation() or process!()
+- `dt`: the dwell times (in seconds) of the mass channels
 - `standards`: dictionary of the type Dict("prefix" => "mineral standard")
 - `glass`: dictionary of the type Dict("prefix" => "reference glass")
 - `num`: optional vector of name of the data column to use as the numerator

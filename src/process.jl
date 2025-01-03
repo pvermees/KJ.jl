@@ -11,6 +11,7 @@ Fits blanks and fractionation effects
 # Methods
 
 - `process!(run::Vector{Sample},
+            dt::AbstractDict,
             method::AbstractString,
             channels::AbstractDict,
             standards::AbstractDict,
@@ -25,6 +26,7 @@ Fits blanks and fractionation effects
 # Arguments
 
 - `run`: the output of `load`
+- `dt`: the dwell times (in seconds) of the mass channels
 - `method`: either "U-Pb", "Lu-Hf", "Rb-Sr" or "concentrations"
 - `channels`: dictionary of the type Dict("P" => "parent", "D" => "daughter", "d" => "sister")
               or a vector of channel names (e.g., the keys of a channels Dict)
@@ -41,13 +43,14 @@ Fits blanks and fractionation effects
 
 ```julia
 myrun = load("data/Lu-Hf",instrument="Agilent")
+dt = dwelltime(myrun)
 method = "Lu-Hf"
 channels = Dict("d"=>"Hf178 -> 260",
                 "D"=>"Hf176 -> 258",
                 "P"=>"Lu175 -> 175")
 standards = Dict("Hogsbo" => "hogsbo")
 glass = Dict("NIST612" => "NIST612p")
-blk, fit = process!(myrun,method,channels,standards,glass)
+blk, fit = process!(myrun,dt,method,channels,standards,glass)
 ```
 """
 function process!(run::Vector{Sample},
@@ -97,6 +100,7 @@ export fitBlanks
 
 """
 atomic(samp::Sample,
+       dt::AbstractDict,
        channels::AbstractDict,
        blank::AbstractDataFrame,
        pars::NamedTuple)
@@ -138,10 +142,12 @@ Average the 'atomic' isotopic ratios for a sample
 # Methods
 
 - `averat(samp::Sample,
+          dt::AbstractDict,
           channels::AbstractDict,
           blank::AbstractDataFrame,
           pars::NamedTuple)`
 - `averat(run::Vector{Sample},
+          dt::AbstractDict,
           channels::AbstractDict,
           blank::AbstractDataFrame,
           pars::NamedTuple;

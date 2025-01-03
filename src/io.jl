@@ -236,6 +236,7 @@ Export isotopic ratio data to an IsoplotRgui json file
 # Methods
 
 - `export2IsoplotR(run::Vector{Sample},
+                   dt::AbstractDict,
                    method::AbstractString,
                    channels::AbstractDict,
                    blank::AbstractDataFrame,
@@ -249,6 +250,7 @@ Export isotopic ratio data to an IsoplotRgui json file
 # Arguments
 
 - `run`: the output of `load`
+- `dt`: the dwell times (in seconds) of the mass channels
 - `method`: a geochronometer (e.g., `Lu-Hf`, `Rb-Sr`, `U-Pb`)
 - `channels`: dictionary of the type Dict("P" => "parent", "D" => "daughter", "d" => "sister")
 - `blank`: the output of fitBlanks()
@@ -259,6 +261,7 @@ Export isotopic ratio data to an IsoplotRgui json file
 # Examples
 ```julia
 myrun = load("data/Lu-Hf",instrument="Agilent")
+dt = dwelltime(myrun)
 method = "Lu-Hf"
 channels = Dict("d"=>"Hf178 -> 260",
                 "D"=>"Hf176 -> 258",
@@ -266,7 +269,7 @@ channels = Dict("d"=>"Hf178 -> 260",
 standards = Dict("Hogsbo" => "hogsbo")
 glass = Dict("NIST612" => "NIST612p")
 cutoff = 1e7
-blk, fit = process!(myrun,method,channels,standards,glass;
+blk, fit = process!(myrun,dt,method,channels,standards,glass;
                     PAcutoff=cutoff,nblank=2,ndrift=1,ndown=1)
 selection = prefix2subset(ratios,"BP")
 export2IsoplotR(selection,"Lu-Hf",fname="BP.json")
