@@ -375,7 +375,9 @@ function getOffset(samp::Sample,
 end
 export getOffset
     
-function transformeer(df::AbstractDataFrame;transformation=nothing,offset::AbstractDict)
+function transformeer(df::AbstractDataFrame;
+                      transformation=nothing,
+                      offset::AbstractDict)
     if isnothing(transformation)
         out = df
     else

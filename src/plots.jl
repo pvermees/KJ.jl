@@ -225,7 +225,6 @@ function plot(samp::Sample,
 end
 # concentrations
 function plot(samp::Sample,
-              dt::AbstractDict,
               blank::AbstractDataFrame,
               pars::AbstractVector,
               elements::AbstractDataFrame,
@@ -247,7 +246,7 @@ function plot(samp::Sample,
         
     else
 
-        offset = getOffset(samp,dt,blank,pars,elements,internal,transformation;
+        offset = getOffset(samp,blank,pars,elements,internal,transformation;
                            num=num,den=den)
 
         p = plot(samp;
@@ -256,7 +255,7 @@ function plot(samp::Sample,
                  i=i,legend=legend,show_title=show_title,
                  titlefontsize=titlefontsize)
 
-        plotFitted!(p,samp,dt,blank,pars,elements,internal;
+        plotFitted!(p,samp,blank,pars,elements,internal;
                      num=num,den=den,transformation=transformation,
                      offset=offset,linecolor=linecol,linestyle=linestyle)
         
@@ -264,7 +263,6 @@ function plot(samp::Sample,
     return p
 end
 function plot(samp::Sample,
-              dt::AbstractDict,
               blank::AbstractDataFrame,
               pars::AbstractVector,
               internal::AbstractString;
@@ -275,7 +273,7 @@ function plot(samp::Sample,
               linecol="black",linestyle=:solid,i=nothing,
               legend=:topleft,show_title=true,titlefontsize=10)
     elements = channels2elements(samp)
-    return plot(samp,dt,blank,pars,elements,internal;
+    return plot(samp,blank,pars,elements,internal;
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
                 linecol=linecol,linestyle=linestyle,i=i,
@@ -332,6 +330,7 @@ function plot(samp::Sample,
 end
 export plot
 
+# minerals
 function plotFitted!(p,
                      samp::Sample,
                      dt::AbstractDict,
@@ -347,20 +346,21 @@ function plotFitted!(p,
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
+# concentrations
 function plotFitted!(p,
                      samp::Sample,
-                     dt::AbstractDict,
                      blank::AbstractDataFrame,
                      pars::AbstractVector,
                      elements::AbstractDataFrame,
                      internal::AbstractString;
                      num=nothing,den=nothing,transformation=nothing,
                      offset::AbstractDict,linecolor="black",linestyle=:solid)
-    pred = predict(samp,dt,pars,blank,elements,internal)
+    pred = predict(samp,pars,blank,elements,internal)
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
+# helper
 function plotFitted!(p,
                      samp::Sample,
                      pred::AbstractDataFrame;

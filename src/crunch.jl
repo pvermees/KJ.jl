@@ -271,7 +271,6 @@ function predict(Dm::AbstractVector,
 end
 # concentrations
 function predict(samp::Sample,
-                 dt::AbstractDict,
                  ef::AbstractVector,
                  blank::AbstractDataFrame,
                  elements::AbstractDataFrame,

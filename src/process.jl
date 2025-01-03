@@ -68,13 +68,12 @@ function process!(run::Vector{Sample},
 end
 # concentrations:
 function process!(run::Vector{Sample},
-                  dt::AbstractDict,
                   internal::Tuple,
                   glass::AbstractDict;
                   nblank::Integer=2)
-    blank = fitBlanks(run,dt;nblank=nblank)
+    blank = fitBlanks(run;nblank=nblank)
     setGroup!(run,glass)
-    fit = fractionation(run,dt,blank,internal,glass)
+    fit = fractionation(run,blank,internal,glass)
     return blank, fit
 end
 export process!

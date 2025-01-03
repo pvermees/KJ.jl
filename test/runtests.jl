@@ -311,13 +311,15 @@ end
 function carbonatetest(verbose=false)
     method = "U-Pb"
     myrun = load("data/carbonate",instrument="Agilent")
+    dt = dwelltime(myrun)
     standards = Dict("WC1_cc"=>"WC1")
     glass = Dict("NIST612"=>"NIST612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blk, fit = process!(myrun,method,channels,standards,glass,
+    blk, fit = process!(myrun,dt,method,channels,standards,glass,
                         nblank=2,ndrift=1,ndown=1,verbose=verbose)
-    export2IsoplotR(myrun,method,channels,blk,fit,prefix="Duff",fname="Duff.json")
-    p = plot(myrun[3],method,channels,blk,fit,standards,glass,
+    export2IsoplotR(myrun,dt,method,channels,blk,fit;
+                    prefix="Duff",fname="Duff.json")
+    p = plot(myrun[3],dt,method,channels,blk,fit,standards,glass;
              transformation=nothing,num=["Pb207"],den="Pb206",ylim=[-0.02,0.3])
     @test display(p) != NaN
 end
@@ -382,14 +384,14 @@ if true
     @testset "hist" begin histest() end
     @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
-    @testset "export" begin exporttest() end=#
+    @testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end
-    #=@testset "iCap test" begin iCaptest() end
+    @testset "iCap test" begin iCaptest() end
     @testset "carbonate test" begin carbonatetest() end
     @testset "timestamp test" begin timestamptest() end
-    @testset "stoichiometry test" begin mineraltest() end
+    @testset "stoichiometry test" begin mineraltest() end=#
     @testset "concentration test" begin concentrationtest() end
-    @testset "extension test" begin extensiontest() end
+    #=@testset "extension test" begin extensiontest() end
     @testset "TUI test" begin TUItest() end=#
 else
     TUI()

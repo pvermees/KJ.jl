@@ -168,24 +168,21 @@ function fractionation(run::Vector{Sample},
 end
 # for concentration measurements:
 function fractionation(run::Vector{Sample},
-                       dt::AbstractDict,
                        blank::AbstractDataFrame,
                        internal::Tuple,
                        glass::AbstractDict)
     elements = channels2elements(run)
-    return fractionation(run,dt,blank,elements,internal,
+    return fractionation(run,blank,elements,internal,
                          collect(keys(glass)))
 end
 function fractionation(run::Vector{Sample},
-                       dt::AbstractDict,
                        blank::AbstractDataFrame,
                        internal::Tuple,
                        glass::AbstractVector)
     elements = channels2elements(run)
-    return fractionation(run,dt,blank,elements,internal,glass)
+    return fractionation(run,blank,elements,internal,glass)
 end
 function fractionation(run::Vector{Sample},
-                       dt::AbstractDict,
                        blank::AbstractDataFrame,
                        elements::AbstractDataFrame,
                        internal::Tuple,
