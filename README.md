@@ -16,10 +16,10 @@ import Pkg; Pkg.add(url="https://github.com/pvermees/KJ.jl.git")
 
 There are four ways to interact with KJ:
 
-1. [TUI](#1-tui-text-based-user-interface): an interactive text-based user interface
-2. [TUI + GUI](#2-tui-gui-extension): a TUI augmented with graphical user interface elements
-3. [REPL](#3-repl-command-line-interface): the command-line interface
-4. [Hybrid](#4-tui-repl): combining the TUI, GUI and REPL
+1. [TUI](#tui-text-based-user-interface): an interactive text-based user interface
+2. [TUI + GUI](#tui-gui-extension): a TUI augmented with graphical user interface elements
+3. [REPL](#repl-command-line-interface): the command-line interface
+4. [Hybrid](#tui-repl): combining the TUI, GUI and REPL
 
 ## TUI (text-based user interface)
 
@@ -29,7 +29,7 @@ Here is a short example of a menu-driven KJ session:
 julia> using KJ
 julia> TUI()
 ----------
- KJ 0.0.1
+ KJ 0.3.0
 ----------
 
 r: Read data files[*]
@@ -90,7 +90,7 @@ You can augment the TUI with GUI elements (currently just file choosers) by inst
 julia> using KJ, KJgui
 julia> TUI(KJgui)
 ----------
- KJ 0.0.1
+ KJ 0.3.0
 ----------
 
 r: Read data files[*]
@@ -158,7 +158,7 @@ manipulate the contents of `ctrl` and sync it with the TUI using the
 julia> using KJ
 julia> TUI()
 ----------
- KJ 0.0.1
+ KJ 0.3.0
 ----------
 
 r: Read data files[*]

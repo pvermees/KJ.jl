@@ -256,6 +256,19 @@ function predict(P::AbstractVector,
     return DataFrame(P=Pf,D=Df,d=df)
 end
 # glass
+function predict(dat::AbstractDataFrame,
+                 dt::AbstractDict,
+                 pars::NamedTuple,
+                 blank::AbstractDataFrame,
+                 channels::AbstractDict,
+                 y0::AbstractFloat;
+                 debug::Bool=false)
+    mf = exp(pars.mfrac)
+    bD = blank[:,channels["D"]]
+    bd = blank[:,channels["d"]]
+    Dm,dm,vD,vd,bDt,bdt = LLprep(bD,bd,dat,dt,channels)
+    return predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
+end
 function predict(Dm::AbstractVector,
                  dm::AbstractVector,
                  vD::AbstractVector,
