@@ -298,7 +298,7 @@ function UPbtest()
     blank, pars = process!(myrun,dt,"U-Pb",channels,standards,glass,
                            nblank=2,ndrift=1,ndown=1)
     export2IsoplotR(myrun,dt,method,channels,blank,pars,fname="UPb.json")
-    p = plot(myrun[1],dt,method,channels,blank,pars,
+    p = plot(myrun[37],dt,method,channels,blank,pars,
              standards,glass,transformation="log",den="Pb206")
     @test display(p) != NaN
 end

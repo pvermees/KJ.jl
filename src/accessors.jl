@@ -179,7 +179,6 @@ end
 # glass
 function gety0(method::AbstractString,
                refmat::AbstractString)
-    x0 = y1 = missing
     i = findfirst(==(method),_KJ["methods"][:,"method"])
     ratio = _KJ["methods"][i,"d"] * _KJ["methods"][i,"D"]
     return _KJ["glass"][refmat][ratio]
