@@ -223,6 +223,7 @@ function time2window(samp::Sample,twin::AbstractVector)
     end
     return out
 end
+export time2window
 
 function prefix2subset(run::Vector{Sample},
                        prefix::AbstractString)

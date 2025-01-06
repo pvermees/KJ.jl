@@ -450,7 +450,7 @@ function getKJtree()
             "Specify the blank (background signal) as pairs of time " * 
             "stamps (in seconds) or trust KJ to choose the " * 
             "blank windows automatically. The blanks of all the " * 
-            "analyses (samples + blanks) will be combined and " * 
+            "analyses (samples + standards) will be combined and " * 
             "interpolated under the signal.",
             action = Dict(
                 "a" => TUIoneAutoBlankWindow!,
