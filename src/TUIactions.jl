@@ -560,7 +560,8 @@ function TUIexport2csv(ctrl::AbstractDict,
     if ctrl["method"]=="concentrations"
         out = concentrations(ctrl["run"],ctrl["blank"],ctrl["par"],ctrl["internal"])
     else
-        out = averat(ctrl["run"],ctrl["dwell"],ctrl["channels"],ctrl["blank"],ctrl["par"])
+        out = averat(ctrl["run"],ctrl["dwell"],ctrl["channels"],ctrl["blank"],ctrl["par"];
+                     method=ctrl["method"])
     end
     fname = splitext(response)[1]*".csv"
     CSV.write(fname,out[ctrl["cache"],:])
@@ -597,8 +598,7 @@ end
 
 function TUIexportLog(ctrl::AbstractDict,
                       response::AbstractString)
-    nh = size(ctrl["history"],1)
-    deleteat!(ctrl["history"],[nh-1,nh])
+    ctrl["history"] = ctrl["history"][1:end-1,:]
     CSV.write(response,ctrl["history"])
     return "xx"
 end

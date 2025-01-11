@@ -186,13 +186,22 @@ function averat(run::Vector{Sample},
                 dt::AbstractDict,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
-                pars::NamedTuple)
+                pars::NamedTuple;
+                method=nothing)
     ns = length(run)
-    nul = fill(0.0,ns)
-    out = DataFrame(name=fill("",ns),x=nul,sx=nul,y=nul,sy=nul,rxy=nul)
+    if isnothing(method)
+        xlab = "x"
+        ylab = "y"
+    else
+        P, D, d = getPDd(method)
+        xlab = P * "/" * D
+        ylab = d * "/" * D
+    end
+    column_names = ["name", xlab, "s[" * xlab * "]", ylab, "s[" * ylab * "]", "rho"]
+    out = DataFrame(hcat(fill("",ns),zeros(ns,5)),column_names)
     for i in 1:ns
         samp = run[i]
-        out[i,1] = samp.sname
+        out[i,:name] = samp.sname
         out[i,2:end] = averat(samp,dt,channels,blank,pars)
     end
     return out

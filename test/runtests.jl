@@ -274,7 +274,7 @@ function PAtest(verbose=false)
     cutoff = 1e7
     blk, fit = process!(myrun,dt,method,channels,standards,glass;
                         PAcutoff=cutoff,nblank=2,ndrift=1,ndown=1)
-    ratios = averat(myrun,dt,channels,blk,fit)
+    ratios = averat(myrun,dt,channels,blk,fit;method=method)
     if verbose println(first(ratios,5)) end
     return ratios
 end
@@ -368,7 +368,7 @@ end
 
 Plots.closeall()
 
-if true
+if false
     @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
