@@ -1,4 +1,4 @@
-using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
+using KJ, KJgui, Test, CSV, Infiltrator, DataFrames, Statistics
 import Plots
 
 function loadtest(verbose=false)
@@ -366,10 +366,14 @@ function TUItest()
     TUI(logbook="logs/test.log",reset=true)
 end
 
+function GUItest()
+    TUI(KJgui;logbook="logs/KJgui.log",reset=true)
+end
+
 Plots.closeall()
 
-if false
-    @testset "load" begin loadtest(true) end
+if true
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -392,7 +396,8 @@ if false
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "TUI test" begin TUItest() end=#
+    @testset "KJgui test" begin GUItest() end
 else
     TUI()
 end
