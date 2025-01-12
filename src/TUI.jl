@@ -58,7 +58,9 @@ function dispatch!(ctrl::AbstractDict;
     else
         println("\n" * message)
     end
-    if isnothing(response) response = readline() end
+    if isnothing(response)
+        response = readline()
+    end
     if response == "?"
         println(help)
         next = nothing
@@ -102,8 +104,10 @@ function dispatch!(ctrl::AbstractDict;
         push!(ctrl["history"],[key,response])
     end
     if verbose
-        print("key: " * key * ", response: " * response)
-        print(", next:"); print(next)
+        print("key: " * key)
+        print(", action: "); print(action)
+        print(", response: " * response)
+        print(", next: "); print(next)
         print(", final: "); println(final)
         println(ctrl["history"])
     end
