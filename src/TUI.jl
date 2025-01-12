@@ -105,7 +105,6 @@ function dispatch!(ctrl::AbstractDict;
     end
     if verbose
         print("key: " * key)
-        print(", action: "); print(action)
         print(", response: " * response)
         print(", next: "); print(next)
         print(", final: "); println(final)
