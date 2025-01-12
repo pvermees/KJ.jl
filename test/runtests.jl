@@ -363,7 +363,7 @@ function extensiontest(verbose=true)
 end
 
 function TUItest()
-    TUI(logbook="logs/test.log",reset=true)
+    TUI(logbook="logs/KJgui.log",reset=true)
 end
 
 function GUItest()
@@ -395,9 +395,9 @@ if true
     @testset "timestamp test" begin timestamptest() end
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
-    @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end=#
-    @testset "KJgui test" begin GUItest() end
+    @testset "extension test" begin extensiontest() end=#
+    @testset "TUI test" begin TUItest() end
+    #=@testset "KJgui test" begin GUItest() end=#
 else
     TUI()
 end

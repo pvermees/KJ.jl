@@ -101,6 +101,10 @@ function dispatch!(ctrl::AbstractDict;
     if !(key in toskip) & !(next in toskip) & !(final in toskip)
         push!(ctrl["history"],[key,response])
     end
+    if verbose
+        println(key * " " * response * " " * next * " " * final)
+        println(ctrl["history"])
+    end
 end
 
 function KJtree!(tree::AbstractDict)
