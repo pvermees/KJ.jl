@@ -91,8 +91,6 @@ function TUIloadICPdir!(ctrl::AbstractDict,
         TUIsetGroups!(ctrl,"standards")
         TUIsetGroups!(ctrl,"glass")
         return "x"
-    elseif ctrl["log"]
-        return "xx"
     else
         return "xxx"
     end
@@ -119,8 +117,6 @@ function TUIloadLAfile!(ctrl::AbstractDict,
         ctrl["priority"]["standards"] = false
         ctrl["priority"]["glass"] = false
         return "xx"
-    elseif ctrl["log"]
-        return "xxx"
     else
         return "xxxx"
     end
