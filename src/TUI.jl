@@ -102,7 +102,9 @@ function dispatch!(ctrl::AbstractDict;
         push!(ctrl["history"],[key,response])
     end
     if verbose
-        println(key * " " * response * " " * next * " " * final)
+        print("key: " * key * ", response: " * response)
+        print(", next:"); print(next)
+        print(", final: "); println(final)
         println(ctrl["history"])
     end
 end
