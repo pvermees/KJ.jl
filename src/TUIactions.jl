@@ -588,7 +588,6 @@ function TUIimportLog!(ctrl::AbstractDict,
     history = CSV.read(response,DataFrame)
     for row in eachrow(history)
         try
-            print(row)
             dispatch!(ctrl;key=row[1],response=row[2],verbose=verbose)
         catch e
             println(e)
