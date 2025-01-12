@@ -50,8 +50,12 @@ function dispatch!(ctrl::AbstractDict;
                    key=nothing,response=nothing,verbose=false)
     if verbose
         println(ctrl["chain"])
+        print("key: " * key)
+        print(", response: " * response)
     end
-    if isnothing(key) key = ctrl["chain"][end] end
+    if isnothing(key)
+        key = ctrl["chain"][end]
+    end
     (message,help,action) = _KJ["tree"][key]
     if isa(message,Function)
         println("\n" * message(ctrl))
