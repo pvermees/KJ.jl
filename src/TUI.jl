@@ -51,7 +51,7 @@ function dispatch!(ctrl::AbstractDict;
     if verbose
         println(ctrl["chain"])
         print("key: " * key)
-        print(", response: " * response)
+        println(", response: " * response)
     end
     if isnothing(key)
         key = ctrl["chain"][end]
