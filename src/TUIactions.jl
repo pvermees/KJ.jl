@@ -581,13 +581,15 @@ function TUIexport2json(ctrl::AbstractDict,
 end
 
 function TUIimportLog!(ctrl::AbstractDict,
-                       response::AbstractString)
+                       response::AbstractString;
+                       verbose::Bool=false)
     TUIclear!(ctrl)
     ctrl["log"] = true
     history = CSV.read(response,DataFrame)
     for row in eachrow(history)
         try
-            dispatch!(ctrl;key=row[1],response=row[2])
+            dispatch!(ctrl;key=row[1],response=row[2];
+                      verbose=verbose)
         catch e
             println(e)
         end
