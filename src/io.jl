@@ -175,9 +175,8 @@ function parseData(data::AbstractDataFrame,
     cs = cumsum(scaled)
     # 2. find the lag time between the laser and ICP-MS files
     ICPduration = runtime[end]
-    lasertime = automatic_datetime.(timestamps[:,1]) # "Timestamp"
-    start = lasertime[1]
-    stop = lasertime[end]
+    start = automatic_datetime(timestamps[1,1]) # "Timestamp
+    stop = automatic_datetime(timestamps[end,1])
     LAduration = Millisecond(stop - start).value/1000
     lower = 0.0
     if LAduration>ICPduration
@@ -195,19 +194,21 @@ function parseData(data::AbstractDataFrame,
     fit = Optim.optimize(misfit,runtime[crude-1],runtime[crude+1])
     lag = Optim.minimizer(fit)
     # 3. parse the signals into samples
-    sequences = findall(!ismissing,timestamps[:,2]) # "Sequence Number"
-    laser_on = findall(==("On"),timestamps[:,11]) # "Laser State"
+    sequences = [findall(!ismissing,timestamps[:,2]); # "Sequence Number"
+                 size(timestamps,1)]
     i1 = argmin(abs.(runtime .- lag))
     i2 = argmin(abs.(runtime .< lag + LAduration))
-    for i in eachindex(sequences)
-        datetime = from = lasertime[laser_on[i]]
-        to = lasertime[laser_on[i]+2]
+    for i in 2:length(sequences)
+        i1 = sequences[i-1]
+        i2 = sequences[i]
+        from = automatic_datetime(timestamps[i1,1])
+        to = automatic_datetime(timestamps[i2,1])
         t1 =  Millisecond(from-start).value/1000
         t2 =  Millisecond(to-start).value/1000
-        first = maximum([1,floor(Int,(i2-i1)*t1/LAduration)])
-        last = minimum([ceil(Int,(i2-i1)*t2/LAduration),nr])
-        sname = timestamps[sequences[i],5] # "Comment"
-        samp = df2sample(data[first:last,:],sname,datetime)
+        first = maximum([1,floor(Int,nr*t1/LAduration)])
+        last = minimum([ceil(Int,nr*t2/LAduration),nr])
+        sname = timestamps[i1,5] # "Comment"
+        samp = df2sample(data[first:last,:],sname,from)
         push!(run,samp)
     end
     return run

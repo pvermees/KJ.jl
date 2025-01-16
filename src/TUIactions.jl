@@ -582,7 +582,7 @@ end
 
 function TUIimportLog!(ctrl::AbstractDict,
                        response::AbstractString;
-                       verbose::Bool=false)
+                       verbose::Bool=true)
     TUIclear!(ctrl)
     ctrl["log"] = true
     history = CSV.read(response,DataFrame)

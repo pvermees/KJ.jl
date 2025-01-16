@@ -241,6 +241,8 @@ function automatic_datetime(datetime_string::AbstractString)
         date_delim = '-'
     elseif occursin(r"/", datetime_string)
         date_delim = '/'
+    else
+        date_delim = nothing
     end
     if occursin(r"(?i:AM|PM)", datetime_string)
         time_format = "H:M:S p"
@@ -252,7 +254,7 @@ function automatic_datetime(datetime_string::AbstractString)
     datetime_vector = split(datetime_string, r"[-\/ ]")
     if length(datetime_vector[1]) == 4
         date_format = "Y$(date_delim)m$(date_delim)d"
-    elseif parse(Int,datetime_vector[1]) > 12
+    elseif tryparse(Int,datetime_vector[1]) > 12
         date_format = "d$(date_delim)m$(date_delim)Y"
     else
         date_format = "m$(date_delim)d$(date_delim)Y"
