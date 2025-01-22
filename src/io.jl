@@ -93,13 +93,46 @@ function readFile(fname::AbstractString;
     return df2sample(dat,sname,datetime)
 end
 
-function df2sample(df::AbstractDataFrame,sname::AbstractString,datetime::DateTime)
+function df2sample(df::AbstractDataFrame,
+                   sname::AbstractString,
+                   datetime::DateTime)
     t = df[:,1]
     i0 = geti0(df[:,2:end])
     t0 = df[i0,1]
     bwin = autoWindow(t,t0;blank=true)
     swin = autoWindow(t,t0;blank=false)
     return Sample(sname,datetime,df,t0,bwin,swin,"sample")
+end
+function df2sample(df::AbstractDataFrame,
+                   sname::AbstractString,
+                   datetime::DateTime,
+                   start::AbstractFloat,
+                   stop::AbstractFloat,
+                   on::AbstractFloat,
+                   off::AbstractFloat)
+    t = df[:,1]
+    selection = (t.>=start .&& t.<=stop)
+    absolute_buffer = 2.0
+    relative_buffer = 0.1
+    if (on-start) > absolute_buffer
+        t2 = on - absolute_buffer
+    else
+        t2 = on - (on - start)*(1 - relative_buffer)
+    end
+    i1 = 1
+    i2 = findall(t[selection] .< t2)[end]
+    bwin = [(i1,i2)]
+    if (off-on) > 2*absolute_buffer
+        t1 = on + absolute_buffer
+        t2 = off - absolute_buffer
+    else
+        t1 = on + (off - on)*(1 - relative_buffer)
+        t2 = off - (off - on)*(1 - relative_buffer)
+    end
+    i1 = findall(t[selection] .< t1)[end]
+    i2 = findall(t[selection] .< t2)[end]
+    swin = [(i1,i2)]
+    return Sample(sname,datetime,df[selection,:],on,bwin,swin,"sample")
 end
 
 function readDat(fname::AbstractString,
@@ -166,49 +199,82 @@ end
 function parseData(data::AbstractDataFrame,
                    timestamps::AbstractDataFrame)
     run = Vector{Sample}(undef,0)
-    # 1. get the cumulative signal
-    nr = size(data,1)
-    runtime = data[:,1] # "Time [Sec]"
+    nr,nc = size(data)
+    ICPtime = data[:,1] # "Time [Sec]"
     signal = data[:,2:end]
-    total = sum.(eachrow(signal))
+    onoff = (cumsum(rle(timestamps[:,11])[2]).+1)[1:end-1] # Laser State
+    # 1. select the low blank signals
+    firstblank = collect(signal[1,:])
+    blankrank = sortperm(firstblank)
+    lq = firstblank[blankrank[floor(Int,nc/4)]]
+    uq = firstblank[blankrank[ceil(Int,3*nc/4)]]
+    iqr = uq - lq
+    outliers = (firstblank .< lq - 1.5*iqr) .|| (firstblank .> uq + 1.5*iqr)
+    lowblanksignal = signal[:,.!outliers]
+    # 2. get the cumulative signal of the low blank signals
+    total = sum.(eachrow(lowblanksignal))
     scaled = total./Statistics.mean(total)
     cs = cumsum(scaled)
-    # 2. find the lag time between the laser and ICP-MS files
-    ICPduration = runtime[end]
-    start = automatic_datetime(timestamps[1,1]) # "Timestamp
-    stop = automatic_datetime(timestamps[end,1])
-    LAduration = Millisecond(stop - start).value/1000
+    # 3. find the lag time between the ICP-MS and laser files
+    ICPduration = ICPtime[end]
+    LAduration = time_difference(timestamps[onoff[1],1],
+                                 timestamps[onoff[end],1])
     lower = 0.0
-    if LAduration>ICPduration
+    if LAduration > ICPduration
         @warn The laser session is longer than the ICP-MS session!
         upper = ICPduration
     else
         upper = ICPduration - LAduration
     end
-    misfit = function(lag)
-        i1 = argmin(abs.(runtime .- lag))
-        i2 = argmin(abs.(runtime .< lag + LAduration))
-        log(cs[end]) - log(cs[i2]-cs[i1])
+    coverage = function(lag)
+        i1 = argmin(abs.(ICPtime .- lag))
+        i2 = argmin(abs.(ICPtime .< lag + LAduration))
+        return cs[i2]-cs[i1]
     end
-    crude = argmin(misfit.(lower:1.0:upper))
-    fit = Optim.optimize(misfit,runtime[crude-1],runtime[crude+1])
-    lag = Optim.minimizer(fit)
-    # 3. parse the signals into samples
-    sequences = [findall(!ismissing,timestamps[:,2]); # "Sequence Number"
-                 size(timestamps,1)]
-    i1 = argmin(abs.(runtime .- lag))
-    i2 = argmin(abs.(runtime .< lag + LAduration))
-    for i in 2:length(sequences)
-        i1 = sequences[i-1]
-        i2 = sequences[i]
-        from = automatic_datetime(timestamps[i1,1])
-        to = automatic_datetime(timestamps[i2,1])
-        t1 =  Millisecond(from-start).value/1000
-        t2 =  Millisecond(to-start).value/1000
-        first = maximum([1,floor(Int,nr*t1/LAduration)])
-        last = minimum([ceil(Int,nr*t2/LAduration),nr])
-        sname = timestamps[i1,5] # "Comment"
-        samp = df2sample(data[first:last,:],sname,from)
+    t = ICPtime[ICPtime.>lower .&& ICPtime.<upper]
+    lag_to_first_shot = t[argmax(coverage.(t))]
+    wait_until_first_shot = time_difference(timestamps[1,1],
+                                            timestamps[onoff[1],1])
+    lag = lag_to_first_shot - wait_until_first_shot
+    # 4. create vectors with the start and end of each sequence, and laser timings
+    sequences = findall(!ismissing,timestamps[:,2]) # "Sequence Number"
+    ns = length(sequences)
+    onoff = rle(timestamps[:,11])
+    i_onoff = [1;cumsum(onoff[2][1:end-1]) .+ 1]
+    i_on = i_onoff[onoff[1].=="On"]
+    i_off = i_onoff[onoff[1].=="Off"]
+    ICPstart = fill(0.0,ns)
+    ICPon = fill(0.0,ns)
+    ICPoff = fill(0.0,ns)
+    ICPstop = fill(0.0,ns)
+    date_times = automatic_datetime.(timestamps[sequences,1])
+    snames = timestamps[sequences,5] # "Comment"
+    for i in 2:ns-1
+        icurrent, inext = sequences[i:i+1]
+        i_previous_off = i_off[i_off .< icurrent][end]
+        i_current_on = i_on[i_on .> icurrent][1]
+        i_current_off = i_off[i_off .< inext][end]
+        i_next_on = i_on[i_on .> inext][1]
+        t_previous_off = time_difference(timestamps[1,1],timestamps[i_previous_off,1])
+        t_current_on = time_difference(timestamps[1,1],timestamps[i_current_on,1])
+        t_current_off = time_difference(timestamps[1,1],timestamps[i_current_off,1])
+        t_next_on = time_difference(timestamps[1,1],timestamps[i_next_on,1])
+        ICPstart[i] = lag + (t_previous_off + t_current_on)/2
+        ICPon[i] = lag + t_current_on
+        ICPoff[i] = lag + t_current_off
+        ICPstop[i] = lag + (t_current_off + t_next_on)/2
+    end
+    ICPon[1] = lag
+    ICPoff[1] = lag + time_difference(timestamps[1,1],timestamps[i_off[2],1])
+    ICPstop[1] = ICPstart[2]
+    ICPstart[end] = ICPstop[end-1]
+    ICPon[end] = lag + time_difference(timestamps[1,1],timestamps[i_on[end],1])
+    ICPoff[end] = lag + time_difference(timestamps[1,1],timestamps[i_off[end],1])
+    ICPstop[end] = ICPtime[end]
+    # 5. parse the data into samples
+    for i in 1:ns
+        samp = df2sample(data,snames[i],date_times[i],
+                         ICPstart[i],ICPstop[i],ICPon[i],ICPoff[i])
         push!(run,samp)
     end
     return run

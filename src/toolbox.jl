@@ -267,6 +267,12 @@ function automatic_datetime(datetime_string::AbstractString)
     return datetime
 end
 
+function time_difference(start::AbstractString,stop::AbstractString)
+    t1 = automatic_datetime(start)
+    t2 = automatic_datetime(stop)
+    return Millisecond(t2-t1).value / 1000
+end
+
 """
 rle(v)
 
