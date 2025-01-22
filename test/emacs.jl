@@ -8,4 +8,13 @@ end
 
 rerun = true
 
-include("runtests.jl")
+if true
+    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
+    import Plots
+    myrun = load("/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon_Maps.csv",
+                 "/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon.Iolite.csv";
+                 instrument="Agilent")
+    plot(myrun[10])
+else
+    include("runtests.jl")
+end

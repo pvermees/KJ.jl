@@ -1,7 +1,7 @@
 name = "KJ"
 uuid = "c976074e-2e5b-4ac6-9301-394412a2f0b0"
 authors = ["pvermees <p.vermeesch@ucl.ac.uk>"]
-version = "0.3.2"
+version = "0.3.3"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -32,7 +32,6 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Infiltrator = "5903a43b-9cc3-4c30-8d17-598619ec4e9b"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-KJgui = "2eef9ca3-af0c-42e0-b773-62fdacf1adee"
 
 [targets]
-test = ["Test", "Infiltrator", "DataFrames", "CSV", "Statistics","KJgui"]
+test = ["Test", "Infiltrator", "DataFrames", "CSV", "Statistics"]

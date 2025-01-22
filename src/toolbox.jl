@@ -241,6 +241,8 @@ function automatic_datetime(datetime_string::AbstractString)
         date_delim = '-'
     elseif occursin(r"/", datetime_string)
         date_delim = '/'
+    else
+        date_delim = nothing
     end
     if occursin(r"(?i:AM|PM)", datetime_string)
         time_format = "H:M:S p"
@@ -252,7 +254,7 @@ function automatic_datetime(datetime_string::AbstractString)
     datetime_vector = split(datetime_string, r"[-\/ ]")
     if length(datetime_vector[1]) == 4
         date_format = "Y$(date_delim)m$(date_delim)d"
-    elseif parse(Int,datetime_vector[1]) > 12
+    elseif tryparse(Int,datetime_vector[1]) > 12
         date_format = "d$(date_delim)m$(date_delim)Y"
     else
         date_format = "m$(date_delim)d$(date_delim)Y"
@@ -263,6 +265,12 @@ function automatic_datetime(datetime_string::AbstractString)
         datetime += Dates.Year(2000)
     end
     return datetime
+end
+
+function time_difference(start::AbstractString,stop::AbstractString)
+    t1 = automatic_datetime(start)
+    t2 = automatic_datetime(stop)
+    return Millisecond(t2-t1).value / 1000
 end
 
 """
