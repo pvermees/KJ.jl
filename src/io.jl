@@ -196,27 +196,25 @@ function readThermoFisher(fname::AbstractString,
     
 end
 
-function parseData(data::AbstractDataFrame,
-                   timestamps::AbstractDataFrame)
-    run = Vector{Sample}(undef,0)
-    nr,nc = size(data)
-    ICPtime = data[:,1] # "Time [Sec]"
-    signal = data[:,2:end]
-    onoff = (cumsum(rle(timestamps[:,11])[2]).+1)[1:end-1] # Laser State
-    # 1. select the low blank signals
+function parser_getLowBlankSignal(signal::AbstractDataFrame)
+    nc = size(signal,2)
     firstblank = collect(signal[1,:])
     blankrank = sortperm(firstblank)
     lq = firstblank[blankrank[floor(Int,nc/4)]]
     uq = firstblank[blankrank[ceil(Int,3*nc/4)]]
     iqr = uq - lq
     outliers = (firstblank .< lq - 1.5*iqr) .|| (firstblank .> uq + 1.5*iqr)
-    lowblanksignal = signal[:,.!outliers]
-    # 2. get the cumulative signal of the low blank signals
+    return signal[:,.!outliers]
+end
+
+function parser_getLaserLag(lowblanksignal::AbstractDataFrame,
+                            ICPtime::AbstractVector,
+                            timestamps::AbstractDataFrame)
+    ICPduration = ICPtime[end]
+    onoff = (cumsum(rle(timestamps[:,11])[2]).+1)[1:end-1] # Laser State
     total = sum.(eachrow(lowblanksignal))
     scaled = total./Statistics.mean(total)
     cs = cumsum(scaled)
-    # 3. find the lag time between the ICP-MS and laser files
-    ICPduration = ICPtime[end]
     LAduration = time_difference(timestamps[onoff[1],1],
                                  timestamps[onoff[end],1])
     lower = 0.0
@@ -235,20 +233,22 @@ function parseData(data::AbstractDataFrame,
     lag_to_first_shot = t[argmax(coverage.(t))]
     wait_until_first_shot = time_difference(timestamps[1,1],
                                             timestamps[onoff[1],1])
-    lag = lag_to_first_shot - wait_until_first_shot
-    # 4. create vectors with the start and end of each sequence, and laser timings
+    return lag_to_first_shot - wait_until_first_shot
+end
+
+function parser_ICPcutter(lag::AbstractFloat,
+                          ICPtime::AbstractVector,
+                          timestamps::AbstractDataFrame)
     sequences = findall(!ismissing,timestamps[:,2]) # "Sequence Number"
     ns = length(sequences)
     onoff = rle(timestamps[:,11])
     i_onoff = [1;cumsum(onoff[2][1:end-1]) .+ 1]
     i_on = i_onoff[onoff[1].=="On"]
     i_off = i_onoff[onoff[1].=="Off"]
-    ICPstart = fill(0.0,ns)
+    ICPstart=fill(0.0,ns)
     ICPon = fill(0.0,ns)
     ICPoff = fill(0.0,ns)
     ICPstop = fill(0.0,ns)
-    date_times = automatic_datetime.(timestamps[sequences,1])
-    snames = timestamps[sequences,5] # "Comment"
     for i in 2:ns-1
         icurrent, inext = sequences[i:i+1]
         i_previous_off = i_off[i_off .< icurrent][end]
@@ -271,11 +271,21 @@ function parseData(data::AbstractDataFrame,
     ICPon[end] = lag + time_difference(timestamps[1,1],timestamps[i_on[end],1])
     ICPoff[end] = lag + time_difference(timestamps[1,1],timestamps[i_off[end],1])
     ICPstop[end] = ICPtime[end]
-    # 5. parse the data into samples
-    for i in 1:ns
-        samp = df2sample(data,snames[i],date_times[i],
-                         ICPstart[i],ICPstop[i],ICPon[i],ICPoff[i])
-        push!(run,samp)
+    return DataFrame(snames=timestamps[sequences,5],
+                     date_times=automatic_datetime.(timestamps[sequences,1]),
+                     ICPstart=ICPstart,ICPon=ICPon,ICPoff=ICPoff,ICPstop=ICPstop)
+end
+
+function parseData(data::AbstractDataFrame,
+                   timestamps::AbstractDataFrame)
+    ICPtime = data[:,1] # "Time [Sec]"
+    lowblanksignal = parser_getLowBlankSignal(data[:,2:end])
+    lag = parser_getLaserLag(lowblanksignal,ICPtime,timestamps)
+    df = parser_ICPcutter(lag,ICPtime,timestamps)
+    run = Vector{Sample}(undef,size(df,1))
+    for i in eachindex(run)
+        run[i] = df2sample(data,df.snames[i],df.date_times[i],
+                           df.ICPstart[i],df.ICPstop[i],df.ICPon[i],df.ICPoff[i])
     end
     return run
 end
