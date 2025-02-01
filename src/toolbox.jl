@@ -46,17 +46,18 @@ end
 function polyFit(t::AbstractVector,
                  y::AbstractVector,
                  n::Integer)
-    
-    function misfit(par)
-        pred = polyVal(par,t)
-        sum((y.-pred).^2)
+    if any(y.>0.0)
+        function misfit(par)
+            pred = polyVal(par,t)
+            sum((y.-pred).^2)
+        end
+        b0 = log(abs(Statistics.mean(y)))
+        init = [b0;fill(-10,n-1)]
+        fit = Optim.optimize(misfit,init)
+        return Optim.minimizer(fit)
+    else
+        return fill(-Inf,n)
     end
-
-    b0 = log(abs(Statistics.mean(y)))
-    init = [b0;fill(-10,n-1)]
-    fit = Optim.optimize(misfit,init)
-    Optim.minimizer(fit)
-
 end
 
 function polyVal(p::AbstractVector,
@@ -197,7 +198,7 @@ function windowData(samp::Sample;blank=false,signal=false)
     elseif signal
         windows = samp.swin
     else
-        windows = [(1,size(samp,1))]
+        windows = [(1,size(samp.dat,1))]
     end
     selection = windows2selection(windows)
     out =  samp.dat[selection,:]
