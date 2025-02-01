@@ -95,12 +95,18 @@ end
 
 function df2sample(df::AbstractDataFrame,
                    sname::AbstractString,
-                   datetime::DateTime)
+                   datetime::DateTime;
+                   absolute_buffer::AbstractFloat=2.0,
+                   relative_buffer::AbstractFloat=0.1)
     t = df[:,1]
     i0 = geti0(df[:,2:end])
     t0 = df[i0,1]
-    bwin = autoWindow(t,t0;blank=true)
-    swin = autoWindow(t,t0;blank=false)
+    bwin = autoWindow(t,t0;blank=true,
+                      absolute_buffer=absolute_buffer,
+                      relative_buffer=relative_buffer)
+    swin = autoWindow(t,t0;blank=false,
+                      absolute_buffer=absolute_buffer,
+                      relative_buffer=relative_buffer)
     return Sample(sname,datetime,df,t0,bwin,swin,"sample")
 end
 function df2sample(df::AbstractDataFrame,
@@ -109,11 +115,21 @@ function df2sample(df::AbstractDataFrame,
                    start::AbstractFloat,
                    stop::AbstractFloat,
                    on::AbstractFloat,
-                   off::AbstractFloat)
+                   off::AbstractFloat;
+                   absolute_buffer::AbstractFloat=2.0,
+                   relative_buffer::AbstractFloat=0.1)
     t = df[:,1]
     selection = (t.>=start .&& t.<=stop)
-    absolute_buffer = 2.0
-    relative_buffer = 0.1
+    bwin = autoBwin(t[selection],on;
+                    off=off,start=start,stop=stop,
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
+    swin = autoSwin(t[selection],on;
+                    off=off,start=start,stop=stop,
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
+
+    
     if (on-start) > absolute_buffer
         t2 = on - absolute_buffer
     else
@@ -206,7 +222,6 @@ function parser_getLowBlankSignal(signal::AbstractDataFrame)
     outliers = (firstblank .< lq - 1.5*iqr) .|| (firstblank .> uq + 1.5*iqr)
     return signal[:,.!outliers]
 end
-
 function parser_getLaserLag(lowblanksignal::AbstractDataFrame,
                             ICPtime::AbstractVector,
                             timestamps::AbstractDataFrame)
@@ -235,7 +250,6 @@ function parser_getLaserLag(lowblanksignal::AbstractDataFrame,
                                             timestamps[onoff[1],1])
     return lag_to_first_shot - wait_until_first_shot
 end
-
 function parser_ICPcutter(lag::AbstractFloat,
                           ICPtime::AbstractVector,
                           timestamps::AbstractDataFrame)
@@ -245,7 +259,7 @@ function parser_ICPcutter(lag::AbstractFloat,
     i_onoff = [1;cumsum(onoff[2][1:end-1]) .+ 1]
     i_on = i_onoff[onoff[1].=="On"]
     i_off = i_onoff[onoff[1].=="Off"]
-    ICPstart=fill(0.0,ns)
+    ICPstart = fill(0.0,ns)
     ICPon = fill(0.0,ns)
     ICPoff = fill(0.0,ns)
     ICPstop = fill(0.0,ns)
@@ -275,7 +289,6 @@ function parser_ICPcutter(lag::AbstractFloat,
                      date_times=automatic_datetime.(timestamps[sequences,1]),
                      ICPstart=ICPstart,ICPon=ICPon,ICPoff=ICPoff,ICPstop=ICPstop)
 end
-
 function parseData(data::AbstractDataFrame,
                    timestamps::AbstractDataFrame)
     ICPtime = data[:,1] # "Time [Sec]"
