@@ -306,11 +306,12 @@ end
 function dwelltime(run::Vector{Sample})
     channels = getChannels(run)
     out = Dict(channel => 1.0 for channel in channels)
-    blk = pool(run;blank=true)
+    all = pool(run)
     for channel in channels
-        values = sort(unique(blk[:,channel]))
-        if length(values)>1
-            dcps = minimum(values[2:end] .- values[1:end-1])
+        values = sort(unique(all[:,channel]))
+        numval = minimum((5,length(values)))
+        if numval>1
+            dcps = minimum(values[2:numval] .- values[1:numval-1])
             out[channel] = minimum([1/dcps,out[channel]])
         end
     end
