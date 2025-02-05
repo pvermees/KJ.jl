@@ -22,7 +22,9 @@ if true
     standards = Dict("91500_zr" => "91500")
     glass = Dict("NIST612" => "NIST612")
     blk, fit = process!(myrun,dt,method,channels,standards,glass,
-                        nblank=2,ndrift=1,ndown=0)
+                        nblank=2,ndrift=2,ndown=0)
+    export2IsoplotR(myrun,dt,method,channels,blk,fit;
+                    fname="/home/pvermees/temp/NHM.json")
     p = plot(myrun[23],dt,method,channels,blk,fit,standards,glass,
              transformation="log",den=nothing)
 else
