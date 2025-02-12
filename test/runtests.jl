@@ -25,15 +25,15 @@ function windowtest()
     @test display(p) != NaN
 end
 
-function blanktest()
+function blanktest(poisson=true)
     myrun = loadtest()
     blk = fitBlanks(myrun;nblank=2)
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     return myrun, dt, blk
 end
 
 function standardtest(verbose=false)
-    myrun, blk = blanktest()
+    myrun, dt, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     anchors = getAnchors("Lu-Hf",standards)
@@ -43,8 +43,8 @@ function standardtest(verbose=false)
     end
 end
 
-function fixedLuHf()
-    myrun, dt, blk = blanktest()
+function fixedLuHf(poisson=true)
+    myrun, dt, blk = blanktest(poisson)
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
                     "D" => "Hf176 -> 258",
@@ -61,22 +61,22 @@ function fixedLuHf()
     return myrun, dt, blk, method, channels, glass, standards, fit
 end
 
-function predictest()
-    myrun, dt, blk, method, channels, glass, standards, fit = fixedLuHf()
+function predictest(poisson=true)
+    myrun, dt, blk, method, channels, glass, standards, fit = fixedLuHf(poisson)
     samp = myrun[105]
     if samp.group == "sample"
         println("Not a standard")
     else
-        pred = predict(samp,dt,method,fit,blk,channels,standards,glass)
-        p = plot(samp,dt,method,channels,blk,fit,standards,glass;
-                 transformation="log")
+        pred = predict(samp,method,fit,blk,channels,standards,glass;dt=dt)
+        p = plot(samp,method,channels,blk,fit,standards,glass;
+                 dt=dt,transformation="log")
         @test display(p) != NaN
     end
     return samp,dt,method,fit,blk,channels,standards,glass,p
 end
     
-function partest(parname,paroffsetfact)
-    samp,dt,method,fit,blk,channels,standards,glass,p = predictest()
+function partest(parname,paroffsetfact;poisson=true)
+    samp,dt,method,fit,blk,channels,standards,glass,p = predictest(poisson)
     drift = fit.drift[1]
     down = fit.down[2]
     mfrac = fit.mfrac[1]
@@ -94,27 +94,28 @@ function partest(parname,paroffsetfact)
                         PAcutoff=nothing,
                         adrift=[drift])
         anchors = getAnchors(method,standards,false)
-        offset = getOffset(samp,dt,channels,blk,adjusted_fit,anchors,"log")
-        plotFitted!(p,samp,dt,blk,adjusted_fit,channels,anchors;
-                    offset=offset,transformation="log",linecolor="red")
+        offset = getOffset(samp,channels,blk,adjusted_fit,anchors,"log";
+                           dt=dt)
+        plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
+                    offset=offset,transformation="log",linecolor="red",dt=dt)
     end
     @test display(p) != NaN
 end
 
-function driftest()
-    partest("drift",1.0)
+function driftest(poisson=true)
+    partest("drift",1.0;poisson=poisson)
 end
 
-function downtest()
-    partest("down",4.0)
+function downtest(poisson=true)
+    partest("down",4.0;poisson=poisson)
 end
 
-function mfractest()
-    partest("mfrac",0.2)
+function mfractest(poisson=true)
+    partest("mfrac",0.2;poisson=poisson)
 end
 
-function fractionationtest(all=true)
-    myrun, dt, blk = blanktest()
+function fractionationtest(all=true;poisson=true)
+    myrun, dt, blk = blanktest(poisson)
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
                     "D" => "Hf176 -> 258",
@@ -125,18 +126,18 @@ function fractionationtest(all=true)
     setGroup!(myrun,standards)
     if all
         println("two separate steps: ")
-        mf = fractionation(myrun,dt,method,blk,channels,glass)
-        fit = fractionation(myrun,dt,method,blk,channels,standards,mf;
-                            ndrift=1,ndown=1)
+        mf = fractionation(myrun,method,blk,channels,glass;dt=dt)
+        fit = fractionation(myrun,method,blk,channels,standards,mf;
+                            dt=dt,ndrift=1,ndown=1)
         println(fit)
         print("no glass: ")
-        fit = fractionation(myrun,dt,method,blk,channels,standards,nothing;
-                            ndrift=1,ndown=1)
+        fit = fractionation(myrun,method,blk,channels,standards,nothing;
+                            ndrift=1,ndown=1,dt=dt)
         println(fit)
         println("two joint steps: ")
     end
-    fit = fractionation(myrun,dt,"Lu-Hf",blk,channels,standards,glass;
-                        ndrift=1,ndown=1)
+    fit = fractionation(myrun,"Lu-Hf",blk,channels,standards,glass;
+                        ndrift=1,ndown=1,dt=dt)
     if (all)
         println(fit)
         return myrun, dt, blk, fit, channels, standards, glass
@@ -148,7 +149,7 @@ function fractionationtest(all=true)
     end
 end
 
-function RbSrTest(show=true)
+function RbSrTest(show=true;poisson=true)
     myrun = load("data/Rb-Sr",instrument="Agilent")
     method = "Rb-Sr"
     channels = Dict("d"=>"Sr88 -> 104",
@@ -157,21 +158,21 @@ function RbSrTest(show=true)
     standards = Dict("MDC_bt" => "MDC -")
     setGroup!(myrun,standards)
     blank = fitBlanks(myrun;nblank=2)
-    dt = dwelltime(myrun)
-    fit = fractionation(myrun,dt,method,blank,channels,standards,8.37861;
-                        ndown=0,ndrift=1,verbose=false)
+    dt = dwelltime(myrun;poisson=poisson)
+    fit = fractionation(myrun,method,blank,channels,standards,8.37861;
+                        ndown=0,ndrift=1,dt=dt,verbose=false)
     anchors = getAnchors(method,standards)
     if show
-        p = plot(myrun[2],dt,channels,blank,fit,anchors,
-                 transformation="log")#,den="Sr88 -> 104")
+        p = plot(myrun[2],channels,blank,fit,anchors,
+                 transformation="log")#,den="Sr88 -> 104";dt=dt)
         @test display(p) != NaN
     end
-    export2IsoplotR(myrun,dt,method,channels,blank,fit;
-                    prefix="Entire",fname="Entire.json")
+    export2IsoplotR(myrun,method,channels,blank,fit;
+                    prefix="Entire",fname="Entire.json",dt=dt)
     return myrun, dt, blank, fit, channels, standards, anchors
 end
 
-function KCaTest(show=true)
+function KCaTest(show=true;poisson=true)
     myrun = load("data/K-Ca",instrument="Agilent")
     method = "K-Ca"
     channels = Dict("d"=>"Ca44 -> 63",
@@ -180,17 +181,17 @@ function KCaTest(show=true)
     standards = Dict("EntireCreek_bt" => "EntCrk")
     setGroup!(myrun,standards)
     blank = fitBlanks(myrun;nblank=2)
-    dt = dwelltime(myrun)
-    fit = fractionation(myrun,dt,method,blank,channels,standards,nothing;
-                        ndown=0,ndrift=1,verbose=false)
+    dt = dwelltime(myrun;poisson=poisson)
+    fit = fractionation(myrun,method,blank,channels,standards,nothing;
+                        ndown=0,ndrift=1,dt=dt,verbose=false)
     anchors = getAnchors(method,standards)
     if show
-        p = plot(myrun[3],dt,channels,blank,fit,anchors,
-                 transformation="log",den=nothing)
+        p = plot(myrun[3],channels,blank,fit,anchors,
+                 transformation="log",den=nothing;dt=dt)
         @test display(p) != NaN
     end
-    export2IsoplotR(myrun,dt,method,channels,blank,fit,
-                    prefix="EntCrk",fname="Entire_KCa.json")
+    export2IsoplotR(myrun,method,channels,blank,fit,
+                    prefix="EntCrk",fname="Entire_KCa.json";dt=dt)
     return myrun, dt, blank, fit, channels, standards, anchors
 end
 
@@ -219,19 +220,19 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
     @test display(p) != NaN    
 end
 
-function histest(;LuHf=false,show=true)
+function histest(;LuHf=false,show=true,poisson=true)
     if LuHf
         myrun,dt,blk,fit,channels,standards,glass,anchors =
-            fractionationtest(false)
+            fractionationtest(false;poisson=poisson)
         standard = "BP_gt"
     else
-        myrun,dt,blk,fit,channels,standards,anchors = RbSrTest(false)
+        myrun,dt,blk,fit,channels,standards,anchors = RbSrTest(false;poisson=poisson)
         standard = "MDC_bt"
     end
     print(fit)
     pooled = pool(myrun;signal=true,group=standard)
     anchor = anchors[standard]
-    pred = predict(pooled,dt,fit,blk,channels,anchor)
+    pred = predict(pooled,fit,blk,channels,anchor;dt=dt)
     Pm = pooled[:,channels["P"]]
     Dm = pooled[:,channels["D"]]
     dm = pooled[:,channels["d"]]
@@ -246,25 +247,25 @@ function histest(;LuHf=false,show=true)
     return anchors, fit, Pm, Dm, dm
 end
 
-function processtest()
+function processtest(poisson=true)
     myrun = load("data/Lu-Hf",instrument="Agilent")
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
                     "P"=>"Lu175 -> 175");
     standards = Dict("Hogsbo_gt" => "hogsbo")#"BP_gt" => "BP")#
     glass = Dict("NIST612" => "NIST612p")
-    blk, fit = process!(myrun,dt,method,channels,standards,glass,
-                        nblank=2,ndrift=1,ndown=1);
-    p = plot(myrun[2],dt,method,channels,blk,fit,standards,glass,
-             transformation="log",den=nothing)#"Hf176 -> 258",);
+    blk, fit = process!(myrun,method,channels,standards,glass;
+                        nblank=2,ndrift=1,ndown=1,dt=dt)
+    p = plot(myrun[2],method,channels,blk,fit,standards,glass;
+             transformation="log",den=nothing,dt=dt)
     @test display(p) != NaN
 end
 
-function PAtest(verbose=false)
+function PAtest(verbose=false;poisson=true)
     myrun = load("data/Lu-Hf",instrument="Agilent")
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     method = "Lu-Hf"
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -272,34 +273,37 @@ function PAtest(verbose=false)
     standards = Dict("Hogsbo_gt" => "hogsbo")
     glass = Dict("NIST612" => "NIST612p")
     cutoff = 1e7
-    blk, fit = process!(myrun,dt,method,channels,standards,glass;
-                        PAcutoff=cutoff,nblank=2,ndrift=1,ndown=1)
-    ratios = averat(myrun,dt,channels,blk,fit;method=method)
+    blk, fit = process!(myrun,method,channels,standards,glass;
+                        PAcutoff=cutoff,nblank=2,ndrift=1,ndown=1,dt=dt)
+    ratios = averat(myrun,channels,blk,fit;method=method,dt=dt)
     if verbose println(first(ratios,5)) end
     return ratios
 end
 
-function exporttest()
-    ratios = PAtest()
-    selection = prefix2subset(ratios,"BP") # "hogsbo"
-    CSV.write("BP.csv",selection)
-    export2IsoplotR(selection,"Lu-Hf",fname="BP.json")
+function exporttest(poisson=true)
+    ratios = PAtest(poisson=poisson)
+    prefix = "BP" # hogsbo
+    selection = prefix2subset(ratios,prefix)
+    fname = poisson ? "poisson" * prefix : "non-poisson" * prefix
+    CSV.write(fname * ".csv",selection)
+    export2IsoplotR(selection,"Lu-Hf",fname=prefix * ".json")
 end
 
-function UPbtest()
+function UPbtest(poisson=true)
     myrun = load("data/U-Pb",instrument="Agilent",head2name=false)
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     method = "U-Pb"
     standards = Dict("Plesovice_zr" => "STDCZ",
                      "91500_zr" => "91500")
     glass = Dict("NIST610" => "610",
                  "NIST612" => "612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blank, pars = process!(myrun,dt,"U-Pb",channels,standards,glass,
-                           nblank=2,ndrift=1,ndown=1)
-    export2IsoplotR(myrun,dt,method,channels,blank,pars,fname="UPb.json")
-    p = plot(myrun[37],dt,method,channels,blank,pars,
-             standards,glass,transformation="log",den="Pb206")
+    blank, pars = process!(myrun,"U-Pb",channels,standards,glass,
+                           nblank=2,ndrift=1,ndown=1,dt=dt)
+    export2IsoplotR(myrun,method,channels,blank,pars;
+                    fname="UPb.json",dt=dt)
+    p = plot(myrun[37],method,channels,blank,pars,standards,glass;
+             transformation="log",den="Pb206",dt=dt)
     @test display(p) != NaN
 end
 
@@ -308,19 +312,20 @@ function iCaptest(verbose=true)
     if verbose summarise(myrun;verbose=true,n=5) end
 end
 
-function carbonatetest(verbose=false)
+function carbonatetest(verbose=false;poisson=true)
     method = "U-Pb"
     myrun = load("data/carbonate",instrument="Agilent")
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     standards = Dict("WC1_cc"=>"WC1")
     glass = Dict("NIST612"=>"NIST612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blk, fit = process!(myrun,dt,method,channels,standards,glass,
-                        nblank=2,ndrift=1,ndown=1,verbose=verbose)
+    blk, fit = process!(myrun,method,channels,standards,glass;
+                        nblank=2,ndrift=1,ndown=1,verbose=verbose,dt=dt)
     export2IsoplotR(myrun,dt,method,channels,blk,fit;
                     prefix="Duff",fname="Duff.json")
-    p = plot(myrun[3],dt,method,channels,blk,fit,standards,glass;
-             transformation=nothing,num=["Pb207"],den="Pb206",ylim=[-0.02,0.3])
+    p = plot(myrun[3],method,channels,blk,fit,standards,glass;
+             transformation=nothing,num=["Pb207"],
+             den="Pb206",ylim=[-0.02,0.3],dt=dt)
     @test display(p) != NaN
 end
 
@@ -376,28 +381,42 @@ if true
     @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
-    @testset "set method and blanks" begin blanktest() end
+    @testset "poisson blank test" begin blanktest() end
+    @testset "non-poisson blank test" begin blanktest(false) end
     @testset "assign standards" begin standardtest(true) end
-    @testset "predict" begin predictest() end
-    @testset "predict drift" begin driftest() end
-    @testset "predict down" begin downtest() end
-    @testset "predict mfrac" begin mfractest() end
-    @testset "fit fractionation" begin fractionationtest(true) end
-    @testset "Rb-Sr" begin RbSrTest() end
-    @testset "K-Ca" begin KCaTest() end
-    @testset "hist" begin histest() end
-    @testset "process run" begin processtest() end
-    @testset "PA test" begin PAtest(true) end
-    @testset "export" begin exporttest() end
-    @testset "U-Pb" begin UPbtest() end
+    @testset "poisson predict" begin predictest() end
+    @testset "non-poisson predict" begin predictest(false) end
+    @testset "poisson drift test" begin driftest() end
+    @testset "non-poisson drift test" begin driftest(false) end
+    @testset "poisson downhole test" begin downtest() end
+    @testset "non-poisson downhole test" begin downtest(false) end
+    @testset "poisson mass fractionation" begin mfractest() end
+    @testset "non-poisson mass fractionation" begin mfractest(false) end
+    @testset "poisson fractionation" begin fractionationtest(true) end
+    @testset "non-poisson fractionation" begin fractionationtest(true;poisson=false) end
+    @testset "poisson Rb-Sr" begin RbSrTest() end
+    @testset "non-poisson Rb-Sr" begin RbSrTest(poisson=false) end
+    @testset "poisson K-Ca" begin KCaTest() end
+    @testset "non-poisson K-Ca" begin KCaTest(poisson=false) end
+    @testset "poisson hist" begin histest() end
+    @testset "non-poisson hist" begin histest(poisson=false) end
+    @testset "poisson process" begin processtest() end
+    @testset "non-poisson process" begin processtest(false) end
+    @testset "poisson PA" begin PAtest(true) end
+    @testset "non-poisson PA" begin PAtest(true;poisson=false) end
+    @testset "poisson export" begin exporttest(false) end
+    @testset "non-poisson export" begin exporttest(true) end
+    @testset "poisson U-Pb" begin UPbtest() end
+    @testset "non-poisson U-Pb" begin UPbtest(false) end
     @testset "iCap test" begin iCaptest() end
-    @testset "carbonate test" begin carbonatetest() end
-    @testset "timestamp test" begin timestamptest() end
-    @testset "stoichiometry test" begin mineraltest() end
-    @testset "concentration test" begin concentrationtest() end
-    @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
-    # @testset "KJgui test" begin GUItest() end
+    @testset "poisson carbonate" begin carbonatetest() end
+    @testset "non-poisson carbonate" begin carbonatetest(poisson=false) end
+    @testset "timestamp" begin timestamptest() end
+    @testset "stoichiometry" begin mineraltest() end
+    @testset "concentration" begin concentrationtest() end
+    @testset "extension" begin extensiontest() end
+    @testset "TUI" begin TUItest() end
+    # @testset "KJgui" begin GUItest() end
 else
     TUI()
 end

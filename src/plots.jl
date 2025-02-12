@@ -101,13 +101,13 @@ display(p)
 ```
 """
 function plot(samp::Sample,
-              dt::AbstractDict,
               method::AbstractString,
               channels::AbstractDict,
               blank::AbstractDataFrame,
               pars::NamedTuple,
               standards::AbstractVector,
               glass::AbstractVector;
+              dt::Union{AbstractDict,Nothing}=nothing,
               num=nothing,den=nothing,
               transformation=nothing,
               seriestype=:scatter,

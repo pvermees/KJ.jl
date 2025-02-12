@@ -50,25 +50,25 @@ function LL(par::AbstractVector,
             bP::AbstractVector,
             bD::AbstractVector,
             bd::AbstractVector,
-            dats::AbstractDict,
-            dt::AbstractDict,
+            signals::AbstractDict,
             channels::AbstractDict,
             anchors::AbstractDict,
             mf::Union{AbstractFloat,Nothing};
             ndrift::Integer=1,
             ndown::Integer=0,
             PAcutoff::Union{AbstractFloat,Nothing}=nothing,
+            dt::Union{AbstractDict,Nothing}=nothing,
             dead::AbstractFloat=0.0)
     drift = par[1:ndrift]
     down = vcat(0.0,par[ndrift+1:ndrift+ndown])
     mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
     adrift = isnothing(PAcutoff) ? drift : par[end-ndrift+1:end]
     out = 0.0
-    for (refmat,dat) in dats
+    for (refmat,signal) in singals
         (x0,y0,y1) = anchors[refmat]
         Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
-            LLprep(bP,bD,bd,dat,dt,channels,mfrac,drift,down;
-                   PAcutoff=PAcutoff,adrift=adrift,dead=dead)
+            LLprep(bP,bD,bd,signal,channels,mfrac,drift,down;
+                   PAcutoff=PAcutoff,adrift=adrift,dt=dt,dead=dead)
         out += LL(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     end
     return out
@@ -98,16 +98,17 @@ end
 function LL(par::AbstractVector,
             bD::AbstractVector,
             bd::AbstractVector,
-            dats::AbstractDict,
-            dt::AbstractDict,
+            signals::AbstractDict
             channels::AbstractDict,
             anchors::AbstractDict;
+            dt::Union{AbstractDict,Nothing}=nothing,
             dead::AbstractFloat=0.0)
     mf = exp(par[1])
     out = 0.0
-    for (refmat,dat) in dats
+    for (refmat,signal) in signals
         y0 = anchors[refmat]
-        Dm,dm,vD,vd,bDt,bdt = LLprep(bD,bd,dat,dt,channels;dead=dead)
+        Dm,dm,vD,vd,bDt,bdt = LLprep(bD,bd,signal,channels;
+                                     dt=dt,dead=dead)
         out += LL(Dm,dm,vD,vd,y0,mf,bDt,bdt)
     end
     return out
@@ -131,23 +132,29 @@ export LL
 function LLprep(bP::AbstractVector,
                 bD::AbstractVector,
                 bd::AbstractVector,
-                dat::AbstractDataFrame,
-                dt::AbstractDict,
+                signal::AbstractDataFrame,
                 channels::AbstractDict,
                 mfrac::AbstractFloat,
                 drift::AbstractVector,
                 down::AbstractVector;
                 PAcutoff::Union{AbstractFloat,Nothing}=nothing,
                 adrift::AbstractVector=drift,
+                dt::Union{AbstractDict,Nothing}=nothing,
                 dead::AbstractFloat=0.0)
-    t = dat.t
-    T = dat.T 
-    Pm = dat[:,channels["P"]]
-    Dm = dat[:,channels["D"]]
-    dm = dat[:,channels["d"]]
-    vP = var_cps(Pm,dt[channels["P"]],dead)
-    vD = var_cps(Dm,dt[channels["D"]],dead)
-    vd = var_cps(dm,dt[channels["d"]],dead)
+    t = signal.t
+    T = signal.T 
+    Pm = signal[:,channels["P"]]
+    Dm = signal[:,channels["D"]]
+    dm = signal[:,channels["d"]]
+    if isnothing(dt)
+        vP = var_timeseries(Pm)
+        vD = var_timeseries(Dm)
+        vd = var_timeseries(dm)
+    else
+        vP = var_cps(Pm,dt[channels["P"]],dead)
+        vD = var_cps(Dm,dt[channels["D"]],dead)
+        vd = var_cps(dm,dt[channels["d"]],dead)
+    end
     ft = get_drift(Pm,t,drift;
                    PAcutoff=PAcutoff,adrift=adrift)
     FT = polyFac(down,T)
@@ -160,15 +167,20 @@ end
 # glass
 function LLprep(bD::AbstractVector,
                 bd::AbstractVector,
-                dat::AbstractDataFrame,
-                dt::AbstractDict,
+                signal::AbstractDataFrame,
                 channels::AbstractDict;
+                dt::Union{AbstractDict,Nothing}=nothing,
                 dead::AbstractFloat=0.0)
-    t = dat.t
-    Dm = dat[:,channels["D"]]
-    dm = dat[:,channels["d"]]
-    vD = var_cps(Dm,dt[channels["D"]],dead)
-    vd = var_cps(dm,dt[channels["d"]],dead)
+    t = signal.t
+    Dm = signal[:,channels["D"]]
+    dm = signal[:,channels["d"]]
+    if isnothing(dt)
+        vD = var_timeseries(Dm)
+        vd = var_timeseries(dm)
+    else
+        vD = var_cps(Dm,dt[channels["D"]],dead)
+        vd = var_cps(dm,dt[channels["d"]],dead)
+    end
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
     return Dm,dm,vD,vd,bDt,bdt
@@ -176,46 +188,49 @@ end
 
 # minerals
 function predict(samp::Sample,
-                 dt::AbstractDict,
                  method::AbstractString,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  standards::AbstractDict,
                  glass::AbstractDict;
+                 dt::Union{AbstractDict,Nothing}=nothing,
                  debug::Bool=false)
     anchors = getAnchors(method,standards,glass)
-    return predict(samp,dt,pars,blank,channels,anchors;debug=debug)
+    return predict(samp,pars,blank,channels,anchors;
+                   dt=dt,debug=debug)
 end
 function predict(samp::Sample,
-                 dt::AbstractDict,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  anchors::AbstractDict;
+                 dt::Union{AbstractDict,Nothing}=nothing,
                  debug::Bool=false)
     if samp.group == "sample"
         KJerror("notStandard")
     else
-        dat = windowData(samp;signal=true)
+        signal = windowData(samp;signal=true)
         anchor = anchors[samp.group]
-        return predict(dat,dt,pars,blank,channels,anchor;debug=debug)
+        return predict(signal,pars,blank,channels,anchor;
+                       dt=dt,debug=debug)
     end
 end
-function predict(dat::AbstractDataFrame,
-                 dt::AbstractDict,
+function predict(signal::AbstractDataFrame,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  anchor::NamedTuple;
+                 dt::Union{AbstractDict,Nothing}=nothing,
+                 dead::AbstractFloat=0.0,
                  debug::Bool=false)
     bP = blank[:,channels["P"]]
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
-        LLprep(bP,bD,bd,dat,dt,channels,
+        LLprep(bP,bD,bd,signal,channels,
                pars.mfrac,pars.drift,pars.down;
-               PAcutoff=pars.PAcutoff,adrift=pars.adrift)
+               PAcutoff=pars.PAcutoff,adrift=pars.adrift,dt=dt,dead=dead)
     return predict(Pm,Dm,dm,vP,vD,vd,
                    anchor.x0,anchor.y0,anchor.y1,
                    ft,FT,mf,bPt,bDt,bdt)
@@ -256,17 +271,19 @@ function predict(P::AbstractVector,
     return DataFrame(P=Pf,D=Df,d=df)
 end
 # glass
-function predict(dat::AbstractDataFrame,
-                 dt::AbstractDict,
+function predict(signal::AbstractDataFrame,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  y0::AbstractFloat;
+                 dt::Union{AbstractDict,Nothing}=nothing,
+                 dead::AbstractFloat=0.0,
                  debug::Bool=false)
     mf = exp(pars.mfrac)
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
-    Dm,dm,vD,vd,bDt,bdt = LLprep(bD,bd,dat,dt,channels)
+    Dm,dm,vD,vd,bDt,bdt = LLprep(bD,bd,signal,channels;
+                                 dt=dt,dead=dead)
     return predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
 end
 function predict(Dm::AbstractVector,
@@ -290,13 +307,13 @@ function predict(samp::Sample,
                  internal::AbstractString;
                  debug::Bool=false)
     if samp.group in collect(keys(_KJ["glass"]))
-        dat = windowData(samp;signal=true)
-        sig = getSignals(dat)
+        signal = windowData(samp;signal=true)
+        sig = getSignals(signal)
         Xm = sig[:,Not(internal)]
         Sm = sig[:,internal]
         concs = elements2concs(elements,samp.group)
         R = collect((concs[:,Not(internal)]./concs[:,internal])[1,:])
-        bt = polyVal(blank,dat.t)
+        bt = polyVal(blank,signal.t)
         bXt = bt[:,Not(internal)]
         bSt = bt[:,internal]
         S = Sm.-bSt

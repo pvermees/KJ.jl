@@ -3,47 +3,6 @@ fractionation
 
 Fit the drift and down hole fractionation
 
-# Methods
-
-- `fractionation(run::Vector{Sample},
-                 dt::AbstractDict,
-                 method::AbstractString,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 standards::Union{AbstractVector,AbstractDict},
-                 glass::Union{AbstractVector,AbstractDict};
-                 ndrift::Integer=1,
-                 ndown::Integer=0,
-                 PAcutoff=nothing,
-                 verbose::Bool=false)`
-- `fractionation(run::Vector{Sample},
-                 dt::AbstractDict,
-                 method::AbstractString,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 standards::Union{AbstractVector,AbstractDict},
-                 mf::Union{AbstractFloat,Nothing};
-                 ndrift::Integer=1,
-                 ndown::Integer=0,
-                 PAcutoff=nothing,
-                 verbose::Bool=false)`
-- `fractionation(run::Vector{Sample},
-                 dt::AbstractDict,
-                 method::AbstractString,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 glass::Union{AbstractVector,AbstractDict};
-                 verbose::Bool=false)`
-- `fractionation(run::Vector{Sample},
-                 blank::AbstractDataFrame,
-                 internal::Tuple,
-                 glass::Union{AbstractVector,AbstractDict})`
-- `fractionation(run::Vector{Sample},
-                 blank::AbstractDataFrame,
-                 elements::AbstractDataFrame,
-                 internal::Tuple,
-                 glass::Union{AbstractVector,AbstractDict})`
-
 # Arguments
 
 - see [`process!`](@ref).
@@ -116,9 +75,9 @@ function fractionation(run::Vector{Sample},
     
     if ndrift<1 KJerror("ndriftzero") end
 
-    dats = Dict()
+    signals = Dict()
     for (refmat,anchor) in anchors
-        dats[refmat] = pool(run;signal=true,group=refmat)
+        signals[refmat] = pool(run;signal=true,group=refmat)
     end
 
     bD = blank[:,channels["D"]]
@@ -130,7 +89,7 @@ function fractionation(run::Vector{Sample},
     if isnothing(mf) init = vcat(init,0.0) end
     if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
 
-    return LLfit(init,bP,bD,bd,dats,dt,channels,anchors,mf;
+    return LLfit(init,bP,bD,bd,signals,dt,channels,anchors,mf;
                  ndrift=ndrift,ndown=ndown,
                  PAcutoff=PAcutoff,verbose=verbose)
 
@@ -157,15 +116,15 @@ function fractionation(run::Vector{Sample},
     
     anchors = getAnchors(method,glass,true)
 
-    dats = Dict()
+    signals = Dict()
     for (refmat,anchor) in anchors
-        dats[refmat] = pool(run;signal=true,group=refmat)
+        signals[refmat] = pool(run;signal=true,group=refmat)
     end
 
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
 
-    return LLfit([0.0],bD,bd,dats,dt,channels,anchors;
+    return LLfit([0.0],bD,bd,signals,dt,channels,anchors;
                  verbose=verbose)
     
 end
@@ -216,7 +175,7 @@ function LLfit(init::AbstractVector,
                bP::AbstractVector,
                bD::AbstractVector,
                bd::AbstractVector,
-               dats::AbstractDict,
+               signals::AbstractDict,
                dt::AbstractDict,
                channels::AbstractDict,
                anchors::AbstractDict,
@@ -226,7 +185,7 @@ function LLfit(init::AbstractVector,
                PAcutoff=nothing,
                verbose::Bool=false)
     
-    objective = (par) -> LL(par,bP,bD,bd,dats,dt,channels,anchors,mf;
+    objective = (par) -> LL(par,bP,bD,bd,signals,dt,channels,anchors,mf;
                             ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 
     fit = Optim.optimize(objective,init)
@@ -258,13 +217,13 @@ end
 function LLfit(init::AbstractVector,
                bD::AbstractVector,
                bd::AbstractVector,
-               dats::AbstractDict,
+               signals::AbstractDict,
                dt::AbstractDict,
                channels::AbstractDict,
                anchors::AbstractDict;
                verbose::Bool=false)
 
-    objective = (par) -> LL(par,bD,bd,dats,dt,channels,anchors)
+    objective = (par) -> LL(par,bD,bd,signals,dt,channels,anchors)
     
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)
