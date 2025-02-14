@@ -54,18 +54,19 @@ blk, fit = process!(myrun,dt,method,channels,standards,glass)
 ```
 """
 function process!(run::Vector{Sample},
-                  dt::AbstractDict,
                   method::AbstractString,
                   channels::AbstractDict,
                   standards::AbstractDict,
                   glass::AbstractDict;
+                  dt::Union{AbstractDict,Nothing}=nothing,
+                  dead::AbstractFloat=0.0,
                   nblank::Integer=2,ndrift::Integer=1,ndown::Integer=1,
                   PAcutoff=nothing,verbose::Bool=false)
     blank = fitBlanks(run;nblank=nblank)
     setGroup!(run,glass)
     setGroup!(run,standards)
-    fit = fractionation(run,dt,method,blank,channels,standards,glass;
-                        ndrift=ndrift,ndown=ndown,
+    fit = fractionation(run,method,blank,channels,standards,glass;
+                        dt=dt,dead=dead,ndrift=ndrift,ndown=ndown,
                         PAcutoff=PAcutoff,verbose=verbose)
     return blank, fit
 end
@@ -114,17 +115,19 @@ atomic(samp::Sample,
 See [`process!`](@ref).
 """
 function atomic(samp::Sample,
-                dt::AbstractDict,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
-                pars::NamedTuple)
+                pars::NamedTuple;
+                dt::Union{AbstractDict,Nothing}=nothing,
+                dead::AbstractFloat=0.0)
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
         LLprep(blank[:,channels["P"]],
                blank[:,channels["D"]],
                blank[:,channels["d"]],
                windowData(samp,signal=true),
-               dt,channels,
+               channels,
                pars.mfrac,pars.drift,pars.down;
+               dt=dt,dead=dead,
                PAcutoff=pars.PAcutoff,
                adrift=pars.adrift)
     P = @. (Pm-bPt)*(ft*FT)
@@ -162,11 +165,13 @@ Average the 'atomic' isotopic ratios for a sample
 See [`process!`](@ref).
 """
 function averat(samp::Sample,
-                dt::AbstractDict,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
-                pars::NamedTuple)
-    P, D, d = atomic(samp,dt,channels,blank,pars)
+                pars::NamedTuple;
+                dt::Union{AbstractDict,Nothing}=nothing,
+                dead::AbstractFloat=0.0)
+    P, D, d = atomic(samp,channels,blank,pars;
+                     dt=dt,dead=dead)
     muP = Statistics.mean(P)
     muD = Statistics.mean(D)
     mud = Statistics.mean(d)
@@ -183,10 +188,11 @@ function averat(samp::Sample,
     return [x sx y sy rxy]
 end
 function averat(run::Vector{Sample},
-                dt::AbstractDict,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
                 pars::NamedTuple;
+                dt::Union{AbstractDict,Nothing}=nothing,
+                dead::AbstractFloat=0.0,
                 method=nothing)
     ns = length(run)
     if isnothing(method)
@@ -202,7 +208,8 @@ function averat(run::Vector{Sample},
     for i in 1:ns
         samp = run[i]
         out[i,:name] = samp.sname
-        out[i,2:end] = averat(samp,dt,channels,blank,pars)
+        out[i,2:end] = averat(samp,channels,blank,pars;
+                              dt=dt,dead=dead)
     end
     return out
 end

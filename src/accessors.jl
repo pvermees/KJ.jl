@@ -184,22 +184,30 @@ function gety0(method::AbstractString,
     return _KJ["glass"][refmat][ratio]
 end
 
-function getAnchors(method::AbstractString,standards::AbstractVector,glass::AbstractVector)
+function getAnchors(method::AbstractString,
+                    standards::AbstractVector,
+                    glass::AbstractVector)
     Sanchors = getAnchors(method,standards,false)
     Ganchors = getAnchors(method,glass,true)
     return merge(Sanchors,Ganchors)
 end
-function getAnchors(method::AbstractString,standards::AbstractDict,glass::AbstractDict)
+function getAnchors(method::AbstractString,
+                    standards::AbstractDict,
+                    glass::AbstractDict)
     return getAnchors(method,collect(keys(standards)),collect(keys(glass)))
 end
-function getAnchors(method::AbstractString,refmats::AbstractVector,glass::Bool=false)
+function getAnchors(method::AbstractString,
+                    refmats::AbstractVector,
+                    glass::Bool=false)
     out = Dict()
     for refmat in refmats
         out[refmat] = glass ? gety0(method,refmat) : getx0y0y1(method,refmat)
     end
     return out
 end
-function getAnchors(method::AbstractString,refmats::AbstractDict,glass::Bool=false)
+function getAnchors(method::AbstractString,
+                    refmats::AbstractDict,
+                    glass::Bool=false)
     return getAnchors(method,collect(keys(refmats)),glass)
 end
 export getAnchors

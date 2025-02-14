@@ -51,14 +51,14 @@ function LL(par::AbstractVector,
             bD::AbstractVector,
             bd::AbstractVector,
             dats::AbstractDict,
-            dt::AbstractDict,
             channels::AbstractDict,
             anchors::AbstractDict,
             mf::Union{AbstractFloat,Nothing};
+            dt::Union{AbstractDict,Nothing}=nothing,
+            dead::AbstractFloat=0.0,
             ndrift::Integer=1,
             ndown::Integer=0,
-            PAcutoff::Union{AbstractFloat,Nothing}=nothing,
-            dead::AbstractFloat=0.0)
+            PAcutoff::Union{AbstractFloat,Nothing}=nothing)
     drift = par[1:ndrift]
     down = vcat(0.0,par[ndrift+1:ndrift+ndown])
     mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
@@ -67,8 +67,8 @@ function LL(par::AbstractVector,
     for (refmat,dat) in dats
         (x0,y0,y1) = anchors[refmat]
         Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
-            LLprep(bP,bD,bd,dat,dt,channels,mfrac,drift,down;
-                   PAcutoff=PAcutoff,adrift=adrift,dead=dead)
+            LLprep(bP,bD,bd,dat,channels,mfrac,drift,down;
+                   dt=dt,dead=dead,PAcutoff=PAcutoff,adrift=adrift)
         out += LL(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     end
     return out
@@ -99,15 +99,16 @@ function LL(par::AbstractVector,
             bD::AbstractVector,
             bd::AbstractVector,
             dats::AbstractDict,
-            dt::AbstractDict,
             channels::AbstractDict,
             anchors::AbstractDict;
+            dt::Union{AbstractDict,Nothing}=nothing,
             dead::AbstractFloat=0.0)
     mf = exp(par[1])
     out = 0.0
     for (refmat,dat) in dats
         y0 = anchors[refmat]
-        Dm,dm,vD,vd,bDt,bdt = LLprep(bD,bd,dat,dt,channels;dead=dead)
+        Dm,dm,vD,vd,bDt,bdt = LLprep(bD,bd,dat,channels;
+                                     dt=dt,dead=dead)
         out += LL(Dm,dm,vD,vd,y0,mf,bDt,bdt)
     end
     return out
@@ -132,22 +133,28 @@ function LLprep(bP::AbstractVector,
                 bD::AbstractVector,
                 bd::AbstractVector,
                 dat::AbstractDataFrame,
-                dt::AbstractDict,
                 channels::AbstractDict,
                 mfrac::AbstractFloat,
                 drift::AbstractVector,
                 down::AbstractVector;
+                dt::Union{AbstractDict,Nothing}=nothing,
+                dead::AbstractFloat=0.0,
                 PAcutoff::Union{AbstractFloat,Nothing}=nothing,
-                adrift::AbstractVector=drift,
-                dead::AbstractFloat=0.0)
+                adrift::AbstractVector=drift)
     t = dat.t
     T = dat.T 
     Pm = dat[:,channels["P"]]
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
-    vP = var_cps(Pm,dt[channels["P"]],dead)
-    vD = var_cps(Dm,dt[channels["D"]],dead)
-    vd = var_cps(dm,dt[channels["d"]],dead)
+    if isnothing(dt)
+        vP = var_timeseries(Pm)
+        vD = var_timeseries(Dm)
+        vd = var_timeseries(dm)
+    else
+        vP = var_cps(Pm,dt[channels["P"]],dead)
+        vD = var_cps(Dm,dt[channels["D"]],dead)
+        vd = var_cps(dm,dt[channels["d"]],dead)
+    end
     ft = get_drift(Pm,t,drift;
                    PAcutoff=PAcutoff,adrift=adrift)
     FT = polyFac(down,T)
@@ -161,14 +168,19 @@ end
 function LLprep(bD::AbstractVector,
                 bd::AbstractVector,
                 dat::AbstractDataFrame,
-                dt::AbstractDict,
                 channels::AbstractDict;
+                dt::Union{AbstractDict,Nothing}=nothing,
                 dead::AbstractFloat=0.0)
     t = dat.t
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
-    vD = var_cps(Dm,dt[channels["D"]],dead)
-    vd = var_cps(dm,dt[channels["d"]],dead)
+    if isnothing(dt)
+        vD = var_timeseries(Dm)
+        vd = var_timeseries(dm)
+    else
+        vD = var_cps(Dm,dt[channels["D"]],dead)
+        vd = var_cps(dm,dt[channels["d"]],dead)
+    end
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
     return Dm,dm,vD,vd,bDt,bdt
@@ -176,45 +188,51 @@ end
 
 # minerals
 function predict(samp::Sample,
-                 dt::AbstractDict,
                  method::AbstractString,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  standards::AbstractDict,
                  glass::AbstractDict;
+                 dt::Union{AbstractDict,Nothing}=nothing,
+                 dead::AbstractFloat=0.0,
                  debug::Bool=false)
     anchors = getAnchors(method,standards,glass)
-    return predict(samp,dt,pars,blank,channels,anchors;debug=debug)
+    return predict(samp,pars,blank,channels,anchors;
+                   dt=dt,dead=dead,debug=debug)
 end
 function predict(samp::Sample,
-                 dt::AbstractDict,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  anchors::AbstractDict;
+                 dt::Union{AbstractDict,Nothing}=nothing,
+                 dead::AbstractFloat=0.0,
                  debug::Bool=false)
     if samp.group == "sample"
         KJerror("notStandard")
     else
         dat = windowData(samp;signal=true)
         anchor = anchors[samp.group]
-        return predict(dat,dt,pars,blank,channels,anchor;debug=debug)
+        return predict(dat,pars,blank,channels,anchor;
+                       dt=dt,dead=dead,debug=debug)
     end
 end
 function predict(dat::AbstractDataFrame,
-                 dt::AbstractDict,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  anchor::NamedTuple;
+                 dt::Union{AbstractDict,Nothing}=nothing,
+                 dead::AbstractFloat=0.0,
                  debug::Bool=false)
     bP = blank[:,channels["P"]]
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
-        LLprep(bP,bD,bd,dat,dt,channels,
+        LLprep(bP,bD,bd,dat,channels,
                pars.mfrac,pars.drift,pars.down;
+               dt=dt,dead=dead,
                PAcutoff=pars.PAcutoff,adrift=pars.adrift)
     return predict(Pm,Dm,dm,vP,vD,vd,
                    anchor.x0,anchor.y0,anchor.y1,
@@ -257,16 +275,18 @@ function predict(P::AbstractVector,
 end
 # glass
 function predict(dat::AbstractDataFrame,
-                 dt::AbstractDict,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  y0::AbstractFloat;
+                 dt::Union{AbstractDict,Nothing}=nothing,
+                 dead::AbstractFloat=0.0,
                  debug::Bool=false)
     mf = exp(pars.mfrac)
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
-    Dm,dm,vD,vd,bDt,bdt = LLprep(bD,bd,dat,dt,channels)
+    Dm,dm,vD,vd,bDt,bdt = LLprep(bD,bd,dat,channels;
+                                 dt=dt,dead=dead)
     return predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
 end
 function predict(Dm::AbstractVector,
@@ -308,32 +328,6 @@ function predict(samp::Sample,
     end
 end
 export predict
-
-function averat_jacobian(P,D,d,x,y)
-    ns = length(P)
-    z = @. 1 + x + y
-    S = @. (D+x*P+y*d)*z/(1 + x^2 + y^2)
-    dPdS = fill(x/z,ns)
-    dDdS = fill(1/z,ns)
-    dddS = fill(y/z,ns)
-    dPdx = @. S/z - S*x/z^2
-    dDdx = @. - S/z^2
-    dddx = @. - S*y/z^2
-    dPdy = @. - S*x/z^2
-    dDdy = @. - S/z^2
-    dddy = @. S/z - S*y/z^2
-    J = zeros(ns+2,3*ns)
-    J[1,1:ns] .= dPdx
-    J[1,ns+1:2*ns] .= dDdx
-    J[1,2*ns+1:3*ns] .= dddx
-    J[2,1:ns] .= dPdy
-    J[2,ns+1:2*ns] .= dDdy
-    J[2,2*ns+1:3*ns] .= dddy
-    J[3:end,1:ns] .= diagm(dPdS)
-    J[3:end,ns+1:2*ns] .= diagm(dDdS)
-    J[3:end,2*ns+1:3*ns] .= diagm(dddS)
-    return J
-end
 
 function get_drift(Pm::AbstractVector,
                    t::AbstractVector,
