@@ -514,6 +514,7 @@ function var_cps(cps::AbstractVector,
 end
 export var_cps
 function var_timeseries(cps::AbstractVector)
-    return mean((cps[2:end].-cps[1:end-1]).^2)
+    var = Statistics.mean((cps[2:end].-cps[1:end-1]).^2)
+    return fill(var,length(cps))
 end
 export var_timeseries

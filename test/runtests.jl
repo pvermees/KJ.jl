@@ -25,15 +25,15 @@ function windowtest()
     @test display(p) != NaN
 end
 
-function blanktest()
+function blanktest(;poisson=false)
     myrun = loadtest()
     blk = fitBlanks(myrun;nblank=2)
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     return myrun, dt, blk
 end
 
-function standardtest(verbose=false)
-    myrun, blk = blanktest()
+function standardtest(verbose=false;poisson=false)
+    myrun, blk = blanktest(;poisson=poisson)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     anchors = getAnchors("Lu-Hf",standards)
@@ -43,8 +43,8 @@ function standardtest(verbose=false)
     end
 end
 
-function fixedLuHf()
-    myrun, dt, blk = blanktest()
+function fixedLuHf(;poisson=false)
+    myrun, dt, blk = blanktest(;poisson=poisson)
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
                     "D" => "Hf176 -> 258",
@@ -114,8 +114,8 @@ function mfractest()
     partest("mfrac",0.2)
 end
 
-function fractionationtest(all=true)
-    myrun, dt, blk = blanktest()
+function fractionationtest(all=true;poisson=false)
+    myrun, dt, blk = blanktest(;poisson=poisson)
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
                     "D" => "Hf176 -> 258",
@@ -149,7 +149,7 @@ function fractionationtest(all=true)
     end
 end
 
-function RbSrTest(show=true)
+function RbSrTest(show=true;poisson=false)
     myrun = load("data/Rb-Sr",instrument="Agilent")
     method = "Rb-Sr"
     channels = Dict("d"=>"Sr88 -> 104",
@@ -158,7 +158,7 @@ function RbSrTest(show=true)
     standards = Dict("MDC_bt" => "MDC -")
     setGroup!(myrun,standards)
     blank = fitBlanks(myrun;nblank=2)
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     fit = fractionation(myrun,method,blank,channels,standards,8.37861;
                         dt=dt,ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
@@ -172,7 +172,7 @@ function RbSrTest(show=true)
     return myrun, dt, blank, fit, channels, standards, anchors
 end
 
-function KCaTest(show=true)
+function KCaTest(show=true;poisson=false)
     myrun = load("data/K-Ca",instrument="Agilent")
     method = "K-Ca"
     channels = Dict("d"=>"Ca44 -> 63",
@@ -181,7 +181,7 @@ function KCaTest(show=true)
     standards = Dict("EntireCreek_bt" => "EntCrk")
     setGroup!(myrun,standards)
     blank = fitBlanks(myrun;nblank=2)
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     fit = fractionation(myrun,method,blank,channels,standards,nothing;
                         dt=dt,ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
@@ -247,9 +247,9 @@ function histest(;LuHf=false,show=true)
     return anchors, fit, Pm, Dm, dm
 end
 
-function processtest()
+function processtest(;poisson=false)
     myrun = load("data/Lu-Hf",instrument="Agilent")
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -263,9 +263,9 @@ function processtest()
     @test display(p) != NaN
 end
 
-function PAtest(verbose=false)
+function PAtest(verbose=false;poisson=false)
     myrun = load("data/Lu-Hf",instrument="Agilent")
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     method = "Lu-Hf"
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -288,9 +288,9 @@ function exporttest()
     export2IsoplotR(selection,"Lu-Hf",fname="BP.json")
 end
 
-function UPbtest()
+function UPbtest(;poisson=false)
     myrun = load("data/U-Pb",instrument="Agilent",head2name=false)
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     method = "U-Pb"
     standards = Dict("Plesovice_zr" => "STDCZ",
                      "91500_zr" => "91500")
@@ -311,10 +311,10 @@ function iCaptest(verbose=true)
     if verbose summarise(myrun;verbose=true,n=5) end
 end
 
-function carbonatetest(verbose=false)
+function carbonatetest(verbose=false;poisson=false)
     method = "U-Pb"
     myrun = load("data/carbonate",instrument="Agilent")
-    dt = dwelltime(myrun)
+    dt = poisson ? dwelltime(myrun) : nothing
     standards = Dict("WC1_cc"=>"WC1")
     glass = Dict("NIST612"=>"NIST612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
@@ -386,7 +386,7 @@ if true
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
     @testset "predict mfrac" begin mfractest() end
-    @testset "fit fractionation" begin fractionationtest(true) end
+    @testset "fractionation" begin fractionationtest(true) end
     @testset "Rb-Sr" begin RbSrTest() end
     @testset "K-Ca" begin KCaTest() end
     @testset "hist" begin histest() end
