@@ -3,80 +3,10 @@ plot
 
 Plot selected channels for a sample or a vector of samples
 
-# Methods
-
-- `plot(samp::Sample,
-        dt::AbstractDict,
-        method::AbstractString,
-        channels::Union{AbstractVector,AbstractDict},
-        blank::AbstractDataFrame,
-        pars::NamedTuple,
-        standards::Union{AbstractVector,AbstractDict},
-        glass::Union{AbstractVector,AbstractDict},
-        num=nothing,den=nothing,
-        transformation=nothing,
-        seriestype=:scatter,
-        ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-        linecol="black",linestyle=:solid,
-        legend=:topleft,show_title=true,
-        titlefontsize=10)`
-- `plot(samp::Sample,
-        channels::Union{AbstractVector,AbstractDict};
-        num=nothing,den=nothing,
-        transformation=nothing,offset=nothing,
-        seriestype=:scatter,ms=2,ma=0.5,
-        xlim=:auto,ylim=:auto,
-        legend=:topleft,show_title=true,
-        titlefontsize=10)`
-- `plot(samp::Sample;
-        num=nothing,den=nothing,
-        transformation=nothing,offset=nothing,
-        seriestype=:scatter,ms=2,ma=0.5,
-        xlim=:auto,ylim=:auto,
-        legend=:topleft,show_title=true,
-        titlefontsize=10)`
-- `plot(samp::Sample,
-        dt::AbstractDict,
-        channels::AbstractDict,
-        blank::AbstractDataFrame,
-        pars::NamedTuple,
-        anchors::AbstractDict;
-        num=nothing,den=nothing,
-        transformation=nothing,
-        seriestype=:scatter,ms=2,ma=0.5,
-        xlim=:auto,ylim=:auto,
-        linecol="black",linestyle=:solid,
-        legend=:topleft,show_title=true,
-        titlefontsize=10)`
-- `plot(samp::Sample,
-        blank::AbstractDataFrame,
-        pars::AbstractVector,
-        elements::AbstractDataFrame,
-        internal::AbstractString;
-        num=nothing,den=nothing,
-        transformation=nothing,
-        seriestype=:scatter,ms=2,ma=0.5,
-        xlim=:auto,ylim=:auto,
-        linecol="black",linestyle=:solid,
-        legend=:topleft,show_title=true,
-        titlefontsize=10)`
-- `plot(samp::Sample,
-        blank::AbstractDataFrame,
-        pars::AbstractVector,
-        internal::AbstractString;
-        num=nothing,den=nothing,
-        transformation=nothing,
-        seriestype=:scatter,ms=2,ma=0.5,
-        xlim=:auto,ylim=:auto,
-        linecol="black",linestyle=:solid,
-        legend=:topleft,show_title=true,
-        titlefontsize=10)`
-
 # Arguments
 
 - `method`: either "U-Pb", "Lu-Hf", "Rb-Sr" or "concentrations"
-- `channels`: dictionary of the type Dict("P" => "parent", "D" => "daughter", "d" => "sister")
-              or a vector of channel names (e.g., the keys of a channels Dict)
+- `channels`: a vector of channel names (e.g., the keys of a channels Dict)
 - `blank`: the output of fitBlanks()p
 - `pars`: the output of fractionation() or process!()
 - `dt`: the dwell times (in seconds) of the mass channels
@@ -101,13 +31,14 @@ display(p)
 ```
 """
 function plot(samp::Sample,
-              dt::AbstractDict,
               method::AbstractString,
               channels::AbstractDict,
               blank::AbstractDataFrame,
               pars::NamedTuple,
-              standards::AbstractVector,
-              glass::AbstractVector;
+              standards::Union{AbstractDict,AbstractVector},
+              glass::Union{AbstractDict,AbstractVector};
+              dt::Union{AbstractDict,Nothing}=nothing,
+              dead::AbstractFloat=0.0,
               num=nothing,den=nothing,
               transformation=nothing,
               seriestype=:scatter,
@@ -119,49 +50,10 @@ function plot(samp::Sample,
     Sanchors = getAnchors(method,standards,false)
     Ganchors = getAnchors(method,glass,true)
     anchors = merge(Sanchors,Ganchors)
-    return plot(samp,dt,channels,blank,pars,anchors;
+    return plot(samp,channels,blank,pars,anchors;
+                dt=dt,dead=dead,
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,
-                ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
-                legend=legend,show_title=show_title,
-                titlefontsize=titlefontsize)
-end
-function plot(samp::Sample,
-              dt::AbstractDict,
-              method::AbstractString,
-              channels::AbstractDict,
-              blank::AbstractDataFrame,
-              pars::NamedTuple,
-              standards::AbstractDict,
-              glass::AbstractDict;
-              num=nothing,den=nothing,
-              transformation=nothing,
-              seriestype=:scatter,
-              ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-              linecol="black",linestyle=:solid,i=nothing,
-              legend=:topleft,
-              show_title=true,
-              titlefontsize=10)
-    return plot(samp,dt,method,channels,blank,pars,
-                collect(keys(standards)),collect(keys(glass));
-                num=num,den=den,transformation=transformation,
-                seriestype=seriestype,ms=ms,ma=ma,
-                xlim=xlim,ylim=ylim,
-                linecol=linecol,linestyle=linestyle,i=i,
-                legend=legend,show_title=show_title,
-                titlefontsize=titlefontsize)
-end
-function plot(samp::Sample,
-              channels::AbstractDict;
-              num=nothing,den=nothing,
-              transformation=nothing,offset=nothing,
-              seriestype=:scatter,
-              ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-              i=nothing,legend=:topleft,
-              show_title=true,titlefontsize=10)
-    return plot(samp,collect(values(channels));
-                num=num,den=den,transformation=transformation,
-                offset=offset,seriestype=seriestype,
                 ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
                 legend=legend,show_title=show_title,
                 titlefontsize=titlefontsize)
@@ -182,11 +74,12 @@ function plot(samp::Sample;
                 titlefontsize=titlefontsize)
 end
 function plot(samp::Sample,
-              dt::AbstractDict,
               channels::AbstractDict,
               blank::AbstractDataFrame,
               pars::NamedTuple,
               anchors::AbstractDict;
+              dt::Union{AbstractDict,Nothing}=nothing,
+              dead::AbstractFloat=0.0,
               num=nothing,den=nothing,
               transformation=nothing,
               seriestype=:scatter,
@@ -210,17 +103,17 @@ function plot(samp::Sample,
         
     else
 
-        offset = getOffset(samp,dt,channels,blank,pars,anchors,transformation;
-                           num=num,den=den)
+        offset = getOffset(samp,channels,blank,pars,anchors,transformation;
+                           dt=dt,dead=dead,num=num,den=den)
 
-        p = plot(samp,channels;
+        p = plot(samp,collect(values(channels));
                  num=num,den=den,transformation=transformation,offset=offset,
                  seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
                  i=i,legend=legend,show_title=show_title,
                  titlefontsize=titlefontsize)
 
-        plotFitted!(p,samp,dt,blank,pars,channels,anchors;
-                    num=num,den=den,transformation=transformation,
+        plotFitted!(p,samp,blank,pars,channels,anchors;
+                    dt=dt,dead=dead,num=num,den=den,transformation=transformation,
                     offset=offset,linecolor=linecol,linestyle=linestyle)
         
     end
@@ -286,7 +179,8 @@ end
 function plot(samp::Sample,
               channels::AbstractVector;
               num=nothing,den=nothing,
-              transformation=nothing,offset=nothing,
+              transformation=nothing,
+              offset=nothing,
               seriestype=:scatter,ms=2,ma=0.5,
               xlim=:auto,ylim=:auto,
               i::Union{Nothing,Integer}=nothing,
@@ -336,14 +230,16 @@ export plot
 # minerals
 function plotFitted!(p,
                      samp::Sample,
-                     dt::AbstractDict,
                      blank::AbstractDataFrame,
                      pars::NamedTuple,
                      channels::AbstractDict,
                      anchors::AbstractDict;
+                     dt::Union{AbstractDict,Nothing}=nothing,
+                     dead::AbstractFloat=0.0,
                      num=nothing,den=nothing,transformation=nothing,
                      offset::AbstractDict,linecolor="black",linestyle=:solid)
-    pred = predict(samp,dt,pars,blank,channels,anchors)
+    pred = predict(samp,pars,blank,channels,anchors;
+                   dt=dt,dead=dead)
     rename!(pred,[channels[i] for i in names(pred)])
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,

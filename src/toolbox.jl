@@ -366,19 +366,21 @@ function getOffset(df::AbstractDataFrame,
     return out
 end
 function getOffset(samp::Sample,
-                   dt::AbstractDict,
                    channels::AbstractDict,
                    blank::AbstractDataFrame,
                    pars::NamedTuple,
                    anchors::AbstractDict,
                    transformation=nothing;
+                   dt::Union{AbstractDict,Nothing}=nothing,
+                   dead::AbstractFloat=0.0,
                    num=nothing,den=nothing)
     ions = collect(values(channels))
     obs = windowData(samp;signal=true)[:,ions]
     yobs = formRatios(obs,num,den)
     offset_obs = getOffset(yobs,transformation)
     
-    pred = predict(samp,dt,pars,blank,channels,anchors)
+    pred = predict(samp,pars,blank,channels,anchors;
+                   dt=dt,dead=dead)
     prednames = [channels[i] for i in names(pred)]
     rename!(pred,prednames)
     ypred = formRatios(pred,num,den)
@@ -511,3 +513,7 @@ function var_cps(cps::AbstractVector,
     return out
 end
 export var_cps
+function var_timeseries(cps::AbstractVector)
+    return mean((cps[2:end].-cps[1:end-1]).^2)
+end
+export var_timeseries

@@ -3,47 +3,6 @@ fractionation
 
 Fit the drift and down hole fractionation
 
-# Methods
-
-- `fractionation(run::Vector{Sample},
-                 dt::AbstractDict,
-                 method::AbstractString,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 standards::Union{AbstractVector,AbstractDict},
-                 glass::Union{AbstractVector,AbstractDict};
-                 ndrift::Integer=1,
-                 ndown::Integer=0,
-                 PAcutoff=nothing,
-                 verbose::Bool=false)`
-- `fractionation(run::Vector{Sample},
-                 dt::AbstractDict,
-                 method::AbstractString,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 standards::Union{AbstractVector,AbstractDict},
-                 mf::Union{AbstractFloat,Nothing};
-                 ndrift::Integer=1,
-                 ndown::Integer=0,
-                 PAcutoff=nothing,
-                 verbose::Bool=false)`
-- `fractionation(run::Vector{Sample},
-                 dt::AbstractDict,
-                 method::AbstractString,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 glass::Union{AbstractVector,AbstractDict};
-                 verbose::Bool=false)`
-- `fractionation(run::Vector{Sample},
-                 blank::AbstractDataFrame,
-                 internal::Tuple,
-                 glass::Union{AbstractVector,AbstractDict})`
-- `fractionation(run::Vector{Sample},
-                 blank::AbstractDataFrame,
-                 elements::AbstractDataFrame,
-                 internal::Tuple,
-                 glass::Union{AbstractVector,AbstractDict})`
-
 # Arguments
 
 - see [`process!`](@ref).
@@ -51,62 +10,33 @@ Fit the drift and down hole fractionation
 """
 # two-step isotope fractionation
 function fractionation(run::Vector{Sample},
-                       dt::AbstractDict,
                        method::AbstractString,
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
                        standards::AbstractDict,
                        glass::AbstractDict;
+                       dt::Union{AbstractDict,Nothing}=nothing,
+                       dead::AbstractFloat=0.0,
                        ndrift::Integer=1,
                        ndown::Integer=0,
                        PAcutoff=nothing,
                        verbose::Bool=false)
-    return fractionation(run,dt,method,blank,channels,
-                         collect(keys(standards)),
-                         collect(keys(glass));
-                         ndrift=ndrift,ndown=ndown,
-                         PAcutoff=PAcutoff,verbose=verbose)
-end
-function fractionation(run::Vector{Sample},
-                       dt::AbstractDict,
-                       method::AbstractString,
-                       blank::AbstractDataFrame,
-                       channels::AbstractDict,
-                       standards::AbstractVector,
-                       glass::AbstractVector;
-                       ndrift::Integer=1,
-                       ndown::Integer=0,
-                       PAcutoff=nothing,
-                       verbose::Bool=false)
-    mf = fractionation(run,dt,method,blank,channels,glass;verbose=verbose)
-    return fractionation(run,dt,method,blank,channels,standards,mf;
+    mf = fractionation(run,method,blank,channels,glass;
+                       dt=dt,dead=dead,verbose=verbose)
+    return fractionation(run,method,blank,channels,standards,mf;
+                         dt=dt,dead=dead,
                          ndrift=ndrift,ndown=ndown,
                          PAcutoff=PAcutoff,verbose=verbose)
 end
 # one-step isotope fractionation using mineral standards
 function fractionation(run::Vector{Sample},
-                       dt::AbstractDict,
                        method::AbstractString,
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
                        standards::AbstractDict,
                        mf::Union{AbstractFloat,Nothing};
-                       ndrift::Integer=1,
-                       ndown::Integer=0,
-                       PAcutoff=nothing,
-                       verbose::Bool=false)
-    return fractionation(run,dt,method,blank,channels,
-                         collect(keys(standards)),mf;
-                         ndrift=ndrift,ndown=ndown,
-                         PAcutoff=PAcutoff,verbose=verbose)
-end
-function fractionation(run::Vector{Sample},
-                       dt::AbstractDict,
-                       method::AbstractString,
-                       blank::AbstractDataFrame,
-                       channels::AbstractDict,
-                       standards::AbstractVector,
-                       mf::Union{AbstractFloat,Nothing};
+                       dt::Union{AbstractDict,Nothing}=nothing,
+                       dead::AbstractFloat=0.0,
                        ndrift::Integer=1,
                        ndown::Integer=0,
                        PAcutoff=nothing,
@@ -130,29 +60,19 @@ function fractionation(run::Vector{Sample},
     if isnothing(mf) init = vcat(init,0.0) end
     if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
 
-    return LLfit(init,bP,bD,bd,dats,dt,channels,anchors,mf;
-                 ndrift=ndrift,ndown=ndown,
+    return LLfit(init,bP,bD,bd,dats,channels,anchors,mf;
+                 dt=dt,dead=dead,ndrift=ndrift,ndown=ndown,
                  PAcutoff=PAcutoff,verbose=verbose)
 
 end
 # isotopic mass fractionation using glass
 function fractionation(run::Vector{Sample},
-                       dt::AbstractDict,
                        method::AbstractString,
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
                        glass::AbstractDict;
-                       verbose::Bool=false)
-    return fractionation(run,dt,method,blank,channels,
-                         collect(keys(glass));
-                         verbose=verbose)
-end
-function fractionation(run::Vector{Sample},
-                       dt::AbstractDict,
-                       method::AbstractString,
-                       blank::AbstractDataFrame,
-                       channels::AbstractDict,
-                       glass::AbstractVector;
+                       dt::Union{AbstractDict,Nothing}=nothing,
+                       dead::AbstractFloat=0.0,
                        verbose::Bool=false)
     
     anchors = getAnchors(method,glass,true)
@@ -165,8 +85,8 @@ function fractionation(run::Vector{Sample},
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
 
-    return LLfit([0.0],bD,bd,dats,dt,channels,anchors;
-                 verbose=verbose)
+    return LLfit([0.0],bD,bd,dats,channels,anchors;
+                 dt=dt,dead=dead,verbose=verbose)
     
 end
 # for concentration measurements:
@@ -175,24 +95,16 @@ function fractionation(run::Vector{Sample},
                        internal::Tuple,
                        glass::AbstractDict)
     elements = channels2elements(run)
-    return fractionation(run,blank,elements,internal,
-                         collect(keys(glass)))
-end
-function fractionation(run::Vector{Sample},
-                       blank::AbstractDataFrame,
-                       internal::Tuple,
-                       glass::AbstractVector)
-    elements = channels2elements(run)
     return fractionation(run,blank,elements,internal,glass)
 end
 function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        elements::AbstractDataFrame,
                        internal::Tuple,
-                       glass::AbstractVector)
+                       glass::AbstractDict)
     ne = size(elements,2)
     num = den = fill(0.0,ne-1)
-    for SRM in glass
+    for (SRM,name)  in glass
         dat = pool(run;signal=true,group=SRM)
         concs = elements2concs(elements,SRM)
         bt = polyVal(blank,dat.t)
@@ -217,17 +129,18 @@ function LLfit(init::AbstractVector,
                bD::AbstractVector,
                bd::AbstractVector,
                dats::AbstractDict,
-               dt::AbstractDict,
                channels::AbstractDict,
                anchors::AbstractDict,
                mf::Union{AbstractFloat,Nothing};
+               dt::Union{AbstractDict,Nothing}=nothing,
+               dead::AbstractFloat=0.0,
                ndrift::Integer=1,
                ndown::Integer=0,
                PAcutoff=nothing,
                verbose::Bool=false)
     
-    objective = (par) -> LL(par,bP,bD,bd,dats,dt,channels,anchors,mf;
-                            ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
+    objective = (par) -> LL(par,bP,bD,bd,dats,channels,anchors,mf;
+                            dt=dt,dead=dead,ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)
@@ -259,12 +172,14 @@ function LLfit(init::AbstractVector,
                bD::AbstractVector,
                bd::AbstractVector,
                dats::AbstractDict,
-               dt::AbstractDict,
                channels::AbstractDict,
                anchors::AbstractDict;
+               dt::Union{AbstractDict,Nothing}=nothing,
+               dead::AbstractFloat=0.0,
                verbose::Bool=false)
 
-    objective = (par) -> LL(par,bD,bd,dats,dt,channels,anchors)
+    objective = (par) -> LL(par,bD,bd,dats,channels,anchors;
+                            dt=dt,dead=dead)
     
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)

@@ -8,7 +8,7 @@ end
 
 rerun = true
 
-if true
+if false
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
     import Plots
     myrun = load("/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon_Maps.csv",
