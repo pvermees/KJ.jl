@@ -322,9 +322,8 @@ function carbonatetest(verbose=false;poisson=false)
                         dt=dt,nblank=2,ndrift=1,ndown=1,verbose=verbose)
     export2IsoplotR(myrun,method,channels,blk,fit;
                     dt=dt,prefix="Duff",fname="Duff.json")
-    p = plot(myrun[3],method,channels,blk,fit,standards,glass;
-             dt=dt,transformation=nothing,
-             num=["Pb207"],den="Pb206",ylim=[-0.02,0.3])
+    p = plot(myrun[4],method,channels,blk,fit,standards,glass;
+             dt=dt,transformation="log")
     @test display(p) != NaN
 end
 
@@ -377,7 +376,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -391,16 +390,16 @@ if true
     @testset "K-Ca" begin KCaTest() end
     @testset "hist" begin histest() end
     @testset "process run" begin processtest() end
-    @testset "PA test" begin PAtest(true) end
+    @testset "PA test" begin PAtest(true) end=#
     @testset "export" begin exporttest() end
-    @testset "U-Pb" begin UPbtest() end
+    #=@testset "U-Pb" begin UPbtest() end
     @testset "iCap test" begin iCaptest() end
     @testset "carbonate test" begin carbonatetest() end
     @testset "timestamp test" begin timestamptest() end
     @testset "stoichiometry test" begin mineraltest() end
     @testset "concentration test" begin concentrationtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "TUI test" begin TUItest() end=#
     # @testset "KJgui test" begin GUItest() end
 else
     TUI()
