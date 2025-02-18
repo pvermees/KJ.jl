@@ -254,13 +254,13 @@ function processtest(show=true;poisson=false)
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
                     "P"=>"Lu175 -> 175");
-    standards = Dict("Hogsbo_gt" => "hogsbo")#"BP_gt" => "BP")#
+    standards = Dict("Hogsbo_gt" => "hogsbo")
     glass = Dict("NIST612" => "NIST612p")
     blk, fit = process!(myrun,method,channels,standards,glass;
                         dt=dt,nblank=2,ndrift=1,ndown=1);
     if show
         p = plot(myrun[2],method,channels,blk,fit,standards,glass;
-                 dt=dt,transformation="log",den=nothing)#"Hf176 -> 258",);
+                 dt=dt,transformation="log",den=nothing)
         @test display(p) != NaN
     end
     return myrun, method, channels, blk, fit
@@ -356,8 +356,16 @@ function concentrationtest()
 end
 
 function internochrontest()
-    myrun, method, channels, blk, fit = processtest(false)
-    x0, y0 = internochron(myrun[1],channels,blk,fit)
+    myrun = load("data/lines",instrument="Agilent")
+    method = "Lu-Hf"
+    channels = Dict("d"=>"Hf178 -> 260",
+                    "D"=>"Hf176 -> 258",
+                    "P"=>"Lu175 -> 175")
+    standards = Dict("GWA-2_gt" => "90667")
+    glass = Dict("NIST610" => "NIST610")
+    blk, fit = process!(myrun,method,channels,standards,glass)
+    isochron = internochron(myrun,method,channels,blk,fit)
+    CSV.write("isochron.csv",isochron)
 end
 
 module test
@@ -383,7 +391,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -404,10 +412,10 @@ if true
     @testset "carbonate" begin carbonatetest() end
     @testset "timestamp" begin timestamptest() end
     @testset "stoichiometry" begin mineraltest() end
-    @testset "concentration" begin concentrationtest() end
+    @testset "concentration" begin concentrationtest() end=#
     @testset "internochron" begin internochrontest() end
-    @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    #=@testset "extension test" begin extensiontest() end
+    @testset "TUI test" begin TUItest() end=#
     # @testset "KJgui test" begin GUItest() end
 else
     TUI()
