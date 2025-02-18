@@ -62,7 +62,7 @@ function averat(P::AbstractVector,
         vd = var_cps(d,dt,dead)
     end
     init = [sum(P)/sum(D),sum(d)/sum(D)]
-    objective = (par) -> LLaverat(par[1],par[2],P,D,d,vP,vD,vd)
+    objective = (par) -> SSaverat(par[1],par[2],P,D,d,vP,vD,vd)
     fit = Optim.optimize(objective,init)
     x,y = Optim.minimizer(fit)
     E = covmat_averat(x,y,P,D,d,vP,vD,vd)
@@ -73,7 +73,7 @@ function averat(P::AbstractVector,
 end
 export averat
 
-function LLaverat(x::AbstractFloat,
+function SSaverat(x::AbstractFloat,
                   y::AbstractFloat,
                   Phat::AbstractVector,
                   Dhat::AbstractVector,
