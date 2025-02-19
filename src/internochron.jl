@@ -106,8 +106,8 @@ function covmat_internochron(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
     H44 = @. (2/(vD*y0^2)+2/vd)/2
     O11 = [ [H11 H12]
             [H21 H22] ]
-    O12 = [ [ H13 H14 ]
-            [ H23 H24 ] ]'
+    O12 = [ [ H13' H14' ]
+            [ H23' H24' ] ]
     O21 = [ [ H31 H32 ]
             [ H41 H42 ] ]
     O22 = [ [ diagm(H33) diagm(H34) ]

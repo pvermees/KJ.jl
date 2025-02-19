@@ -364,7 +364,7 @@ function internochrontest()
     standards = Dict("GWA-2_gt" => "90667")
     glass = Dict("NIST610" => "NIST610")
     blk, fit = process!(myrun,method,channels,standards,glass)
-    isochron = internochron(myrun,channels,blk,fit)#;method=method)
+    isochron = internochron(myrun,channels,blk,fit;method=method)
     CSV.write("isochron.csv",isochron)
 end
 
@@ -391,7 +391,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -412,10 +412,10 @@ if true
     @testset "carbonate" begin carbonatetest() end
     @testset "timestamp" begin timestamptest() end
     @testset "stoichiometry" begin mineraltest() end
-    @testset "concentration" begin concentrationtest() end=#
+    @testset "concentration" begin concentrationtest() end
     @testset "internochron" begin internochrontest() end
-    #=@testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end=#
+    @testset "extension test" begin extensiontest() end
+    @testset "TUI test" begin TUItest() end
     # @testset "KJgui test" begin GUItest() end
 else
     TUI()
