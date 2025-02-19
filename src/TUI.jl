@@ -721,15 +721,6 @@ function getKJtree()
                 "n" => "head2name"
             )
         ),
-        "extra" => (
-            message =
-            "x: Exit\n" * 
-            "?: Help",
-            help =
-            "If you supplied any extensions when starting KJ, " *
-            "they will tend to put their options in this menu",
-            action = Dict()
-        ),
         "setNblank" => (
             message = TUIsetNblankMessage,
             help =
@@ -828,6 +819,67 @@ function getKJtree()
             "spot01, spot02, ...) and the spot name must be inferred " * 
             "from the file name (e.g. /path/to/data/Plesovice-01.csv)",
             action = TUIhead2name!
+        ),
+        "extra" => (
+            message =
+            "i: Internal isochrons\n" *
+            "x: Exit\n" * 
+            "?: Help",
+            help =
+            "If you supplied any extensions when starting KJ, " *
+            "they will tend to put their options in this menu",
+            action = Dict(
+                "i" => "internochron"
+            )
+        ),
+        "internochron" => (
+            message =
+            "p: Plot\n" *
+            "e: Export\n" *
+            "x: Exit\n" *
+            "?: Help",
+            help =
+            "Plot the internal isochron for a single laser spot " *
+            "or export all the spots to a .csv file.",
+            action = Dict(
+                "p" => TUInternochronViewer!,
+                "e" => "internocsv"
+            )
+        ),
+        "internoview" => (
+            message =
+            "n: Next\n" *
+            "p: Previous\n" *
+            "g: Go to\n" *
+            "t: Tabulate all the samples in the session\n" *
+            "x: Exit\n" *
+            "?: Help",
+            help =
+            "It is useful to view the outcome of the internal isochron " *
+            "regression to ensure that the results are sensible and that the " *
+            "algorithm did not get stuck in a local minimum.",
+            action = Dict(
+                "n" => TUInternochron_next!,
+                "p" => TUInternochron_previous!,
+                "g" => "internogoto",
+                "t" => TUItabulate
+            )
+        ),
+        "internogoto" => (
+            message =
+            "Enter the number of the sample to plot " *
+            "(? for help, x to exit):",
+            help = "Jump to a specific analysis.",
+            action = TUInternochron_goto!
+        ),
+        "internocsv" =>(
+            message =
+            "Enter the path and name of the .csv " *
+            "file (? for help, x to exit):",
+            help =
+            "Provide the file name with or without " *
+            "the .csv extension.",
+            action = internochron2csv
         )
     )
 end

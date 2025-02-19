@@ -759,3 +759,51 @@ function TUIclear!(ctrl::AbstractDict)
     end
     return nothing
 end
+
+function TUInternochronViewer!(ctrl::AbstractDict)
+    TUInternochron(ctrl)
+    return "internoview"
+end
+
+function TUInternochron_next!(ctrl::AbstractDict)
+    ctrl["i"] += 1
+    if ctrl["i"]>length(ctrl["run"]) ctrl["i"] = 1 end
+    return TUInternochron(ctrl)
+end
+
+function TUInternochron_previous!(ctrl::AbstractDict)
+    ctrl["i"] -= 1
+    if ctrl["i"]<1 ctrl["i"] = length(ctrl["run"]) end
+    return TUInternochron(ctrl)
+end
+
+function TUInternochron_goto!(ctrl::AbstractDict,
+                              response::AbstractString)
+    ctrl["i"] = parse(Int,response)
+    if ctrl["i"]>length(ctrl["run"]) ctrl["i"] = 1 end
+    if ctrl["i"]<1 ctrl["i"] = length(ctrl["run"]) end
+    TUInternochron(ctrl)
+    return "x"
+end
+
+function TUInternochron(ctrl::AbstractDict)
+    x,sx,y,sy,rxy = internochron(ctrl["run"][ctrl["i"]],
+                                 ctrl["channels"],
+                                 ctrl["blank"],
+                                 ctrl["par"])
+    p = plot(ctrl["run"][ctrl["i"]],x,sx,y,sy,rxy)
+    display(p)
+    return nothing
+end
+export TUIinternochron
+
+function internochron2csv(ctrl::AbstractDict,
+                          fname::AbstractString)
+    tab = internochron(ctrl["run"],
+                       ctrl["channels"],
+                       ctrl["blank"],
+                       ctrl["par"];
+                       method=ctrl["method"],)
+    CSV.write(fname,tab)
+    return "xx"
+end
