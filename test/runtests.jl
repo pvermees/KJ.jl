@@ -247,20 +247,23 @@ function histest(;LuHf=false,show=true)
     return anchors, fit, Pm, Dm, dm
 end
 
-function processtest(;poisson=false)
+function processtest(show=true;poisson=false)
     myrun = load("data/Lu-Hf",instrument="Agilent")
     dt = poisson ? dwelltime(myrun) : nothing
     method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
                     "P"=>"Lu175 -> 175");
-    standards = Dict("Hogsbo_gt" => "hogsbo")#"BP_gt" => "BP")#
+    standards = Dict("Hogsbo_gt" => "hogsbo")
     glass = Dict("NIST612" => "NIST612p")
     blk, fit = process!(myrun,method,channels,standards,glass;
                         dt=dt,nblank=2,ndrift=1,ndown=1);
-    p = plot(myrun[2],method,channels,blk,fit,standards,glass;
-             dt=dt,transformation="log",den=nothing)#"Hf176 -> 258",);
-    @test display(p) != NaN
+    if show
+        p = plot(myrun[2],method,channels,blk,fit,standards,glass;
+                 dt=dt,transformation="log",den=nothing)
+        @test display(p) != NaN
+    end
+    return myrun, method, channels, blk, fit
 end
 
 function PAtest(verbose=false;poisson=false)
@@ -275,8 +278,7 @@ function PAtest(verbose=false;poisson=false)
     cutoff = 1e7
     blk, fit = process!(myrun,method,channels,standards,glass;
                         dt=dt,PAcutoff=cutoff,nblank=2,ndrift=1,ndown=1)
-    ratios = averat(myrun,channels,blk,fit;
-                    dt=dt,method=method)
+    ratios = averat(myrun,channels,blk,fit)
     if verbose println(first(ratios,5)) end
     return ratios
 end
@@ -353,6 +355,19 @@ function concentrationtest()
     @test display(p) != NaN
 end
 
+function internochrontest()
+    myrun = load("data/lines",instrument="Agilent")
+    method = "Lu-Hf"
+    channels = Dict("d"=>"Hf178 -> 260",
+                    "D"=>"Hf176 -> 258",
+                    "P"=>"Lu175 -> 175")
+    standards = Dict("GWA-2_gt" => "90667")
+    glass = Dict("NIST610" => "NIST610")
+    blk, fit = process!(myrun,method,channels,standards,glass)
+    isochron = internochron(myrun,channels,blk,fit;method=method)
+    CSV.write("isochron.csv",isochron)
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -376,7 +391,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -390,16 +405,17 @@ if true
     @testset "K-Ca" begin KCaTest() end
     @testset "hist" begin histest() end
     @testset "process run" begin processtest() end
-    @testset "PA test" begin PAtest(true) end=#
+    @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
-    #=@testset "U-Pb" begin UPbtest() end
-    @testset "iCap test" begin iCaptest() end
-    @testset "carbonate test" begin carbonatetest() end
-    @testset "timestamp test" begin timestamptest() end
-    @testset "stoichiometry test" begin mineraltest() end
-    @testset "concentration test" begin concentrationtest() end
+    @testset "U-Pb" begin UPbtest() end
+    @testset "iCap" begin iCaptest() end
+    @testset "carbonate" begin carbonatetest() end
+    @testset "timestamp" begin timestamptest() end
+    @testset "stoichiometry" begin mineraltest() end
+    @testset "concentration" begin concentrationtest() end
+    @testset "internochron" begin internochrontest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end=#
+    @testset "TUI test" begin TUItest() end
     # @testset "KJgui test" begin GUItest() end
 else
     TUI()
