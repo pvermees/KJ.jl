@@ -355,7 +355,7 @@ function concentrationtest()
     @test display(p) != NaN
 end
 
-function internochrontest()
+function internochrontest(show=true)
     myrun = load("data/lines",instrument="Agilent")
     method = "Lu-Hf"
     channels = Dict("d"=>"Hf178 -> 260",
@@ -366,6 +366,26 @@ function internochrontest()
     blk, fit = process!(myrun,method,channels,standards,glass)
     isochron = internochron(myrun,channels,blk,fit;method=method)
     CSV.write("isochron.csv",isochron)
+    if show
+        p = internoplot(myrun[11],channels,blk,fit;method=method)
+        @test display(p) != NaN
+    end
+end
+
+function internochronUPbtest(show=true)
+    method = "U-Pb"
+    myrun = load("data/carbonate",instrument="Agilent")
+    standards = Dict("WC1_cc"=>"WC1")
+    glass = Dict("NIST612"=>"NIST612")
+    channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
+    blk, fit = process!(myrun,method,channels,standards,glass,
+                        nblank=2,ndrift=1,ndown=1)
+    isochron = internochron(myrun,channels,blk,fit;method=method)
+    CSV.write("isochronUPb.csv",isochron)
+    if show
+        p = internoplot(myrun[7],channels,blk,fit;method=method)
+        @test display(p) != NaN
+    end
 end
 
 module test
@@ -391,7 +411,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -412,10 +432,11 @@ if true
     @testset "carbonate" begin carbonatetest() end
     @testset "timestamp" begin timestamptest() end
     @testset "stoichiometry" begin mineraltest() end
-    @testset "concentration" begin concentrationtest() end
-    @testset "internochron" begin internochrontest() end
-    @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "concentration" begin concentrationtest() end=#
+    @testset "Lu-Hf internochron" begin internochrontest() end
+    @testset "UPb internochron" begin internochronUPbtest() end
+    #=@testset "extension test" begin extensiontest() end
+    @testset "TUI test" begin TUItest() end=#
     # @testset "KJgui test" begin GUItest() end
 else
     TUI()

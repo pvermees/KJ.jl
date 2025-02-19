@@ -162,7 +162,12 @@ function x0y02t(x0::AbstractFloat,
     return t, st, y0, sy0, rho
 end
 
-function york2ludwig_misfit(t,x0,y0,L5,L8,U58)
+function york2ludwig_misfit(par::AbstractVector,
+                            x0::AbstractFloat,
+                            y0::AbstractFloat,
+                            L5::AbstractFloat,
+                            L8::AbstractFloat,
+                            U58::AbstractFloat)
     t = par[1]
     x = 1/(exp(L8*t)-1)
     y = U58*(exp(L5*t)-1)/(exp(L8*t)-1)
