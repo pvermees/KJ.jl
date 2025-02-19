@@ -364,7 +364,7 @@ function internochrontest()
     standards = Dict("GWA-2_gt" => "90667")
     glass = Dict("NIST610" => "NIST610")
     blk, fit = process!(myrun,method,channels,standards,glass)
-    isochron = internochron(myrun,method,channels,blk,fit)
+    isochron = internochron(myrun,channels,blk,fit)#;method=method)
     CSV.write("isochron.csv",isochron)
 end
 
