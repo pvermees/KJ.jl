@@ -22,5 +22,5 @@ top,p
 top,e
 export,s
 format,c
-csv,Lu-Hf.csv
+csv,output/Lu-Hf.csv
 top,x
