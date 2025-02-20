@@ -27,7 +27,7 @@ function internoplot(samp::Sample,
         sdig = 2
         tdig = ceil(Int,log10(t/st)) + sdig
         tstring = "t = " *
-            string(round(t,sigdigits=tdig)) * "+/-" *
+            string(round(t,sigdigits=tdig)) * "±" *
             string(round(st,sigdigits=sdig)) * "Ma"
         Plots.annotate!(Plots.xlims(p)[2],
                         Plots.ylims(p)[2],

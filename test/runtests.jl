@@ -168,7 +168,7 @@ function RbSrTest(show=true;poisson=false)
         @test display(p) != NaN
     end
     export2IsoplotR(myrun,method,channels,blank,fit;
-                    dt=dt,prefix="Entire",fname="Entire.json")
+                    dt=dt,prefix="Entire",fname="output/Entire.json")
     return myrun, dt, blank, fit, channels, standards, anchors
 end
 
@@ -191,7 +191,7 @@ function KCaTest(show=true;poisson=false)
         @test display(p) != NaN
     end
     export2IsoplotR(myrun,method,channels,blank,fit;
-                    dt=dt,prefix="EntCrk",fname="Entire_KCa.json")
+                    dt=dt,prefix="EntCrk",fname="output/Entire_KCa.json")
     return myrun, dt, blank, fit, channels, standards, anchors
 end
 
@@ -242,7 +242,7 @@ function histest(;LuHf=false,show=true)
     if show
         plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
         df = DataFrame(Pm=Pm,Dm=Dm,dm=dm,Pp=Pp,Dp=Dp,dp=dp)
-        CSV.write("pooled_" * standard * ".csv",df)
+        CSV.write("output/pooled_" * standard * ".csv",df)
     end
     return anchors, fit, Pm, Dm, dm
 end
@@ -286,8 +286,8 @@ end
 function exporttest()
     ratios = PAtest()
     selection = prefix2subset(ratios,"BP") # "hogsbo"
-    CSV.write("BP.csv",selection)
-    export2IsoplotR(selection,"Lu-Hf",fname="BP.json")
+    CSV.write("output/BP.csv",selection)
+    export2IsoplotR(selection,"Lu-Hf",fname="output/BP.json")
 end
 
 function UPbtest(;poisson=false)
@@ -302,7 +302,7 @@ function UPbtest(;poisson=false)
     blank, pars = process!(myrun,"U-Pb",channels,standards,glass;
                            dt=dt,nblank=2,ndrift=1,ndown=1)
     export2IsoplotR(myrun,method,channels,blank,pars;
-                    dt=dt,fname="UPb.json")
+                    dt=dt,fname="output/UPb.json")
     p = plot(myrun[37],method,channels,blank,pars,standards,glass;
              dt=dt,transformation="log",den="Pb206")
     @test display(p) != NaN
@@ -323,7 +323,7 @@ function carbonatetest(verbose=false;poisson=false)
     blk, fit = process!(myrun,method,channels,standards,glass;
                         dt=dt,nblank=2,ndrift=1,ndown=1,verbose=verbose)
     export2IsoplotR(myrun,method,channels,blk,fit;
-                    dt=dt,prefix="Duff",fname="Duff.json")
+                    dt=dt,prefix="Duff",fname="output/Duff.json")
     p = plot(myrun[4],method,channels,blk,fit,standards,glass;
              dt=dt,transformation="log")
     @test display(p) != NaN
@@ -365,7 +365,7 @@ function internochrontest(show=true)
     glass = Dict("NIST610" => "NIST610")
     blk, fit = process!(myrun,method,channels,standards,glass)
     isochron = internochron(myrun,channels,blk,fit;method=method)
-    CSV.write("isochron.csv",isochron)
+    CSV.write("output/isochron.csv",isochron)
     if show
         p = internoplot(myrun[11],channels,blk,fit;method=method)
         @test display(p) != NaN
@@ -381,7 +381,7 @@ function internochronUPbtest(show=true)
     blk, fit = process!(myrun,method,channels,standards,glass,
                         nblank=2,ndrift=1,ndown=1)
     isochron = internochron(myrun,channels,blk,fit;method=method)
-    CSV.write("isochronUPb.csv",isochron)
+    CSV.write("output/isochronUPb.csv",isochron)
     if show
         p = internoplot(myrun[7],channels,blk,fit;method=method)
         @test display(p) != NaN
