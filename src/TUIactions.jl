@@ -787,15 +787,16 @@ function TUInternochron_goto!(ctrl::AbstractDict,
 end
 
 function TUInternochron(ctrl::AbstractDict)
-    x,sx,y,sy,rxy = internochron(ctrl["run"][ctrl["i"]],
-                                 ctrl["channels"],
-                                 ctrl["blank"],
-                                 ctrl["par"])
-    p = plot(ctrl["run"][ctrl["i"]],x,sx,y,sy,rxy)
+    p = internoplot(ctrl["run"][ctrl["i"]],
+                    ctrl["channels"],
+                    ctrl["blank"],
+                    ctrl["par"];
+                    method=ctrl["method"],
+                    i=ctrl["i"])
     display(p)
     return nothing
 end
-export TUIinternochron
+export TUInternochron
 
 function internochron2csv(ctrl::AbstractDict,
                           fname::AbstractString)
@@ -803,7 +804,7 @@ function internochron2csv(ctrl::AbstractDict,
                        ctrl["channels"],
                        ctrl["blank"],
                        ctrl["par"];
-                       method=ctrl["method"],)
+                       method=ctrl["method"])
     CSV.write(fname,tab)
     return "xx"
 end
