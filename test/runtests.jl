@@ -53,11 +53,11 @@ function fixedLuHf(;poisson=false)
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[-3.9225],
-           down=[0.0,0.03362],
-           mfrac=0.38426,
+    fit = (drift=[4.264],
+           down=[0.0,0.05647],
+           mfrac=0.3845,
            PAcutoff=nothing,
-           adrift=[-3.9225])
+           adrift=[4.264])
     return myrun, dt, blk, method, channels, glass, standards, fit
 end
 
@@ -138,6 +138,7 @@ function fractionationtest(all=true;poisson=false)
     end
     fit = fractionation(myrun,"Lu-Hf",blk,channels,standards,glass;
                         dt=dt,ndrift=1,ndown=1)
+    println(fit)
     if (all)
         println(fit)
         return myrun, dt, blk, fit, channels, standards, glass

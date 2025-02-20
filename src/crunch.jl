@@ -1,5 +1,5 @@
 # minerals
-function getP(Pm::AbstractVector,
+function getS(Pm::AbstractVector,
               Dm::AbstractVector,
               dm::AbstractVector,
               vP::AbstractVector,
@@ -14,9 +14,9 @@ function getP(Pm::AbstractVector,
               bPt::AbstractVector,
               bDt::AbstractVector,
               bdt::AbstractVector)
-    return @. ((FT*(bDt-Dm)*ft*mf*vP*x0*y0+(FT*dm-FT*bdt)*ft*vP*x0)*y1+(mf^2*(Pm*vD-bPt*vD)*x0^2+FT*(Dm-bDt)*ft*mf*vP*x0)*y0^2+(FT*bdt-FT*dm)*ft*vP*x0*y0+(Pm-bPt)*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
+    return @. ((dm-bdt-bDt+Dm)*mf^2*vP*y1^2+((((FT*bDt-Dm*FT)*ft*mf^2*vP+(FT*bPt-FT*Pm)*ft*mf^2*vD)*x0+((-2*dm)+2*bdt+2*bDt-2*Dm)*mf^2*vP)*y0+((FT*Pm-FT*bPt)*ft*mf*vd+(FT*dm-FT*bdt)*ft*mf*vP)*x0)*y1+((FT^2*dm-FT^2*bdt-FT^2*bPt+FT^2*Pm)*ft^2*mf^2*vD*x0^2+((Dm*FT-FT*bDt)*ft*mf^2*vP+(FT*Pm-FT*bPt)*ft*mf^2*vD)*x0+(dm-bdt-bDt+Dm)*mf^2*vP)*y0^2+(((Dm*FT^2-FT^2*bDt)*ft^2*mf*vd+(FT^2*dm-FT^2*bdt)*ft^2*mf*vD)*x0^2+((FT*bPt-FT*Pm)*ft*mf*vd+(FT*bdt-FT*dm)*ft*mf*vP)*x0)*y0+((-FT^2*bPt)-FT^2*bDt+FT^2*Pm+Dm*FT^2)*ft^2*vd*x0^2)/(mf^2*vP*y1^2-2*mf^2*vP*y0*y1+(FT^2*ft^2*mf^2*vD*x0^2+mf^2*vP)*y0^2+FT^2*ft^2*vd*x0^2)
 end
-function getD(Pm::AbstractVector,
+function getp(Pm::AbstractVector,
               Dm::AbstractVector,
               dm::AbstractVector,
               vP::AbstractVector,
@@ -31,10 +31,10 @@ function getD(Pm::AbstractVector,
               bPt::AbstractVector,
               bDt::AbstractVector,
               bdt::AbstractVector)
-    return @. -(FT^2*(bDt-Dm)*ft^2*vP*y1^2+(ft*mf*(FT*Pm*vD-FT*bPt*vD)*x0+FT^2*(2*Dm-2*bDt)*ft^2*vP)*y0*y1+(ft*mf*(FT*bPt*vD-FT*Pm*vD)*x0+FT^2*(bDt-Dm)*ft^2*vP)*y0^2+mf*(bdt*vD-dm*vD)*x0^2*y0+(bDt-Dm)*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
+    return @. ((bDt-Dm)*mf^2*vP*y1^2+(((FT*Pm-FT*bPt)*ft*mf^2*vD*x0+(Dm-bDt)*mf^2*vP)*y0+(dm-bdt)*mf*vP)*y1+((FT^2*bdt-FT^2*dm)*ft^2*mf*vD*x0^2+(bdt-dm)*mf*vP)*y0+(FT^2*bDt-Dm*FT^2)*ft^2*vd*x0^2+(FT*Pm-FT*bPt)*ft*vd*x0)/((bDt-Dm)*mf^2*vP*y1^2+((FT*Pm-FT*bPt)*ft*mf^2*vD*x0+(2*Dm-2*bDt)*mf^2*vP)*y0*y1+((FT*bPt-FT*Pm)*ft*mf^2*vD*x0+(bDt-Dm)*mf^2*vP)*y0^2+(FT^2*bdt-FT^2*dm)*ft^2*mf*vD*x0^2*y0+(FT^2*bDt-Dm*FT^2)*ft^2*vd*x0^2)
 end
 # glass
-function getD(Dm::AbstractVector,
+function getS(Dm::AbstractVector,
               dm::AbstractVector,
               vD::AbstractVector,
               vd::AbstractVector,
@@ -42,7 +42,7 @@ function getD(Dm::AbstractVector,
               mf::AbstractFloat,
               bDt::AbstractVector,
               bdt::AbstractVector)
-    return @. ((dm-bdt)*mf*vD*y0+(Dm-bDt)*vd)/(mf^2*vD*y0^2+vd)
+    return @. ((dm-bdt)*mf^2*vD*y0^2+((Dm-bDt)*mf*vd+(dm-bdt)*mf*vD)*y0+(Dm-bDt)*vd)/(mf^2*vD*y0^2+vd)
 end
 
 # mineral
@@ -253,12 +253,12 @@ function predict(Pm::AbstractVector,
                  bPt::AbstractVector,
                  bDt::AbstractVector,
                  bdt::AbstractVector)
-    P = getP(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    D = getD(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    return predict(P,D,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    S = getS(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    p = getp(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    return predict(S,p,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
 end
-function predict(P::AbstractVector,
-                 D::AbstractVector,
+function predict(S::AbstractVector,
+                 p::AbstractVector,
                  x0::AbstractFloat,
                  y0::AbstractFloat,
                  y1::AbstractFloat,
@@ -268,9 +268,11 @@ function predict(P::AbstractVector,
                  bPt::AbstractVector,
                  bDt::AbstractVector,
                  bdt::AbstractVector)
-    Pf = @. P + bPt
-    Df = @. D + bDt
-    df = @. D*mf*y0 + P*ft*FT*(y1-y0)/x0 + bdt
+    x = @. (1-p)*x0*ft*FT
+    y = @. (y1+p*(y0-y1))*mf
+    Pf = @. S*x/(1+x+y) + bPt
+    df = @. S*y/(1+x+y) + bdt
+    Df = @. S/(1+x+y) + bDt
     return DataFrame(P=Pf,D=Df,d=df)
 end
 # glass
@@ -297,9 +299,10 @@ function predict(Dm::AbstractVector,
                  mf::AbstractFloat,
                  bDt::AbstractVector,
                  bdt::AbstractVector)
-    D = getD(Dm,dm,vD,vd,y0,mf,bDt,bdt)
-    Df = @. D + bDt
-    df = @. D*mf*y0 + bdt
+    S = getS(Dm,dm,vD,vd,y0,mf,bDt,bdt)
+    y = @. y0*mf
+    df = @. S*y/(1+y) + bdt
+    Df = @. S/(1+y) + bDt
     return DataFrame(D=Df,d=df)
 end
 # concentrations

@@ -130,9 +130,9 @@ function atomic(samp::Sample,
                dt=dt,dead=dead,
                PAcutoff=pars.PAcutoff,
                adrift=pars.adrift)
-    P = @. (Pm-bPt)*(ft*FT)
-    D = @. (Dm-bDt)*mf
-    d = @. (dm-bdt)
+    P = @. (Pm-bPt)/(ft*FT)
+    D = @. (Dm-bDt)
+    d = @. (dm-bdt)/mf
     return P, D, d
 end
 export atomic
