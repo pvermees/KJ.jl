@@ -5,6 +5,9 @@ function internoplot(samp::Sample,
                      method::Union{AbstractString,Nothing}=nothing,
                      legend::Bool = false,
                      nsigma::Integer = 2,
+                     i::Union{Integer,Nothing}=nothing,
+                     show_title::Bool=true,
+                     titlefontsize::Integer=10,
                      plot_options...)
     Phat, Dhat, dhat = atomic(samp,channels,blank,pars)
     x0, sx0, y0, sy0, rx0y0 = internochron(samp,channels,blank,pars)
@@ -34,6 +37,13 @@ function internoplot(samp::Sample,
             ymax = Plots.ylims(p)[2]
             add_concordia_line(xmax,ymax)
         end
+    end
+    if show_title
+        title = samp.sname*" ["*samp.group*"]"
+        if !isnothing(i)
+            title = string(i) * ". " * title
+        end
+        Plots.title!(title;titlefontsize=titlefontsize)
     end
     return p
 end
