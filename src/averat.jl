@@ -83,8 +83,11 @@ function SSaverat(x::AbstractFloat,
                   vP::AbstractVector,
                   vD::AbstractVector,
                   vd::AbstractVector)
-    D = averatD(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    sum(@. (D*y-dhat)^2/vd+(D*x-Phat)^2/vP+(D-Dhat)^2/vD )
+    S = averatS(x,y,Phat,Dhat,dhat,vP,vD,vd)
+    dP = @. Phat - S*x/(1+x+y)
+    dd = @. dhat - S*y/(1+x+y)
+    dD = @. Dhat - S/(1+x+y)
+    return sum(@. dP^2/vP + dD^2/vD + dd^2/vd )
 end
 
 # block matrix inversion of the Hessian matrix
@@ -96,15 +99,16 @@ function covmat_averat(x::AbstractFloat,
                        vP::AbstractVector,
                        vD::AbstractVector,
                        vd::AbstractVector)
-    D = averatD(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    O11 = sum(@. D^2/vP)
-    O12 = O21 = 0.0
-    O22 = sum(@. D^2/vd)
-    O13 = @. (D*x-Phat)/vP+(D*x)/vP
-    O23 = @. (D*y-dhat)/vd+(D*y)/vd
-    O31 = @. ((2*(D*x-Phat))/vP+(2*D*x)/vP)/2
-    O32 = @. ((2*(D*y-dhat))/vd+(2*D*y)/vd)/2
-    O33 = @. ((2*y^2)/vd+(2*x^2)/vP+2/vD)/2
+    S = averatS(x,y,Phat,Dhat,dhat,vP,vD,vd)
+    O11 = sum(@. ((2*(S/(y+x+1)-(S*x)/(y+x+1)^2)^2)/vP+(4*S*y*((S*y)/(y+x+1)-dhat))/(vd*(y+x+1)^3)+(2*((2*S*x)/(y+x+1)^3-(2*S)/(y+x+1)^2)*((S*x)/(y+x+1)-Phat))/vP+(4*S*(S/(y+x+1)-Dhat))/(vD*(y+x+1)^3)+(2*S^2*y^2)/(vd*(y+x+1)^4)+(2*S^2)/(vD*(y+x+1)^4))/2 )
+    O12 = sum(@. ((-(2*S*((S*y)/(y+x+1)-dhat))/(vd*(y+x+1)^2))+(4*S*y*((S*y)/(y+x+1)-dhat))/(vd*(y+x+1)^3)+(2*((2*S*x)/(y+x+1)^3-S/(y+x+1)^2)*((S*x)/(y+x+1)-Phat))/vP-(2*S*y*(S/(y+x+1)-(S*y)/(y+x+1)^2))/(vd*(y+x+1)^2)-(2*S*x*(S/(y+x+1)-(S*x)/(y+x+1)^2))/(vP*(y+x+1)^2)+(4*S*(S/(y+x+1)-Dhat))/(vD*(y+x+1)^3)+(2*S^2)/(vD*(y+x+1)^4))/2 )
+    O21 = sum(@. ((2*((2*S*y)/(y+x+1)^3-S/(y+x+1)^2)*((S*y)/(y+x+1)-dhat))/vd-(2*S*((S*x)/(y+x+1)-Phat))/(vP*(y+x+1)^2)+(4*S*x*((S*x)/(y+x+1)-Phat))/(vP*(y+x+1)^3)-(2*S*y*(S/(y+x+1)-(S*y)/(y+x+1)^2))/(vd*(y+x+1)^2)-(2*S*x*(S/(y+x+1)-(S*x)/(y+x+1)^2))/(vP*(y+x+1)^2)+(4*S*(S/(y+x+1)-Dhat))/(vD*(y+x+1)^3)+(2*S^2)/(vD*(y+x+1)^4))/2 )
+    O22 = sum(@. ((2*(S/(y+x+1)-(S*y)/(y+x+1)^2)^2)/vd+(2*((2*S*y)/(y+x+1)^3-(2*S)/(y+x+1)^2)*((S*y)/(y+x+1)-dhat))/vd+(4*S*x*((S*x)/(y+x+1)-Phat))/(vP*(y+x+1)^3)+(4*S*(S/(y+x+1)-Dhat))/(vD*(y+x+1)^3)+(2*S^2*x^2)/(vP*(y+x+1)^4)+(2*S^2)/(vD*(y+x+1)^4))/2)
+    O13 = @. ((-(2*y*((S*y)/(y+x+1)-dhat))/(vd*(y+x+1)^2))+(2*(1/(y+x+1)-x/(y+x+1)^2)*((S*x)/(y+x+1)-Phat))/vP+(2*x*(S/(y+x+1)-(S*x)/(y+x+1)^2))/(vP*(y+x+1))-(2*(S/(y+x+1)-Dhat))/(vD*(y+x+1)^2)-(2*S*y^2)/(vd*(y+x+1)^3)-(2*S)/(vD*(y+x+1)^3))/2
+    O23 = @. ((2*(1/(y+x+1)-y/(y+x+1)^2)*((S*y)/(y+x+1)-dhat))/vd-(2*x*((S*x)/(y+x+1)-Phat))/(vP*(y+x+1)^2)+(2*y*(S/(y+x+1)-(S*y)/(y+x+1)^2))/(vd*(y+x+1))-(2*(S/(y+x+1)-Dhat))/(vD*(y+x+1)^2)-(2*S*x^2)/(vP*(y+x+1)^3)-(2*S)/(vD*(y+x+1)^3))/2
+    O31 = @. ((-(2*y*((S*y)/(y+x+1)-dhat))/(vd*(y+x+1)^2))+(2*((S*x)/(y+x+1)-Phat))/(vP*(y+x+1))-(2*x*((S*x)/(y+x+1)-Phat))/(vP*(y+x+1)^2)+(2*x*(S/(y+x+1)-(S*x)/(y+x+1)^2))/(vP*(y+x+1))-(2*(S/(y+x+1)-Dhat))/(vD*(y+x+1)^2)-(2*S*y^2)/(vd*(y+x+1)^3)-(2*S)/(vD*(y+x+1)^3))/2
+    O32 = @. ((2*((S*y)/(y+x+1)-dhat))/(vd*(y+x+1))-(2*y*((S*y)/(y+x+1)-dhat))/(vd*(y+x+1)^2)-(2*x*((S*x)/(y+x+1)-Phat))/(vP*(y+x+1)^2)+(2*y*(S/(y+x+1)-(S*y)/(y+x+1)^2))/(vd*(y+x+1))-(2*(S/(y+x+1)-Dhat))/(vD*(y+x+1)^2)-(2*S*x^2)/(vP*(y+x+1)^3)-(2*S)/(vD*(y+x+1)^3))/2
+    O33 = @. ((2*y^2)/(vd*(y+x+1)^2)+(2*x^2)/(vP*(y+x+1)^2)+2/(vD*(y+x+1)^2))/2
     H11 = [ [O11 O12]
             [O21 O22] ]
     H12 = [ O13' ; O23' ]
@@ -113,7 +117,7 @@ function covmat_averat(x::AbstractFloat,
     return inv( H11 - H12 * inv(H22) * H21 )
 end
 
-function averatD(x::AbstractFloat,
+function averatS(x::AbstractFloat,
                  y::AbstractFloat,
                  Phat::AbstractVector,
                  Dhat::AbstractVector,
@@ -121,5 +125,5 @@ function averatD(x::AbstractFloat,
                  vP::AbstractVector,
                  vD::AbstractVector,
                  vd::AbstractVector)
-    return @. (dhat*vD*vP*y+Phat*vD*vd*x+Dhat*vP*vd)/(vD*vP*y^2+vD*vd*x^2+vP*vd)
+    return @. (dhat*vD*vP*y^2+((Phat*vD*vd+dhat*vD*vP)*x+Dhat*vP*vd+dhat*vD*vP)*y +Phat*vD*vd*x^2+(Dhat*vP+Phat*vD)*vd*x+Dhat*vP*vd)/(vD*vP*y^2+vD*vd*x^2+vP*vd)
 end
