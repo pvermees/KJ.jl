@@ -60,7 +60,7 @@ function fractionation(run::Vector{Sample},
     if isnothing(mf) init = vcat(init,0.0) end
     if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
 
-    return LLfit(init,bP,bD,bd,dats,channels,anchors,mf;
+    return SSfit(init,bP,bD,bd,dats,channels,anchors,mf;
                  dt=dt,dead=dead,ndrift=ndrift,ndown=ndown,
                  PAcutoff=PAcutoff,verbose=verbose)
 
@@ -85,7 +85,7 @@ function fractionation(run::Vector{Sample},
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
 
-    return LLfit([0.0],bD,bd,dats,channels,anchors;
+    return SSfit([0.0],bD,bd,dats,channels,anchors;
                  dt=dt,dead=dead,verbose=verbose)
     
 end
@@ -124,7 +124,7 @@ end
 export fractionation
 
 # minerals
-function LLfit(init::AbstractVector,
+function SSfit(init::AbstractVector,
                bP::AbstractVector,
                bD::AbstractVector,
                bd::AbstractVector,
@@ -139,7 +139,7 @@ function LLfit(init::AbstractVector,
                PAcutoff=nothing,
                verbose::Bool=false)
     
-    objective = (par) -> LL(par,bP,bD,bd,dats,channels,anchors,mf;
+    objective = (par) -> SS(par,bP,bD,bd,dats,channels,anchors,mf;
                             dt=dt,dead=dead,ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 
     fit = Optim.optimize(objective,init)
@@ -168,7 +168,7 @@ function LLfit(init::AbstractVector,
 
 end
 # glass
-function LLfit(init::AbstractVector,
+function SSfit(init::AbstractVector,
                bD::AbstractVector,
                bd::AbstractVector,
                dats::AbstractDict,
@@ -178,7 +178,7 @@ function LLfit(init::AbstractVector,
                dead::AbstractFloat=0.0,
                verbose::Bool=false)
 
-    objective = (par) -> LL(par,bD,bd,dats,channels,anchors;
+    objective = (par) -> SS(par,bD,bd,dats,channels,anchors;
                             dt=dt,dead=dead)
     
     fit = Optim.optimize(objective,init)
