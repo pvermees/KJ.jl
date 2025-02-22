@@ -121,7 +121,7 @@ function atomic(samp::Sample,
                 dt::Union{AbstractDict,Nothing}=nothing,
                 dead::AbstractFloat=0.0)
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
-        LLprep(blank[:,channels["P"]],
+        SSprep(blank[:,channels["P"]],
                blank[:,channels["D"]],
                blank[:,channels["d"]],
                windowData(samp,signal=true),
@@ -130,10 +130,10 @@ function atomic(samp::Sample,
                dt=dt,dead=dead,
                PAcutoff=pars.PAcutoff,
                adrift=pars.adrift)
-    P = @. (Pm-bPt)*(ft*FT)
-    D = @. (Dm-bDt)*mf
-    d = @. (dm-bdt)
-    return P, D, d
+    Phat = @. (Pm-bPt)*ft*FT
+    Dhat = @. (Dm-bDt)*mf
+    dhat = @. (dm-bdt)
+    return Phat, Dhat, dhat
 end
 export atomic
 
