@@ -21,6 +21,7 @@ Plot selected channels for a sample or a vector of samples
 - `elements`: a 1-row dataframe with the elements corresponding to each channel
 - `i`: (optional) sample number
 - `show_title`: self explanatory
+- `kw...`: keyword arguments to the generic scatter plot function
 
 # Examples
 
@@ -46,7 +47,8 @@ function plot(samp::Sample,
               linecol="black",linestyle=:solid,
               i=nothing,legend=:topleft,
               show_title=true,
-              titlefontsize=10)
+              titlefontsize=10,
+              kw...)
     Sanchors = getAnchors(method,standards,false)
     Ganchors = getAnchors(method,glass,true)
     anchors = merge(Sanchors,Ganchors)
@@ -56,7 +58,8 @@ function plot(samp::Sample,
                 seriestype=seriestype,
                 ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
                 legend=legend,show_title=show_title,
-                titlefontsize=titlefontsize)
+                titlefontsize=titlefontsize,
+                kw...)
 end
 function plot(samp::Sample;
               num=nothing,den=nothing,
@@ -64,14 +67,16 @@ function plot(samp::Sample;
               seriestype=:scatter,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
               i=nothing,legend=:topleft,
-              show_title=true,titlefontsize=10)
+              show_title=true,titlefontsize=10,
+              kw...)
     return plot(samp,getChannels(samp);
                 num=num,den=den,transformation=transformation,
                 offset=offset,seriestype=seriestype,
                 ms=ms,ma=ma,
                 xlim=xlim,ylim=ylim,i=i,
                 legend=legend,show_title=show_title,
-                titlefontsize=titlefontsize)
+                titlefontsize=titlefontsize,
+                kw...)
 end
 function plot(samp::Sample,
               channels::AbstractDict,
@@ -90,7 +95,8 @@ function plot(samp::Sample,
               i=nothing,
               legend=:topleft,
               show_title=true,
-              titlefontsize=10)
+              titlefontsize=10,
+              kw...)
 
     if samp.group == "sample"
 
@@ -99,7 +105,7 @@ function plot(samp::Sample,
                  seriestype=seriestype,ms=ms,ma=ma,
                  xlim=xlim,ylim=ylim,i=i,
                  legend=legend,show_title=show_title,
-                 titlefontsize=titlefontsize)
+                 titlefontsize=titlefontsize,kw...)
         
     else
 
@@ -110,7 +116,7 @@ function plot(samp::Sample,
                  num=num,den=den,transformation=transformation,offset=offset,
                  seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
                  i=i,legend=legend,show_title=show_title,
-                 titlefontsize=titlefontsize)
+                 titlefontsize=titlefontsize,kw...)
 
         plotFitted!(p,samp,blank,pars,channels,anchors;
                     dt=dt,dead=dead,num=num,den=den,transformation=transformation,
@@ -130,7 +136,8 @@ function plot(samp::Sample,
               seriestype=:scatter,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
               linecol="black",linestyle=:solid,i=nothing,
-              legend=:topleft,show_title=true,titlefontsize=10)
+              legend=:topleft,show_title=true,
+              titlefontsize=10,kw...)
     if samp.group == "sample"
 
         p = plot(samp;
@@ -138,7 +145,7 @@ function plot(samp::Sample,
                  seriestype=seriestype,ms=ms,ma=ma,
                  xlim=xlim,ylim=ylim,i=i,
                  legend=legend,show_title=show_title,
-                 titlefontsize=titlefontsize)
+                 titlefontsize=titlefontsize,kw...)
         
     else
 
@@ -149,7 +156,7 @@ function plot(samp::Sample,
                  num=num,den=den,transformation=transformation,offset=offset,
                  seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
                  i=i,legend=legend,show_title=show_title,
-                 titlefontsize=titlefontsize)
+                 titlefontsize=titlefontsize,kw...)
 
         plotFitted!(p,samp,blank,pars,elements,internal;
                      num=num,den=den,transformation=transformation,
@@ -167,14 +174,15 @@ function plot(samp::Sample,
               seriestype=:scatter,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
               linecol="black",linestyle=:solid,i=nothing,
-              legend=:topleft,show_title=true,titlefontsize=10)
+              legend=:topleft,show_title=true,
+              titlefontsize=10,kw...)
     elements = channels2elements(samp)
     return plot(samp,blank,pars,elements,internal;
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
                 linecol=linecol,linestyle=linestyle,i=i,
                 legend=legend,show_title=show_title,
-                titlefontsize=titlefontsize)
+                titlefontsize=titlefontsize,kw...)
 end
 function plot(samp::Sample,
               channels::AbstractVector;
@@ -186,7 +194,8 @@ function plot(samp::Sample,
               i::Union{Nothing,Integer}=nothing,
               legend=:topleft,
               show_title=true,
-              titlefontsize=10)
+              titlefontsize=10,
+              kw...)
     xlab = names(samp.dat)[1]
     x = samp.dat[:,xlab]
     meas = samp.dat[:,channels]
@@ -200,7 +209,8 @@ function plot(samp::Sample,
     p = Plots.plot(x,Matrix(ty);
                    ms=ms,ma=ma,seriestype=seriestype,
                    label=permutedims(names(y)),
-                   legend=legend,xlimits=xlim,ylimits=ylim)
+                   legend=legend,xlimits=xlim,ylimits=ylim,
+                   kw...)
     Plots.xlabel!(xlab)
     Plots.ylabel!(ylab)
     if show_title
