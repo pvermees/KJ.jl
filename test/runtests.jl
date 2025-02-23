@@ -411,7 +411,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -420,9 +420,9 @@ if true
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
     @testset "predict mfrac" begin mfractest() end
-    @testset "fractionation" begin fractionationtest(true) end=#
+    @testset "fractionation" begin fractionationtest(true) end
     @testset "Rb-Sr" begin RbSrTest() end
-    #=@testset "K-Ca" begin KCaTest() end
+    @testset "K-Ca" begin KCaTest() end
     @testset "hist" begin histest() end
     @testset "process run" begin processtest() end
     @testset "PA test" begin PAtest(true) end
@@ -436,7 +436,7 @@ if true
     @testset "Lu-Hf internochron" begin internochrontest() end
     @testset "UPb internochron" begin internochronUPbtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end=#
+    @testset "TUI test" begin TUItest() end
     # @testset "KJgui test" begin GUItest() end
 else
     TUI()

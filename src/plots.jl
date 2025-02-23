@@ -100,7 +100,7 @@ function plot(samp::Sample,
 
     if samp.group == "sample"
 
-        p = plot(samp,channels;
+        p = plot(samp,collect(values(channels));
                  num=num,den=den,transformation=transformation,
                  seriestype=seriestype,ms=ms,ma=ma,
                  xlim=xlim,ylim=ylim,i=i,
