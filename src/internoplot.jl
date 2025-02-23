@@ -31,7 +31,7 @@ function internoplot(samp::Sample,
             string(round(st,sigdigits=sdig)) * "Ma"
         Plots.annotate!(Plots.xlims(p)[2],
                         Plots.ylims(p)[2],
-                        Plots.text(tstring,:right))
+                        Plots.text(tstring,:right,titlefontsize))
         if method=="U-Pb"
             xmax = Plots.xlims(p)[2]
             ymax = Plots.ylims(p)[2]

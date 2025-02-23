@@ -84,7 +84,7 @@ function SSaverat(x::AbstractFloat,
                   vD::AbstractVector,
                   vd::AbstractVector)
     D = averatD(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    sum(@. (D*y-dhat)^2/vd+(D*x-Phat)^2/vP+(D-Dhat)^2/vD )
+    return sum(@. (D*y-dhat)^2/vd+(D*x-Phat)^2/vP+(D-Dhat)^2/vD )
 end
 
 # block matrix inversion of the Hessian matrix
