@@ -8,7 +8,7 @@ end
 
 rerun = true
 
-if true
+if false
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
     import Plots
 
@@ -17,6 +17,7 @@ if true
     myrun = load("/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon_Maps.csv",
                  "/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon.Iolite.csv";
                  instrument="Agilent")
+    deleteat!(myrun, 31)
     method = "U-Pb";
     channels = Dict("d"=>"Pb207",
                     "D"=>"Pb206",
@@ -25,8 +26,8 @@ if true
     glass = Dict("NIST612" => "NIST612")
     blk, fit = process!(myrun,method,channels,standards,glass,
                         nblank=2,ndrift=2,ndown=0)
-    #export2IsoplotR(myrun,method,channels,blk,fit;dt=dt,
-    #                fname="/home/pvermees/temp/NHM.json")
+    export2IsoplotR(myrun,method,channels,blk,fit;
+                    fname="/home/pvermees/temp/NHM.json")
     p = plot(myrun[snum],method,channels,blk,fit,standards,glass;
              transformation="log",den=nothing)
 else
