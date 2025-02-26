@@ -97,7 +97,6 @@ function plot(samp::Sample,
               show_title=true,
               titlefontsize=10,
               kw...)
-
     if samp.group == "sample"
 
         p = plot(samp,collect(values(channels));

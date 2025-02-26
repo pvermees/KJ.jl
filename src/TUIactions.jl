@@ -334,7 +334,7 @@ end
 
 function TUIgeochronPlotter(ctrl::AbstractDict,samp::Sample)
     if isnothing(ctrl["blank"]) | (samp.group=="sample")
-        p = plot(samp,ctrl["channels"];
+        p = plot(samp,collect(values(ctrl["channels"]));
                  den=ctrl["den"],transformation=ctrl["transformation"],i=ctrl["i"])
     else
         anchors = getAnchors(ctrl["method"],ctrl["standards"],ctrl["glass"])
