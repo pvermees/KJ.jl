@@ -1,36 +1,4 @@
-"""
-plot
-
-Plot selected channels for a sample or a vector of samples
-
-# Arguments
-
-- `method`: either "U-Pb", "Lu-Hf", "Rb-Sr" or "concentrations"
-- `channels`: a vector of channel names (e.g., the keys of a channels Dict)
-- `blank`: the output of fitBlanks()p
-- `pars`: the output of fractionation() or process!()
-- `dt`: the dwell times (in seconds) of the mass channels
-- `standards`: dictionary of the type Dict("prefix" => "mineral standard")
-- `glass`: dictionary of the type Dict("prefix" => "reference glass")
-- `num`: optional vector of name of the data column to use as the numerator
-- `den`: optional name of the data column to use as the denominator
-- `transformation`: "sqrt", "log" or nothing
-- `seriestype`: :scatter or :path
-- `titlefontsize`, `legend`, `ms`, `xlim`, `ylim`: see the generic Plot.plot function
-- `anchors`: the output of getAnchors()
-- `elements`: a 1-row dataframe with the elements corresponding to each channel
-- `i`: (optional) sample number
-- `show_title`: self explanatory
-- `kw...`: keyword arguments to the generic scatter plot function
-
-# Examples
-
-```julia
-myrun = load("data/Lu-Hf";instrument="Agilent")
-p = plot(myrun[1],["Hf176 -> 258","Hf178 -> 260"])
-display(p)
-```
-"""
+# ratios
 function plot(samp::Sample,
               method::AbstractString,
               channels::AbstractDict,
@@ -61,23 +29,6 @@ function plot(samp::Sample,
                 titlefontsize=titlefontsize,
                 kw...)
 end
-function plot(samp::Sample;
-              num=nothing,den=nothing,
-              transformation=nothing,offset=nothing,
-              seriestype=:scatter,
-              ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-              i=nothing,legend=:topleft,
-              show_title=true,titlefontsize=10,
-              kw...)
-    return plot(samp,getChannels(samp);
-                num=num,den=den,transformation=transformation,
-                offset=offset,seriestype=seriestype,
-                ms=ms,ma=ma,
-                xlim=xlim,ylim=ylim,i=i,
-                legend=legend,show_title=show_title,
-                titlefontsize=titlefontsize,
-                kw...)
-end
 function plot(samp::Sample,
               channels::AbstractDict,
               blank::AbstractDataFrame,
@@ -99,7 +50,8 @@ function plot(samp::Sample,
               kw...)
     if samp.group == "sample"
 
-        p = plot(samp,collect(values(channels));
+        p = plot(samp;
+                 channels=collect(values(channels)),
                  num=num,den=den,transformation=transformation,
                  seriestype=seriestype,ms=ms,ma=ma,
                  xlim=xlim,ylim=ylim,i=i,
@@ -111,7 +63,8 @@ function plot(samp::Sample,
         offset = getOffset(samp,channels,blank,pars,anchors,transformation;
                            dt=dt,dead=dead,num=num,den=den)
 
-        p = plot(samp,collect(values(channels));
+        p = plot(samp;
+                 channels=collect(values(channels)),
                  num=num,den=den,transformation=transformation,offset=offset,
                  seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
                  i=i,legend=legend,show_title=show_title,
@@ -183,9 +136,10 @@ function plot(samp::Sample,
                 legend=legend,show_title=show_title,
                 titlefontsize=titlefontsize,kw...)
 end
-function plot(samp::Sample,
-              channels::AbstractVector;
-              num=nothing,den=nothing,
+function plot(samp::Sample;
+              channels::AbstractVector=getChannels(samp),
+              num=nothing,
+              den=nothing,
               transformation=nothing,
               offset=nothing,
               seriestype=:scatter,ms=2,ma=0.5,
