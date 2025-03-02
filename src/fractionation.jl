@@ -1,13 +1,3 @@
-"""
-fractionation
-
-Fit the drift and down hole fractionation
-
-# Arguments
-
-- see [`process!`](@ref).
-- `elements`: a 1-row dataframe with the elements corresponding to each channel
-"""
 # two-step isotope fractionation
 function fractionation(run::Vector{Sample},
                        method::AbstractString,

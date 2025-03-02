@@ -142,7 +142,7 @@ function TUImethod!(ctrl::AbstractDict,
 end
 
 function TUItabulate(ctrl::AbstractDict)
-    summarise(ctrl["run"];verbose=true)
+    summarise(ctrl["run"];verbose=false)
     return nothing
 end
 
@@ -327,15 +327,21 @@ function TUIconcentrationPlotter(ctrl::AbstractDict,samp::Sample)
         p = plot(samp,ctrl["blank"],ctrl["par"],ctrl["internal"][1];
                  den=ctrl["den"],transformation=ctrl["transformation"],i=ctrl["i"])
     else
-        p = plot(samp;den=ctrl["den"],transformation=ctrl["transformation"],i=ctrl["i"])
+        p = plot(samp;
+                 den=ctrl["den"],
+                 transformation=ctrl["transformation"],
+                 i=ctrl["i"])
     end
     return p
 end
 
 function TUIgeochronPlotter(ctrl::AbstractDict,samp::Sample)
     if isnothing(ctrl["blank"]) | (samp.group=="sample")
-        p = plot(samp,collect(values(ctrl["channels"]));
-                 den=ctrl["den"],transformation=ctrl["transformation"],i=ctrl["i"])
+        p = plot(samp;
+                 channels=collect(values(ctrl["channels"])),
+                 den=ctrl["den"],
+                 transformation=ctrl["transformation"],
+                 i=ctrl["i"])
     else
         anchors = getAnchors(ctrl["method"],ctrl["standards"],ctrl["glass"])
         p = plot(samp,ctrl["method"],ctrl["channels"],ctrl["blank"],
@@ -587,7 +593,7 @@ end
 
 function TUIimportLog!(ctrl::AbstractDict,
                        response::AbstractString;
-                       verbose::Bool=true)
+                       verbose::Bool=false)
     TUIclear!(ctrl)
     ctrl["log"] = true
     history = CSV.read(response,DataFrame)
