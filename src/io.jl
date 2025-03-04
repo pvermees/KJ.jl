@@ -92,6 +92,7 @@ function readFile(fname::AbstractString;
     dat, sname, datetime = readDat(fname,instrument,head2name)
     return df2sample(dat,sname,datetime)
 end
+export readFile
 
 function df2sample(df::AbstractDataFrame,
                    sname::AbstractString,

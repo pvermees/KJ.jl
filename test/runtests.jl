@@ -407,10 +407,6 @@ function TUItest()
     TUI(;logbook="logs/Lu-Hf.log",reset=true)
 end
 
-function GUItest()
-    TUI(KJgui;logbook="logs/KJgui.log",reset=true)
-end
-
 Plots.closeall()
 
 if true
@@ -440,7 +436,6 @@ if true
     @testset "UPb internochron" begin internochronUPbtest() end
     @testset "extension test" begin extensiontest() end
     @testset "TUI test" begin TUItest() end
-    # @testset "KJgui test" begin GUItest() end
 else
     TUI()
 end

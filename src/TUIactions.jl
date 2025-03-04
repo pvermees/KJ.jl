@@ -88,7 +88,6 @@ function TUIloadICPdir!(ctrl::AbstractDict,
     ctrl["priority"]["load"] = false
     ctrl["multifile"] = true
     ctrl["ICPpath"] = response
-    println("Done")
     if ctrl["template"]
         TUIsetGroups!(ctrl,"standards")
         TUIsetGroups!(ctrl,"glass")
@@ -142,7 +141,7 @@ function TUImethod!(ctrl::AbstractDict,
 end
 
 function TUItabulate(ctrl::AbstractDict)
-    summarise(ctrl["run"];verbose=false)
+    summarise(ctrl["run"];verbose=true)
     return nothing
 end
 

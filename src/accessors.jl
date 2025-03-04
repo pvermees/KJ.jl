@@ -147,7 +147,7 @@ function geti0(signals::AbstractDataFrame)
     mid = (q[2]+q[1])/2
     (lovals,lens) = rle(total.<mid)
     i = findfirst(lovals)
-    return sum(lens[1:i])
+    return max(2,sum(lens[1:i]))
 end
 export geti0
 

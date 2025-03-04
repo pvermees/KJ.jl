@@ -8,7 +8,30 @@ end
 
 rerun = true
 
-if false
+option = "Abdelkadir" # "KJgui" # "runtests" #
+
+if option == "Abdelkadir"
+    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
+    import Plots
+
+    snum = 168
+
+    myrun = load("/home/pvermees/Dropbox/Plasmatrace/Abdulkadir";
+                 instrument="Agilent")
+    method = "U-Pb"
+    channels = Dict("d"=>"Pb207",
+                    "D"=>"Pb206",
+                    "P"=>"U238");
+    standards = Dict("MAD_ap" => "MAD")
+    glass = Dict("NIST612" => "GLASS")
+    blk, fit = process!(myrun,method,channels,standards,glass,
+                        nblank=2,ndrift=2,ndown=1)
+    export2IsoplotR(myrun,method,channels,blk,fit;
+                    prefix="MAD",
+                    fname="/home/pvermees/temp/Abdelkadir.json")
+    p = plot(myrun[snum],method,channels,blk,fit,standards,glass;
+             transformation="log",den="Pb206")
+elseif option == "NHM"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
     import Plots
 
@@ -18,7 +41,7 @@ if false
                  "/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon.Iolite.csv";
                  instrument="Agilent")
     deleteat!(myrun, 31)
-    method = "U-Pb";
+    method = "U-Pb"
     channels = Dict("d"=>"Pb207",
                     "D"=>"Pb206",
                     "P"=>"U238");
@@ -30,6 +53,9 @@ if false
                     fname="/home/pvermees/temp/NHM.json")
     p = plot(myrun[snum],method,channels,blk,fit,standards,glass;
              transformation="log",den=nothing)
+elseif option == "KJgui"
+    using KJ, KJgui, Test, CSV, Infiltrator, DataFrames, Statistics
+    TUI(KJgui;reset=true)
 else
     include("runtests.jl")
 end
