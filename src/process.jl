@@ -51,7 +51,7 @@ function atomic(samp::Sample,
         SSprep(blank[:,channels["P"]],
                blank[:,channels["D"]],
                blank[:,channels["d"]],
-               windowData(samp,signal=true),
+               windowData(samp;signal=true),
                channels,
                pars.mfrac,pars.drift,pars.down;
                dt=dt,dead=dead,
@@ -76,7 +76,7 @@ function concentrations(samp::Sample,
                         blank::AbstractDataFrame,
                         pars::AbstractVector,
                         internal::Tuple)
-    dat = windowData(samp,signal=true)
+    dat = windowData(samp;signal=true)
     sig = getSignals(dat)
     out = copy(sig)
     bt = polyVal(blank,dat.t)

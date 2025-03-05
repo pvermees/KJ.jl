@@ -8,7 +8,7 @@ end
 
 rerun = true
 
-option = "Abdulkadir" # "runtests" # "KJgui" #
+option = "runtests" # "Abdulkadir" #"KJgui" #
 
 if option == "Abdulkadir"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
@@ -28,24 +28,23 @@ if option == "Abdulkadir"
     glass = Dict("NIST612" => "GLASS")
     blk, fit = process!(myrun,method,channels,standards,glass,
                         nblank=1,ndrift=1,ndown=1)
+    i0 = geti0(myrun[156].dat)
+    p = KJ.plot(myrun[156],method,channels,blk,fit,standards,glass;
+                transformation=nothing)#"log")
+    display(p)
     if false
-        fit = (drift = [-50.0],
-               down = [0.0],
-               mfrac = -1.0,
-               PAcutoff = nothing,
-               adrift = [NaN])
-    end
-    export2IsoplotR(myrun,method,channels,blk,fit;
-                    prefix="MAD",
-                    fname="/home/pvermees/temp/Abdulkadir.json")
-    rm("/home/pvermees/temp/Abdulkadir.pdf")
-    for snum in snums
-        savefig(KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
-                        transformation="log"),#,den="Pb206"),
-                "/home/pvermees/temp/temp.pdf")
-        append_pdf!("/home/pvermees/temp/Abdulkadir.pdf",
-                    "/home/pvermees/temp/temp.pdf",
-                    cleanup=true)
+        export2IsoplotR(myrun,method,channels,blk,fit;
+                        prefix="MAD",
+                        fname="/home/pvermees/temp/Abdulkadir.json")
+        rm("/home/pvermees/temp/Abdulkadir.pdf")
+        for snum in snums
+            savefig(KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
+                            transformation="log"),#,den="Pb206"),
+                    "/home/pvermees/temp/temp.pdf")
+            append_pdf!("/home/pvermees/temp/Abdulkadir.pdf",
+                        "/home/pvermees/temp/temp.pdf",
+                        cleanup=true)
+        end
     end
 elseif option == "NHM"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics

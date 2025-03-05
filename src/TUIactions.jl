@@ -404,6 +404,44 @@ function TUIratios!(ctrl::AbstractDict,
     return "x"
 end
 
+function TUIt0AutoOne!(ctrl::AbstractDict)
+    samp = ctrl["run"][ctrl["i"]]
+    sett0!(samp)
+    setBwin!(samp)
+    setSwin!(samp)
+    TUIplotter(ctrl)
+    return "x"
+end
+
+function TUIt0One!(ctrl::AbstractDict,
+                   response::AbstractString)
+    t0 = parse(Float64,response)
+    samp = ctrl["run"][ctrl["i"]]
+    sett0!(samp,t0)
+    setBwin!(samp)
+    setSwin!(samp)
+    TUIplotter(ctrl)
+    return "xx"
+end
+
+function TUIt0AutoAll!(ctrl::AbstractDict)
+    sett0!(ctrl["run"])
+    setBwin!(ctrl["run"])
+    setSwin!(ctrl["run"])
+    TUIplotter(ctrl)
+    return "x"
+end
+
+function TUIt0All!(ctrl::AbstractDict,
+                   response::AbstractString)
+    t0 = parse(Float64,response)
+    sett0!(ctrl["run"],t0)
+    setBwin!(ctrl["run"])
+    setSwin!(ctrl["run"])
+    TUIplotter(ctrl)
+    return "xx"
+end
+
 function TUIoneAutoBlankWindow!(ctrl::AbstractDict)
     setBwin!(ctrl["run"][ctrl["i"]])
     return TUIplotter(ctrl)

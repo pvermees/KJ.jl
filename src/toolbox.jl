@@ -207,6 +207,7 @@ function windowData(samp::Sample;blank=false,signal=false)
     end
     return out
 end
+export windowData
 
 function windows2selection(windows)
     selection = Integer[]
