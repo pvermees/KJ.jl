@@ -8,7 +8,45 @@ end
 
 rerun = true
 
-if false
+option = "runtests" # "Abdulkadir" #"KJgui" #
+
+if option == "Abdulkadir"
+    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
+    import Plots
+
+    myrun = load("/home/pvermees/Dropbox/Plasmatrace/Abdulkadir";
+                 instrument="Agilent")
+
+    snames = summarise(myrun).name
+    snums = findall(x -> occursin("MAD", x), snames)
+
+    method = "U-Pb"
+    channels = Dict("d"=>"Pb207",
+                    "D"=>"Pb206",
+                    "P"=>"U238");
+    standards = Dict("MAD_ap" => "MAD")
+    glass = Dict("NIST612" => "GLASS")
+    blk, fit = process!(myrun,method,channels,standards,glass,
+                        nblank=1,ndrift=1,ndown=1)
+    i0 = geti0(myrun[156].dat)
+    p = KJ.plot(myrun[156],method,channels,blk,fit,standards,glass;
+                transformation=nothing)#"log")
+    display(p)
+    if false
+        export2IsoplotR(myrun,method,channels,blk,fit;
+                        prefix="MAD",
+                        fname="/home/pvermees/temp/Abdulkadir.json")
+        rm("/home/pvermees/temp/Abdulkadir.pdf")
+        for snum in snums
+            savefig(KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
+                            transformation="log"),#,den="Pb206"),
+                    "/home/pvermees/temp/temp.pdf")
+            append_pdf!("/home/pvermees/temp/Abdulkadir.pdf",
+                        "/home/pvermees/temp/temp.pdf",
+                        cleanup=true)
+        end
+    end
+elseif option == "NHM"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
     import Plots
 
@@ -18,7 +56,7 @@ if false
                  "/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon.Iolite.csv";
                  instrument="Agilent")
     deleteat!(myrun, 31)
-    method = "U-Pb";
+    method = "U-Pb"
     channels = Dict("d"=>"Pb207",
                     "D"=>"Pb206",
                     "P"=>"U238");
@@ -30,6 +68,9 @@ if false
                     fname="/home/pvermees/temp/NHM.json")
     p = plot(myrun[snum],method,channels,blk,fit,standards,glass;
              transformation="log",den=nothing)
+elseif option == "KJgui"
+    using KJ, KJgui, Test, CSV, Infiltrator, DataFrames, Statistics
+    TUI(KJgui;reset=true)
 else
     include("runtests.jl")
 end

@@ -414,7 +414,8 @@ function getKJtree()
             "p: Previous\n" * 
             "g: Go to\n" * 
             "t: Tabulate all the samples in the session\n" * 
-            "r: Plot signals or ratios?\n" * 
+            "r: Plot signals or ratios?\n" *
+            "0: Set 'time zero'\n" *
             "b: Select blank window(s)\n" * 
             "s: Select signal window(s)\n" * 
             "d: Choose a data transformation\n" * 
@@ -430,6 +431,7 @@ function getKJtree()
                 "g" => "goto",
                 "t" => TUItabulate,
                 "r" => "setDen",
+                "0" => "t0",
                 "b" => "Bwin",
                 "s" => "Swin",
                 "d" => "transformation"
@@ -447,6 +449,43 @@ function getKJtree()
             "Plot the ratios of the channels relative to a common " * 
             "denominator. Zero values for the denominator are omitted.",
             action = TUIratios!
+        ),
+        "t0" => (
+            message =
+            "Choose an option to set the start of the signal ('time zero'):\n" * 
+            "a: Automatic (current sample)\n" * 
+            "s: Manually set t0 (current sample)\n" * 
+            "A: Automatic (all samples)\n" * 
+            "S: Manually set t0 (all samples)\n" * 
+            "x: Exit\n" * 
+            "?: Help",
+            help =
+            "Specify t0 ('time zero'), marking the onset of laser ablation " * 
+            "(in seconds) or trust KJ to choose t0 automatically.",
+            action = Dict(
+                "a" => TUIt0AutoOne!,
+                "s" => "t0one",
+                "A" => TUIt0AutoAll!,
+                "S" => "t0all"
+            )
+        ),
+        "t0one" => (
+            message =
+            "Enter the onset of laser ablation (t0) in seconds. " *
+            "Type '?' for help and 'x' to exit.",
+            help =
+            "Specify the start of the signal (which equals the " *
+            "the end of the blank) as a number of seconds.",
+            action = TUIt0One!
+        ),
+        "t0all" => (
+            message =
+            "Enter the onset of laser ablation (t0) in seconds. " *
+            "Type '?' for help and 'x' to exit.",
+            help =
+            "Specify the start of the signal (which equals the " *
+            "the end of the blank) as a number of seconds.",
+            action = TUIt0All!
         ),
         "Bwin" => (
             message =

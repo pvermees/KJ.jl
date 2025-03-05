@@ -88,7 +88,6 @@ function TUIloadICPdir!(ctrl::AbstractDict,
     ctrl["priority"]["load"] = false
     ctrl["multifile"] = true
     ctrl["ICPpath"] = response
-    println("Done")
     if ctrl["template"]
         TUIsetGroups!(ctrl,"standards")
         TUIsetGroups!(ctrl,"glass")
@@ -142,7 +141,7 @@ function TUImethod!(ctrl::AbstractDict,
 end
 
 function TUItabulate(ctrl::AbstractDict)
-    summarise(ctrl["run"];verbose=false)
+    summarise(ctrl["run"];verbose=true)
     return nothing
 end
 
@@ -403,6 +402,44 @@ function TUIratios!(ctrl::AbstractDict,
     end
     TUIplotter(ctrl)
     return "x"
+end
+
+function TUIt0AutoOne!(ctrl::AbstractDict)
+    samp = ctrl["run"][ctrl["i"]]
+    sett0!(samp)
+    setBwin!(samp)
+    setSwin!(samp)
+    TUIplotter(ctrl)
+    return "x"
+end
+
+function TUIt0One!(ctrl::AbstractDict,
+                   response::AbstractString)
+    t0 = parse(Float64,response)
+    samp = ctrl["run"][ctrl["i"]]
+    sett0!(samp,t0)
+    setBwin!(samp)
+    setSwin!(samp)
+    TUIplotter(ctrl)
+    return "xx"
+end
+
+function TUIt0AutoAll!(ctrl::AbstractDict)
+    sett0!(ctrl["run"])
+    setBwin!(ctrl["run"])
+    setSwin!(ctrl["run"])
+    TUIplotter(ctrl)
+    return "x"
+end
+
+function TUIt0All!(ctrl::AbstractDict,
+                   response::AbstractString)
+    t0 = parse(Float64,response)
+    sett0!(ctrl["run"],t0)
+    setBwin!(ctrl["run"])
+    setSwin!(ctrl["run"])
+    TUIplotter(ctrl)
+    return "xx"
 end
 
 function TUIoneAutoBlankWindow!(ctrl::AbstractDict)

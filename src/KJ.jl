@@ -1,6 +1,6 @@
 module KJ
 
-using Dates, DataFrames, Printf, Infiltrator, LinearAlgebra
+using Dates, DataFrames, Printf, Infiltrator, LinearAlgebra, ForwardDiff
 import Plots, Statistics, Optim, CSV
 
 include("errors.jl")

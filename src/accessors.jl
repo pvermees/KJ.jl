@@ -131,8 +131,8 @@ function setSwin!(samp::Sample,swin::AbstractVector;seconds::Bool=false)
     samp.swin = seconds ? time2window(samp,swin) : swin
 end
 function setSwin!(run::Vector{Sample})
-    for i in eachindex(run)
-        setSwin!(run[i])
+    for samp in run
+        setSwin!(samp)
     end
 end
 function setSwin!(samp::Sample)
@@ -147,14 +147,27 @@ function geti0(signals::AbstractDataFrame)
     mid = (q[2]+q[1])/2
     (lovals,lens) = rle(total.<mid)
     i = findfirst(lovals)
-    return sum(lens[1:i])
+    return max(2,sum(lens[1:i]))
 end
 export geti0
 
+function sett0!(run::Vector{Sample})
+    for samp in run
+        sett0!(samp)
+    end
+end
+function sett0!(run::Vector{Sample},t0::AbstractFloat)
+    for samp in run
+        sett0!(samp,t0)
+    end
+end
 function sett0!(samp::Sample)
     dat = getSignals(samp)
     i0 = geti0(dat)
-    samp.t0 = samp.dat[i0,1]
+    sett0!(samp,samp.dat[i0,1])
+end
+function sett0!(samp::Sample,t0::AbstractFloat)
+    samp.t0 = t0
 end
 export sett0!
 
