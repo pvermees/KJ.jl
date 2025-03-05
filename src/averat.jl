@@ -70,7 +70,7 @@ function averat(Phat::AbstractVector,
     H = ForwardDiff.hessian(objective,[x,y])
     try
         # covmat_averat(x,y,Phat,Dhat,dhat,vP,vD,vd)
-        LinearAlgebra.inv(H)
+        E = LinearAlgebra.inv(H)
         sx = E[1,1]>0 ? sqrt(E[1,1]) : NaN
         sy = E[2,2]>0 ? sqrt(E[2,2]) : NaN
         rxy = E[1,2]/(sx*sy)

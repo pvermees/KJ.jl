@@ -8,16 +8,18 @@ end
 
 rerun = true
 
-option = "Abdelkadir" # "KJgui" # "runtests" #
+option = "Abdulkadir" # "runtests" # "KJgui" #
 
-if option == "Abdelkadir"
-    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
+if option == "Abdulkadir"
+    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
     import Plots
-
-    snum = 168
 
     myrun = load("/home/pvermees/Dropbox/Plasmatrace/Abdulkadir";
                  instrument="Agilent")
+
+    snames = summarise(myrun).name
+    snums = findall(x -> occursin("MAD", x), snames)
+
     method = "U-Pb"
     channels = Dict("d"=>"Pb207",
                     "D"=>"Pb206",
@@ -25,12 +27,26 @@ if option == "Abdelkadir"
     standards = Dict("MAD_ap" => "MAD")
     glass = Dict("NIST612" => "GLASS")
     blk, fit = process!(myrun,method,channels,standards,glass,
-                        nblank=2,ndrift=2,ndown=1)
+                        nblank=1,ndrift=1,ndown=1)
+    if false
+        fit = (drift = [-50.0],
+               down = [0.0],
+               mfrac = -1.0,
+               PAcutoff = nothing,
+               adrift = [NaN])
+    end
     export2IsoplotR(myrun,method,channels,blk,fit;
                     prefix="MAD",
-                    fname="/home/pvermees/temp/Abdelkadir.json")
-    p = plot(myrun[snum],method,channels,blk,fit,standards,glass;
-             transformation="log",den="Pb206")
+                    fname="/home/pvermees/temp/Abdulkadir.json")
+    rm("/home/pvermees/temp/Abdulkadir.pdf")
+    for snum in snums
+        savefig(KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
+                        transformation="log"),#,den="Pb206"),
+                "/home/pvermees/temp/temp.pdf")
+        append_pdf!("/home/pvermees/temp/Abdulkadir.pdf",
+                    "/home/pvermees/temp/temp.pdf",
+                    cleanup=true)
+    end
 elseif option == "NHM"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
     import Plots
