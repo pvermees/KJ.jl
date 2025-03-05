@@ -8,13 +8,13 @@ end
 
 rerun = true
 
-option = "Abdelkadir" # "KJgui" # "runtests" #
+option = "Abdulkadir" # "KJgui" # "runtests" #
 
-if option == "Abdelkadir"
-    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
+if option == "Abdulkadir"
+    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
     import Plots
 
-    snum = 168
+    snums = [167,168]
 
     myrun = load("/home/pvermees/Dropbox/Plasmatrace/Abdulkadir";
                  instrument="Agilent")
@@ -28,9 +28,15 @@ if option == "Abdelkadir"
                         nblank=2,ndrift=2,ndown=1)
     export2IsoplotR(myrun,method,channels,blk,fit;
                     prefix="MAD",
-                    fname="/home/pvermees/temp/Abdelkadir.json")
-    p = plot(myrun[snum],method,channels,blk,fit,standards,glass;
-             transformation="log",den="Pb206")
+                    fname="/home/pvermees/temp/Abdulkadir.json")
+    for snum in snums
+        p = KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
+                    transformation="log",den="Pb206")
+        savefig(p,"/home/pvermees/temp/temp.pdf")
+        append_pdf!("/home/pvermees/temp/Abdulkadir.pdf",
+                    "/home/pvermees/temp/temp.pdf",
+                    cleanup=true)
+    end
 elseif option == "NHM"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
     import Plots
