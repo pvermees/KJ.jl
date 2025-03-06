@@ -72,7 +72,7 @@ function predictest()
         pred = predict(samp,method,fit,blk,channels,
                        standards,glass;dt=dt)
         p = plot(samp,method,channels,blk,fit,standards,glass;
-                 dt=dt,transformation="log")
+                 dt=dt,transformation="Log")
         @test display(p) != NaN
     end
     return samp,dt,method,fit,blk,channels,standards,glass,p
@@ -97,9 +97,8 @@ function partest(parname,paroffsetfact)
                         PAcutoff=nothing,
                         adrift=[drift])
         anchors = getAnchors(method,standards,false)
-        offset = getOffset(samp,channels,blk,adjusted_fit,anchors,"log";dt=dt)
         plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
-                    dt=dt,offset=offset,transformation="log",linecolor="red")
+                    dt=dt,transformation="Log",linecolor="red")
     end
     @test display(p) != NaN
 end
@@ -165,8 +164,8 @@ function RbSrTest(show=true;poisson=false)
                         dt=dt,ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     if show
-        p = plot(myrun[2],channels,blank,fit,anchors,
-                 transformation="log";dt=dt)
+        p = plot(myrun[2],channels,blank,fit,anchors;
+                 transformation="Log",den="Sr87 -> 103",dt=dt)
         @test display(p) != NaN
     end
     export2IsoplotR(myrun,method,channels,blank,fit;
@@ -189,7 +188,7 @@ function KCaTest(show=true;poisson=false)
     anchors = getAnchors(method,standards)
     if show
         p = plot(myrun[3],channels,blank,fit,anchors,
-                 transformation="log",den=nothing;dt=dt)
+                 transformation="Log",den=nothing;dt=dt)
         @test display(p) != NaN
     end
     export2IsoplotR(myrun,method,channels,blank,fit;
@@ -262,7 +261,7 @@ function processtest(show=true;poisson=false)
                         dt=dt,nblank=2,ndrift=1,ndown=1)
     if show
         p = plot(myrun[2],method,channels,blk,fit,standards,glass;
-                 dt=dt,transformation="log",den=nothing)
+                 dt=dt,transformation="Log",den=nothing)
         @test display(p) != NaN
     end
     return myrun, method, channels, blk, fit
@@ -306,7 +305,7 @@ function UPbtest(;poisson=false)
     export2IsoplotR(myrun,method,channels,blank,pars;
                     dt=dt,fname="output/UPb.json")
     p = plot(myrun[37],method,channels,blank,pars,standards,glass;
-             dt=dt,transformation="log",den="Pb206")
+             dt=dt,transformation="Log",den="Pb206")
     @test display(p) != NaN
 end
 
@@ -327,7 +326,7 @@ function carbonatetest(verbose=false;poisson=false)
     export2IsoplotR(myrun,method,channels,blk,fit;
                     dt=dt,prefix="Duff",fname="output/Duff.json")
     p = plot(myrun[4],method,channels,blk,fit,standards,glass;
-             dt=dt,transformation="log")
+             dt=dt,transformation="Log")
     @test display(p) != NaN
 end
 
@@ -352,7 +351,7 @@ function concentrationtest()
     setGroup!(myrun,glass)
     blk, fit = process!(myrun,internal,glass;nblank=2)
     p = plot(myrun[4],blk,fit,internal[1];
-             transformation="log",den=internal[1])
+             transformation="Log",den=internal[1])
     conc = concentrations(myrun,blk,fit,internal)
     @test display(p) != NaN
 end
