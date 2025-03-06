@@ -199,12 +199,21 @@ function plotFitted!(p,
                      anchors::AbstractDict;
                      dt::Union{AbstractDict,Nothing}=nothing,
                      dead::AbstractFloat=0.0,
-                     num=nothing,den=nothing,transformation=nothing,
-                     offset::AbstractDict,linecolor="black",linestyle=:solid)
+                     num::Union{Nothing,AbstractString}=nothing,
+                     den::Union{Nothing,AbstractString}=nothing,
+                     transformation::Union{Nothing,AbstractString}=nothing,
+                     offset::AbstractDict,
+                     linecolor="black",
+                     linestyle=:solid)
     pred = predict(samp,pars,blank,channels,anchors;
                    dt=dt,dead=dead)
     rename!(pred,[channels[i] for i in names(pred)])
     plotFitted!(p,samp,pred;
+                num=num,den=den,transformation=transformation,
+                offset=offset,linecolor=linecolor,linestyle=linestyle)
+    bt = predict(samp,blank[:,collect(values(channels))])
+    plotFitted!(p,samp,bt;
+                blank=true,signal=false,
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
@@ -215,10 +224,19 @@ function plotFitted!(p,
                      pars::AbstractVector,
                      elements::AbstractDataFrame,
                      internal::AbstractString;
-                     num=nothing,den=nothing,transformation=nothing,
-                     offset::AbstractDict,linecolor="black",linestyle=:solid)
+                     num::Union{Nothing,AbstractString}=nothing,
+                     den::Union{Nothing,AbstractString}=nothing,
+                     transformation::Union{Nothing,AbstractString}=nothing,
+                     offset::AbstractDict,
+                     linecolor="black",
+                     linestyle=:solid)
     pred = predict(samp,pars,blank,elements,internal)
     plotFitted!(p,samp,pred;
+                num=num,den=den,transformation=transformation,
+                offset=offset,linecolor=linecolor,linestyle=linestyle)
+    bt = predict(samp,blank)
+    plotFitted!(p,samp,bt;
+                blank=true,signal=false,
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
@@ -226,9 +244,12 @@ end
 function plotFitted!(p,
                      samp::Sample,
                      pred::AbstractDataFrame;
-                     num=nothing,den=nothing,transformation=nothing,
-                     offset::AbstractDict,linecolor="black",linestyle=:solid)
-    x = windowData(samp,signal=true)[:,1]
+                     blank::Bool=false,signal::Bool=true,
+                     num=nothing,den=nothing,
+                     transformation=nothing,
+                     offset::AbstractDict,
+                     linecolor="black",linestyle=:solid)
+    x = windowData(samp,blank=blank,signal=signal)[:,1]
     y = formRatios(pred,num,den)
     ty = transformeer(y;transformation=transformation,offset=offset)
     for tyi in eachcol(ty)
