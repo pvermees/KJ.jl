@@ -15,8 +15,6 @@ function averat(run::Vector{Sample},
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
                 pars::NamedTuple;
-                dt::Union{AbstractDict,Nothing}=nothing,
-                dead::AbstractFloat=0.0,
                 method=nothing)
     ns = length(run)
     if isnothing(method)
@@ -32,35 +30,23 @@ function averat(run::Vector{Sample},
     for i in 1:ns
         samp = run[i]
         out[i,:name] = samp.sname
-        out[i,2:end] = averat(samp,channels,blank,pars;
-                              dt=dt,dead=dead)
+        out[i,2:end] = averat(samp,channels,blank,pars)
     end
     return out
 end
 function averat(samp::Sample,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
-                pars::NamedTuple;
-                dt::Union{AbstractDict,Nothing}=nothing,
-                dead::AbstractFloat=0.0)
-    Phat, Dhat, dhat = atomic(samp,channels,blank,pars;
-                              dt=dt,dead=dead)
-    return averat(Phat,Dhat,dhat;dt=dt,dead=dead)
+                pars::NamedTuple)
+    Phat, Dhat, dhat = atomic(samp,channels,blank,pars)
+    return averat(Phat,Dhat,dhat)
 end
 function averat(Phat::AbstractVector,
                 Dhat::AbstractVector,
-                dhat::AbstractVector;
-                dt::Union{AbstractDict,Nothing}=nothing,
-                dead::AbstractFloat=0.0)
-    if isnothing(dt)
-        vP = var_timeseries(Phat)
-        vD = var_timeseries(Dhat)
-        vd = var_timeseries(dhat)
-    else
-        vP = var_cps(Phat,dt,dead)
-        vD = var_cps(Dhat,dt,dead)
-        vd = var_cps(dhat,dt,dead)
-    end
+                dhat::AbstractVector)
+    vP = var_timeseries(Phat)
+    vD = var_timeseries(Dhat)
+    vd = var_timeseries(dhat)
     init = [sum(Phat)/sum(Dhat),sum(dhat)/sum(Dhat)]
     objective = (par) -> SSaverat(par[1],par[2],
                                   Phat,Dhat,dhat,

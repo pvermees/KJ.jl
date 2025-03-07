@@ -4,15 +4,13 @@ function process!(run::Vector{Sample},
                   channels::AbstractDict,
                   standards::AbstractDict,
                   glass::AbstractDict;
-                  dt::Union{AbstractDict,Nothing}=nothing,
-                  dead::AbstractFloat=0.0,
                   nblank::Integer=2,ndrift::Integer=1,ndown::Integer=1,
                   PAcutoff=nothing,verbose::Bool=false)
     blank = fitBlanks(run;nblank=nblank)
     setGroup!(run,glass)
     setGroup!(run,standards)
     fit = fractionation(run,method,blank,channels,standards,glass;
-                        dt=dt,dead=dead,ndrift=ndrift,ndown=ndown,
+                        ndrift=ndrift,ndown=ndown,
                         PAcutoff=PAcutoff,verbose=verbose)
     return blank, fit
 end
@@ -44,9 +42,7 @@ export fitBlanks
 function atomic(samp::Sample,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
-                pars::NamedTuple;
-                dt::Union{AbstractDict,Nothing}=nothing,
-                dead::AbstractFloat=0.0)
+                pars::NamedTuple)
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
         SSprep(blank[:,channels["P"]],
                blank[:,channels["D"]],
@@ -54,7 +50,6 @@ function atomic(samp::Sample,
                windowData(samp;signal=true),
                channels,
                pars.mfrac,pars.drift,pars.down;
-               dt=dt,dead=dead,
                PAcutoff=pars.PAcutoff,
                adrift=pars.adrift)
     Phat = @. (Pm-bPt)*ft*FT

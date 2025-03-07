@@ -54,8 +54,6 @@ function SS(par::AbstractVector,
             channels::AbstractDict,
             anchors::AbstractDict,
             mf::Union{AbstractFloat,Nothing};
-            dt::Union{AbstractDict,Nothing}=nothing,
-            dead::AbstractFloat=0.0,
             ndrift::Integer=1,
             ndown::Integer=0,
             PAcutoff::Union{AbstractFloat,Nothing}=nothing)
@@ -68,7 +66,7 @@ function SS(par::AbstractVector,
         (x0,y0,y1) = anchors[refmat]
         Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
             SSprep(bP,bD,bd,dat,channels,mfrac,drift,down;
-                   dt=dt,dead=dead,PAcutoff=PAcutoff,adrift=adrift)
+                   PAcutoff=PAcutoff,adrift=adrift)
         out += SS(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     end
     return out
@@ -100,15 +98,12 @@ function SS(par::AbstractVector,
             bd::AbstractVector,
             dats::AbstractDict,
             channels::AbstractDict,
-            anchors::AbstractDict;
-            dt::Union{AbstractDict,Nothing}=nothing,
-            dead::AbstractFloat=0.0)
+            anchors::AbstractDict)
     mf = exp(par[1])
     out = 0.0
     for (refmat,dat) in dats
         y0 = anchors[refmat]
-        Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,channels;
-                                     dt=dt,dead=dead)
+        Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,channels)
         out += SS(Dm,dm,vD,vd,y0,mf,bDt,bdt)
     end
     return out
@@ -137,8 +132,6 @@ function SSprep(bP::AbstractVector,
                 mfrac::AbstractFloat,
                 drift::AbstractVector,
                 down::AbstractVector;
-                dt::Union{AbstractDict,Nothing}=nothing,
-                dead::AbstractFloat=0.0,
                 PAcutoff::Union{AbstractFloat,Nothing}=nothing,
                 adrift::AbstractVector=drift)
     t = dat.t
@@ -146,15 +139,9 @@ function SSprep(bP::AbstractVector,
     Pm = dat[:,channels["P"]]
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
-    if isnothing(dt)
-        vP = var_timeseries(Pm)
-        vD = var_timeseries(Dm)
-        vd = var_timeseries(dm)
-    else
-        vP = var_cps(Pm,dt[channels["P"]],dead)
-        vD = var_cps(Dm,dt[channels["D"]],dead)
-        vd = var_cps(dm,dt[channels["d"]],dead)
-    end
+    vP = var_timeseries(Pm)
+    vD = var_timeseries(Dm)
+    vd = var_timeseries(dm)
     ft = get_drift(Pm,t,drift;
                    PAcutoff=PAcutoff,adrift=adrift)
     FT = polyFac(down,T)
@@ -168,19 +155,12 @@ end
 function SSprep(bD::AbstractVector,
                 bd::AbstractVector,
                 dat::AbstractDataFrame,
-                channels::AbstractDict;
-                dt::Union{AbstractDict,Nothing}=nothing,
-                dead::AbstractFloat=0.0)
+                channels::AbstractDict)
     t = dat.t
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
-    if isnothing(dt)
-        vD = var_timeseries(Dm)
-        vd = var_timeseries(dm)
-    else
-        vD = var_cps(Dm,dt[channels["D"]],dead)
-        vd = var_cps(dm,dt[channels["d"]],dead)
-    end
+    vD = var_timeseries(Dm)
+    vd = var_timeseries(dm)
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
     return Dm,dm,vD,vd,bDt,bdt
@@ -194,28 +174,22 @@ function predict(samp::Sample,
                  channels::AbstractDict,
                  standards::AbstractDict,
                  glass::AbstractDict;
-                 dt::Union{AbstractDict,Nothing}=nothing,
-                 dead::AbstractFloat=0.0,
                  debug::Bool=false)
     anchors = getAnchors(method,standards,glass)
-    return predict(samp,pars,blank,channels,anchors;
-                   dt=dt,dead=dead,debug=debug)
+    return predict(samp,pars,blank,channels,anchors;debug=debug)
 end
 function predict(samp::Sample,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  anchors::AbstractDict;
-                 dt::Union{AbstractDict,Nothing}=nothing,
-                 dead::AbstractFloat=0.0,
                  debug::Bool=false)
     if samp.group == "sample"
         KJerror("notStandard")
     else
         dat = windowData(samp;signal=true)
         anchor = anchors[samp.group]
-        return predict(dat,pars,blank,channels,anchor;
-                       dt=dt,dead=dead,debug=debug)
+        return predict(dat,pars,blank,channels,anchor;debug=debug)
     end
 end
 function predict(dat::AbstractDataFrame,
@@ -223,8 +197,6 @@ function predict(dat::AbstractDataFrame,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  anchor::NamedTuple;
-                 dt::Union{AbstractDict,Nothing}=nothing,
-                 dead::AbstractFloat=0.0,
                  debug::Bool=false)
     bP = blank[:,channels["P"]]
     bD = blank[:,channels["D"]]
@@ -232,7 +204,6 @@ function predict(dat::AbstractDataFrame,
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
         SSprep(bP,bD,bd,dat,channels,
                pars.mfrac,pars.drift,pars.down;
-               dt=dt,dead=dead,
                PAcutoff=pars.PAcutoff,adrift=pars.adrift)
     return predict(Pm,Dm,dm,vP,vD,vd,
                    anchor.x0,anchor.y0,anchor.y1,
@@ -279,14 +250,11 @@ function predict(dat::AbstractDataFrame,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
                  y0::AbstractFloat;
-                 dt::Union{AbstractDict,Nothing}=nothing,
-                 dead::AbstractFloat=0.0,
                  debug::Bool=false)
     mf = exp(pars.mfrac)
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
-    Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,channels;
-                                 dt=dt,dead=dead)
+    Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,channels)
     return predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
 end
 function predict(Dm::AbstractVector,
