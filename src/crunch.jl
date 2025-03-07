@@ -142,7 +142,7 @@ function SSprep(bP::AbstractVector,
                 PAcutoff::Union{AbstractFloat,Nothing}=nothing,
                 adrift::AbstractVector=drift)
     t = dat.t
-    T = dat.T 
+    T = dat.T
     Pm = dat[:,channels["P"]]
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
@@ -326,6 +326,13 @@ function predict(samp::Sample,
     else
         KJerror("notStandard")
     end
+end
+# blank
+function predict(samp::Sample,
+                 blank::AbstractDataFrame;
+                 debug::Bool=false)
+    dat = windowData(samp;blank=true)
+    return polyVal(blank,dat.t)
 end
 export predict
 

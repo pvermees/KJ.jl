@@ -35,7 +35,7 @@ function formRatios(df::AbstractDataFrame,
         n = fill(findfirst(==(num[1]),labels),length(d))
     end
     mat = Matrix(df)
-    ratios = mat[:,n]./mat[:,d]
+    ratios = @. (mat[:,n]+0.5)/(mat[:,d]+0.5)
     num = labels[n]
     den = labels[d]
     ratlabs = brackets ? "(".*num.*")/(".*den.*")" : num.*"/".*den
@@ -343,101 +343,28 @@ function rle(v::AbstractVector{T}) where T
     push!(lens, cl)
     return (vals, lens)
 end
-
-function getOffset(df::AbstractDataFrame,
-                   transformation=nothing)
-    colnames = names(df)
-    nc = length(colnames)
-    if isnothing(transformation)
-        out = Dict(zip(colnames,fill(0.0,nc)))
-    else
-        out = Dict{String,Float64}()
-        for col in colnames
-            m = minimum(df[:,col])
-            offset = m<0 ? abs(m) : 0.0
-            if transformation=="log"
-                M = maximum(df[:,col])
-                padding = m<0 ? (M-m)/100 : 0.0
-            else
-                padding = 0.0
-            end
-            out[col] = offset + padding
-        end
-    end
-    return out
-end
-function getOffset(samp::Sample,
-                   channels::AbstractDict,
-                   blank::AbstractDataFrame,
-                   pars::NamedTuple,
-                   anchors::AbstractDict,
-                   transformation=nothing;
-                   dt::Union{AbstractDict,Nothing}=nothing,
-                   dead::AbstractFloat=0.0,
-                   num=nothing,den=nothing)
-    ions = collect(values(channels))
-    obs = windowData(samp;signal=true)[:,ions]
-    yobs = formRatios(obs,num,den)
-    offset_obs = getOffset(yobs,transformation)
     
-    pred = predict(samp,pars,blank,channels,anchors;
-                   dt=dt,dead=dead)
-    prednames = [channels[i] for i in names(pred)]
-    rename!(pred,prednames)
-    ypred = formRatios(pred,num,den)
-    offset_pred = getOffset(ypred,transformation)
-    
-    out = offset_obs
-    for key in keys(out)
-        if key in keys(offset_pred)
-            out[key] = maximum([offset_obs[key],offset_pred[key]])
-        else
-            out[key] = offset_obs[key]
-        end
-    end
-    return out
-end
-# concentrations
-function getOffset(samp::Sample,
-                   blank::AbstractDataFrame,
-                   pars::AbstractVector,
-                   elements::AbstractDataFrame,
-                   internal::AbstractString,
-                   transformation=nothing;
-                   num=nothing,den=nothing)
-    obs = windowData(samp;signal=true)
-    yobs = formRatios(obs,num,den)
-    offset_obs = getOffset(yobs,transformation)
-    
-    pred = predict(samp,pars,blank,elements,internal)
-    ypred = formRatios(pred,num,den)
-    offset_pred = getOffset(ypred,transformation)
-    
-    out = offset_obs
-    for key in keys(out)
-        if key in keys(offset_pred)
-            out[key] = maximum([offset_obs[key],offset_pred[key]])
-        else
-            out[key] = offset_obs[key]
-        end
-    end
-    return out
-end
-export getOffset
-    
-function transformeer(df::AbstractDataFrame;
-                      transformation=nothing,
-                      offset::AbstractDict)
+function transformeer(df::AbstractDataFrame,
+                      transformation::Union{Nothing,AbstractString})
     if isnothing(transformation)
         out = df
     else
         out = copy(df)
         for key in names(out)
-            out[:,key] = eval(Symbol(transformation)).(df[:,key] .+ offset[key])
+            out[:,key] = eval(Symbol(transformation)).(df[:,key])
         end
     end
     return out
 end
+
+function get_offset()
+    return 10
+end
+
+function Log(val::AbstractFloat)
+    return log(val + get_offset())
+end
+export Log
 
 function dict2string(dict::AbstractDict)
     k = collect(keys(dict))
