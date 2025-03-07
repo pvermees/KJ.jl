@@ -68,16 +68,9 @@ function averat(Phat::AbstractVector,
     fit = Optim.optimize(objective,init)
     x, y = Optim.minimizer(fit)
     H = ForwardDiff.hessian(objective,[x,y])
-    try
-        # covmat_averat(x,y,Phat,Dhat,dhat,vP,vD,vd)
-        E = LinearAlgebra.inv(H)
-        sx = E[1,1]>0 ? sqrt(E[1,1]) : NaN
-        sy = E[2,2]>0 ? sqrt(E[2,2]) : NaN
-        rxy = E[1,2]/(sx*sy)
-        return [x sx y sy rxy]
-    catch
-        return [x NaN y NaN NaN]
-    end
+    E = hessian2covmat(H,[x,y])
+    # E = covmat_averat(x,y,Phat,Dhat,dhat,vP,vD,vd)
+    return E
 end
 export averat
 

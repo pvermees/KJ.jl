@@ -41,11 +41,10 @@ function internochron(Phat::AbstractVector,
                                         vP,vD,vd)
     fit = Optim.optimize(objective,init)
     x0, y0 = Optim.minimizer(fit)
-    E = covmat_internochron(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
-    sx0 = E[1,1]>0 ? sqrt(E[1,1]) : NaN
-    sy0 = E[2,2]>0 ? sqrt(E[2,2]) : NaN
-    rx0y0 = E[1,2]/(sx0*sy0)
-    return [x0 sx0 y0 sy0 rx0y0]
+    H = ForwardDiff.hessian(objective,[x0,y0])
+    E = hessian2covmat(H,[x0,y0])
+    #E = covmat_internochron(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
+    return E
 end
 export internochron
 
@@ -62,8 +61,8 @@ function init_internochron(Phat::AbstractVector,
     return [x0i,y0i]
 end
 
-function SSinternochron(x0::AbstractFloat,
-                        y0::AbstractFloat,
+function SSinternochron(x0::Real,
+                        y0::Real,
                         Phat::AbstractVector,
                         Dhat::AbstractVector,
                         dhat::AbstractVector,

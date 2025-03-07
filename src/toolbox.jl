@@ -446,3 +446,17 @@ function var_timeseries(cps::AbstractVector)
     return fill(var,length(cps))
 end
 export var_timeseries
+
+# requires that length(pars) == 2
+function hessian2covmat(H::Matrix,
+                        pars::AbstractVector)
+    try
+        E = LinearAlgebra.inv(H)
+        s1 = E[1,1]>0 ? sqrt(E[1,1]) : NaN
+        s2 = E[2,2]>0 ? sqrt(E[2,2]) : NaN
+        rho = E[1,2]/(s1*s2)
+        return [pars[1] s1 pars[2] s2 rho]
+    catch
+        return [pars[1] NaN pars[2] NaN NaN]
+    end
+end
