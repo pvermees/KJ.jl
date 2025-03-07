@@ -8,7 +8,7 @@ end
 
 rerun = true
 
-option = "Abdulkadir" # "runtests" # "KJgui" #
+option = "runtests" # "KJgui" # "Abdulkadir" #
 
 if option == "Abdulkadir"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
