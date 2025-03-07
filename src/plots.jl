@@ -176,7 +176,12 @@ function plot(samp::Sample;
 end
 export plot
 
-function prep_plot(samp,channels,num,den,ylim,transformation)
+function prep_plot(samp::Sample,
+                   channels::AbstractVector,
+                   num::Union{Nothing,AbstractString}=nothing,
+                   den::Union{Nothing,AbstractString}=nothing,
+                   ylim=:auto,
+                   transformation::Union{Nothing,AbstractString}=nothing)
     xlab = names(samp.dat)[1]
     x = samp.dat[:,xlab]
     meas = samp.dat[:,channels]
