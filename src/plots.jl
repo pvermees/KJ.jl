@@ -198,6 +198,7 @@ function prep_plot(samp,channels,num,den,ylim,transformation)
     end
     return x, y, ty, xlab, ylab, ylim
 end
+export prep_plot
 
 # minerals
 function plotFitted!(p,
