@@ -5,16 +5,12 @@ function fractionation(run::Vector{Sample},
                        channels::AbstractDict,
                        standards::AbstractDict,
                        glass::AbstractDict;
-                       dt::Union{AbstractDict,Nothing}=nothing,
-                       dead::AbstractFloat=0.0,
                        ndrift::Integer=1,
                        ndown::Integer=0,
                        PAcutoff=nothing,
                        verbose::Bool=false)
-    mf = fractionation(run,method,blank,channels,glass;
-                       dt=dt,dead=dead,verbose=verbose)
+    mf = fractionation(run,method,blank,channels,glass;verbose=verbose)
     return fractionation(run,method,blank,channels,standards,mf;
-                         dt=dt,dead=dead,
                          ndrift=ndrift,ndown=ndown,
                          PAcutoff=PAcutoff,verbose=verbose)
 end
@@ -25,8 +21,6 @@ function fractionation(run::Vector{Sample},
                        channels::AbstractDict,
                        standards::AbstractDict,
                        mf::Union{AbstractFloat,Nothing};
-                       dt::Union{AbstractDict,Nothing}=nothing,
-                       dead::AbstractFloat=0.0,
                        ndrift::Integer=1,
                        ndown::Integer=0,
                        PAcutoff=nothing,
@@ -51,7 +45,7 @@ function fractionation(run::Vector{Sample},
     if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
 
     return SSfit(init,bP,bD,bd,dats,channels,anchors,mf;
-                 dt=dt,dead=dead,ndrift=ndrift,ndown=ndown,
+                 ndrift=ndrift,ndown=ndown,
                  PAcutoff=PAcutoff,verbose=verbose)
 
 end
@@ -61,8 +55,6 @@ function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
                        glass::AbstractDict;
-                       dt::Union{AbstractDict,Nothing}=nothing,
-                       dead::AbstractFloat=0.0,
                        verbose::Bool=false)
     
     anchors = getAnchors(method,glass,true)
@@ -75,8 +67,7 @@ function fractionation(run::Vector{Sample},
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
 
-    return SSfit([0.0],bD,bd,dats,channels,anchors;
-                 dt=dt,dead=dead,verbose=verbose)
+    return SSfit([0.0],bD,bd,dats,channels,anchors;verbose=verbose)
     
 end
 # for concentration measurements:
@@ -122,15 +113,13 @@ function SSfit(init::AbstractVector,
                channels::AbstractDict,
                anchors::AbstractDict,
                mf::Union{AbstractFloat,Nothing};
-               dt::Union{AbstractDict,Nothing}=nothing,
-               dead::AbstractFloat=0.0,
                ndrift::Integer=1,
                ndown::Integer=0,
                PAcutoff=nothing,
                verbose::Bool=false)
     
     objective = (par) -> SS(par,bP,bD,bd,dats,channels,anchors,mf;
-                            dt=dt,dead=dead,ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
+                            ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)
@@ -164,12 +153,9 @@ function SSfit(init::AbstractVector,
                dats::AbstractDict,
                channels::AbstractDict,
                anchors::AbstractDict;
-               dt::Union{AbstractDict,Nothing}=nothing,
-               dead::AbstractFloat=0.0,
                verbose::Bool=false)
 
-    objective = (par) -> SS(par,bD,bd,dats,channels,anchors;
-                            dt=dt,dead=dead)
+    objective = (par) -> SS(par,bD,bd,dats,channels,anchors)
     
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)

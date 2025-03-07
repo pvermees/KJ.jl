@@ -6,8 +6,6 @@ function plot(samp::Sample,
               pars::NamedTuple,
               standards::Union{AbstractDict,AbstractVector},
               glass::Union{AbstractDict,AbstractVector};
-              dt::Union{AbstractDict,Nothing}=nothing,
-              dead::AbstractFloat=0.0,
               num=nothing,den=nothing,
               transformation=nothing,
               seriestype=:scatter,
@@ -21,7 +19,6 @@ function plot(samp::Sample,
     Ganchors = getAnchors(method,glass,true)
     anchors = merge(Sanchors,Ganchors)
     return plot(samp,channels,blank,pars,anchors;
-                dt=dt,dead=dead,
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,
                 ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
@@ -34,8 +31,6 @@ function plot(samp::Sample,
               blank::AbstractDataFrame,
               pars::NamedTuple,
               anchors::AbstractDict;
-              dt::Union{AbstractDict,Nothing}=nothing,
-              dead::AbstractFloat=0.0,
               num=nothing,den=nothing,
               transformation=nothing,
               seriestype=:scatter,
@@ -48,10 +43,13 @@ function plot(samp::Sample,
               show_title=true,
               titlefontsize=10,
               kw...)
+
+    channelvec = collect(values(channels))
+        
     if samp.group == "sample"
 
         p = plot(samp;
-                 channels=collect(values(channels)),
+                 channels=channelvec,
                  num=num,den=den,transformation=transformation,
                  seriestype=seriestype,ms=ms,ma=ma,
                  xlim=xlim,ylim=ylim,i=i,
@@ -61,18 +59,23 @@ function plot(samp::Sample,
     else
 
         p = plot(samp;
-                 channels=collect(values(channels)),
+                 channels=channelvec,
                  num=num,den=den,transformation=transformation,
                  seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
                  i=i,legend=legend,show_title=show_title,
                  titlefontsize=titlefontsize,kw...)
 
         plotFitted!(p,samp,blank,pars,channels,anchors;
-                    dt=dt,dead=dead,num=num,den=den,
-                    transformation=transformation,
+                    num=num,den=den,transformation=transformation,
                     linecolor=linecol,linestyle=linestyle)
         
     end
+    
+    plotFittedBlank!(p,samp,blank,channelvec;
+                     num=num,den=den,
+                     transformation=transformation,
+                     linecolor=linecol,linestyle=linestyle)
+
     return p
 end
 # concentrations
@@ -110,6 +113,11 @@ function plot(samp::Sample,
                     linecolor=linecol,linestyle=linestyle)
         
     end
+    
+    plotFittedBlank!(p,samp,blank;
+                     num=num,den=den,transformation=transformation,
+                     linecolor=linecol,linestyle=linestyle)
+
     return p
 end
 function plot(samp::Sample,
@@ -212,22 +220,14 @@ function plotFitted!(p,
                      pars::NamedTuple,
                      channels::AbstractDict,
                      anchors::AbstractDict;
-                     dt::Union{AbstractDict,Nothing}=nothing,
-                     dead::AbstractFloat=0.0,
                      num::Union{Nothing,AbstractString}=nothing,
                      den::Union{Nothing,AbstractString}=nothing,
                      transformation::Union{Nothing,AbstractString}=nothing,
                      linecolor="black",
                      linestyle=:solid)
-    pred = predict(samp,pars,blank,channels,anchors;
-                   dt=dt,dead=dead)
+    pred = predict(samp,pars,blank,channels,anchors)
     rename!(pred,[channels[i] for i in names(pred)])
     plotFitted!(p,samp,pred;
-                num=num,den=den,transformation=transformation,
-                linecolor=linecolor,linestyle=linestyle)
-    bt = predict(samp,blank[:,collect(values(channels))])
-    plotFitted!(p,samp,bt;
-                blank=true,signal=false,
                 num=num,den=den,transformation=transformation,
                 linecolor=linecolor,linestyle=linestyle)
 end
@@ -245,11 +245,6 @@ function plotFitted!(p,
                      linestyle=:solid)
     pred = predict(samp,pars,blank,elements,internal)
     plotFitted!(p,samp,pred;
-                num=num,den=den,transformation=transformation,
-                linecolor=linecolor,linestyle=linestyle)
-    bt = predict(samp,blank)
-    plotFitted!(p,samp,bt;
-                blank=true,signal=false,
                 num=num,den=den,transformation=transformation,
                 linecolor=linecolor,linestyle=linestyle)
 end
@@ -270,3 +265,36 @@ function plotFitted!(p,
     end
 end
 export plotFitted!
+
+# minerals
+function plotFittedBlank!(p,
+                          samp::Sample,
+                          blank::AbstractDataFrame,
+                          channels::AbstractVector;
+                          num::Union{Nothing,AbstractString}=nothing,
+                          den::Union{Nothing,AbstractString}=nothing,
+                          transformation::Union{Nothing,AbstractString}=nothing,
+                          linecolor="black",
+                          linestyle=:solid)
+    bt = predict(samp,blank[:,channels])
+    plotFitted!(p,samp,bt;
+                blank=true,signal=false,
+                num=num,den=den,transformation=transformation,
+                linecolor=linecolor,linestyle=linestyle)
+end
+# concentrations
+function plotFittedBlank!(p,
+                          samp::Sample,
+                          blank::AbstractDataFrame;
+                          num::Union{Nothing,AbstractString}=nothing,
+                          den::Union{Nothing,AbstractString}=nothing,
+                          transformation::Union{Nothing,AbstractString}=nothing,
+                          linecolor="black",
+                          linestyle=:solid)
+    bt = predict(samp,blank)
+    plotFitted!(p,samp,bt;
+                blank=true,signal=false,
+                num=num,den=den,transformation=transformation,
+                linecolor=linecolor,linestyle=linestyle)
+end
+export plotFittedBlank!

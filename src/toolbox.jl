@@ -433,14 +433,6 @@ function elements2concs(elements::AbstractDataFrame,
     return out
 end
 
-function var_cps(cps::AbstractVector,
-                 dt::AbstractFloat,
-                 dead::AbstractFloat)
-    out = @. (cps/dt)*(1+cps*dead)/(1-cps*dead)
-    out[cps .<= 0.0] .= 1.0/dt^2
-    return out
-end
-export var_cps
 function var_timeseries(cps::AbstractVector)
     var = Statistics.mean((cps[2:end].-cps[1:end-1]).^2)
     return fill(var,length(cps))
