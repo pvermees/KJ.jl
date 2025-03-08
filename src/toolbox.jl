@@ -248,11 +248,24 @@ function string2windows(samp::Sample,text::AbstractString,single::Bool)
     end
     return windows
 end
-function time2window(samp::Sample,start::Number,finish::Number)
+
+function t2i(samp::Sample,t::Number)
     nt = size(samp.dat,1)
     maxt = samp.dat[end,1]
-    from = max(1,Int(round(nt*start/maxt)))
-    to = min(nt,Int(round(nt*finish/maxt)))
+    return Int(round(nt*t/maxt))
+end
+export t2i
+function i2t(samp::Sample,i::Integer)
+    ni = size(samp.dat,1)
+    maxt = samp.dat[end,1]
+    return maxt*i/ni
+end
+export i2t
+
+function time2window(samp::Sample,start::Number,finish::Number)
+    ni = size(samp.dat,1)
+    from = max(1,t2i(samp,start))
+    to = min(ni,t2i(samp,finish))
     return (from,to)
 end
 function time2window(samp::Sample,twin::AbstractVector)

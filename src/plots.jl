@@ -276,8 +276,8 @@ function plotFittedBlank!(p,
                           transformation::Union{Nothing,AbstractString}=nothing,
                           linecolor="black",
                           linestyle=:solid)
-    bt = predict(samp,blank[:,channels])
-    plotFitted!(p,samp,bt;
+    pred = predict(samp,blank[:,channels])
+    plotFitted!(p,samp,pred;
                 blank=true,signal=false,
                 num=num,den=den,transformation=transformation,
                 linecolor=linecolor,linestyle=linestyle)
@@ -291,8 +291,8 @@ function plotFittedBlank!(p,
                           transformation::Union{Nothing,AbstractString}=nothing,
                           linecolor="black",
                           linestyle=:solid)
-    bt = predict(samp,blank)
-    plotFitted!(p,samp,bt;
+    pred = predict(samp,blank)
+    plotFitted!(p,samp,pred;
                 blank=true,signal=false,
                 num=num,den=den,transformation=transformation,
                 linecolor=linecolor,linestyle=linestyle)
