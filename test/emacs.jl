@@ -8,7 +8,7 @@ end
 
 rerun = true
 
-option = "runtests" # "KJgui" # "Abdulkadir" #
+option = "Abdulkadir" # "runtests" # "KJgui" #
 
 if option == "Abdulkadir"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
@@ -26,17 +26,16 @@ if option == "Abdulkadir"
                     "P"=>"U238")
     standards = Dict("MAD_ap" => "MAD")
     glass = Dict("NIST612" => "GLASS")
-    blk, fit = process!(myrun,method,channels,standards,glass,
-                        nblank=1,ndrift=1,ndown=1)
     sett0!(myrun,6.5)
     setBwin!(myrun)
     setSwin!(myrun)
+    blk, fit = process!(myrun,method,channels,standards,glass,
+                        nblank=1,ndrift=1,ndown=1)
     p = KJ.plot(myrun[166],method,channels,blk,fit,standards,glass;
                 transformation="Log")
     display(p)
-    if false
+    if true
         export2IsoplotR(myrun,method,channels,blk,fit;
-                        prefix="MAD",
                         fname="/home/pvermees/temp/Abdulkadir.json")
         rm("/home/pvermees/temp/Abdulkadir.pdf")
         for snum in snums
