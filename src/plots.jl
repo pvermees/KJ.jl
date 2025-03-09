@@ -45,7 +45,7 @@ function plot(samp::Sample,
               kw...)
 
     channelvec = collect(values(channels))
-        
+
     if samp.group == "sample"
 
         p = plot(samp;
@@ -195,9 +195,11 @@ function prep_plot(samp::Sample,
     meas = samp.dat[:,channels]
     ratsig = isnothing(den) ? "signal" : "ratio"
     y = (ratsig == "signal") ? meas : formRatios(meas,num,den)
+    arg = nothing
     if isnothing(transformation)
         ylab = ratsig
-    elseif transformation == "Log"
+    elseif transformation == "log" && minimum(Matrix(y)) == 0
+        transformation = "Log"
         ylab = "log(" * ratsig * "+" * string(get_offset()) * ")"
     else
         ylab = transformation*"("*ratsig*")"
@@ -259,6 +261,9 @@ function plotFitted!(p,
                      linecolor="black",linestyle=:solid)
     x = windowData(samp,blank=blank,signal=signal)[:,1]
     y = formRatios(pred,num,den)
+    if transformation == "log" && minimum(Matrix(y)) == 0
+        transformation == "Log"
+    end
     ty = transformeer(y,transformation)
     for tyi in eachcol(ty)
         Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")

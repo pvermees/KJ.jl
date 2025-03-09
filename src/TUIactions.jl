@@ -543,7 +543,7 @@ end
 function TUItransformation!(ctrl::AbstractDict,
                             response::AbstractString)
     if response=="L"
-        ctrl["transformation"] = "Log"
+        ctrl["transformation"] = "log"
     elseif response=="s"
         ctrl["transformation"] = "sqrt"
     else
