@@ -1,0 +1,11 @@
+instrument = "Agilent"
+multifile = true
+head2name = true
+method = "Lu-Hf"
+options = Dict("drift" => 1,"blank" => 2,"down" => 1)
+PAcutoff = nothing
+transformation = "sqrt"
+glass = Dict("NIST612" => "NIST612")
+standards = Dict("BP_gt" => "BP")
+channels = Dict("P" => "Lu175 -> 175","D" => "Hf176 -> 258","d" => "Hf178 -> 260")
+internal = nothing
