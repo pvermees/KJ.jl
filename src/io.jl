@@ -232,6 +232,7 @@ function parser_getLaserLag(lowblanksignal::AbstractDataFrame,
     scaled = total./Statistics.mean(total)
     cs = cumsum(scaled)
     LAduration = time_difference(timestamps[onoff[1],1],
+
                                  timestamps[onoff[end],1])
     lower = 0.0
     if LAduration > ICPduration
@@ -389,14 +390,21 @@ function export2IsoplotR(ratios::AbstractDataFrame,
 
     P, D, d = getPDd(method)
 
+    snames = ratios[:,1]
+    PD = replace(ratios[:,2], NaN => "\"NA\"")
+    sPD = replace(ratios[:,3], NaN => "\"NA\"")
+    dD = replace(ratios[:,4], NaN => "\"NA\"")
+    sdD = replace(ratios[:,5], NaN => "\"NA\"")
+    rho = replace(ratios[:,6], NaN => "\"NA\"")
+
     datastring = "\"ierr\":1,\"data\":{"*
-    "\""* P *"/"* D *"\":["*     join(ratios[:,2],",")*"],"*
-    "\"err["* P *"/"* D *"]\":["*join(ratios[:,3],",")*"],"*
-    "\""* d *"/"* D *"\":["*     join(ratios[:,4],",")*"],"*
-    "\"err["* d *"/"* D *"]\":["*join(ratios[:,5],",")*"],"*
-    "\"(rho)\":["*join(ratios[:,6],",")*"],"*
+    "\""* P *"/"* D *"\":["*     join(PD,",")*"],"*
+    "\"err["* P *"/"* D *"]\":["*join(sPD,",")*"],"*
+    "\""* d *"/"* D *"\":["*     join(dD,",")*"],"*
+    "\"err["* d *"/"* D *"]\":["*join(sdD,",")*"],"*
+    "\"(rho)\":["*join(rho,",")*"],"*
     "\"(C)\":[],\"(omit)\":[],"*
-    "\"(comment)\":[\""*join(ratios[:,1],"\",\"")*"\"]"
+    "\"(comment)\":[\""*join(snames,"\",\"")*"\"]"
 
     json = replace(json,"\""*method*"\":{}" =>
                    "\""*method*"\":{"*datastring*"}}")
