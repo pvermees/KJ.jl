@@ -262,7 +262,7 @@ function plotFitted!(p,
     x = windowData(samp,blank=blank,signal=signal)[:,1]
     y = formRatios(pred,num,den)
     if transformation == "log" && minimum(Matrix(y)) == 0
-        transformation == "Log"
+        transformation = "Log"
     end
     ty = transformeer(y,transformation)
     for tyi in eachcol(ty)
