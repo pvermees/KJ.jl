@@ -167,11 +167,13 @@ function plot(samp::Sample;
         end
         Plots.title!(title;titlefontsize=titlefontsize)
     end
-    dy = Plots.ylims(p)
+    dy_ax = collect(Plots.ylims(p))
     # plot t0:
-    Plots.plot!(p,[samp.t0,samp.t0],collect(dy[[1,2]]);
+    Plots.plot!(p,[samp.t0,samp.t0],collect(dy_ax[[1,2]]);
                 linecolor="grey",linestyle=:dot,label="")
     # plot selection windows:
+    dy_dat = [minimum(Matrix(ty)),maximum(Matrix(ty))]
+    dy = @. (dy_ax + dy_dat)/2
     for win in [samp.bwin,samp.swin]
         for w in win
             from = x[w[1]]

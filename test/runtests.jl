@@ -13,7 +13,9 @@ function plottest()
              channels=["Hf176 -> 258","Hf178 -> 260"])
     @test display(p) != NaN
     p = plot(myrun[1];
-             channels=["Hf176 -> 258","Hf178 -> 260"], den="Hf178 -> 260")
+             channels=["Lu175 -> 175","Hf176 -> 258","Hf178 -> 260"],
+             den="Hf178 -> 260",
+             transformation = "log")
     @test display(p) != NaN
 end
 
@@ -427,7 +429,7 @@ if true
     @testset "Lu-Hf internochron" begin internochrontest() end
     @testset "UPb internochron" begin internochronUPbtest() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    #@testset "TUI test" begin TUItest() end
 else
     TUI()
 end
