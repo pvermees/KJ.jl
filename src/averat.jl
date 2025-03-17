@@ -54,9 +54,10 @@ function averat(Phat::AbstractVector,
     fit = Optim.optimize(objective,init)
     x, y = Optim.minimizer(fit)
     H = ForwardDiff.hessian(objective,[x,y])
-    E = hessian2covmat(H,[x,y])
-    # E = covmat_averat(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    return E
+    out = hessian2xyerr(H,[x,y])
+    #E = covmat_averat(x,y,Phat,Dhat,dhat,vP,vD,vd)
+    #out = [x sqrt(E[1,1]) y sqrt(E[2,2]) E[1,2]/sqrt(E[1,1]*E[2,2])]
+    return out
 end
 export averat
 
@@ -69,7 +70,7 @@ function SSaverat(x::Real,
                   vD::AbstractVector,
                   vd::AbstractVector)
     D = averatD(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    return sum(@. (D*y-dhat)^2/vd+(D*x-Phat)^2/vP+(D-Dhat)^2/vD )
+    return sum(@. (D*y-dhat)^2/vd+(D*x-Phat)^2/vP+(D-Dhat)^2/vD )/2
 end
 
 # block matrix inversion of the Hessian matrix

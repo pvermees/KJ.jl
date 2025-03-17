@@ -42,9 +42,9 @@ function internochron(Phat::AbstractVector,
     fit = Optim.optimize(objective,init)
     x0, y0 = Optim.minimizer(fit)
     H = ForwardDiff.hessian(objective,[x0,y0])
-    E = hessian2covmat(H,[x0,y0])
+    out = hessian2xyerr(H,[x0,y0])
     #E = covmat_internochron(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
-    return E
+    return out
 end
 export internochron
 
