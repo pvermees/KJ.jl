@@ -416,11 +416,11 @@ if true
     @testset "fractionation" begin fractionationtest(true) end
     @testset "Rb-Sr" begin RbSrTest() end
     @testset "K-Ca" begin KCaTest() end
-    @testset "hist" begin histest() end=#
+    @testset "hist" begin histest() end
     @testset "process run" begin processtest() end
-    #=@testset "PA test" begin PAtest(true) end
+    @testset "PA test" begin PAtest(true) end=#
     @testset "export" begin exporttest() end
-    @testset "U-Pb" begin UPbtest() end
+    #=@testset "U-Pb" begin UPbtest() end
     @testset "iCap" begin iCaptest() end
     @testset "carbonate" begin carbonatetest() end
     @testset "timestamp" begin timestamptest() end

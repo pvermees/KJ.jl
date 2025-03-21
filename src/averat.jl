@@ -44,68 +44,33 @@ end
 function averat(Phat::AbstractVector,
                 Dhat::AbstractVector,
                 dhat::AbstractVector)
-    vP = var_timeseries(Phat)
-    vD = var_timeseries(Dhat)
-    vd = var_timeseries(dhat)
+    O = O_timeseries(Phat,Dhat,dhat)
     init = [sum(Phat)/sum(Dhat),sum(dhat)/sum(Dhat)]
-    objective = (par) -> SSaverat(par[1],par[2],
-                                  Phat,Dhat,dhat,
-                                  vP,vD,vd)
+    objective = (par) -> LLaverat(par[1],par[2],
+                                  Phat,Dhat,dhat,O)
     fit = Optim.optimize(objective,init)
     x, y = Optim.minimizer(fit)
     H = ForwardDiff.hessian(objective,[x,y])
     out = hessian2xyerr(H,[x,y])
-    #E = covmat_averat(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    #out = [x sqrt(E[1,1]) y sqrt(E[2,2]) E[1,2]/sqrt(E[1,1]*E[2,2])]
     return out
 end
 export averat
 
-function SSaverat(x::Real,
+function LLaverat(x::Real,
                   y::Real,
                   Phat::AbstractVector,
                   Dhat::AbstractVector,
                   dhat::AbstractVector,
-                  vP::AbstractVector,
-                  vD::AbstractVector,
-                  vd::AbstractVector)
-    D = averatD(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    return sum(@. (D*y-dhat)^2/vd+(D*x-Phat)^2/vP+(D-Dhat)^2/vD )/2
+                  O::Matrix)
+    D = averatD(x,y,Phat,Dhat,dhat,O)
+    return sum(@. ((D*y-dhat)*(O[3,3]*(D*y-dhat)+O[3,1]*(D*x-Phat)+(D-Dhat)*O[3,2])+(D-Dhat)*(O[2,3]*(D*y-dhat)+O[2,1]*(D*x-Phat)+(D-Dhat)*O[2,2])+(D*x-Phat)*(O[1,3]*(D*y-dhat)+O[1,1]*(D*x-Phat)+(D-Dhat)*O[1,2]))/2 )
 end
 
-# block matrix inversion of the Hessian matrix
-function covmat_averat(x::Real,
-                       y::Real,
-                       Phat::AbstractVector,
-                       Dhat::AbstractVector,
-                       dhat::AbstractVector,
-                       vP::AbstractVector,
-                       vD::AbstractVector,
-                       vd::AbstractVector)
-    D = averatD(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    O11 = sum(@. D^2/vP)
-    O12 = O21 = 0.0
-    O22 = sum(@. D^2/vd)
-    O13 = @. (D*x-Phat)/vP+(D*x)/vP
-    O23 = @. (D*y-dhat)/vd+(D*y)/vd
-    O31 = @. ((2*(D*x-Phat))/vP+(2*D*x)/vP)/2
-    O32 = @. ((2*(D*y-dhat))/vd+(2*D*y)/vd)/2
-    O33 = @. ((2*y^2)/vd+(2*x^2)/vP+2/vD)/2
-    H11 = [ [O11 O12]
-            [O21 O22] ]
-    H12 = [ O13' ; O23' ]
-    H21 = [ O31 O32 ]
-    H22 = diagm( O33 )
-    return inv( H11 - H12 * inv(H22) * H21 )
-end
-
-function averatD(x,
-                 y,
+function averatD(x::Real,
+                 y::Real,
                  Phat::AbstractVector,
                  Dhat::AbstractVector,
                  dhat::AbstractVector,
-                 vP::AbstractVector,
-                 vD::AbstractVector,
-                 vd::AbstractVector)
-    return @. (dhat*vD*vP*y+Phat*vD*vd*x+Dhat*vP*vd)/(vD*vP*y^2+vD*vd*x^2+vP*vd)
+                 O::Matrix)
+    return @. ((2*O[3,3]*dhat+(O[3,1]+O[1,3])*Phat+Dhat*O[3,2]+Dhat*O[2,3])*y+((O[3,1]+O[1,3])*dhat+2*O[1,1]*Phat+Dhat*O[2,1]+Dhat*O[1,2])*x+(O[3,2]+O[2,3])*dhat+(O[2,1]+O[1,2])*Phat+2*Dhat*O[2,2])/(2*O[3,3]*y^2+((2*O[3,1]+2*O[1,3])*x+2*O[3,2]+2*O[2,3])*y+2*O[1,1]*x^2+(2*O[2,1]+2*O[1,2])*x+2*O[2,2])
 end

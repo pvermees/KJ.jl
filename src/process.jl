@@ -43,8 +43,8 @@ function atomic(samp::Sample,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
                 pars::NamedTuple)
-    Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
-        SSprep(blank[:,channels["P"]],
+    Pm,Dm,dm,O,ft,FT,mf,bPt,bDt,bdt =
+        LLprep(blank[:,channels["P"]],
                blank[:,channels["D"]],
                blank[:,channels["d"]],
                windowData(samp;signal=true),
