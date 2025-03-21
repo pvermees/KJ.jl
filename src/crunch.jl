@@ -2,9 +2,7 @@
 function getP(Pm::AbstractVector,
               Dm::AbstractVector,
               dm::AbstractVector,
-              vP::AbstractVector,
-              vD::AbstractVector,
-              vd::AbstractVector,
+              O::Matrix,
               x0::AbstractFloat,
               y0::AbstractFloat,
               y1::AbstractFloat,
@@ -14,14 +12,12 @@ function getP(Pm::AbstractVector,
               bPt::AbstractVector,
               bDt::AbstractVector,
               bdt::AbstractVector)
-    return @. -((Dm*FT*ft*mf*vP*x0*y0-FT*dm*ft*vP*x0)*y1+((-Pm*mf^2*vD*x0^2)-Dm*FT*ft*mf*vP*x0)*y0^2+FT*dm*ft*vP*x0*y0-Pm*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
+    return @. -(((((2*FT*O[2,1]+2*FT*O[1,2])*O[3,3]+((-FT*O[3,1])-FT*O[1,3])*O[3,2]-FT*O[2,3]*O[3,1]-FT*O[1,3]*O[2,3])*Pm+4*Dm*FT*O[2,2]*O[3,3]-Dm*FT*O[3,2]^2-2*Dm*FT*O[2,3]*O[3,2]-Dm*FT*O[2,3]^2)*ft*mf*x0*y0+(((-4*FT*O[2,2]*O[3,3])+FT*O[3,2]^2+2*FT*O[2,3]*O[3,2]+FT*O[2,3]^2)*dm+((FT*O[2,1]+FT*O[1,2])*O[3,2]-2*FT*O[2,2]*O[3,1]+(FT*O[2,1]+FT*O[1,2])*O[2,3]-2*FT*O[1,3]*O[2,2])*Pm)*ft*x0)*y1+((((-4*O[1,1]*O[3,3])+O[3,1]^2+2*O[1,3]*O[3,1]+O[1,3]^2)*Pm+((-2*Dm*O[2,1])-2*Dm*O[1,2])*O[3,3]+(Dm*O[3,1]+Dm*O[1,3])*O[3,2]+Dm*O[2,3]*O[3,1]+Dm*O[1,3]*O[2,3])*mf^2*x0^2+((((-2*FT*O[2,1])-2*FT*O[1,2])*O[3,3]+(FT*O[3,1]+FT*O[1,3])*O[3,2]+FT*O[2,3]*O[3,1]+FT*O[1,3]*O[2,3])*Pm-4*Dm*FT*O[2,2]*O[3,3]+Dm*FT*O[3,2]^2+2*Dm*FT*O[2,3]*O[3,2]+Dm*FT*O[2,3]^2)*ft*mf*x0)*y0^2+((((2*O[2,1]+2*O[1,2])*O[3,3]+((-O[3,1])-O[1,3])*O[3,2]-O[2,3]*O[3,1]-O[1,3]*O[2,3])*dm+((-4*O[1,1]*O[3,2])+(2*O[2,1]+2*O[1,2])*O[3,1]-4*O[1,1]*O[2,3]+2*O[1,3]*O[2,1]+2*O[1,2]*O[1,3])*Pm+((-Dm*O[2,1])-Dm*O[1,2])*O[3,2]+2*Dm*O[2,2]*O[3,1]+((-Dm*O[2,1])-Dm*O[1,2])*O[2,3]+2*Dm*O[1,3]*O[2,2])*mf*x0^2+((4*FT*O[2,2]*O[3,3]-FT*O[3,2]^2-2*FT*O[2,3]*O[3,2]-FT*O[2,3]^2)*dm+(((-FT*O[2,1])-FT*O[1,2])*O[3,2]+2*FT*O[2,2]*O[3,1]+((-FT*O[2,1])-FT*O[1,2])*O[2,3]+2*FT*O[1,3]*O[2,2])*Pm)*ft*x0)*y0+(((O[2,1]+O[1,2])*O[3,2]-2*O[2,2]*O[3,1]+(O[2,1]+O[1,2])*O[2,3]-2*O[1,3]*O[2,2])*dm+((-4*O[1,1]*O[2,2])+O[2,1]^2+2*O[1,2]*O[2,1]+O[1,2]^2)*Pm)*x0^2)/((4*FT^2*O[2,2]*O[3,3]-FT^2*O[3,2]^2-2*FT^2*O[2,3]*O[3,2]-FT^2*O[2,3]^2)*ft^2*y1^2+(((((-4*FT*O[2,1])-4*FT*O[1,2])*O[3,3]+(2*FT*O[3,1]+2*FT*O[1,3])*O[3,2]+2*FT*O[2,3]*O[3,1]+2*FT*O[1,3]*O[2,3])*ft*mf*x0+((-8*FT^2*O[2,2]*O[3,3])+2*FT^2*O[3,2]^2+4*FT^2*O[2,3]*O[3,2]+2*FT^2*O[2,3]^2)*ft^2)*y0+(((-2*FT*O[2,1])-2*FT*O[1,2])*O[3,2]+4*FT*O[2,2]*O[3,1]+((-2*FT*O[2,1])-2*FT*O[1,2])*O[2,3]+4*FT*O[1,3]*O[2,2])*ft*x0)*y1+((4*O[1,1]*O[3,3]-O[3,1]^2-2*O[1,3]*O[3,1]-O[1,3]^2)*mf^2*x0^2+((4*FT*O[2,1]+4*FT*O[1,2])*O[3,3]+((-2*FT*O[3,1])-2*FT*O[1,3])*O[3,2]-2*FT*O[2,3]*O[3,1]-2*FT*O[1,3]*O[2,3])*ft*mf*x0+(4*FT^2*O[2,2]*O[3,3]-FT^2*O[3,2]^2-2*FT^2*O[2,3]*O[3,2]-FT^2*O[2,3]^2)*ft^2)*y0^2+((4*O[1,1]*O[3,2]+((-2*O[2,1])-2*O[1,2])*O[3,1]+4*O[1,1]*O[2,3]-2*O[1,3]*O[2,1]-2*O[1,2]*O[1,3])*mf*x0^2+((2*FT*O[2,1]+2*FT*O[1,2])*O[3,2]-4*FT*O[2,2]*O[3,1]+(2*FT*O[2,1]+2*FT*O[1,2])*O[2,3]-4*FT*O[1,3]*O[2,2])*ft*x0)*y0+(4*O[1,1]*O[2,2]-O[2,1]^2-2*O[1,2]*O[2,1]-O[1,2]^2)*x0^2)
 end
 function getD(Pm::AbstractVector,
               Dm::AbstractVector,
               dm::AbstractVector,
-              vP::AbstractVector,
-              vD::AbstractVector,
-              vd::AbstractVector,
+              O::Matrix,
               x0::AbstractFloat,
               y0::AbstractFloat,
               y1::AbstractFloat,
@@ -31,22 +27,21 @@ function getD(Pm::AbstractVector,
               bPt::AbstractVector,
               bDt::AbstractVector,
               bdt::AbstractVector)
-    return @. (Dm*FT^2*ft^2*vP*y1^2+((-FT*Pm*ft*mf*vD*x0)-2*Dm*FT^2*ft^2*vP)*y0*y1+(FT*Pm*ft*mf*vD*x0+Dm*FT^2*ft^2*vP)*y0^2+dm*mf*vD*x0^2*y0+Dm*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
+    return @. ((((2*FT^2*O[2,1]+2*FT^2*O[1,2])*O[3,3]+((-FT^2*O[3,1])-FT^2*O[1,3])*O[3,2]-FT^2*O[2,3]*O[3,1]-FT^2*O[1,3]*O[2,3])*Pm+4*Dm*FT^2*O[2,2]*O[3,3]-Dm*FT^2*O[3,2]^2-2*Dm*FT^2*O[2,3]*O[3,2]-Dm*FT^2*O[2,3]^2)*ft^2*y1^2+(((((-4*FT*O[1,1]*O[3,3])+FT*O[3,1]^2+2*FT*O[1,3]*O[3,1]+FT*O[1,3]^2)*Pm+((-2*Dm*FT*O[2,1])-2*Dm*FT*O[1,2])*O[3,3]+(Dm*FT*O[3,1]+Dm*FT*O[1,3])*O[3,2]+Dm*FT*O[2,3]*O[3,1]+Dm*FT*O[1,3]*O[2,3])*ft*mf*x0+((((-4*FT^2*O[2,1])-4*FT^2*O[1,2])*O[3,3]+(2*FT^2*O[3,1]+2*FT^2*O[1,3])*O[3,2]+2*FT^2*O[2,3]*O[3,1]+2*FT^2*O[1,3]*O[2,3])*Pm-8*Dm*FT^2*O[2,2]*O[3,3]+2*Dm*FT^2*O[3,2]^2+4*Dm*FT^2*O[2,3]*O[3,2]+2*Dm*FT^2*O[2,3]^2)*ft^2)*y0+((((-2*FT*O[2,1])-2*FT*O[1,2])*O[3,3]+(FT*O[3,1]+FT*O[1,3])*O[3,2]+FT*O[2,3]*O[3,1]+FT*O[1,3]*O[2,3])*dm+((-2*FT*O[1,1]*O[3,2])+(FT*O[2,1]+FT*O[1,2])*O[3,1]-2*FT*O[1,1]*O[2,3]+FT*O[1,3]*O[2,1]+FT*O[1,2]*O[1,3])*Pm+((-2*Dm*FT*O[2,1])-2*Dm*FT*O[1,2])*O[3,2]+4*Dm*FT*O[2,2]*O[3,1]+((-2*Dm*FT*O[2,1])-2*Dm*FT*O[1,2])*O[2,3]+4*Dm*FT*O[1,3]*O[2,2])*ft*x0)*y1+(((4*FT*O[1,1]*O[3,3]-FT*O[3,1]^2-2*FT*O[1,3]*O[3,1]-FT*O[1,3]^2)*Pm+(2*Dm*FT*O[2,1]+2*Dm*FT*O[1,2])*O[3,3]+((-Dm*FT*O[3,1])-Dm*FT*O[1,3])*O[3,2]-Dm*FT*O[2,3]*O[3,1]-Dm*FT*O[1,3]*O[2,3])*ft*mf*x0+(((2*FT^2*O[2,1]+2*FT^2*O[1,2])*O[3,3]+((-FT^2*O[3,1])-FT^2*O[1,3])*O[3,2]-FT^2*O[2,3]*O[3,1]-FT^2*O[1,3]*O[2,3])*Pm+4*Dm*FT^2*O[2,2]*O[3,3]-Dm*FT^2*O[3,2]^2-2*Dm*FT^2*O[2,3]*O[3,2]-Dm*FT^2*O[2,3]^2)*ft^2)*y0^2+(((4*O[1,1]*O[3,3]-O[3,1]^2-2*O[1,3]*O[3,1]-O[1,3]^2)*dm+2*Dm*O[1,1]*O[3,2]+((-Dm*O[2,1])-Dm*O[1,2])*O[3,1]+2*Dm*O[1,1]*O[2,3]-Dm*O[1,3]*O[2,1]-Dm*O[1,2]*O[1,3])*mf*x0^2+(((2*FT*O[2,1]+2*FT*O[1,2])*O[3,3]+((-FT*O[3,1])-FT*O[1,3])*O[3,2]-FT*O[2,3]*O[3,1]-FT*O[1,3]*O[2,3])*dm+(2*FT*O[1,1]*O[3,2]+((-FT*O[2,1])-FT*O[1,2])*O[3,1]+2*FT*O[1,1]*O[2,3]-FT*O[1,3]*O[2,1]-FT*O[1,2]*O[1,3])*Pm+(2*Dm*FT*O[2,1]+2*Dm*FT*O[1,2])*O[3,2]-4*Dm*FT*O[2,2]*O[3,1]+(2*Dm*FT*O[2,1]+2*Dm*FT*O[1,2])*O[2,3]-4*Dm*FT*O[1,3]*O[2,2])*ft*x0)*y0+((2*O[1,1]*O[3,2]+((-O[2,1])-O[1,2])*O[3,1]+2*O[1,1]*O[2,3]-O[1,3]*O[2,1]-O[1,2]*O[1,3])*dm+4*Dm*O[1,1]*O[2,2]-Dm*O[2,1]^2-2*Dm*O[1,2]*O[2,1]-Dm*O[1,2]^2)*x0^2)/((4*FT^2*O[2,2]*O[3,3]-FT^2*O[3,2]^2-2*FT^2*O[2,3]*O[3,2]-FT^2*O[2,3]^2)*ft^2*y1^2+(((((-4*FT*O[2,1])-4*FT*O[1,2])*O[3,3]+(2*FT*O[3,1]+2*FT*O[1,3])*O[3,2]+2*FT*O[2,3]*O[3,1]+2*FT*O[1,3]*O[2,3])*ft*mf*x0+((-8*FT^2*O[2,2]*O[3,3])+2*FT^2*O[3,2]^2+4*FT^2*O[2,3]*O[3,2]+2*FT^2*O[2,3]^2)*ft^2)*y0+(((-2*FT*O[2,1])-2*FT*O[1,2])*O[3,2]+4*FT*O[2,2]*O[3,1]+((-2*FT*O[2,1])-2*FT*O[1,2])*O[2,3]+4*FT*O[1,3]*O[2,2])*ft*x0)*y1+((4*O[1,1]*O[3,3]-O[3,1]^2-2*O[1,3]*O[3,1]-O[1,3]^2)*mf^2*x0^2+((4*FT*O[2,1]+4*FT*O[1,2])*O[3,3]+((-2*FT*O[3,1])-2*FT*O[1,3])*O[3,2]-2*FT*O[2,3]*O[3,1]-2*FT*O[1,3]*O[2,3])*ft*mf*x0+(4*FT^2*O[2,2]*O[3,3]-FT^2*O[3,2]^2-2*FT^2*O[2,3]*O[3,2]-FT^2*O[2,3]^2)*ft^2)*y0^2+((4*O[1,1]*O[3,2]+((-2*O[2,1])-2*O[1,2])*O[3,1]+4*O[1,1]*O[2,3]-2*O[1,3]*O[2,1]-2*O[1,2]*O[1,3])*mf*x0^2+((2*FT*O[2,1]+2*FT*O[1,2])*O[3,2]-4*FT*O[2,2]*O[3,1]+(2*FT*O[2,1]+2*FT*O[1,2])*O[2,3]-4*FT*O[1,3]*O[2,2])*ft*x0)*y0+(4*O[1,1]*O[2,2]-O[2,1]^2-2*O[1,2]*O[2,1]-O[1,2]^2)*x0^2)
 end
 # glass
 function getD(Dm::AbstractVector,
               dm::AbstractVector,
-              vD::AbstractVector,
-              vd::AbstractVector,
+              O::Matrix,
               y0::AbstractFloat,
               mf::AbstractFloat,
               bDt::AbstractVector,
               bdt::AbstractVector)
-    return @. (dm*mf*vD*y0+Dm*vd)/(mf^2*vD*y0^2+vd)
+    return @. ((2*O[2,2]*dm+Dm*O[2,1]+Dm*O[1,2])*mf*y0+(O[2,1]+O[1,2])*dm+2*Dm*O[1,1])/(2*O[2,2]*mf^2*y0^2+(2*O[2,1]+2*O[1,2])*mf*y0+2*O[1,1])
 end
 
 # mineral
-function SS(par::AbstractVector,
+function LL(par::AbstractVector,
             bP::AbstractVector,
             bD::AbstractVector,
             bd::AbstractVector,
@@ -64,19 +59,17 @@ function SS(par::AbstractVector,
     out = 0.0
     for (refmat,dat) in dats
         (x0,y0,y1) = anchors[refmat]
-        Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
-            SSprep(bP,bD,bd,dat,channels,mfrac,drift,down;
+        Pm,Dm,dm,O,ft,FT,mf,bPt,bDt,bdt =
+            LLprep(bP,bD,bd,dat,channels,mfrac,drift,down;
                    PAcutoff=PAcutoff,adrift=adrift)
-        out += SS(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+        out += LL(Pm,Dm,dm,O,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     end
     return out
 end
-function SS(Pm::AbstractVector,
+function LL(Pm::AbstractVector,
             Dm::AbstractVector,
             dm::AbstractVector,
-            vP::AbstractVector,
-            vD::AbstractVector,
-            vd::AbstractVector,
+            O::Matrix,
             x0::AbstractFloat,
             y0::AbstractFloat,
             y1::AbstractFloat,
@@ -86,14 +79,14 @@ function SS(Pm::AbstractVector,
             bPt::AbstractVector,
             bDt::AbstractVector,
             bdt::AbstractVector)
-    pred = predict(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    dP = @. pred[:,"P"] - Pm
-    dD = @. pred[:,"D"] - Dm
-    dd = @. pred[:,"d"] - dm
-    return sum(@. (dP^2)/vP + (dD^2)/vD + (dd^2)/vd )
+    pred = predict(Pm,Dm,dm,O,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    P = pred[:,"P"]
+    D = pred[:,"D"]
+    d = pred[:,"d"]
+    return sum(@. (((-(FT*P*ft*(y1-y0))/x0)-D*mf*y0+dm)*(O[3,3]*((-(FT*P*ft*(y1-y0))/x0)-D*mf*y0+dm)+O[3,1]*(Pm-P)+(Dm-D)*O[3,2])+(Dm-D)*(O[2,3]*((-(FT*P*ft*(y1-y0))/x0)-D*mf*y0+dm)+O[2,1]*(Pm-P)+(Dm-D)*O[2,2])+(Pm-P)*(O[1,3]*((-(FT*P*ft*(y1-y0))/x0)-D*mf*y0+dm)+O[1,1]*(Pm-P)+(Dm-D)*O[1,2]))/2 )
 end
 # glass
-function SS(par::AbstractVector,
+function LL(par::AbstractVector,
             bD::AbstractVector,
             bd::AbstractVector,
             dats::AbstractDict,
@@ -103,28 +96,27 @@ function SS(par::AbstractVector,
     out = 0.0
     for (refmat,dat) in dats
         y0 = anchors[refmat]
-        Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,channels)
-        out += SS(Dm,dm,vD,vd,y0,mf,bDt,bdt)
+        Dm,dm,O,bDt,bdt = LLprep(bD,bd,dat,channels)
+        out += LL(Dm,dm,O,y0,mf,bDt,bdt)
     end
     return out
 end
-function SS(Dm::AbstractVector,
+function LL(Dm::AbstractVector,
             dm::AbstractVector,
-            vD::AbstractVector,
-            vd::AbstractVector,
+            O::Matrix,
             y0::AbstractFloat,
             mf::AbstractFloat,
             bDt::AbstractVector,
             bdt::AbstractVector)
-    pred = predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
-    dD = @. pred[:,"D"] - Dm
-    dd = @. pred[:,"d"] - dm
-    return sum(@. (dD^2)/vD + (dd^2)/vd )
+    pred = predict(Dm,dm,O,y0,mf,bDt,bdt)
+    D = pred[:,"D"]
+    d = pred[:,"d"]
+    return sum(@. ((dm-D*mf*y0)*(O[2,2]*(dm-D*mf*y0)+(Dm-D)*O[2,1])+(Dm-D)*(O[1,2]*(dm-D*mf*y0)+(Dm-D)*O[1,1]))/2 )
 end
-export SS
+export LL
 
 # minerals
-function SSprep(bP::AbstractVector,
+function LLprep(bP::AbstractVector,
                 bD::AbstractVector,
                 bd::AbstractVector,
                 dat::AbstractDataFrame,
@@ -139,9 +131,7 @@ function SSprep(bP::AbstractVector,
     Pm = dat[:,channels["P"]]
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
-    vP = var_timeseries(Pm)
-    vD = var_timeseries(Dm)
-    vd = var_timeseries(dm)
+    O = O_timeseries(Pm,Dm,dm)
     ft = get_drift(Pm,t,drift;
                    PAcutoff=PAcutoff,adrift=adrift)
     FT = polyFac(down,T)
@@ -149,21 +139,20 @@ function SSprep(bP::AbstractVector,
     bPt = polyVal(bP,t)
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
-    return Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt
+    return Pm,Dm,dm,O,ft,FT,mf,bPt,bDt,bdt
 end
 # glass
-function SSprep(bD::AbstractVector,
+function LLprep(bD::AbstractVector,
                 bd::AbstractVector,
                 dat::AbstractDataFrame,
                 channels::AbstractDict)
     t = dat.t
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
-    vD = var_timeseries(Dm)
-    vd = var_timeseries(dm)
+    O = O_timeseries(Dm,dm)
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
-    return Dm,dm,vD,vd,bDt,bdt
+    return Dm,dm,O,bDt,bdt
 end
 
 # minerals
@@ -201,20 +190,18 @@ function predict(dat::AbstractDataFrame,
     bP = blank[:,channels["P"]]
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
-    Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
-        SSprep(bP,bD,bd,dat,channels,
+    Pm,Dm,dm,O,ft,FT,mf,bPt,bDt,bdt =
+        LLprep(bP,bD,bd,dat,channels,
                pars.mfrac,pars.drift,pars.down;
                PAcutoff=pars.PAcutoff,adrift=pars.adrift)
-    return predict(Pm,Dm,dm,vP,vD,vd,
+    return predict(Pm,Dm,dm,O,
                    anchor.x0,anchor.y0,anchor.y1,
                    ft,FT,mf,bPt,bDt,bdt)
 end
 function predict(Pm::AbstractVector,
                  Dm::AbstractVector,
                  dm::AbstractVector,
-                 vP::AbstractVector,
-                 vD::AbstractVector,
-                 vd::AbstractVector,
+                 O::Matrix,
                  x0::AbstractFloat,
                  y0::AbstractFloat,
                  y1::AbstractFloat,
@@ -224,8 +211,8 @@ function predict(Pm::AbstractVector,
                  bPt::AbstractVector,
                  bDt::AbstractVector,
                  bdt::AbstractVector)
-    P = getP(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    D = getD(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    P = getP(Pm,Dm,dm,O,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    D = getD(Pm,Dm,dm,O,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     return predict(P,D,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
 end
 function predict(P::AbstractVector,
@@ -254,18 +241,17 @@ function predict(dat::AbstractDataFrame,
     mf = exp(pars.mfrac)
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
-    Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,channels)
-    return predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
+    Dm,dm,O,bDt,bdt = LLprep(bD,bd,dat,channels)
+    return predict(Dm,dm,O,y0,mf,bDt,bdt)
 end
 function predict(Dm::AbstractVector,
                  dm::AbstractVector,
-                 vD::AbstractVector,
-                 vd::AbstractVector,
+                 O::Matrix,
                  y0::AbstractFloat,
                  mf::AbstractFloat,
                  bDt::AbstractVector,
                  bdt::AbstractVector)
-    D = getD(Dm,dm,vD,vd,y0,mf,bDt,bdt)
+    D = getD(Dm,dm,O,y0,mf,bDt,bdt)
     Df = @. D + bDt
     df = @. D*mf*y0 + bdt
     return DataFrame(D=Df,d=df)

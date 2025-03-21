@@ -446,6 +446,14 @@ function elements2concs(elements::AbstractDataFrame,
     return out
 end
 
+function O_timeseries(vectors...)
+    cps = hcat(vectors...)
+    diff = (cps[2:end,:].-cps[1:end-1,:])
+    covmat = Statistics.cov(diff)
+    return LinearAlgebra.inv(covmat)
+end
+export O_timeseries
+
 function var_timeseries(cps::AbstractVector)
     var = Statistics.mean((cps[2:end].-cps[1:end-1]).^2)
     return fill(var,length(cps))
