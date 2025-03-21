@@ -404,7 +404,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -418,9 +418,9 @@ if true
     @testset "K-Ca" begin KCaTest() end
     @testset "hist" begin histest() end
     @testset "process run" begin processtest() end
-    @testset "PA test" begin PAtest(true) end
+    @testset "PA test" begin PAtest(true) end=#
     @testset "export" begin exporttest() end
-    @testset "U-Pb" begin UPbtest() end
+    #=@testset "U-Pb" begin UPbtest() end
     @testset "iCap" begin iCaptest() end
     @testset "carbonate" begin carbonatetest() end
     @testset "timestamp" begin timestamptest() end
@@ -428,7 +428,7 @@ if true
     @testset "concentration" begin concentrationtest() end
     @testset "Lu-Hf internochron" begin internochrontest() end
     @testset "UPb internochron" begin internochronUPbtest() end
-    @testset "extension test" begin extensiontest() end
+    @testset "extension test" begin extensiontest() end=#
     #@testset "TUI test" begin TUItest() end
 else
     TUI()

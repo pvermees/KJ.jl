@@ -453,8 +453,8 @@ end
 export var_timeseries
 
 # requires that length(pars) == 2
-function hessian2covmat(H::Matrix,
-                        pars::AbstractVector)
+function hessian2xyerr(H::Matrix,
+                       pars::AbstractVector)
     try
         E = LinearAlgebra.inv(H)
         s1 = E[1,1]>0 ? sqrt(E[1,1]) : NaN
