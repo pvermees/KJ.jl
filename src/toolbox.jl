@@ -176,7 +176,11 @@ function autoWindow(samp::Sample;
     return autoWindow(samp.dat[:,1],samp.t0;blank=blank)
 end
 
-function pool(run::Vector{Sample};blank=false,signal=false,group=nothing)
+function pool(run::Vector{Sample};
+              blank::Bool=false,
+              signal::Bool=false,
+              group::Union{Nothing,AbstractString}=nothing,
+              include_variances::Bool=false)
     if isnothing(group)
         selection = 1:length(run)
     else
@@ -188,9 +192,32 @@ function pool(run::Vector{Sample};blank=false,signal=false,group=nothing)
     for i in eachindex(selection)
         dats[i] = windowData(run[selection[i]],blank=blank,signal=signal)
     end
-    return reduce(vcat,dats)
+    if include_variances
+        vars = Vector{DataFrame}(undef,ns)
+        channels = getChannels(run)
+        for i in eachindex(selection)
+            vars[i] = dat2var(dats[i],channels)
+        end
+        return reduce(vcat,dats), reduce(vcat,vars)
+    else
+        return reduce(vcat,dats)
+    end
 end
 export pool
+
+function dat2var(dat::AbstractDataFrame,
+                 channels::AbstractVector)
+    diff = dat[2:end,channels] .- dat[1:end-1,channels]
+    covmat = Statistics.cov(Matrix(diff))
+    mat = repeat(diag(covmat)',inner=[nrow(dat),1])./2
+    return DataFrame(mat,channels)
+end
+
+function var_timeseries(cps::AbstractVector)
+    var = Statistics.var((cps[2:end].-cps[1:end-1]))./2
+    return fill(var,length(cps))
+end
+export var_timeseries
 
 function windowData(samp::Sample;blank=false,signal=false)
     if blank
@@ -445,12 +472,6 @@ function elements2concs(elements::AbstractDataFrame,
     end
     return out
 end
-
-function var_timeseries(cps::AbstractVector)
-    var = Statistics.mean((cps[2:end].-cps[1:end-1]).^2)
-    return fill(var,length(cps))
-end
-export var_timeseries
 
 # requires that length(pars) == 2
 function hessian2xyerr(H::Matrix,

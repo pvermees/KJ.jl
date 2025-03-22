@@ -51,6 +51,7 @@ function SS(par::AbstractVector,
             bD::AbstractVector,
             bd::AbstractVector,
             dats::AbstractDict,
+            vars::AbstractDict,
             channels::AbstractDict,
             anchors::AbstractDict,
             mf::Union{AbstractFloat,Nothing};
@@ -65,7 +66,7 @@ function SS(par::AbstractVector,
     for (refmat,dat) in dats
         (x0,y0,y1) = anchors[refmat]
         Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
-            SSprep(bP,bD,bd,dat,channels,mfrac,drift,down;
+            SSprep(bP,bD,bd,dat,vars[refmat],channels,mfrac,drift,down;
                    PAcutoff=PAcutoff,adrift=adrift)
         out += SS(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     end
@@ -97,13 +98,14 @@ function SS(par::AbstractVector,
             bD::AbstractVector,
             bd::AbstractVector,
             dats::AbstractDict,
+            vars::AbstractDict,
             channels::AbstractDict,
             anchors::AbstractDict)
     mf = exp(par[1])
     out = 0.0
     for (refmat,dat) in dats
         y0 = anchors[refmat]
-        Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,channels)
+        Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,vars[refmat],channels)
         out += SS(Dm,dm,vD,vd,y0,mf,bDt,bdt)
     end
     return out
@@ -128,6 +130,7 @@ function SSprep(bP::AbstractVector,
                 bD::AbstractVector,
                 bd::AbstractVector,
                 dat::AbstractDataFrame,
+                var::AbstractDataFrame,
                 channels::AbstractDict,
                 mfrac::AbstractFloat,
                 drift::AbstractVector,
@@ -139,9 +142,9 @@ function SSprep(bP::AbstractVector,
     Pm = dat[:,channels["P"]]
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
-    vP = var_timeseries(Pm)
-    vD = var_timeseries(Dm)
-    vd = var_timeseries(dm)
+    vP = var[:,channels["P"]]
+    vD = var[:,channels["D"]]
+    vd = var[:,channels["d"]]
     ft = get_drift(Pm,t,drift;
                    PAcutoff=PAcutoff,adrift=adrift)
     FT = polyFac(down,T)
@@ -155,12 +158,13 @@ end
 function SSprep(bD::AbstractVector,
                 bd::AbstractVector,
                 dat::AbstractDataFrame,
+                var::AbstractDataFrame,
                 channels::AbstractDict)
     t = dat.t
     Dm = dat[:,channels["D"]]
     dm = dat[:,channels["d"]]
-    vD = var_timeseries(Dm)
-    vd = var_timeseries(dm)
+    vD = var[:,channels["D"]]
+    vd = var[:,channels["d"]]
     bDt = polyVal(bD,t)
     bdt = polyVal(bd,t)
     return Dm,dm,vD,vd,bDt,bdt
@@ -188,11 +192,13 @@ function predict(samp::Sample,
         KJerror("notStandard")
     else
         dat = windowData(samp;signal=true)
+        var = dat2var(dat,collect(values(channels)))
         anchor = anchors[samp.group]
-        return predict(dat,pars,blank,channels,anchor;debug=debug)
+        return predict(dat,var,pars,blank,channels,anchor;debug=debug)
     end
 end
 function predict(dat::AbstractDataFrame,
+                 var::AbstractDataFrame,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
@@ -202,7 +208,7 @@ function predict(dat::AbstractDataFrame,
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
-        SSprep(bP,bD,bd,dat,channels,
+        SSprep(bP,bD,bd,dat,var,channels,
                pars.mfrac,pars.drift,pars.down;
                PAcutoff=pars.PAcutoff,adrift=pars.adrift)
     return predict(Pm,Dm,dm,vP,vD,vd,
@@ -246,6 +252,7 @@ function predict(P::AbstractVector,
 end
 # glass
 function predict(dat::AbstractDataFrame,
+                 var::AbstractDataFrame,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
@@ -254,7 +261,7 @@ function predict(dat::AbstractDataFrame,
     mf = exp(pars.mfrac)
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
-    Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,channels)
+    Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,var,channels)
     return predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
 end
 function predict(Dm::AbstractVector,
