@@ -31,8 +31,12 @@ function fractionation(run::Vector{Sample},
     if ndrift<1 KJerror("ndriftzero") end
 
     dats = Dict()
+    vars = Dict()
     for (refmat,anchor) in anchors
-        dats[refmat] = pool(run;signal=true,group=refmat)
+        dats[refmat], vars[refmat] = pool(run;
+                                          signal=true,
+                                          group=refmat,
+                                          include_variances=true)
     end
 
     bD = blank[:,channels["D"]]
@@ -44,7 +48,7 @@ function fractionation(run::Vector{Sample},
     if isnothing(mf) init = vcat(init,0.0) end
     if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
 
-    return SSfit(init,bP,bD,bd,dats,channels,anchors,mf;
+    return SSfit(init,bP,bD,bd,dats,vars,channels,anchors,mf;
                  ndrift=ndrift,ndown=ndown,
                  PAcutoff=PAcutoff,verbose=verbose)
 
@@ -60,14 +64,16 @@ function fractionation(run::Vector{Sample},
     anchors = getAnchors(method,glass,true)
 
     dats = Dict()
+    vars = Dict()
     for (refmat,anchor) in anchors
-        dats[refmat] = pool(run;signal=true,group=refmat)
+        dats[refmat], vars[refmat] = pool(run;signal=true,group=refmat,
+                                          include_variances=true)
     end
 
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
 
-    return SSfit([0.0],bD,bd,dats,channels,anchors;verbose=verbose)
+    return SSfit([0.0],bD,bd,dats,vars,channels,anchors;verbose=verbose)
     
 end
 # for concentration measurements:
@@ -110,6 +116,7 @@ function SSfit(init::AbstractVector,
                bD::AbstractVector,
                bd::AbstractVector,
                dats::AbstractDict,
+               vars::AbstractDict,
                channels::AbstractDict,
                anchors::AbstractDict,
                mf::Union{AbstractFloat,Nothing};
@@ -117,8 +124,8 @@ function SSfit(init::AbstractVector,
                ndown::Integer=0,
                PAcutoff=nothing,
                verbose::Bool=false)
-    
-    objective = (par) -> SS(par,bP,bD,bd,dats,channels,anchors,mf;
+
+    objective = (par) -> SS(par,bP,bD,bd,dats,vars,channels,anchors,mf;
                             ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 
     fit = Optim.optimize(objective,init)
@@ -151,11 +158,12 @@ function SSfit(init::AbstractVector,
                bD::AbstractVector,
                bd::AbstractVector,
                dats::AbstractDict,
+               vars::AbstractDict,
                channels::AbstractDict,
                anchors::AbstractDict;
                verbose::Bool=false)
 
-    objective = (par) -> SS(par,bD,bd,dats,channels,anchors)
+    objective = (par) -> SS(par,bD,bd,dats,vars,channels,anchors)
     
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)

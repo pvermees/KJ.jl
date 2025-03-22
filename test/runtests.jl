@@ -29,14 +29,14 @@ function windowtest()
     @test display(p) != NaN
 end
 
-function blanktest(;poisson=false)
+function blanktest()
     myrun = loadtest()
     blk = fitBlanks(myrun;nblank=2)
     return myrun, blk
 end
 
-function standardtest(verbose=false;poisson=false)
-    myrun, blk = blanktest(;poisson=poisson)
+function standardtest(verbose=false)
+    myrun, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
     anchors = getAnchors("Lu-Hf",standards)
@@ -46,8 +46,8 @@ function standardtest(verbose=false;poisson=false)
     end
 end
 
-function fixedLuHf(;poisson=false)
-    myrun, blk = blanktest(;poisson=poisson)
+function fixedLuHf()
+    myrun, blk = blanktest()
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
                     "D" => "Hf176 -> 258",
@@ -116,8 +116,8 @@ function mfractest()
     partest("mfrac",0.2)
 end
 
-function fractionationtest(all=true;poisson=false)
-    myrun, blk = blanktest(;poisson=poisson)
+function fractionationtest(all=true)
+    myrun, blk = blanktest()
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
                     "D" => "Hf176 -> 258",
@@ -151,7 +151,7 @@ function fractionationtest(all=true;poisson=false)
     end
 end
 
-function RbSrTest(show=true;poisson=false)
+function RbSrTest(show=true)
     myrun = load("data/Rb-Sr",instrument="Agilent")
     method = "Rb-Sr"
     channels = Dict("d"=>"Sr88 -> 104",
@@ -173,7 +173,7 @@ function RbSrTest(show=true;poisson=false)
     return myrun, blank, fit, channels, standards, anchors
 end
 
-function KCaTest(show=true;poisson=false)
+function KCaTest(show=true)
     myrun = load("data/K-Ca",instrument="Agilent")
     method = "K-Ca"
     channels = Dict("d"=>"Ca44 -> 63",
@@ -230,9 +230,9 @@ function histest(;LuHf=false,show=true)
         standard = "MDC_bt"
     end
     print(fit)
-    pooled = pool(myrun;signal=true,group=standard)
+    pooled, vars = pool(myrun;signal=true,group=standard,include_variances=true)
     anchor = anchors[standard]
-    pred = predict(pooled,fit,blk,channels,anchor)
+    pred = predict(pooled,vars,fit,blk,channels,anchor)
     Pm = pooled[:,channels["P"]]
     Dm = pooled[:,channels["D"]]
     dm = pooled[:,channels["d"]]
@@ -247,7 +247,7 @@ function histest(;LuHf=false,show=true)
     return anchors, fit, Pm, Dm, dm
 end
 
-function processtest(show=true;poisson=false)
+function processtest(show=true)
     myrun = load("data/Lu-Hf",instrument="Agilent")
     method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
@@ -265,7 +265,7 @@ function processtest(show=true;poisson=false)
     return myrun, method, channels, blk, fit
 end
 
-function PAtest(verbose=false;poisson=false)
+function PAtest(verbose=false)
     myrun = load("data/Lu-Hf",instrument="Agilent")
     method = "Lu-Hf"
     channels = Dict("d"=>"Hf178 -> 260",
@@ -288,7 +288,7 @@ function exporttest()
     export2IsoplotR(selection,"Lu-Hf",fname="output/BP.json")
 end
 
-function UPbtest(;poisson=false)
+function UPbtest()
     myrun = load("data/U-Pb",instrument="Agilent",head2name=false)
     method = "U-Pb"
     standards = Dict("Plesovice_zr" => "STDCZ",
@@ -310,7 +310,7 @@ function iCaptest(verbose=true)
     if verbose summarise(myrun;verbose=true,n=5) end
 end
 
-function carbonatetest(verbose=false;poisson=false)
+function carbonatetest(verbose=false)
     method = "U-Pb"
     myrun = load("data/carbonate",instrument="Agilent")
     standards = Dict("WC1_cc"=>"WC1")
@@ -404,7 +404,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -418,9 +418,9 @@ if true
     @testset "K-Ca" begin KCaTest() end
     @testset "hist" begin histest() end
     @testset "process run" begin processtest() end
-    @testset "PA test" begin PAtest(true) end=#
+    @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
-    #=@testset "U-Pb" begin UPbtest() end
+    @testset "U-Pb" begin UPbtest() end
     @testset "iCap" begin iCaptest() end
     @testset "carbonate" begin carbonatetest() end
     @testset "timestamp" begin timestamptest() end
@@ -428,7 +428,7 @@ if true
     @testset "concentration" begin concentrationtest() end
     @testset "Lu-Hf internochron" begin internochrontest() end
     @testset "UPb internochron" begin internochronUPbtest() end
-    @testset "extension test" begin extensiontest() end=#
+    @testset "extension test" begin extensiontest() end
     #@testset "TUI test" begin TUItest() end
 else
     TUI()

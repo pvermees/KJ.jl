@@ -43,11 +43,13 @@ function atomic(samp::Sample,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
                 pars::NamedTuple)
+    dat = windowData(samp;signal=true)
+    var = dat2var(dat,collect(values(channels)))
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
         SSprep(blank[:,channels["P"]],
                blank[:,channels["D"]],
                blank[:,channels["d"]],
-               windowData(samp;signal=true),
+               dat,var,
                channels,
                pars.mfrac,pars.drift,pars.down;
                PAcutoff=pars.PAcutoff,
