@@ -70,7 +70,7 @@ function SSinternochron(x0::Real,
                         vD::AbstractVector,
                         vd::AbstractVector)
     P, D, d = internochronPDd(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
-    return sum(@. (P-Phat)^2/vP + (D-Dhat)^2/vd + (d-dhat)^2/vd )
+    return sum(@. (P-Phat)^2/vP + (D-Dhat)^2/vd + (d-dhat)^2/vd )/2
 end
 
 function internochronPd(x0,y0,Phat,Dhat,dhat,vP,vD,vd)

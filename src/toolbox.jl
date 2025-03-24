@@ -390,21 +390,24 @@ function transformeer(df::AbstractDataFrame,
         out = df
     else
         out = copy(df)
+        offset = get_offset(df,transformation)
         for key in names(out)
-            out[:,key] = eval(Symbol(transformation)).(df[:,key])
+            out[:,key] = eval(Symbol(transformation)).(df[:,key] .+ offset)
         end
     end
     return out
 end
 
-function get_offset()
-    return 10
+function get_offset(df::AbstractDataFrame,
+                    transformation::Union{Nothing,AbstractString})
+    min_val = minimum(Matrix(df))
+    if (transformation == "log" && min_val <= 0) ||
+        (transformation == "sqrt" && min_val < 0)
+        return 10.0 - min_val
+    else
+        return 0.0
+    end
 end
-
-function Log(val::AbstractFloat)
-    return log(val + get_offset())
-end
-export Log
 
 function dict2string(dict::AbstractDict)
     k = collect(keys(dict))

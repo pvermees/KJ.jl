@@ -198,11 +198,12 @@ function prep_plot(samp::Sample,
     ratsig = isnothing(den) ? "signal" : "ratio"
     y = (ratsig == "signal") ? meas : formRatios(meas,num,den)
     arg = nothing
+    min_val = minimum(Matrix(y))
     if isnothing(transformation)
         ylab = ratsig
-    elseif transformation == "log" && minimum(Matrix(y)) == 0
-        transformation = "Log"
-        ylab = "log(" * ratsig * "+" * string(get_offset()) * ")"
+    elseif (transformation == "log" && min_val <= 0) ||
+        (transformation == "sqrt" && min_val < 0)
+        ylab = transformation * "(" * ratsig * "+offset)"
     else
         ylab = transformation*"("*ratsig*")"
     end
@@ -263,9 +264,6 @@ function plotFitted!(p,
                      linecolor="black",linestyle=:solid)
     x = windowData(samp,blank=blank,signal=signal)[:,1]
     y = formRatios(pred,num,den)
-    if transformation == "log" && minimum(Matrix(y)) == 0
-        transformation = "Log"
-    end
     ty = transformeer(y,transformation)
     for tyi in eachcol(ty)
         Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
