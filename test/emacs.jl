@@ -8,11 +8,13 @@ end
 
 rerun = true
 
-option = "runtests" # "KJgui" # "Abdulkadir" # "NHM" #
+option = "NHM-carbonate" # "runtests" # "KJgui" # "Abdulkadir" # "NHM" #
+
+if option != "runtests"
+    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
+end
 
 if option == "Abdulkadir"
-    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
-    import Plots
 
     myrun = load("/home/pvermees/Dropbox/Plasmatrace/Abdulkadir";
                  instrument="Agilent")
@@ -48,11 +50,7 @@ if option == "Abdulkadir"
         end
     end
 elseif option == "NHM"
-    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
-    import Plots
-
     snum = 23
-    
     myrun = load("/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon_Maps.csv",
                  "/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon.Iolite.csv";
                  instrument="Agilent")
@@ -67,10 +65,31 @@ elseif option == "NHM"
                         nblank=2,ndrift=2,ndown=0)
     export2IsoplotR(myrun,method,channels,blk,fit;
                     fname="/home/pvermees/temp/NHM.json")
-    p = plot(myrun[snum],method,channels,blk,fit,standards,glass;
-             transformation="log",den=nothing)
+    results = averat(myrun,channels,blk,fit;method=method)
+    CSV.write("/home/pvermees/temp/NHM.csv",results)
+    p = KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
+                transformation="log",den=nothing)
+elseif option == "NHM-carbonate"
+    snum = 3
+    myrun = load("/home/pvermees/Documents/Plasmatrace/NHM/240408_ET_Carbonate.csv",
+                 "/home/pvermees/Documents/Plasmatrace/NHM/240408_FP_CarbonateDating.Iolite.csv";
+                 instrument="Agilent")
+    method = "U-Pb"
+    channels = Dict("d"=>"Pb207",
+                    "D"=>"Pb206",
+                    "P"=>"U238");
+    standards = Dict("RA138_cc" => "RA138")
+    glass = Dict("NIST612" => "NIST612")
+    setBwin!(myrun[1],[(40,60)];seconds=true)
+    blk, fit = process!(myrun,method,channels,standards,glass,
+                        nblank=2,ndrift=2,ndown=0)
+    export2IsoplotR(myrun,method,channels,blk,fit;
+                    fname="/home/pvermees/temp/NHM-carbonate.json")
+    results = averat(myrun,channels,blk,fit;method=method)
+    CSV.write("/home/pvermees/temp/NHM-carbonate.csv",results)
+    p = KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
+                transformation="log",den=nothing)
 elseif option == "KJgui"
-    using KJ, KJgui, Test, CSV, Infiltrator, DataFrames, Statistics
     TUI(KJgui;reset=true)
 else
     include("runtests.jl")
