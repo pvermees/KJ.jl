@@ -8,7 +8,7 @@ end
 
 rerun = true
 
-option = "runtests" # "KJgui" # "Abdulkadir" #
+option = "runtests" # "KJgui" # "Abdulkadir" # "NHM" #
 
 if option == "Abdulkadir"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
@@ -32,7 +32,7 @@ if option == "Abdulkadir"
     blk, fit = process!(myrun,method,channels,standards,glass,
                         nblank=1,ndrift=1,ndown=1)
     p = KJ.plot(myrun[166],method,channels,blk,fit,standards,glass;
-                transformation="Log")
+                transformation="log")
     display(p)
     if true
         export2IsoplotR(myrun,method,channels,blk,fit;
