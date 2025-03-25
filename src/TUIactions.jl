@@ -540,6 +540,13 @@ function TUIallMultiSignalWindow!(ctrl::AbstractDict,
     return "xx"
 end
 
+function TUImoveWin!(ctrl::AbstractDict,
+                     response::AbstractString)
+    shift_windows!(ctrl["run"],parse(Float64,response))
+    TUIplotter(ctrl)
+    return "x"
+end
+
 function TUItransformation!(ctrl::AbstractDict,
                             response::AbstractString)
     if response=="L"

@@ -417,7 +417,8 @@ function getKJtree()
             "r: Plot signals or ratios?\n" *
             "0: Set 'time zero'\n" *
             "b: Select blank window(s)\n" * 
-            "s: Select signal window(s)\n" * 
+            "s: Select signal window(s)\n" *
+            "m: Move selection windows\n" * 
             "d: Choose a data transformation\n" * 
             "x: Exit\n" * 
             "?: Help",
@@ -434,6 +435,7 @@ function getKJtree()
                 "0" => "t0",
                 "b" => "Bwin",
                 "s" => "Swin",
+                "m" => "moveWin",
                 "d" => "transformation"
             )
         ),
@@ -626,6 +628,16 @@ function getKJtree()
             "of numbers. For example: (40,45),(50,60) marks a two-part " * 
             "signal window from 40 to 45s, and from 50 to 60s.",
             action = TUIallMultiSignalWindow!
+        ),
+        "moveWin" => (
+            message =
+            "Enter the shift in seconds:\n" * 
+            "(? for help, x to exit):",
+            help =
+            "Moves all the time zero values and selection windows " *
+            "by a fixed number of seconds (can either be positive or negative). " *
+            "This can be useful to correct a misaligned laser log.",
+            action = TUImoveWin!
         ),
         "transformation" => (
             message =

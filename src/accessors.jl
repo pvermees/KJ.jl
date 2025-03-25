@@ -141,6 +141,30 @@ function setSwin!(samp::Sample)
 end
 export setSwin!
 
+function shift_windows!(run::Vector{Sample},
+                        shift::Number=0.0)
+    for samp in run
+        samp.t0 += shift
+        di = t2i(samp,shift)
+        nt = size(samp.dat,1)
+        bwin = []
+        for win in samp.bwin
+            start = max(win[1]+di,1)
+            stop = min(win[2]+di,nt)
+            push!(bwin,(start,stop))
+        end
+        setBwin!(samp,bwin)
+        swin = []
+        for win in samp.swin
+            start = max(win[1]+di,1)
+            stop = min(win[2]+di,nt)
+            push!(swin,(start,stop))
+        end
+        setSwin!(samp,swin)
+    end
+end
+export shift_windows!
+
 function geti0(signals::AbstractDataFrame)
     total = sum.(eachrow(signals))
     q = Statistics.quantile(total,[0.05,0.95])
