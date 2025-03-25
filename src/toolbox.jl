@@ -495,7 +495,7 @@ function chauvenet(data::Vector{<:Real})
     mu = Statistics.mean(data)
     sigma = Statistics.std(data)
     criterion = 1.0 / (2 * n)
-    z_scores = abs.((data .- mu) ./ sigma)
-    probabilities = 2 .* (1 .- Distributions.cdf(Distributions.Normal(), z_scores))
+    z_scores = @. abs((data - mu) / sigma)
+    probabilities = @. 2 * (1 - Distributions.cdf(Distributions.Normal(),z_scores))
     return probabilities .>= criterion
 end

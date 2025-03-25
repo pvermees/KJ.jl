@@ -8,7 +8,7 @@ end
 
 rerun = true
 
-option = "NHM-carbonate" # "runtests" # "KJgui" # "Abdulkadir" # "NHM" #
+option = "runtests" # "KJgui" # "Abdulkadir" # "NHM" # "NHM-carbonate" #
 
 if option != "runtests"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
