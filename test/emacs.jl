@@ -11,7 +11,7 @@ rerun = true
 option = "NHM-carbonate" # "runtests" # "KJgui" # "Abdulkadir" # "NHM" #
 
 if option != "runtests"
-    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
+    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots
 end
 
 if option == "Abdulkadir"
@@ -70,7 +70,6 @@ elseif option == "NHM"
     p = KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
                 transformation="log",den=nothing)
 elseif option == "NHM-carbonate"
-    snum = 3
     myrun = load("/home/pvermees/Documents/Plasmatrace/NHM/240408_ET_Carbonate.csv",
                  "/home/pvermees/Documents/Plasmatrace/NHM/240408_FP_CarbonateDating.Iolite.csv";
                  instrument="Agilent")
@@ -87,8 +86,17 @@ elseif option == "NHM-carbonate"
                     fname="/home/pvermees/temp/NHM-carbonate.json")
     results = averat(myrun,channels,blk,fit;method=method)
     CSV.write("/home/pvermees/temp/NHM-carbonate.csv",results)
-    p = KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
-                transformation="log",den=nothing)
+    if true
+        # rm("/home/pvermees/temp/NHM-carbonate.pdf")
+        for samp in myrun
+            savefig(KJ.plot(samp,method,channels,blk,fit,standards,glass;
+                            transformation="log",den=nothing),
+                    "/home/pvermees/temp/temp.pdf")
+            append_pdf!("/home/pvermees/temp/NHM-carbonate.pdf",
+                        "/home/pvermees/temp/temp.pdf",
+                        cleanup=true)
+        end
+    end
 elseif option == "KJgui"
     TUI(KJgui;reset=true)
 else

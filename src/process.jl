@@ -33,7 +33,8 @@ function fitBlanks(run::Vector{Sample};
     nc = length(channels)
     bpar = DataFrame(zeros(nblank,nc),channels)
     for channel in channels
-        bpar[:,channel] = polyFit(blk.t,blk[:,channel],nblank)
+        good = chauvenet(blk[:,channel])
+        bpar[:,channel] = polyFit(blk.t[good],blk[good,channel],nblank)
     end
     return bpar
 end

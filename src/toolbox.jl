@@ -489,3 +489,13 @@ function hessian2xyerr(H::Matrix,
         return [pars[1] NaN pars[2] NaN NaN]
     end
 end
+
+function chauvenet(data::Vector{<:Real})
+    n = length(data)
+    mu = Statistics.mean(data)
+    sigma = Statistics.std(data)
+    criterion = 1.0 / (2 * n)
+    z_scores = abs.((data .- mu) ./ sigma)
+    probabilities = 2 .* (1 .- Distributions.cdf(Distributions.Normal(), z_scores))
+    return probabilities .>= criterion
+end
