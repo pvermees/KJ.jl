@@ -11,7 +11,7 @@ rerun = true
 option = "NHM-carbonate" # "runtests" # "KJgui" # "Abdulkadir" # "NHM" #
 
 if option != "runtests"
-    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots
+    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
 end
 
 if option == "Abdulkadir"
@@ -80,6 +80,7 @@ elseif option == "NHM-carbonate"
     standards = Dict("RA138_cc" => "RA138")
     glass = Dict("NIST612" => "NIST612")
     setBwin!(myrun[1],[(40,60)];seconds=true)
+    shift_windows!(myrun,-2.0)
     blk, fit = process!(myrun,method,channels,standards,glass,
                         nblank=2,ndrift=2,ndown=0)
     export2IsoplotR(myrun,method,channels,blk,fit;
@@ -96,6 +97,9 @@ elseif option == "NHM-carbonate"
                         "/home/pvermees/temp/temp.pdf",
                         cleanup=true)
         end
+    else
+        KJ.plot(myrun[2],method,channels,blk,fit,standards,glass;
+                transformation="log",den=nothing)
     end
 elseif option == "KJgui"
     TUI(KJgui;reset=true)
