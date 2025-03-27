@@ -161,21 +161,25 @@ function getKJtree()
         "dir|file" => (
             message =
             "d: Read a directory of individual data files\n" * 
-            "p: Parse the data from a single file using a laser log\n" * 
+            "p: Parse the data from a single file using a laser log (provide paths)\n" *
+            "P: Parse the data from a single file using a laser log (choose from list)\n" *
             "(? for help, x to exit):",
             help =
             "There are two ways to store mass spectrometer data. Each analysis " * 
             "(spot or raster) can be saved into its own file, or all analyses can be " * 
             "stored together in a single file. In the latter case, a laser log file is " * 
-            "needed to parse the data into individual samples",
+            "needed to parse the data into individual samples. Option p requires " *
+            "the full paths of the data and log files. Option P requires the name of the " *
+            "directory in which the data and laser log are stored.",
             action = Dict(
                 "d" => "loadICPdir",
-                "p" => "loadICPfile"
+                "p" => "loadICPfile",
+                "P" => "choosedir"
             )
         ),
         "loadICPdir" => (
             message =
-            "Enter the full path of the data directory " * 
+            "Enter the full path of the data directory " *
             "(? for help, x to exit):",
             help =
             "KJ will read all the files in this folder. " * 
@@ -200,10 +204,32 @@ function getKJtree()
             "previous step using this log file.",
             action = TUIloadLAfile!
         ),
+        "choosedir" => (
+            message =
+            "Specify the directory containing the data and laser log file " * 
+            "(? for help, x to exit):",
+            help =
+            "Provide the full path of the directory that contains the " *
+            "LA-ICP-MS data and the laser log file. In the next step, " *
+            "KJ will list the content of this directory and ask you to " *
+            "pick two files from it.",
+            action = TUIchoosedir!
+        ),
+        "pickICPLAfiles" => (
+            message =
+            "Select the ICP-MS data and laser log file as " *
+            "a comma-separated list of two numbers " *
+            "(? for help, x to exit):",
+            help =
+            "For example, enter 3,5 to select the third and fifth " *
+            "data file in the directory as the ICP-MS file and " *
+            "laser log, respectively.",
+            action = TUIpickICPLAfiles!
+        ),
         "method" => (
             message = TUIshowMethods,
-            help = "Choose a method. Email us if you can't " * 
-            "find the one you're looking for.",
+            help = "Choose a method. Email us if you cannot " * 
+            "find the one you are looking for.",
             action = TUImethod!
         ),
         "internal" => (

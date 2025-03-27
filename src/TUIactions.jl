@@ -104,6 +104,10 @@ end
 function TUIloadLAfile!(ctrl::AbstractDict,
                         response::AbstractString)
     ctrl["LApath"] = response
+    TUIloadICPLAdata!(ctrl::AbstractDict)
+end
+
+function TUIloadICPLAdata!(ctrl::AbstractDict)
     ctrl["run"] = load(ctrl["ICPpath"],ctrl["LApath"];
                        instrument=ctrl["instrument"])
     if isnothing(ctrl["channels"])
@@ -119,6 +123,27 @@ function TUIloadLAfile!(ctrl::AbstractDict,
     else
         return "xxxx"
     end
+end
+
+function TUIchoosedir!(ctrl::AbstractDict,
+                       response::AbstractString)
+    ctrl["ICPpath"] = response
+    files = readdir(response)
+    for (i, file) in enumerate(files)
+        @printf "%2d. %s\n" i file
+    end
+    return "pickICPLAfiles"
+end
+
+function TUIpickICPLAfiles!(ctrl::AbstractDict,
+                            response::AbstractString)
+    selection = split(response,',')
+    ICPnum = parse(Int,selection[1])
+    LAnum = parse(Int,selection[2])
+    files = readdir(ctrl["ICPpath"];join=true)
+    ctrl["ICPpath"] = files[ICPnum]
+    ctrl["LApath"] = files[LAnum]
+    return TUIloadICPLAdata!(ctrl)
 end
 
 function TUImethod!(ctrl::AbstractDict,
