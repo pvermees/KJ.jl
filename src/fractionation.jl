@@ -135,12 +135,12 @@ function SSfit(init::AbstractVector,
         println("Drift and downhole fractionation correction:\n")
         println(fit)
     else
-        if fit.iteration_converged
+        if fit.stopped_by.time_limit
             @warn "Reached the maximum number of iterations before achieving " *
                 "convergence. Reduce the order of the polynomials or fix the " *
                 "mass fractionation and try again."
         end
-        if !fit.g_converged
+        if fit.stopped_by.ls_failed
             @warn "Least squares algorithm did not converge."
         end
     end
