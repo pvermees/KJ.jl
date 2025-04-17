@@ -8,13 +8,30 @@ end
 
 rerun = true
 
-option = "runtests" # "KJgui" # "Abdulkadir" # "NHM" # "NHM-carbonate" #
+option = "Camila" # "runtests" # "KJgui" # "Abdulkadir" # "NHM" # "NHM-carbonate" #
 
 if option != "runtests"
-    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots, PDFmerger
+    using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots
+    #PDFmerger
 end
 
-if option == "Abdulkadir"
+if option == "Camila"
+    
+    myrun = load("/home/pvermees/Dropbox/Plasmatrace/Camila/";
+                 instrument="Agilent")
+
+    method = "U-Pb"
+    channels = Dict("d"=>"Pb207",
+                    "D"=>"Pb206",
+                    "P"=>"U238");
+    standards = Dict("Plesovice_zr" => "STDCZ")
+    glass = Dict("NIST612" => "GLASS")
+    blk, fit = process!(myrun,method,channels,standards,glass;
+                        verbose=true)
+    p = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;
+                transformation="log")
+    
+elseif option == "Abdulkadir"
 
     myrun = load("/home/pvermees/Dropbox/Plasmatrace/Abdulkadir";
                  instrument="Agilent")
