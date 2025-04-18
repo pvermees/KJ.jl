@@ -47,7 +47,7 @@ function fractionation(run::Vector{Sample},
     if (ndown>0) init = vcat(init,fill(0.0,ndown)) end
     if isnothing(mf) init = vcat(init,0.0) end
     if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
-
+    
     return SSfit(init,bP,bD,bd,dats,vars,channels,anchors,mf;
                  ndrift=ndrift,ndown=ndown,
                  PAcutoff=PAcutoff,verbose=verbose)

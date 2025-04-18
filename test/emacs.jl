@@ -8,14 +8,33 @@ end
 
 rerun = true
 
-option = "Camila" # "runtests" # "KJgui" # "Abdulkadir" # "NHM" # "NHM-carbonate" #
+option = "runtests" # "KJgui" "Cuba" # "Camila" #
+         # "NHM" # "NHM-carbonate" # "Abdulkadir"
 
 if option != "runtests"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots
     #PDFmerger
 end
 
-if option == "Camila"
+if option == "Cuba"
+
+    myrun = load("/home/pvermees/Documents/Plasmatrace/" *
+                 "Cuba/YAMIRKA_Ap_32U5Hz_JetH_GEon_3.0J-10A41/";
+                 instrument="FIN2",head2name=false)
+
+    method = "U-Pb"
+    channels = Dict("d"=>"Pb207",
+                    "D"=>"Pb206",
+                    "P"=>"U238");
+    standards = Dict("91500_zr" => "91500")
+    glass = Dict("NIST612" => "612")
+    blk, fit = process!(myrun,method,channels,standards,glass;
+                        verbose=true)
+
+    results = averat(myrun,channels,blk,fit;method=method)
+    CSV.write("/home/pvermees/temp/Cuba.csv",results)
+    
+elseif option == "Camila"
     
     myrun = load("/home/pvermees/Dropbox/Plasmatrace/Camila/";
                  instrument="Agilent")
@@ -28,8 +47,6 @@ if option == "Camila"
     glass = Dict("NIST612" => "GLASS")
     blk, fit = process!(myrun,method,channels,standards,glass;
                         verbose=true)
-    p = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;
-                transformation="log")
     
 elseif option == "Abdulkadir"
 
