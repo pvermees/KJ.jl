@@ -43,7 +43,7 @@ function getExt(instrument)
     if instrument in ["Agilent","ThermoFisher"]
         return ".csv"
     else
-        KJerror("unknownInstrument")
+        return instrument
     end
 end
 

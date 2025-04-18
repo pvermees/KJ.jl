@@ -68,6 +68,8 @@ function TUIinstrument!(ctrl::AbstractDict,
         ctrl["instrument"] = "Agilent"
     elseif response=="t"
         ctrl["instrument"] = "ThermoFisher"
+    elseif response=="f"
+        ctrl["instrument"] = "FIN2"
     else
         @warn "Unsupported instrument"
         return "x"
@@ -587,7 +589,8 @@ end
 
 function TUIprocess!(ctrl::AbstractDict)
     println("Fitting blanks...")
-    ctrl["blank"] = fitBlanks(ctrl["run"],nblank=ctrl["options"]["blank"])
+    ctrl["blank"] = fitBlanks(ctrl["run"],
+                              nblank=ctrl["options"]["blank"])
     println("Fractionation correction...")
     if ctrl["method"] == "concentrations"
         ctrl["par"] = fractionation(ctrl["run"],
@@ -596,7 +599,9 @@ function TUIprocess!(ctrl::AbstractDict)
                                     ctrl["glass"])
     else
         ctrl["dwell"] = ctrl["poisson"] ? dwelltime(ctrl["run"]) : nothing
-        ctrl["anchors"] = getAnchors(ctrl["method"],ctrl["standards"],ctrl["glass"])
+        ctrl["anchors"] = getAnchors(ctrl["method"],
+                                     ctrl["standards"],
+                                     ctrl["glass"])
         ctrl["par"] = fractionation(ctrl["run"],
                                     ctrl["method"],
                                     ctrl["blank"],

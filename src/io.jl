@@ -129,7 +129,6 @@ function df2sample(df::AbstractDataFrame,
                     off=off,start=start,stop=stop,
                     absolute_buffer=absolute_buffer,
                     relative_buffer=relative_buffer)
-
     
     if (on-start) > absolute_buffer
         t2 = on - absolute_buffer
@@ -158,6 +157,9 @@ function readDat(fname::AbstractString,
     if instrument=="Agilent"
         sname, datetime, header, skipto, footerskip =
             readAgilent(fname,head2name)
+    elseif instrument=="FIN2"
+        sname, datetime, header, skipto, footerskip =
+            readFIN(fname,head2name)
     elseif instrument=="ThermoFisher"
         sname, datetime, header, skipto, footerskip =
             readThermoFisher(fname,head2name)
@@ -209,6 +211,19 @@ function readThermoFisher(fname::AbstractString,
     skipto = 16
     footerskip = 0
     
+    return sname, datetime, header, skipto, footerskip
+    
+end
+
+function readFIN(fname::AbstractString,
+                 head2name::Bool=true)
+    lines = split(readuntil(fname, "Time"), "\r\n")
+    snamestring = head2name ? lines[3] : fname
+    sname = split(split(snamestring,r"[\\/]")[end],".FIN")[1]
+    datetime = Dates.DateTime(lines[2],"EEEE, U dd, yyyy HH:MM:SS")
+    header = 8
+    skipto = 9
+    footerskip = 0
     return sname, datetime, header, skipto, footerskip
     
 end
