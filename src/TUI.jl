@@ -150,8 +150,8 @@ function getKJtree()
         ),
         "instrument" => (
             message =
-            "a: Agilent (csv)\n" * 
-            "t: ThermoFisher (csv)\n" *
+            "a: csv (Agilent)\n" * 
+            "t: csv (ThermoFisher)\n" *
             "f: FIN2\n" * 
             "x: Exit\n" * 
             "?: Help",

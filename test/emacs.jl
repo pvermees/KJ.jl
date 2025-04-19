@@ -26,7 +26,7 @@ if option == "Cuba"
     channels = Dict("d"=>"Pb207",
                     "D"=>"Pb206",
                     "P"=>"U238");
-    standards = Dict("91500_zr" => "91500")
+    standards = Dict("NW-1_ap" => "NW-1")
     glass = Dict("NIST612" => "612")
     blk, fit = process!(myrun,method,channels,standards,glass;
                         verbose=true)
