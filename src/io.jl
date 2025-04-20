@@ -148,7 +148,9 @@ function df2sample(df::AbstractDataFrame,
     i1 = findall(t[selection] .< t1)[end]
     i2 = findall(t[selection] .< t2)[end]
     swin = [(i1,i2)]
-    return Sample(sname,datetime,df[selection,:],on,bwin,swin,"sample")
+    dat = df[selection,:]
+    dat[:,1] .= df[selection,1] .- start # change time
+    return Sample(sname,datetime,dat,0.0,bwin,swin,"sample")
 end
 
 function readDat(fname::AbstractString,

@@ -8,7 +8,8 @@ end
 
 rerun = true
 
-option = "runtests" # "KJgui" # "Cuba" # "Camila" #
+option = "Raman"
+         # "runtests" # "KJgui" # "Cuba" # "Camila" #
          # "NHM" # "NHM-carbonate" # "Abdulkadir"
 
 if option != "runtests"
@@ -16,7 +17,25 @@ if option != "runtests"
     #PDFmerger
 end
 
-if option == "Cuba"
+if option == "Raman"
+
+    home = "/home/pvermees/Documents/Raman/NHM/"
+    myrun = load(home * "250324_PV_DinoZircon.csv",
+                 home * "250324_PV_DinoZircons.Iolite.csv";
+                 instrument="Agilent")
+    method = "U-Pb"
+    internal = getInternal("zircon","Si29")
+    glass = Dict("NIST612" => "NIST612")
+    setGroup!(myrun,glass)
+    smp = 4
+    setSwin!(myrun[smp],[(20,180)];seconds=true)
+    blk, fit = process!(myrun,internal,glass;nblank=2)
+    p = KJ.plot(myrun[smp],blk,fit,internal[1];
+                transformation="log",den=internal[1])
+    display(p)
+    conc = concentrations(myrun[smp],blk,fit,internal)
+
+elseif option == "Cuba"
 
     myrun = load("/home/pvermees/Documents/Plasmatrace/" *
                  "Cuba/YAMIRKA_Ap_32U5Hz_JetH_GEon_3.0J-10A41/";
@@ -33,6 +52,11 @@ if option == "Cuba"
 
     results = averat(myrun,channels,blk,fit;method=method)
     CSV.write("/home/pvermees/temp/Cuba.csv",results)
+
+    smp = 7
+    p = KJ.plot(myrun[smp],method,channels,blk,fit,standards,glass;
+                transformation="log",den="Pb206")
+    display(p)
     
 elseif option == "Camila"
     
