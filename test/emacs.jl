@@ -18,11 +18,11 @@ if option != "runtests"
 end
 
 if option == "Raman"
-
+    
     home = "/home/pvermees/Documents/Raman/NHM/"
-    myrun = load(home * "250324_PV_DinoZircon.csv",
-                 home * "250324_PV_DinoZircons.Iolite.csv";
-                 instrument="Agilent")
+    dfile = home * "250324_PV_DinoZircon.csv"
+    tfile = home * "250324_PV_DinoZircons.Iolite.csv"
+    myrun = load(dfile,tfile;instrument="Agilent")
     method = "U-Pb"
     internal = getInternal("zircon","Si29")
     glass = Dict("NIST612" => "NIST612")
@@ -32,7 +32,7 @@ if option == "Raman"
     blk, fit = process!(myrun,internal,glass;nblank=2)
     p = KJ.plot(myrun[smp],blk,fit,internal[1];
                 transformation="log",den=internal[1])
-    display(p)
+    #display(p)
     conc = concentrations(myrun[smp],blk,fit,internal)
 
 elseif option == "Cuba"
