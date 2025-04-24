@@ -140,7 +140,7 @@ function SSfit(init::AbstractVector,
                 "convergence. Reduce the order of the polynomials or fix the " *
                 "mass fractionation and try again."
         end
-        if fit.stopped_by.ls_failed
+        if hasproperty(fit.stopped_by,:ls_failed) && fit.stopped_by.ls_failed
             @warn "Least squares algorithm did not converge."
         end
     end
