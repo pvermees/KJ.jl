@@ -151,6 +151,7 @@ function plot(samp::Sample;
               legend=:topleft,
               show_title=true,
               titlefontsize=10,
+              padding::Number=0.1,
               kw...)
     x, y, ty, xlab, ylab, ylim = prep_plot(samp,channels,num,den,ylim,transformation)
     p = Plots.plot(x,Matrix(ty);
@@ -167,18 +168,21 @@ function plot(samp::Sample;
         end
         Plots.title!(title;titlefontsize=titlefontsize)
     end
-    dy_ax = collect(Plots.ylims(p))
+    if ylim == :auto
+        dy_win = collect(Plots.ylims(p))
+    else
+        buffer = (ylim[2]-ylim[1])*padding/2
+        dy_win = (ylim[1] + buffer, ylim[2] - buffer)
+    end
     # plot t0:
-    Plots.plot!(p,[samp.t0,samp.t0],collect(dy_ax[[1,2]]);
+    Plots.plot!(p,[samp.t0,samp.t0],collect(dy_win[[1,2]]);
                 linecolor="grey",linestyle=:dot,label="")
     # plot selection windows:
-    dy_dat = [minimum(Matrix(ty)),maximum(Matrix(ty))]
-    dy = @. (dy_ax + dy_dat)/2
     for win in [samp.bwin,samp.swin]
         for w in win
             from = x[w[1]]
             to = x[w[2]]
-            Plots.plot!(p,[from,from,to,to,from],collect(dy[[1,2,2,1,1]]);
+            Plots.plot!(p,[from,from,to,to,from],collect(dy_win[[1,2,2,1,1]]);
                         linecolor="black",linestyle=:dot,label="")
         end
     end
@@ -191,12 +195,13 @@ function prep_plot(samp::Sample,
                    num::Union{Nothing,AbstractString}=nothing,
                    den::Union{Nothing,AbstractString}=nothing,
                    ylim=:auto,
-                   transformation::Union{Nothing,AbstractString}=nothing)
+                   transformation::Union{Nothing,AbstractString}=nothing;
+                   padding::Number=0.1)
     xlab = names(samp.dat)[1]
     x = samp.dat[:,xlab]
     meas = samp.dat[:,channels]
     ratsig = isnothing(den) ? "signal" : "ratio"
-    y = (ratsig == "signal") ? meas : formRatios(meas,num,den)
+    y = (ratsig == "signal") ? meas : formRatios(meas,num,den)    
     arg = nothing
     min_val = minimum(Matrix(y))
     if isnothing(transformation)
@@ -209,14 +214,27 @@ function prep_plot(samp::Sample,
     end
     ty = transformeer(y,transformation)
     if ylim == :auto && ratsig == "ratio"
-        miny = minimum(Matrix(ty))
-        maxy = maximum(Matrix(ty[x .> samp.t0,:]))
-        buffer = (maxy-miny)/20
-        ylim = (miny-buffer,maxy+buffer)
+        ylim = get_ylim(samp,channels,num,den,transformation;
+                        padding=padding)
     end
     return x, y, ty, xlab, ylab, ylim
 end
 export prep_plot
+function get_ylim(samp::Sample,
+                  channels::AbstractVector,
+                  num::Union{Nothing,AbstractString}=nothing,
+                  den::Union{Nothing,AbstractString}=nothing,
+                  transformation::Union{Nothing,AbstractString}=nothing;
+                  padding::Number=0.1)
+    dat = windowData(samp,blank=false,signal=true)
+    meas = dat[:,channels]
+    ratsig = isnothing(den) ? "signal" : "ratio"
+    y = (ratsig == "signal") ? meas : formRatios(meas,num,den)
+    ty = transformeer(y,transformation)
+    miny, maxy = extrema(Matrix(ty))
+    buffer = (maxy-miny)*padding
+    return (miny-buffer,maxy+buffer)
+end
 
 # minerals
 function plotFitted!(p,
