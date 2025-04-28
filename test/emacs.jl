@@ -8,8 +8,8 @@ end
 
 rerun = true
 
-option = "runtests"
-         # "Camila" # "KJgui" # "Cuba" # "Raman"
+option = "Cuba"
+         # "Camila" # "KJgui" # "runtests" # "Raman"
          # "NHM" # "NHM-carbonate" # "Abdulkadir"
 
 if option != "runtests"
@@ -37,8 +37,7 @@ if option == "Raman"
 
 elseif option == "Cuba"
 
-    myrun = load("/home/pvermees/Documents/Plasmatrace/" *
-                 "Cuba/YAMIRKA_Ap_32U5Hz_JetH_GEon_3.0J-10A41/";
+    myrun = load("/home/pvermees/Dropbox/Plasmatrace/Cuba/10A41/";
                  instrument="FIN2",head2name=false)
 
     method = "U-Pb"
