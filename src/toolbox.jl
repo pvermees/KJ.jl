@@ -331,6 +331,7 @@ function automatic_datetime(datetime_string::AbstractString)
         time_format = "H:M:S"
     end
     datetime_vector = split(datetime_string, r"[-\/ ]")
+    println(datetime_vector)
     if length(datetime_vector[1]) == 4
         date_format = "Y$(date_delim)m$(date_delim)d"
     elseif tryparse(Int,datetime_vector[1]) > 12
@@ -350,6 +351,11 @@ function time_difference(start::AbstractString,stop::AbstractString)
     t1 = automatic_datetime(start)
     t2 = automatic_datetime(stop)
     return Millisecond(t2-t1).value / 1000
+end
+function time_difference(start::AbstractString,stop::AbstractVector)
+    t1 = automatic_datetime(start)
+    t2 = automatic_datetime.(stop)
+    return Millisecond(t2.-t1).value ./ 1000
 end
 
 """

@@ -1,8 +1,8 @@
 function parseData(data::AbstractDataFrame,
                    timestamps::AbstractDataFrame)
     ICPtime = data[:,1] # "Time [Sec]"
-    lowblanksignal = getLowBlankSignal(data[:,2:end])
-    lag = getLaserLag(lowblanksignal,ICPtime,timestamps)
+    cumsig = vec(sum(Matrix(data[:,2:end]),dims=2))
+    lag = getLaserLag(cumsig,ICPtime,timestamps)
     df = ICPcutter(lag,ICPtime,timestamps)
     run = Vector{Sample}(undef,size(df,1))
     for i in eachindex(run)
@@ -12,29 +12,19 @@ function parseData(data::AbstractDataFrame,
     return run
 end
 
-function getLowBlankSignal(signal::AbstractDataFrame)
-    nc = size(signal,2)
-    firstblank = collect(signal[1,:])
-    blankrank = sortperm(firstblank)
-    lq = firstblank[blankrank[floor(Int,nc/4)]]
-    uq = firstblank[blankrank[ceil(Int,3*nc/4)]]
-    iqr = uq - lq
-    outliers = (firstblank .< lq - 1.5*iqr) .|| (firstblank .> uq + 1.5*iqr)
-    return signal[:,.!outliers]
-end
-
-function getLaserLag(lowblanksignal::AbstractDataFrame,
+function getLaserLag(cumsig::AbstractVector,
                      ICPtime::AbstractVector,
                      timestamps::AbstractDataFrame)
     ICPduration = ICPtime[end]
     onoff = (cumsum(rle(timestamps[:,11])[2]).+1)[1:end-1] # Laser State
-    total = sum.(eachrow(lowblanksignal))
-    scaled = total./Statistics.mean(total)
+    t = time_difference(timestamps[1,1],timestamps[:,1])
+    @infiltrate
+    signal2blank_ratio = function(lag)
+    end
     cs = cumsum(scaled)
-    LAduration = time_difference(timestamps[onoff[1],1],
-
-                                 timestamps[onoff[end],1])
     lower = 0.0
+    LAduration = time_difference(timestamps[onoff[1],1],
+                                 timestamps[onoff[end],1])
     if LAduration > ICPduration
         @warn The laser session is longer than the ICP-MS session!
         upper = ICPduration
@@ -50,6 +40,7 @@ function getLaserLag(lowblanksignal::AbstractDataFrame,
     lag_to_first_shot = t[argmax(coverage.(t))]
     wait_until_first_shot = time_difference(timestamps[1,1],
                                             timestamps[onoff[1],1])
+    @infiltrate
     return lag_to_first_shot - wait_until_first_shot
 end
 
