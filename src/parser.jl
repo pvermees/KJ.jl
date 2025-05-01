@@ -1,8 +1,8 @@
 function parseData(data::AbstractDataFrame,
                    timestamps::AbstractDataFrame)
     ICPtime = data[:,1] # "Time [Sec]"
-    cumsig = vec(sum(Matrix(data[:,2:end]),dims=2))
-    lag = getLaserLag(cumsig,ICPtime,timestamps)
+    totsig = vec(sum(Matrix(data[:,2:end]),dims=2))
+    lag = getLaserLag(totsig,ICPtime,timestamps)
     df = ICPcutter(lag,ICPtime,timestamps)
     run = Vector{Sample}(undef,size(df,1))
     for i in eachindex(run)
@@ -12,36 +12,38 @@ function parseData(data::AbstractDataFrame,
     return run
 end
 
-function getLaserLag(cumsig::AbstractVector,
+function getLaserLag(totsig::AbstractVector,
                      ICPtime::AbstractVector,
                      timestamps::AbstractDataFrame)
-    ICPduration = ICPtime[end]
+    # generated indices of laser on and off state
+    ICPduration = ICPtime[end] - ICPtime[1]
+    sweep = ICPduration / (length(ICPtime)-1)
     onoff = (cumsum(rle(timestamps[:,11])[2]).+1)[1:end-1] # Laser State
-    t = time_difference(timestamps[1,1],timestamps[:,1])
-    @infiltrate
-    signal2blank_ratio = function(lag)
-    end
-    cs = cumsum(scaled)
-    lower = 0.0
+    LAtime = time_difference(timestamps[1,1],timestamps[onoff,1])
+    start = round.(Int,LAtime[1:2:end-1]/sweep)
+    stop = round.(Int,LAtime[2:2:end]/sweep)
+    on_intervals = map((s, e) -> (s+1):(e), start, stop)
+    off_intervals = map((s, e) -> (s+1):(e), stop[1:end-1], start[2:end])
+    ion = reduce(vcat, on_intervals)
+    ioff = reduce(vcat, off_intervals)
+    # choose the search range
+    lower = 0
     LAduration = time_difference(timestamps[onoff[1],1],
                                  timestamps[onoff[end],1])
     if LAduration > ICPduration
         @warn The laser session is longer than the ICP-MS session!
-        upper = ICPduration
+        upper = ceil(Int,ICPduration/sweep)
     else
-        upper = ICPduration - LAduration
+        upper = ceil(Int,(ICPduration-LAduration)/sweep)
     end
-    coverage = function(lag)
-        i1 = argmin(abs.(ICPtime .- lag))
-        i2 = argmin(abs.(ICPtime .< lag + LAduration))
-        return cs[i2]-cs[i1]
+    # maximise the signal to blank (log)ratio
+    misfit = fill(0.0,upper-lower+1)
+    for lag in lower:upper
+        signal = totsig[lag .+ ion]
+        blank = totsig[lag .+ ioff]
+        misfit[lag+1] = log(sum(signal)) - log(sum(blank))
     end
-    t = ICPtime[ICPtime.>lower .&& ICPtime.<upper]
-    lag_to_first_shot = t[argmax(coverage.(t))]
-    wait_until_first_shot = time_difference(timestamps[1,1],
-                                            timestamps[onoff[1],1])
-    @infiltrate
-    return lag_to_first_shot - wait_until_first_shot
+    return argmax(misfit)
 end
 
 function ICPcutter(lag::AbstractFloat,
