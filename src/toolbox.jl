@@ -256,7 +256,7 @@ function string2windows(samp::Sample,text::AbstractString,single::Bool)
         ftime = parse.(Float64,parts[3:4:end])
         nw = Int(round(size(parts,1)/4))
     end
-    windows = Vector{Window}(undef,nw)
+    windows = Vector{Tuple}(undef,nw)
     t = samp.dat[:,1]
     nt = size(t,1)
     maxt = t[end]

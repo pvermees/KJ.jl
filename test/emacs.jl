@@ -8,8 +8,8 @@ end
 
 rerun = true
 
-option = "NHM"
-         # "Camila" # "KJgui" # "runtests" # "Raman"
+option = "runtests"
+         # "Camila" # "KJgui" # "NHM" # "Raman"
          # "Cuba" # "NHM-carbonate" # "Abdulkadir"
 
 if option != "runtests"

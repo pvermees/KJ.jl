@@ -82,7 +82,7 @@ function load(dfile::AbstractString,
     catch e
         println("Failed to read "*tfile)
     end
-    return parseData(dat,timestamps)
+    return parser_main(dat,timestamps)
 end
 export load
 
@@ -90,7 +90,7 @@ function readFile(fname::AbstractString;
                   instrument::AbstractString="Agilent",
                   head2name::Bool=true)
     dat, sname, datetime = readDat(fname,instrument,head2name)
-    return df2sample(dat,sname,datetime)
+    return io_df2sample(dat,sname,datetime)
 end
 export readFile
 
@@ -169,6 +169,23 @@ function readFIN(fname::AbstractString,
     footerskip = 0
     return sname, datetime, header, skipto, footerskip
     
+end
+
+function io_df2sample(df::AbstractDataFrame,
+                      sname::AbstractString,
+                      datetime::DateTime;
+                      absolute_buffer::AbstractFloat=2.0,
+                      relative_buffer::AbstractFloat=0.1)
+    t = df[:,1]
+    i0 = geti0(df[:,2:end])
+    t0 = df[i0,1]
+    bwin = autoWindow(t,t0;blank=true,
+                      absolute_buffer=absolute_buffer,
+                      relative_buffer=relative_buffer)
+    swin = autoWindow(t,t0;blank=false,
+                      absolute_buffer=absolute_buffer,
+                      relative_buffer=relative_buffer)
+    return Sample(sname,datetime,df,t0,bwin,swin,"sample")
 end
 
 """
