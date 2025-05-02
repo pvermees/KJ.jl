@@ -25,7 +25,7 @@ function fractionation(run::Vector{Sample},
                        ndown::Integer=0,
                        PAcutoff=nothing,
                        verbose::Bool=false)
-
+    
     anchors = getAnchors(method,standards,false)
     
     if ndrift<1 KJerror("ndriftzero") end
@@ -124,7 +124,7 @@ function SSfit(init::AbstractVector,
                ndown::Integer=0,
                PAcutoff=nothing,
                verbose::Bool=false)
-
+    
     objective = (par) -> SS(par,bP,bD,bd,dats,vars,channels,anchors,mf;
                             ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 
@@ -148,7 +148,7 @@ function SSfit(init::AbstractVector,
     down = vcat(0.0,pars[ndrift+1:ndrift+ndown])
     mfrac = isnothing(mf) ? pars[ndrift+ndown+1] : log(mf)
     adrift = isnothing(PAcutoff) ? drift : pars[end-ndrift+1:end]
-
+    
     return (drift=drift,down=down,mfrac=mfrac,
             PAcutoff=PAcutoff,adrift=adrift)
 
