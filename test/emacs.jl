@@ -108,8 +108,9 @@ elseif option == "Abdulkadir"
     end
 elseif option == "NHM"
     snum = 10
-    myrun = load("/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon_Maps.csv",
-                 "/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon.Iolite.csv";
+    home = "/home/pvermees/Documents/Plasmatrace/NHM/"
+    myrun = load(home * "240708_PV_Zircon_Maps.csv",
+                 home * "240708_PV_Zircon.Iolite.csv";
                  instrument="Agilent")
     deleteat!(myrun, 31)
     method = "U-Pb"
@@ -128,8 +129,9 @@ elseif option == "NHM"
                 transformation="log",den=nothing)
     display(p)
 elseif option == "NHM-carbonate"
-    myrun = load("/home/pvermees/Documents/Plasmatrace/NHM/240408_ET_Carbonate.csv",
-                 "/home/pvermees/Documents/Plasmatrace/NHM/240408_FP_CarbonateDating.Iolite.csv";
+    home = "/home/pvermees/Documents/Plasmatrace/NHM/"
+    myrun = load(home * "240408_ET_Carbonate.csv",
+                 home * "240408_FP_CarbonateDating.Iolite.csv";
                  instrument="Agilent")
     method = "U-Pb"
     channels = Dict("d"=>"Pb207",
