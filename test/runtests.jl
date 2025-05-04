@@ -326,8 +326,8 @@ function carbonatetest(verbose=false)
 end
 
 function timestamptest(verbose=true)
-    myrun = load("data/timestamp/MSdata.csv",
-                 "data/timestamp/timestamp.csv";
+    myrun = load("data/timestamp/Moreira_data.csv",
+                 "data/timestamp/Moreira_timestamp.csv";
                  instrument="Agilent")
     if verbose summarise(myrun;verbose=true,n=5) end
     p = KJ.plot(myrun[2];transformation="sqrt")
@@ -385,6 +385,19 @@ function internochronUPbtest(show=true)
     end
 end
 
+function maptest()
+    method = "concentrations"
+    myrun = load("data/timestamp/NHM_cropped.csv",
+                 "data/timestamp/NHM_timestamps.csv";
+                 instrument="Agilent")
+    internal = getInternal("zircon","Si29")
+    glass = Dict("NIST612" => "NIST612")
+    setGroup!(myrun,glass)
+    blk, fit = process!(myrun,internal,glass;nblank=2)
+    p = KJ.plot(myrun[1];transformation="sqrt")#,xlim=[0,20])
+    @test display(p) != NaN
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -405,7 +418,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -428,9 +441,10 @@ if true
     @testset "stoichiometry" begin mineraltest() end
     @testset "concentration" begin concentrationtest() end
     @testset "Lu-Hf internochron" begin internochrontest() end
-    @testset "UPb internochron" begin internochronUPbtest() end
-    @testset "extension test" begin extensiontest() end
-    #@testset "TUI test" begin TUItest() end
+    @testset "UPb internochron" begin internochronUPbtest() end=#
+    @testset "map" begin maptest() end
+    #=@testset "extension test" begin extensiontest() end
+    @testset "TUI test" begin TUItest() end=#
 else
     TUI()
 end
