@@ -1,13 +1,10 @@
-const Window = Tuple{Int,Int}
-export Window
-
 mutable struct Sample
     sname::String
     datetime::DateTime
     dat::DataFrame
     t0::Float64
-    bwin::Vector{Window}
-    swin::Vector{Window}
+    bwin::Vector{Tuple}
+    swin::Vector{Tuple}
     group::String
 end
 export Sample

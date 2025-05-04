@@ -598,7 +598,6 @@ function TUIprocess!(ctrl::AbstractDict)
                                     ctrl["internal"],
                                     ctrl["glass"])
     else
-        ctrl["dwell"] = ctrl["poisson"] ? dwelltime(ctrl["run"]) : nothing
         ctrl["anchors"] = getAnchors(ctrl["method"],
                                      ctrl["standards"],
                                      ctrl["glass"])

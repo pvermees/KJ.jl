@@ -8,9 +8,9 @@ end
 
 rerun = true
 
-option = "Cuba"
-         # "Camila" # "KJgui" # "runtests" # "Raman"
-         # "NHM" # "NHM-carbonate" # "Abdulkadir"
+option = "runtests"
+         # "Camila" # "KJgui" # "NHM" # "Raman"
+         # "Cuba" # "NHM-carbonate" # "Abdulkadir"
 
 if option != "runtests"
     using KJ, Test, CSV, Infiltrator, DataFrames, Statistics, Plots
@@ -107,9 +107,10 @@ elseif option == "Abdulkadir"
         end
     end
 elseif option == "NHM"
-    snum = 23
-    myrun = load("/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon_Maps.csv",
-                 "/home/pvermees/Documents/Plasmatrace/NHM/240708_PV_Zircon.Iolite.csv";
+    snum = 10
+    home = "/home/pvermees/Documents/Plasmatrace/NHM/"
+    myrun = load(home * "240708_PV_Zircon_Maps.csv",
+                 home * "240708_PV_Zircon.Iolite.csv";
                  instrument="Agilent")
     deleteat!(myrun, 31)
     method = "U-Pb"
@@ -125,10 +126,12 @@ elseif option == "NHM"
     results = averat(myrun,channels,blk,fit;method=method)
     CSV.write("/home/pvermees/temp/NHM.csv",results)
     p = KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
-                transformation="log",den=nothing)
+                xlim=[0,20],transformation="log",den=nothing)
+    display(p)
 elseif option == "NHM-carbonate"
-    myrun = load("/home/pvermees/Documents/Plasmatrace/NHM/240408_ET_Carbonate.csv",
-                 "/home/pvermees/Documents/Plasmatrace/NHM/240408_FP_CarbonateDating.Iolite.csv";
+    home = "/home/pvermees/Documents/Plasmatrace/NHM/"
+    myrun = load(home * "240408_ET_Carbonate.csv",
+                 home * "240408_FP_CarbonateDating.Iolite.csv";
                  instrument="Agilent")
     method = "U-Pb"
     channels = Dict("d"=>"Pb207",
