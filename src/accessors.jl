@@ -250,7 +250,7 @@ end
 export getAnchors
 
 function getSignals(dat::AbstractDataFrame)
-    tail = "T" in names(dat) ? 2 : 1
+    tail = count(x -> x in ["T","x","y"], names(dat)) + 1
     return dat[:,2:end-tail]
 end
 function getSignals(samp::Sample)

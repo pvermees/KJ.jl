@@ -71,8 +71,6 @@ function plot(samp::Sample,
         
     end
 
-    @infiltrate
-    
     plotFittedBlank!(p,samp,blank,channelvec;
                      num=num,den=den,
                      transformation=transformation,

@@ -394,9 +394,11 @@ function maptest()
     glass = Dict("NIST612" => "NIST612")
     setGroup!(myrun,glass)
     blk, fit = process!(myrun,internal,glass;nblank=2)
-    conc = concentrations(myrun[10],blk,fit,internal)
-    p = KJ.plot(myrun[10],blk,fit,"Si29";
-                transformation="sqrt",xlim=[0,20])
+    snum = 10
+    conc = concentrations(myrun[snum],blk,fit,internal)
+    p = Plots.plot(conc.x,conc.y;seriestype=:scatter,
+                   marker_z=conc[:,"ppm[U] from U238"],
+                   color = :viridis)
     @test display(p) != NaN
 end
 
@@ -420,7 +422,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -443,10 +445,10 @@ if true
     @testset "stoichiometry" begin mineraltest() end
     @testset "concentration" begin concentrationtest() end
     @testset "Lu-Hf internochron" begin internochrontest() end
-    @testset "UPb internochron" begin internochronUPbtest() end=#
+    @testset "UPb internochron" begin internochronUPbtest() end
     @testset "map" begin maptest() end
-    #=@testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end=#
+    @testset "extension test" begin extensiontest() end
+    #@testset "TUI test" begin TUItest() end
 else
     TUI()
 end

@@ -74,7 +74,7 @@ function concentrations(samp::Sample,
                         blank::AbstractDataFrame,
                         pars::AbstractVector,
                         internal::Tuple)
-    dat = windowData(samp;signal=true)
+    dat = windowData(samp;signal=true,add_xy=true)
     sig = getSignals(dat)
     out = copy(sig)
     bt = polyVal(blank,dat.t)
@@ -89,6 +89,11 @@ function concentrations(samp::Sample,
     elementnames = collect(elements[1,:])
     channelnames = names(sig)
     nms = "ppm[" .* elementnames .* "] from " .* channelnames
+    if "x" in names(dat) && "y" in names(dat)
+        out.x = dat.x
+        out.y = dat.y
+        append!(nms,["x","y"])
+    end
     rename!(out,Symbol.(nms))
     return out
 end
