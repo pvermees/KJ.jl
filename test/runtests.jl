@@ -327,7 +327,7 @@ end
 
 function timestamptest(verbose=true)
     myrun = load("data/timestamp/Moreira_data.csv",
-                 "data/timestamp/Moreira_timestamp.csv";
+                 "data/timestamp/Moreira_timestamps.csv";
                  instrument="Agilent")
     if verbose summarise(myrun;verbose=true,n=5) end
     p = KJ.plot(myrun[2];transformation="sqrt")
@@ -394,7 +394,9 @@ function maptest()
     glass = Dict("NIST612" => "NIST612")
     setGroup!(myrun,glass)
     blk, fit = process!(myrun,internal,glass;nblank=2)
-    p = KJ.plot(myrun[1];transformation="sqrt")#,xlim=[0,20])
+    conc = concentrations(myrun[10],blk,fit,internal)
+    p = KJ.plot(myrun[10],blk,fit,"Si29";
+                transformation="sqrt",xlim=[0,20])
     @test display(p) != NaN
 end
 

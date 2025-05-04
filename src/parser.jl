@@ -94,7 +94,15 @@ function parser_swin(i_on_off::AbstractVector,
         end
         i_start_plus_buffer = i_start + i_buffer
         i_stop_minus_buffer = i_stop - i_buffer
-        out[i] = (i_start_plus_buffer, i_stop_minus_buffer, x[i], y[i])
+        x_buffer = (x[j+1] - x[j])*i_buffer/window_width_i
+        x_start_plus_buffer = x[j] + x_buffer
+        x_stop_minus_buffer = x[j+1] - x_buffer
+        y_buffer = (y[j+1] - y[j])*i_buffer/window_width_i
+        y_start_plus_buffer = y[j] + y_buffer
+        y_stop_minus_buffer = y[j+1] - y_buffer
+        out[i] = (i_start_plus_buffer, i_stop_minus_buffer,
+                  x_start_plus_buffer, x_stop_minus_buffer,
+                  y_start_plus_buffer, y_stop_minus_buffer)
     end
     return out
 end

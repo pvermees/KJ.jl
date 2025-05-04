@@ -70,6 +70,8 @@ function plot(samp::Sample,
                     linecolor=linecol,linestyle=linestyle)
         
     end
+
+    @infiltrate
     
     plotFittedBlank!(p,samp,blank,channelvec;
                      num=num,den=den,
