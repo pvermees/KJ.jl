@@ -1,6 +1,6 @@
-function parser_main(ICPdata::AbstractDataFrame,
+function parser_main(ICP_data::AbstractDataFrame,
                      timestamps::AbstractDataFrame)
-    lag, sweep = parser_lag_sweep(ICPdata,timestamps)
+    lag, sweep = parser_lag_sweep(ICP_data,timestamps)
     LA_start_of_spot_indices = findall(.!ismissing.(timestamps[:,3])) # SubPoint
     LA_start_of_spot_times = time_difference(timestamps[1,1],
                                              timestamps[LA_start_of_spot_indices,1])
@@ -11,60 +11,51 @@ function parser_main(ICPdata::AbstractDataFrame,
         LA_start_of_spot_index = LA_start_of_spot_indices[i]
         ICP_start_of_spot_index = ICP_start_of_spot_indices[i]
         if i == 1
-            LA_start_of_blank_index = LA_start_of_spot_index
-            LA_end_of_spot_index = LA_start_of_spot_indices[i+1] - 1
-            ICP_start_of_blank_index = ICP_start_of_spot_index
-        elseif i == nspot
-            LA_start_of_blank_index = LA_start_of_spot_index - 1
-            LA_end_of_spot_index = size(timestamps,1)
-            LA_start_of_blank_time = time_difference(timestamps[1,1],
-                                                     timestamps[LA_start_of_spot_index,1])
-            ICP_start_of_blank_index = parser_LAtime2ICPindex(LA_start_of_blank_time,
-                                                              lag,sweep)
+            ICP_start_of_blank_index = 1
         else
-            LA_start_of_blank_index = LA_start_of_spot_index - 1
-            LA_end_of_spot_index = LA_start_of_spot_indices[i+1] - 1
-            LA_start_of_blank_time = time_difference(timestamps[1,1],
-                                                     timestamps[LA_start_of_blank_index,1])
+            LA_start_of_blank_time = LA_start_of_spot_times[i] - 1
             ICP_start_of_blank_index = parser_LAtime2ICPindex(LA_start_of_blank_time,
                                                               lag,sweep)
+        end
+        if i == nspot
+            LA_end_of_spot_index = size(timestamps,1)
+        else
+            LA_end_of_spot_index = LA_start_of_spot_indices[i+1] - 1
         end
         LA_end_of_spot_time = time_difference(timestamps[1,1],
                                               timestamps[LA_end_of_spot_index,1])
         ICP_end_of_spot_index = parser_LAtime2ICPindex(LA_end_of_spot_time,
                                                        lag,sweep)
-        selected_ICP_data = ICPdata[ICP_start_of_blank_index:ICP_end_of_spot_index,:]
-        selected_timestamps = timestamps[LA_start_of_blank_index:LA_end_of_spot_index,:]
-        sname = timestamps[LA_start_of_spot_index,5] # Comment
-        datetime = automatic_datetime(timestamps[LA_start_of_spot_index,1])
+        selected_ICP_data = ICP_data[ICP_start_of_blank_index:ICP_end_of_spot_index,:]
+        selected_timestamps = timestamps[LA_start_of_spot_index:LA_end_of_spot_index,:]
         run[i] = parser_df2sample(selected_ICP_data,
-                                  selected_timestamps,
-                                  sname,
-                                  datetime)
+                                  selected_timestamps)
     end
     return run
 end
 
 function parser_df2sample(selected_ICP_data::AbstractDataFrame,
-                          selected_timestamps::AbstractDataFrame,
-                          sname::AbstractString,
-                          datetime::DateTime;
+                          selected_timestamps::AbstractDataFrame;
                           absolute_buffer::AbstractFloat=2.0,
                           relative_buffer::AbstractFloat=0.1)
+    sname = selected_timestamps[1,5] # Comment
+    datetime = automatic_datetime(selected_timestamps[1,1])
     LA_on_off_indices = parser_on_off_indices(selected_timestamps)
     LA_on_off_times = time_difference(selected_timestamps[1,1],
                                       selected_timestamps[LA_on_off_indices,1])
     x = selected_timestamps[LA_on_off_indices,6] # X(um)
     y = selected_timestamps[LA_on_off_indices,7] # Y(um)
     dat = selected_ICP_data
-    dat[:,1] .= dat[:,1] .- dat[1,1]
-    nsweeps = size(selected_ICP_data,1)
-    maxt = dat[end,1]
-    ICP_on_off_indices = @. floor(Int,nsweeps*LA_on_off_times/maxt)
+    ICP_times = dat[:,1] .= dat[:,1] .- dat[1,1]
+    nsweep = length(ICP_times)
+    sweep = ICP_times[end]/nsweep
+    lag = round(Int,nsweep*(1-LA_on_off_times[end]/ICP_times[end]))
+    ICP_on_off_indices = parser_LAtime2ICPindex(LA_on_off_times,
+                                               lag,sweep)
     i0 = ICP_on_off_indices[1]
-    t0 = dat[i0,1]
-    bwin = parser_bwin(i0,dat[:,1])
-    swin = parser_swin(ICP_on_off_indices,x,y,dat[:,1])
+    t0 = ICP_times[i0]
+    bwin = parser_bwin(i0,ICP_times)
+    swin = parser_swin(ICP_on_off_indices,x,y,ICP_times)
     return Sample(sname,datetime,dat,t0,bwin,swin,"sample")
 end
 
@@ -72,12 +63,12 @@ function parser_bwin(i0::Integer,
                      t::AbstractVector;
                      absolute_buffer::AbstractFloat=2.0,
                      relative_buffer::AbstractFloat=0.1)
-    if t[end] > absolute_buffer
-        t0_minus_buffer = t[i0] - absolute_buffer
-        i0_minus_buffer = round(Int,i0*t0_minus_buffer/t[i0])
+    if t[i0] > absolute_buffer
+        i_buffer = round(Int,i0*absolute_buffer/t[i0])
     else
-        i0_minus_buffer = round(Int,i0*(1-relative_buffer))
+        i_buffer = round(Int,i0*relative_buffer)
     end
+    i0_minus_buffer = i0 - i_buffer
     return [(1,i0_minus_buffer)]
 end
 
@@ -88,6 +79,7 @@ function parser_swin(i_on_off::AbstractVector,
                      absolute_buffer::AbstractFloat=2.0,
                      relative_buffer::AbstractFloat=0.1)
     nwin = round(Int,length(x)/2)
+    nt = length(t)
     out = Vector{Tuple}(undef,nwin)
     for i in 1:nwin
         j = 2*i - 1
@@ -98,7 +90,7 @@ function parser_swin(i_on_off::AbstractVector,
         if window_width_t > 2*absolute_buffer
             i_buffer = round(Int,window_width_i*absolute_buffer/window_width_t)
         else
-            i_buffer = round(Int,window_width_i*(1-relative_buffer))
+            i_buffer = round(Int,window_width_i*relative_buffer)
         end
         i_start_plus_buffer = i_start + i_buffer
         i_stop_minus_buffer = i_stop - i_buffer

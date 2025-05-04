@@ -8,8 +8,8 @@ end
 
 rerun = true
 
-option = "runtests"
-         # "Camila" # "KJgui" # "NHM" # "Raman"
+option = "NHM"
+         # "Camila" # "KJgui" # "runtests" # "Raman"
          # "Cuba" # "NHM-carbonate" # "Abdulkadir"
 
 if option != "runtests"
@@ -126,7 +126,7 @@ elseif option == "NHM"
     results = averat(myrun,channels,blk,fit;method=method)
     CSV.write("/home/pvermees/temp/NHM.csv",results)
     p = KJ.plot(myrun[snum],method,channels,blk,fit,standards,glass;
-                transformation="log",den=nothing)
+                xlim=[0,20],transformation="log",den=nothing)
     display(p)
 elseif option == "NHM-carbonate"
     home = "/home/pvermees/Documents/Plasmatrace/NHM/"
