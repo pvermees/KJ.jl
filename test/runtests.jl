@@ -9,13 +9,13 @@ end
 
 function plottest()
     myrun = loadtest()
-    p = plot(myrun[1];
-             channels=["Hf176 -> 258","Hf178 -> 260"])
+    p = KJ.plot(myrun[1];
+                channels=["Hf176 -> 258","Hf178 -> 260"])
     @test display(p) != NaN
-    p = plot(myrun[1];
-             channels=["Lu175 -> 175","Hf176 -> 258","Hf178 -> 260"],
-             den="Hf178 -> 260",
-             transformation = "log")
+    p = KJ.plot(myrun[1];
+                channels=["Lu175 -> 175","Hf176 -> 258","Hf178 -> 260"],
+                den="Hf178 -> 260",
+                transformation = "log")
     @test display(p) != NaN
 end
 
@@ -25,7 +25,7 @@ function windowtest()
     setSwin!(myrun[i],[(70,90),(100,140)])
     setBwin!(myrun[i],[(0,22)];seconds=true)
     setSwin!(myrun[i],[(37,65)];seconds=true)
-    p = plot(myrun[i];channels=["Hf176 -> 258","Hf178 -> 260"])
+    p = KJ.plot(myrun[i];channels=["Hf176 -> 258","Hf178 -> 260"])
     @test display(p) != NaN
 end
 
@@ -72,8 +72,8 @@ function predictest()
     else
         pred = predict(samp,method,fit,blk,channels,
                        standards,glass)
-        p = plot(samp,method,channels,blk,fit,standards,glass;
-                 transformation="log")
+        p = KJ.plot(samp,method,channels,blk,fit,standards,glass;
+                    transformation="log")
         @test display(p) != NaN
     end
     return samp,method,fit,blk,channels,standards,glass,p
@@ -164,8 +164,8 @@ function RbSrTest(show=true)
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     if show
-        p = plot(myrun[2],channels,blank,fit,anchors;
-                 transformation="log",den="Sr87 -> 103")
+        p = KJ.plot(myrun[2],channels,blank,fit,anchors;
+                    transformation="log",den="Sr87 -> 103")
         @test display(p) != NaN
     end
     export2IsoplotR(myrun,method,channels,blank,fit;
@@ -186,8 +186,8 @@ function KCaTest(show=true)
                         ndown=0,ndrift=1,verbose=false)
     anchors = getAnchors(method,standards)
     if show
-        p = plot(myrun[3],channels,blank,fit,anchors,
-                 transformation="log",den=nothing)
+        p = KJ.plot(myrun[3],channels,blank,fit,anchors,
+                    transformation="log",den=nothing)
         @test display(p) != NaN
     end
     export2IsoplotR(myrun,method,channels,blank,fit;
@@ -258,8 +258,8 @@ function processtest(show=true)
     blk, fit = process!(myrun,method,channels,standards,glass;
                         nblank=2,ndrift=1,ndown=1)
     if show
-        p = plot(myrun[2],method,channels,blk,fit,standards,glass;
-                 transformation="log",den="Hf176 -> 258")
+        p = KJ.plot(myrun[2],method,channels,blk,fit,standards,glass;
+                    transformation="log",den="Hf176 -> 258")
         @test display(p) != NaN
     end
     return myrun, method, channels, blk, fit
@@ -300,8 +300,8 @@ function UPbtest()
                            nblank=2,ndrift=1,ndown=1)
     export2IsoplotR(myrun,method,channels,blank,pars;
                     fname="output/UPb.json")
-    p = plot(myrun[37],method,channels,blank,pars,standards,glass;
-             transformation="log",den="Pb206")
+    p = KJ.plot(myrun[37],method,channels,blank,pars,standards,glass;
+                transformation="log",den="Pb206")
     @test display(p) != NaN
 end
 
@@ -320,8 +320,8 @@ function carbonatetest(verbose=false)
                         nblank=2,ndrift=1,ndown=1,verbose=verbose)
     export2IsoplotR(myrun,method,channels,blk,fit;
                     prefix="Duff",fname="output/Duff.json")
-    p = plot(myrun[4],method,channels,blk,fit,standards,glass;
-             transformation="log")
+    p = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;
+                transformation="log")
     @test display(p) != NaN
 end
 
@@ -330,7 +330,7 @@ function timestamptest(verbose=true)
                  "data/timestamp/timestamp.csv";
                  instrument="Agilent")
     if verbose summarise(myrun;verbose=true,n=5) end
-    p = plot(myrun[2];transformation="sqrt")
+    p = KJ.plot(myrun[2];transformation="sqrt")
     @test display(p) != NaN
 end
 
@@ -345,8 +345,8 @@ function concentrationtest()
     glass = Dict("NIST612" => "NIST612p")
     setGroup!(myrun,glass)
     blk, fit = process!(myrun,internal,glass;nblank=2)
-    p = plot(myrun[4],blk,fit,internal[1];
-             transformation="log",den=internal[1])
+    p = KJ.plot(myrun[4],blk,fit,internal[1];
+                transformation="log",den=internal[1])
     conc = concentrations(myrun,blk,fit,internal)
     @test display(p) != NaN
 end
