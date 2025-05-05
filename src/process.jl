@@ -43,8 +43,9 @@ export fitBlanks
 function atomic(samp::Sample,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
-                pars::NamedTuple)
-    dat = windowData(samp;signal=true)
+                pars::NamedTuple;
+                add_xy::Bool=false)
+    dat = windowData(samp;signal=true,add_xy=add_xy)
     var = dat2var(dat,collect(values(channels)))
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
         SSprep(blank[:,channels["P"]],
@@ -58,7 +59,11 @@ function atomic(samp::Sample,
     Phat = @. (Pm-bPt)*ft*FT
     Dhat = @. (Dm-bDt)*mf
     dhat = @. (dm-bdt)
-    return Phat, Dhat, dhat
+    if add_xy
+        return Phat, Dhat, dhat, dat.x, dat.y
+    else
+        return Phat, Dhat, dhat
+    end
 end
 export atomic
 
