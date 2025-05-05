@@ -436,8 +436,8 @@ end
 
 Plots.closeall()
 
-if true
-    #=@testset "load" begin loadtest(true) end
+if false
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -461,9 +461,9 @@ if true
     @testset "concentration" begin concentrationtest() end
     @testset "Lu-Hf internochron" begin internochrontest() end
     @testset "UPb internochron" begin internochronUPbtest() end
-    @testset "concentration map" begin maptest() end=#
+    @testset "concentration map" begin maptest() end
     @testset "isotope ratio map" begin map_dating_test() end
-    #@testset "extension test" begin extensiontest() end
+    @testset "extension test" begin extensiontest() end
     #@testset "TUI test" begin TUItest() end
 else
     TUI()

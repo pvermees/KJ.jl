@@ -28,7 +28,8 @@ function TUIinit()
         "par" => nothing,
         "cache" => nothing,
         "transformation" => "sqrt",
-        "poisson" => false,
+        "mapcolumn" => 1,
+        "clims" => nothing,
         "log" => false,
         "template" => false
     )
@@ -881,4 +882,44 @@ function internochron2csv(ctrl::AbstractDict,
                        method=ctrl["method"])
     CSV.write(fname,tab)
     return "xx"
+end
+
+function TUItimeresolved2csv(ctrl::AbstractDict,
+                             dname::AbstractString)
+    for samp in ctrl["run"]
+        fname = samp.sname * ".csv"
+        path = joinpath(dname,fname)
+        df = ctrl2df(ctrl,samp)
+        CSV.write(path,df)
+    end
+    return "x"
+end
+export TUItimeresolved
+
+function TUImap!(ctrl::AbstractDict)
+    df = ctrl2df(ctrl,ctrl["run"][ctrl["i"]])
+    selected_column = names(df)[ctrl["mapcolumn"]]
+    p = plotMap(df,selected_column;
+                clims=ctrl["clims"])
+    display(p)
+    return "map"
+end
+export TUImap!
+
+function ctrl2df(ctrl::AbstractDict,
+                 samp::Sample)
+    if ctrl["method"] == "concentrations"
+        df = concentrations(samp,
+                            ctrl["blank"],
+                            ctrl["par"],
+                            ctrl["internal"])
+    else
+        P,D,d,x,y = atomic(samp,
+                           ctrl["channels"],
+                           ctrl["blank"],
+                           ctrl["par"];
+                           add_xy=true)
+        df = DataFrame(P=P,D=D,d=d,x=x,y=y)
+    end
+    return df
 end
