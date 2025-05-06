@@ -350,6 +350,7 @@ function concentrationtest()
                 transformation="log",den=internal[1])
     conc = concentrations(myrun,blk,fit,internal)
     @test display(p) != NaN
+    return conc
 end
 
 function internochrontest(show=true)
@@ -417,6 +418,17 @@ function map_dating_test()
     @test display(p) != NaN
 end
 
+function map_fail_test()
+    myrun, method, channels, blk, fit = processtest()
+    P,D,d,x,y = atomic(myrun[2],channels,blk,fit;add_xy=true)
+    df = DataFrame(P=P,D=D,d=d,x=x,y=y)
+    p = plotMap(df,"P")
+    @test display(p) != NaN
+    conc = concentrationtest()
+    p = plotMap(conc,"Lu175 -> Lu175")
+    @test display(p) != NaN
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -463,6 +475,7 @@ if true
     @testset "UPb internochron" begin internochronUPbtest() end
     @testset "concentration map" begin maptest() end
     @testset "isotope ratio map" begin map_dating_test() end
+    @testset "map fail test" begin map_fail_test() end
     @testset "extension test" begin extensiontest() end
     #@testset "TUI test" begin TUItest() end
 else
