@@ -146,3 +146,29 @@ function TUIsetNdownMessage(ctrl::AbstractDict)
     string(ctrl["options"]["down"]) * ", ? for help, x to exit)"
     return msg
 end
+
+function TUIchooseColumnMessage(ctrl::AbstractDict)
+    colnames = names(ctrl["cache"])[1:end-2]
+    msg = "Choose one of the following columns:\n"
+    for i in eachindex(colnames)
+        msg *= string(i) * ". " * colnames[i] * "\n"
+    end
+    return msg
+end
+
+function TUIchooseClimsMessage(ctrl::AbstractDict)
+    channel = ctrl["mapcolumn"]
+    colnames = names(ctrl["cache"])
+    values = ctrl["cache"][:,channel]
+    minval = minimum(values[values.>0])
+    minrounded = round(minval;sigdigits=3)
+    maxval = maximum(values)
+    maxrounded = round(maxval;sigdigits=3)
+    m = string(minrounded)
+    M = string(maxrounded)
+    msg = "Choose the limits of the colour scale as a comma-separated " *
+        "list of two numbers. FYI: the values of " *
+        colnames[channel] * " range from " * m * " to " * M *
+        ". Enter 'r' to reset to the default values."
+    return msg
+end

@@ -28,7 +28,7 @@ function TUIinit()
         "par" => nothing,
         "cache" => nothing,
         "transformation" => "sqrt",
-        "mapcolumn" => 1,
+        "mapcolumn" => 2,
         "clims" => nothing,
         "log" => false,
         "template" => false
@@ -328,7 +328,7 @@ function TUIglassTab(ctrl::AbstractDict)
     return "x"
 end
 
-function TUIviewer!(ctrl::AbstractDict)
+function TUIviewer(ctrl::AbstractDict)
     TUIplotter(ctrl)
     return "view"
 end
@@ -884,28 +884,6 @@ function internochron2csv(ctrl::AbstractDict,
     return "xx"
 end
 
-function TUItimeresolved2csv(ctrl::AbstractDict,
-                             dname::AbstractString)
-    for samp in ctrl["run"]
-        fname = samp.sname * ".csv"
-        path = joinpath(dname,fname)
-        df = ctrl2df(ctrl,samp)
-        CSV.write(path,df)
-    end
-    return "x"
-end
-export TUItimeresolved
-
-function TUImap!(ctrl::AbstractDict)
-    df = ctrl2df(ctrl,ctrl["run"][ctrl["i"]])
-    selected_column = names(df)[ctrl["mapcolumn"]]
-    p = plotMap(df,selected_column;
-                clims=ctrl["clims"])
-    display(p)
-    return "map"
-end
-export TUImap!
-
 function ctrl2df(ctrl::AbstractDict,
                  samp::Sample)
     if ctrl["method"] == "concentrations"
@@ -922,4 +900,70 @@ function ctrl2df(ctrl::AbstractDict,
         df = DataFrame(P=P,D=D,d=d,x=x,y=y)
     end
     return df
+end
+
+function TUItimeresolved2csv(ctrl::AbstractDict,
+                             dname::AbstractString)
+    for samp in ctrl["run"]
+        fname = samp.sname * ".csv"
+        path = joinpath(dname,fname)
+        df = ctrl2df(ctrl,samp)
+        CSV.write(path,df)
+    end
+    return "x"
+end
+export TUItimeresolved
+
+function TUImapper(ctrl::AbstractDict)
+    TUImap(ctrl)
+    return "map"
+end
+
+function TUImap(ctrl::AbstractDict)
+    ctrl["cache"] = ctrl2df(ctrl,ctrl["run"][ctrl["i"]])
+    colnames = names(ctrl["cache"])
+    selected_column = colnames[ctrl["mapcolumn"]]
+    p = plotMap(ctrl["cache"],
+                selected_column;
+                clims=ctrl["clims"])
+    tit = string(ctrl["i"]) * ". " * ctrl["run"][ctrl["i"]].sname
+    Plots.title!(p, tit)
+    display(p)
+    return nothing
+end
+export TUImap
+
+function TUIchooseMapColumn!(ctrl::AbstractDict,
+                             response::AbstractString)
+    ctrl["mapcolumn"] = parse(Int,response)
+    TUImap(ctrl)
+    return "x"
+end
+
+function TUImapPrevious!(ctrl::AbstractDict)
+    ctrl["i"] -= 1
+    if ctrl["i"]<1 ctrl["i"] = length(ctrl["run"]) end
+    return TUImap(ctrl)
+end
+
+function TUImapNext!(ctrl::AbstractDict)
+    ctrl["i"] += 1
+    if ctrl["i"]>length(ctrl["run"]) ctrl["i"] = 1 end
+    return TUImap(ctrl)
+end
+
+function TUIchooseClims!(ctrl::AbstractDict,
+                         response::AbstractString)
+    if response == "r"
+        ctrl["clims"] = nothing
+    else
+        parts = split(response,',')
+        if length(parts)>1 && all(isdigit,parts[1]) && all(isdigit,parts[2])
+            min = parse(Float64,parts[1])
+            max = parse(Float64,parts[2])
+            ctrl["clims"] = (min,max)
+        end
+    end
+    TUImap(ctrl)
+    return "x"
 end

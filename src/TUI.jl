@@ -138,7 +138,7 @@ function getKJtree()
                 "t" => TUItabulate,
                 "s" => "standards",
                 "g" => "glass",
-                "v" => TUIviewer!,
+                "v" => TUIviewer,
                 "p" => TUIprocess!,
                 "e" => "export",
                 "l" => "log",
@@ -910,7 +910,7 @@ function getKJtree()
             action = Dict(
                 "i" => "internochron",
                 "t" => "timeresolved",
-                "m" => TUImap!
+                "m" => TUImapper
             )
         ),
         "internochron" => (
@@ -974,13 +974,31 @@ function getKJtree()
         "map" => (
             message =
             "c: choose a column to plot\n" *
+            "p: previous\n" *
+            "n: next\n" *
+            "g: goto\n" *
             "s: set the limits of the colour scale\n" *
             "x: Exit\n" *
             "?: Help",
             help =
             "Plots time resolved data in x,y-space. Only works " *
             "for data that come with a laser log.",
-            action = TUImap!
+            action = Dict(
+                "c" => "chooseMapColumn",
+                "p" => TUImapPrevious!,
+                "n" => TUImapNext!,
+                "s" => "clims"
+            )
+        ),
+        "chooseMapColumn" => (
+            message = TUIchooseColumnMessage,
+            help = "Choose a channel to form a colour scale for the map.",
+            action = TUIchooseMapColumn!
+        ),
+        "clims" => (
+            message = TUIchooseClimsMessage,
+            help = "Adjust the colour scale by marking its minimum and maxmium value.",
+            action = TUIchooseClims!
         )
     )
 end
