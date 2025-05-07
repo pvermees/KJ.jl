@@ -110,7 +110,7 @@ function TUIratioMessage(ctrl::AbstractDict)
         channels = getChannels(ctrl["run"])
     end
     msg = "Choose one of the following denominators:\n"
-    for i in 1:length(channels)
+    for i in eachindex(channels)
         msg *= string(i)*": "*channels[i]*"\n"
     end
     msg *= "or\n"
