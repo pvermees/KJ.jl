@@ -448,7 +448,7 @@ end
 
 Plots.closeall()
 
-if false
+if true
     @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
