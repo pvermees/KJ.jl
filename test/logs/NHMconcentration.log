@@ -1,0 +1,17 @@
+task,action
+top,r
+instrument,a
+dir|file,P
+choosedir,data/timestamp
+pickICPLAfiles,"3,4"
+top,m
+method,c
+internal,1
+mineral,2
+top,g
+glass,a
+chooseGlass,3
+addGlassGroup,p
+addGlassByPrefix,NIST612
+glass,x
+top,p

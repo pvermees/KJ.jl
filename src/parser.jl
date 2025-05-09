@@ -2,8 +2,8 @@ function parser_main(ICP_data::AbstractDataFrame,
                      timestamps::AbstractDataFrame)
     lag, sweep = parser_lag_sweep(ICP_data,timestamps)
     LA_start_of_spot_indices = findall(.!ismissing.(timestamps[:,3])) # SubPoint
-    LA_start_of_spot_times = time_difference(timestamps[1,1],
-                                             timestamps[LA_start_of_spot_indices,1])
+    LA_times = time_difference(timestamps[1,1],timestamps[:,1])
+    LA_start_of_spot_times = LA_times[LA_start_of_spot_indices]
     ICP_start_of_spot_indices = parser_LAtime2ICPindex(LA_start_of_spot_times,lag,sweep)
     nspot = length(LA_start_of_spot_indices)
     run = Vector{Sample}(undef,nspot)
@@ -13,17 +13,16 @@ function parser_main(ICP_data::AbstractDataFrame,
         if i == 1
             ICP_start_of_blank_index = 1
         else
-            LA_start_of_blank_time = LA_start_of_spot_times[i] - 1
+            LA_start_of_blank_time = LA_times[LA_start_of_spot_index-1]
             ICP_start_of_blank_index = parser_LAtime2ICPindex(LA_start_of_blank_time,
                                                               lag,sweep)
         end
         if i == nspot
-            LA_end_of_spot_index = size(timestamps,1)
+            LA_end_of_spot_index = length(LA_times)
         else
             LA_end_of_spot_index = LA_start_of_spot_indices[i+1] - 1
         end
-        LA_end_of_spot_time = time_difference(timestamps[1,1],
-                                              timestamps[LA_end_of_spot_index,1])
+        LA_end_of_spot_time = LA_times[LA_end_of_spot_index]
         ICP_end_of_spot_index = parser_LAtime2ICPindex(LA_end_of_spot_time,
                                                        lag,sweep)
         selected_ICP_data = ICP_data[ICP_start_of_blank_index:ICP_end_of_spot_index,:]
@@ -94,7 +93,15 @@ function parser_swin(i_on_off::AbstractVector,
         end
         i_start_plus_buffer = i_start + i_buffer
         i_stop_minus_buffer = i_stop - i_buffer
-        out[i] = (i_start_plus_buffer, i_stop_minus_buffer, x[i], y[i])
+        x_buffer = (x[j+1] - x[j])*i_buffer/window_width_i
+        x_start_plus_buffer = x[j] + x_buffer
+        x_stop_minus_buffer = x[j+1] - x_buffer
+        y_buffer = (y[j+1] - y[j])*i_buffer/window_width_i
+        y_start_plus_buffer = y[j] + y_buffer
+        y_stop_minus_buffer = y[j+1] - y_buffer
+        out[i] = (i_start_plus_buffer, i_stop_minus_buffer,
+                  x_start_plus_buffer, x_stop_minus_buffer,
+                  y_start_plus_buffer, y_stop_minus_buffer)
     end
     return out
 end

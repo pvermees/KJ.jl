@@ -326,11 +326,12 @@ function carbonatetest(verbose=false)
 end
 
 function timestamptest(verbose=true)
-    myrun = load("data/timestamp/MSdata.csv",
-                 "data/timestamp/timestamp.csv";
+    myrun = load("data/timestamp/Moreira_data.csv",
+                 "data/timestamp/Moreira_timestamps.csv";
                  instrument="Agilent")
     if verbose summarise(myrun;verbose=true,n=5) end
-    p = KJ.plot(myrun[2];transformation="sqrt")
+    p = KJ.plot(myrun[2];
+                transformation="sqrt")
     @test display(p) != NaN
 end
 
@@ -349,6 +350,7 @@ function concentrationtest()
                 transformation="log",den=internal[1])
     conc = concentrations(myrun,blk,fit,internal)
     @test display(p) != NaN
+    return conc
 end
 
 function internochrontest(show=true)
@@ -383,6 +385,48 @@ function internochronUPbtest(show=true)
         p = internoplot(myrun[7],channels,blk,fit;method=method)
         @test display(p) != NaN
     end
+end
+
+function maptest()
+    method = "concentrations"
+    myrun = load("data/timestamp/NHM_cropped.csv",
+                 "data/timestamp/NHM_timestamps.csv";
+                 instrument="Agilent")
+    internal = getInternal("zircon","Si29")
+    glass = Dict("NIST612" => "NIST612")
+    setGroup!(myrun,glass)
+    blk, fit = process!(myrun,internal,glass;nblank=2)
+    conc = concentrations(myrun[10],blk,fit,internal)
+    p = plotMap(conc,"ppm[U] from U238";clims=(1,1000))
+    @test display(p) != NaN
+end
+
+function map_dating_test()
+    method = "U-Pb"
+    myrun = load("data/timestamp/NHM_cropped.csv",
+                 "data/timestamp/NHM_timestamps.csv";
+                 instrument="Agilent")
+    standards = Dict("91500_zr"=>"91500")
+    glass = Dict("NIST612" => "NIST612")
+    channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
+    blk, fit = process!(myrun,method,channels,standards,glass,
+                        nblank=2,ndrift=1,ndown=0)
+    snum = 10
+    P,D,d,x,y = atomic(myrun[snum],channels,blk,fit;add_xy=true)
+    df = DataFrame(P=P,D=D,d=d,x=x,y=y)
+    p = plotMap(df,"P";clims=(1e3,1e6))
+    @test display(p) != NaN
+end
+
+function map_fail_test()
+    myrun, method, channels, blk, fit = processtest()
+    P,D,d,x,y = atomic(myrun[2],channels,blk,fit;add_xy=true)
+    df = DataFrame(P=P,D=D,d=d,x=x,y=y)
+    p = plotMap(df,"P")
+    @test display(p) != NaN
+    conc = concentrationtest()
+    p = plotMap(conc,"Lu175 -> Lu175")
+    @test display(p) != NaN
 end
 
 module test
@@ -429,6 +473,9 @@ if true
     @testset "concentration" begin concentrationtest() end
     @testset "Lu-Hf internochron" begin internochrontest() end
     @testset "UPb internochron" begin internochronUPbtest() end
+    @testset "concentration map" begin maptest() end
+    @testset "isotope ratio map" begin map_dating_test() end
+    @testset "map fail test" begin map_fail_test() end
     @testset "extension test" begin extensiontest() end
     #@testset "TUI test" begin TUItest() end
 else

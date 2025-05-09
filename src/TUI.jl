@@ -138,7 +138,7 @@ function getKJtree()
                 "t" => TUItabulate,
                 "s" => "standards",
                 "g" => "glass",
-                "v" => TUIviewer!,
+                "v" => TUIviewer,
                 "p" => TUIprocess!,
                 "e" => "export",
                 "l" => "log",
@@ -683,15 +683,14 @@ function getKJtree()
         "export" => (
             message =
             "a: All analyses\n" * 
-            "s: Samples only (no standards)\n" * 
+            "s: Samples only (no standards)\n" *
             "x: Exit\n" * 
             "?: Help\n" * 
             "or enter the prefix of the analyses that you want to select",
             help =
             "Select some or all of the samples to export to a " * 
             ".csv or .json file for further analysis in higher " * 
-            "level data reduction software " * 
-            "such as IsoplotR.",
+            "level data reduction software such as IsoplotR.",
             action = TUIsubset!
         ),
         "format" => (
@@ -901,13 +900,17 @@ function getKJtree()
         "extra" => (
             message =
             "i: Internal isochrons\n" *
+            "t: Time-resolved estimates\n" *
+            "m: Maps\n" *
             "x: Exit\n" * 
             "?: Help",
             help =
             "If you supplied any extensions when starting KJ, " *
             "they will tend to put their options in this menu",
             action = Dict(
-                "i" => "internochron"
+                "i" => "internochron",
+                "t" => "timeresolved",
+                "m" => TUImapper
             )
         ),
         "internochron" => (
@@ -950,7 +953,7 @@ function getKJtree()
             help = "Jump to a specific analysis.",
             action = TUInternochron_goto!
         ),
-        "internocsv" =>(
+        "internocsv" => (
             message =
             "Enter the path and name of the .csv " *
             "file (? for help, x to exit):",
@@ -958,6 +961,44 @@ function getKJtree()
             "Provide the file name with or without " *
             "the .csv extension.",
             action = internochron2csv
+        ),
+        "timeresolved" => (
+            message = "Enter the full path of the directory into " *
+            "to save the csv files with the time-resolved results " *
+            "(? for help, x to exit):",
+            help =
+            "KJ will export the all time-resolved results in a single " *
+            "folder as a sequence of csv files.",
+            action = TUItimeresolved2csv
+        ),
+        "map" => (
+            message =
+            "c: choose a column to plot\n" *
+            "p: previous\n" *
+            "n: next\n" *
+            "g: goto\n" *
+            "s: set the limits of the colour scale\n" *
+            "x: Exit\n" *
+            "?: Help",
+            help =
+            "Plots time resolved data in x,y-space. Only works " *
+            "for data that come with a laser log.",
+            action = Dict(
+                "c" => "chooseMapColumn",
+                "p" => TUImapPrevious!,
+                "n" => TUImapNext!,
+                "s" => "clims"
+            )
+        ),
+        "chooseMapColumn" => (
+            message = TUIchooseColumnMessage,
+            help = "Choose a channel to form a colour scale for the map.",
+            action = TUIchooseMapColumn!
+        ),
+        "clims" => (
+            message = TUIchooseClimsMessage,
+            help = "Adjust the colour scale by marking its minimum and maxmium value.",
+            action = TUIchooseClims!
         )
     )
 end

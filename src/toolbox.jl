@@ -180,7 +180,8 @@ function pool(run::Vector{Sample};
               blank::Bool=false,
               signal::Bool=false,
               group::Union{Nothing,AbstractString}=nothing,
-              include_variances::Bool=false)
+              include_variances::Bool=false,
+              add_xy::Bool=false)
     if isnothing(group)
         selection = 1:length(run)
     else
@@ -190,7 +191,10 @@ function pool(run::Vector{Sample};
     ns = length(selection)
     dats = Vector{DataFrame}(undef,ns)
     for i in eachindex(selection)
-        dats[i] = windowData(run[selection[i]],blank=blank,signal=signal)
+        dats[i] = windowData(run[selection[i]];
+                             blank=blank,
+                             signal=signal,
+                             add_xy=add_xy)
     end
     if include_variances
         vars = Vector{DataFrame}(undef,ns)
@@ -219,7 +223,10 @@ function var_timeseries(cps::AbstractVector)
 end
 export var_timeseries
 
-function windowData(samp::Sample;blank=false,signal=false)
+function windowData(samp::Sample;
+                    blank::Bool=false,
+                    signal::Bool=false,
+                    add_xy::Bool=false)
     if blank
         windows = samp.bwin
     elseif signal
@@ -227,21 +234,38 @@ function windowData(samp::Sample;blank=false,signal=false)
     else
         windows = [(1,size(samp.dat,1))]
     end
-    selection = windows2selection(windows)
-    out =  samp.dat[selection,:]
+    selection, x, y = windows2selection(windows;add_xy=add_xy)
+    selected_dat =  samp.dat[selection,:]
     if signal
-        out.T = (out[:,1] .- samp.t0)./60 # in minutes, for numerical stability
+        selected_dat.T = (selected_dat[:,1] .- samp.t0)./60 # in minutes, for numerical stability
+        if !(isnothing(x) || isnothing(y))
+            selected_dat.x = x
+            selected_dat.y = y
+        end
     end
-    return out
+    return selected_dat
 end
 export windowData
 
-function windows2selection(windows)
+function windows2selection(windows::AbstractVector;
+                           add_xy::Bool=false)
     selection = Integer[]
+    add_xy = add_xy && length(windows[1])>2
+    if add_xy
+        x = Float64[]
+        y = Float64[]
+    else
+        x = y = nothing
+    end
     for w in windows
         append!(selection, w[1]:w[2])
+        if add_xy
+            nsweeps = w[2]-w[1]+1
+            append!(x,range(w[3],w[4];length=nsweeps))
+            append!(y,range(w[5],w[6];length=nsweeps))
+        end
     end
-    return selection
+    return selection, x, y
 end
 
 function string2windows(samp::Sample,text::AbstractString,single::Bool)

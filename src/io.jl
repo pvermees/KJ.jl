@@ -121,6 +121,7 @@ function readDat(fname::AbstractString,
     select!(dat, [k for (k,v) in pairs(eachcol(dat)) if !all(ismissing, v)])
     return dat, sname, datetime
 end
+export readDat
 
 function readAgilent(fname::AbstractString,
                      head2name::Bool=true)

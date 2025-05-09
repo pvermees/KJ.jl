@@ -70,7 +70,7 @@ function plot(samp::Sample,
                     linecolor=linecol,linestyle=linestyle)
         
     end
-    
+
     plotFittedBlank!(p,samp,blank,channelvec;
                      num=num,den=den,
                      transformation=transformation,
@@ -321,3 +321,38 @@ function plotFittedBlank!(p,
                 linecolor=linecolor,linestyle=linestyle)
 end
 export plotFittedBlank!
+
+function plotMap(df::AbstractDataFrame,
+                 column::AbstractString;
+                 clims::Union{Nothing,Tuple}=nothing,
+                 markersize::Number=2,
+                 markershape::Symbol=:square,
+                 colorbar_scale::Symbol=:log10,
+                 aspect_ratio::Symbol=:equal,
+                 color::Symbol=:viridis)
+    if all([cname in ["x";"y"] for cname in names(df)])
+        positive = df[:,column] .> 0
+        z = df[positive,column]
+        if isnothing(clims)
+            clims = (minimum(z),maximum(z))
+        end
+        p = Plots.plot(df.x[positive],
+                       df.y[positive];
+                       seriestype=:scatter,
+                       marker_z=z,
+                       color=color,
+                       aspect_ratio=aspect_ratio,
+                       legend=false, 
+                       colorbar=true,
+                       colorbar_scale=colorbar_scale,
+                       clims=clims,
+                       markersize=markersize,
+                       markershape=markershape,
+                       markerstrokewidth=0,
+                       colorbar_title=column)
+    else
+        @warn "This dataset does not contain x and y coordinates."
+        return nothing
+    end
+end
+export plotMap
