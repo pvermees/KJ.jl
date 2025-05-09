@@ -8,8 +8,8 @@ end
 
 rerun = true
 
-option = "runtests"
-         # "Camila" # "KJgui" # "NHM" # "Raman"
+option = "dolomite"
+         # "runtests" "Camila" # "KJgui" # "NHM" # "Raman"
          # "Cuba" # "NHM-carbonate" # "Abdulkadir"
 
 if option != "runtests"
@@ -17,7 +17,23 @@ if option != "runtests"
     #PDFmerger
 end
 
-if option == "Raman"
+if option == "dolomite"
+    snum = 2
+    home = "/home/pvermees/Documents/Plasmatrace/NHM/"
+    myrun = load(home * "250227_FP_Dolomite_spikes_removed.csv",
+                 home * "250227_FP_Dolomite.Iolite.csv";
+                 instrument="Agilent")
+    method = "U-Pb"
+    channels = Dict("d"=>"Pb207",
+                    "D"=>"Pb206",
+                    "P"=>"U238");
+    standards = Dict("ASH15_cc" => "ASH15")
+    glass = Dict("NIST612" => "NIST612")
+    p = KJ.plot(myrun[snum];
+                channels=collect(values(channels)),
+                transformation="log",den=nothing)
+    display(p)
+elseif option == "Raman"
     
     home = "/home/pvermees/Documents/Raman/NHM/"
     dfile = home * "250324_PV_DinoZircon.csv"
