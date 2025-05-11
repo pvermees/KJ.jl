@@ -2,7 +2,7 @@ function parser_main(ICP_data::AbstractDataFrame,
                      timestamps::AbstractDataFrame)
     lag, sweep = parser_lag_sweep(ICP_data,timestamps)
     LA_start_of_spot_indices = findall(.!ismissing.(timestamps[:,3])) # SubPoint
-    LA_times = time_difference(timestamps[1,1],timestamps[:,1])
+    LA_times = time_difference.(timestamps[1,1],timestamps[:,1])
     LA_start_of_spot_times = LA_times[LA_start_of_spot_indices]
     ICP_start_of_spot_indices = parser_LAtime2ICPindex(LA_start_of_spot_times,lag,sweep)
     nspot = length(LA_start_of_spot_indices)
@@ -40,8 +40,8 @@ function parser_df2sample(selected_ICP_data::AbstractDataFrame,
     sname = selected_timestamps[1,5] # Comment
     datetime = automatic_datetime(selected_timestamps[1,1])
     LA_on_off_indices = parser_on_off_indices(selected_timestamps)
-    LA_on_off_times = time_difference(selected_timestamps[1,1],
-                                      selected_timestamps[LA_on_off_indices,1])
+    LA_on_off_times = time_difference.(selected_timestamps[1,1],
+                                       selected_timestamps[LA_on_off_indices,1])
     x = selected_timestamps[LA_on_off_indices,6] # X(um)
     y = selected_timestamps[LA_on_off_indices,7] # Y(um)
     dat = selected_ICP_data
@@ -139,7 +139,7 @@ end
 
 function parser_interpolated_on_off_indices(timestamps,sweep)
     onoff = parser_on_off_indices(timestamps)
-    LAtime = time_difference(timestamps[1,1],timestamps[onoff,1])
+    LAtime = time_difference.(timestamps[1,1],timestamps[onoff,1])
     start = ceil.(Int,LAtime[1:2:end-1]/sweep)
     stop = floor.(Int,LAtime[2:2:end]/sweep)
     on_intervals = map((s, e) -> (s+1):(e), start, stop)

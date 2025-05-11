@@ -330,7 +330,9 @@ function plotMap(df::AbstractDataFrame,
                  colorbar_scale::Symbol=:log10,
                  aspect_ratio::Symbol=:equal,
                  color::Symbol=:viridis)
-    if all([cname in ["x";"y"] for cname in names(df)])
+    has_x = "x" in names(df) && !any(isnothing.(df[:,"x"]))
+    has_y = "y" in names(df) && !any(isnothing.(df[:,"y"]))
+    if has_x & has_y
         positive = df[:,column] .> 0
         z = df[positive,column]
         if isnothing(clims)

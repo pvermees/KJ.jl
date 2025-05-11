@@ -397,7 +397,10 @@ function maptest()
     setGroup!(myrun,glass)
     blk, fit = process!(myrun,internal,glass;nblank=2)
     conc = concentrations(myrun[10],blk,fit,internal)
-    p = plotMap(conc,"ppm[U] from U238";clims=(1,1000))
+    p = plotMap(conc,"ppm[U] from U238";
+                clims=(0,500),
+                colorbar_scale=:identity)
+    CSV.write("output/Umap.csv",conc)
     @test display(p) != NaN
 end
 
