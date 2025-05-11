@@ -329,17 +329,23 @@ function plotMap(df::AbstractDataFrame,
                  markershape::Symbol=:square,
                  colorbar_scale::Symbol=:log10,
                  aspect_ratio::Symbol=:equal,
-                 color::Symbol=:viridis)
+                 color::Symbol=:viridis,
+                 ignore_negative::Bool=true,
+                 kw...)
     has_x = "x" in names(df) && !any(isnothing.(df[:,"x"]))
     has_y = "y" in names(df) && !any(isnothing.(df[:,"y"]))
     if has_x & has_y
-        positive = df[:,column] .> 0
-        z = df[positive,column]
+        if ignore_negative
+            selection = df[:,column] .> 0
+        else
+            selection = fill(true,size(df,1))
+        end
+        z = df[selection,column]
         if isnothing(clims)
             clims = (minimum(z),maximum(z))
         end
-        p = Plots.plot(df.x[positive],
-                       df.y[positive];
+        p = Plots.plot(df.x[selection],
+                       df.y[selection];
                        seriestype=:scatter,
                        marker_z=z,
                        color=color,
@@ -351,7 +357,8 @@ function plotMap(df::AbstractDataFrame,
                        markersize=markersize,
                        markershape=markershape,
                        markerstrokewidth=0,
-                       colorbar_title=column)
+                       colorbar_title=column,
+                       kw...)
     else
         @warn "This dataset does not contain x and y coordinates."
         return nothing

@@ -15,7 +15,9 @@ function averat(run::Vector{Sample},
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
                 pars::NamedTuple;
-                method=nothing)
+                method=nothing,
+                physics::Bool=true,
+                numerical::Bool=true)
     ns = length(run)
     if isnothing(method)
         xlab = "x"
@@ -30,33 +32,53 @@ function averat(run::Vector{Sample},
     for i in 1:ns
         samp = run[i]
         out[i,:name] = samp.sname
-        out[i,2:end] = averat(samp,channels,blank,pars)
+        out[i,2:end] = averat(samp,channels,blank,pars;
+                              physics=physics)
     end
     return out
 end
 function averat(samp::Sample,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
-                pars::NamedTuple)
+                pars::NamedTuple;
+                physics::Bool=true,
+                numerical::Bool=true)
     Phat, Dhat, dhat = atomic(samp,channels,blank,pars)
-    return averat(Phat,Dhat,dhat)
+    return averat(Phat,Dhat,dhat;physics=physics)
 end
 function averat(Phat::AbstractVector,
                 Dhat::AbstractVector,
-                dhat::AbstractVector)
-    vP = var_timeseries(Phat)
-    vD = var_timeseries(Dhat)
-    vd = var_timeseries(dhat)
+                dhat::AbstractVector;
+                physics::Bool=true,
+                numerical::Bool=true)
     init = [sum(Phat)/sum(Dhat),sum(dhat)/sum(Dhat)]
-    objective = (par) -> SSaverat(par[1],par[2],
-                                  Phat,Dhat,dhat,
-                                  vP,vD,vd)
-    fit = Optim.optimize(objective,init)
-    x, y = Optim.minimizer(fit)
-    H = ForwardDiff.hessian(objective,[x,y])
-    out = hessian2xyerr(H,[x,y])
-    #E = covmat_averat(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    #out = [x sqrt(E[1,1]) y sqrt(E[2,2]) E[1,2]/sqrt(E[1,1]*E[2,2])]
+    if physics
+        vP = var_timeseries(Phat)
+        vD = var_timeseries(Dhat)
+        vd = var_timeseries(dhat)
+        objective = (par) -> SSaverat(par[1],par[2],
+                                      Phat,Dhat,dhat,
+                                      vP,vD,vd)
+        fit = Optim.optimize(objective,init)
+        x, y = Optim.minimizer(fit)
+        if numerical
+            H = ForwardDiff.hessian(objective,[x,y])
+            out = hessian2xyerr(H,[x,y])
+        else # slower
+            E = covmat_averat(x,y,Phat,Dhat,dhat,vP,vD,vd)
+            out = [x sqrt(E[1,1]) y sqrt(E[2,2]) E[1,2]/sqrt(E[1,1]*E[2,2])]
+        end
+    else
+        n = length(Phat)
+        E = n*Statistics.cov([Phat Dhat dhat], dims=1)
+        J = [1/sum(Dhat) -sum(Phat)/sum(Dhat)^2 0;
+             0 -sum(dhat)/sum(Dhat)^2 1/sum(Dhat)]
+        covmat = J * E * transpose(J)
+        sx = sqrt(covmat[1,1])
+        sy = sqrt(covmat[2,2])
+        rho = covmat[1,2]/sqrt(sx*sy)
+        out = [init[1] sx init[2] sy rho]
+    end
     return out
 end
 export averat
