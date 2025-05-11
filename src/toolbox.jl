@@ -237,7 +237,7 @@ function windowData(samp::Sample;
     selection, x, y = windows2selection(windows;add_xy=add_xy)
     selected_dat =  samp.dat[selection,:]
     if signal
-        selected_dat.T = (selected_dat[:,1] .- samp.t0)./60 # in minutes, for numerical stability
+        selected_dat.T = (selected_dat[:,1] .- samp.t0)./60 # in minutes
         if !(isnothing(x) || isnothing(y))
             selected_dat.x = x
             selected_dat.y = y
@@ -340,7 +340,9 @@ end
 export prefix2subset
 
 function automatic_datetime(datetime_string::AbstractString)
-    if occursin(r"-", datetime_string)
+    if datetime_string == "n/a"
+        return nothing
+    elseif occursin(r"-", datetime_string)
         date_delim = '-'
     elseif occursin(r"/", datetime_string)
         date_delim = '/'
@@ -370,15 +372,15 @@ function automatic_datetime(datetime_string::AbstractString)
     return datetime
 end
 
-function time_difference(start::AbstractString,stop::AbstractString)
+function time_difference(start::AbstractString,
+                         stop::AbstractString)
     t1 = automatic_datetime(start)
     t2 = automatic_datetime(stop)
-    return Millisecond(t2-t1).value / 1000
-end
-function time_difference(start::AbstractString,stop::AbstractVector)
-    t1 = automatic_datetime(start)
-    t2 = automatic_datetime.(stop)
-    return Float64.(dt.value/1000 for dt in t2 .- t1)
+    if isnothing(t1) || isnothing(t2)
+        return nothing
+    else
+        return Millisecond(t2-t1).value / 1000
+    end
 end
 
 """

@@ -60,7 +60,7 @@ function atomic(samp::Sample,
     Dhat = @. (Dm-bDt)*mf
     dhat = @. (dm-bdt)
     if add_xy
-        if all([cname in ["x";"y"] for cname in names(dat)])
+        if all([cname in names(dat) for cname in ["x";"y"]])
             return Phat, Dhat, dhat, dat.x, dat.y
         else
             return Phat, Dhat, dhat, nothing, nothing
