@@ -38,7 +38,7 @@ function TUI(extensions...;logbook::AbstractString="",reset=false)
     while true
         if length(_KJ["ctrl"]["chain"])<1 return end
         try
-            dispatch!(_KJ["ctrl"],verbose=false)
+            dispatch!(_KJ["ctrl"],verbose=true)
         catch e
             println(e)
         end
@@ -693,7 +693,7 @@ function getKJtree()
             "level data reduction software such as IsoplotR.",
             action = TUIsubset!
         ),
-        "format" => (
+        "exportformat" => (
             message = TUIexportFormatMessage,
             help =
             "Export to a comma-separated variable format with " * 
