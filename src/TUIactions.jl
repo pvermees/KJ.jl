@@ -631,7 +631,7 @@ function TUIsubset!(ctrl::AbstractDict,
     if ctrl["method"] == "concentrations"
         return "csv"
     else
-        return "format"
+        return "exportformat"
     end
 end
 
