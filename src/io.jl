@@ -1,50 +1,16 @@
-"""
-load
-
-Read mass spectrometer data
-
-# Returns
-
-- a vector of samples
-
-# Methods
-
-- `load(dname::AbstractString;
-        instrument::AbstractString="Agilent",
-        head2name::Bool=true)`
-- `load(dfile::AbstractString,
-        tfile::AbstractString;
-        instrument::AbstractString="Agilent")`
-
-# Arguments
-
-- `dname`: directory containing mass spectrometer data files
-- `instrument`: one of "Agilent" or "ThermoFisher"
-- `head2name`: `true` if sample names should be read from the file headers.
-               `false` if they should be extracted from the file names
-- `dfile`: single data file
-- `tfile`: laser timestamp file
-
-# Examples
-```julia
-myrun = load("data/Lu-Hf";instrument="Agilent")
-p = plot(myrun[1],["Hf176 -> 258","Hf178 -> 260"])
-display(p)
-```
-"""
 function load(dname::AbstractString;
-              instrument::AbstractString="Agilent",
+              format::AbstractString="Agilent",
               head2name::Bool=true)
     fnames = readdir(dname)
     samples = Vector{Sample}(undef,0)
     datetimes = Vector{DateTime}(undef,0)
-    ext = getExt(instrument)
+    ext = getExt(format)
     for fname in fnames
         if occursin(ext,fname)
             try
                 pname = joinpath(dname,fname)
                 samp = readFile(pname;
-                                instrument=instrument,
+                                format=format,
                                 head2name=head2name)
                 push!(samples,samp)
                 push!(datetimes,samp.datetime)
@@ -67,12 +33,12 @@ function load(dname::AbstractString;
 end
 function load(dfile::AbstractString,
               tfile::AbstractString;
-              instrument::AbstractString="Agilent")
+              format::AbstractString="Agilent")
     samples = Vector{Sample}(undef,0)
     datetimes = Vector{DateTime}(undef,0)
     dat = timestamps = DataFrame()
     try
-        dat = readDat(dfile,instrument,false)[1]
+        dat = readDat(dfile,format,false)[1]
         dat.t = dat[:,1] ./ dat[end,1]
     catch e
         println("Failed to read "*dfile)
@@ -87,27 +53,27 @@ end
 export load
 
 function readFile(fname::AbstractString;
-                  instrument::AbstractString="Agilent",
+                  format::AbstractString="Agilent",
                   head2name::Bool=true)
-    dat, sname, datetime = readDat(fname,instrument,head2name)
+    dat, sname, datetime = readDat(fname,format,head2name)
     return io_df2sample(dat,sname,datetime)
 end
 export readFile
 
 function readDat(fname::AbstractString,
-                 instrument::AbstractString="Agilent",
+                 format::AbstractString="Agilent",
                  head2name::Bool=true)
-    if instrument=="Agilent"
+    if format=="Agilent"
         sname, datetime, header, skipto, footerskip =
             readAgilent(fname,head2name)
-    elseif instrument=="FIN2"
+    elseif format=="FIN2"
         sname, datetime, header, skipto, footerskip =
             readFIN(fname,head2name)
-    elseif instrument=="ThermoFisher"
+    elseif format=="ThermoFisher"
         sname, datetime, header, skipto, footerskip =
             readThermoFisher(fname,head2name)
     else
-        KJerror("unknownInstrument")
+        KJerror("unknownFormat")
     end
     dat = CSV.read(
         fname,
@@ -219,7 +185,7 @@ Export isotopic ratio data to an IsoplotRgui json file
 
 # Examples
 ```julia
-myrun = load("data/Lu-Hf",instrument="Agilent")
+myrun = load("data/Lu-Hf",format="Agilent")
 method = "Lu-Hf"
 channels = Dict("d"=>"Hf178 -> 260",
                 "D"=>"Hf176 -> 258",

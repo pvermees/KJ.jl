@@ -39,11 +39,11 @@ function setKJctrl!(ctrl::AbstractDict)
 end
 export setKJctrl!
 
-function getExt(instrument)
-    if instrument in ["Agilent","ThermoFisher"]
+function getExt(format)
+    if format in ["Agilent","ThermoFisher"]
         return ".csv"
     else
-        return instrument
+        return format
     end
 end
 

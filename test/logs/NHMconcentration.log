@@ -1,6 +1,6 @@
 task,action
 top,r
-instrument,a
+format,a
 dir|file,P
 choosedir,data/timestamp
 pickICPLAfiles,"3,4"
