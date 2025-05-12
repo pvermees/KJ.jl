@@ -15,7 +15,7 @@ function TUIinit()
         "multifile" => true,
         "head2name" => true,
         "method" => "",
-        "instrument" => "",
+        "format" => "",
         "ICPpath" => "",
         "LApath" => "",
         "channels" => nothing,
@@ -59,20 +59,20 @@ function TUIread(ctrl::AbstractDict)
             return "loadICPfile"
         end
     else
-        return "instrument"
+        return "format"
     end
 end
 
-function TUIinstrument!(ctrl::AbstractDict,
+function TUIformat!(ctrl::AbstractDict,
                         response::AbstractString)
     if response=="a"
-        ctrl["instrument"] = "Agilent"
+        ctrl["format"] = "Agilent"
     elseif response=="t"
-        ctrl["instrument"] = "ThermoFisher"
+        ctrl["format"] = "ThermoFisher"
     elseif response=="f"
-        ctrl["instrument"] = "FIN2"
+        ctrl["format"] = "FIN2"
     else
-        @warn "Unsupported instrument"
+        @warn "Unsupported format"
         return "x"
     end
     return "dir|file"
@@ -81,7 +81,7 @@ end
 function TUIloadICPdir!(ctrl::AbstractDict,
                         response::AbstractString)
     ctrl["run"] = load(response;
-                       instrument=ctrl["instrument"],
+                       format=ctrl["format"],
                        head2name=ctrl["head2name"])
     if isnothing(ctrl["channels"])
         ctrl["channels"] = getChannels(ctrl["run"])
@@ -112,7 +112,7 @@ end
 
 function TUIloadICPLAdata!(ctrl::AbstractDict)
     ctrl["run"] = load(ctrl["ICPpath"],ctrl["LApath"];
-                       instrument=ctrl["instrument"])
+                       format=ctrl["format"])
     if isnothing(ctrl["channels"])
         ctrl["channels"] = getChannels(ctrl["run"]) # reset
     end
@@ -688,7 +688,7 @@ end
 function TUIopenTemplate!(ctrl::AbstractDict,
                           response::AbstractString)
     include(response)
-    ctrl["instrument"] = instrument
+    ctrl["format"] = format
     ctrl["head2name"] = head2name
     ctrl["multifile"] = multifile
     ctrl["method"] = method
@@ -714,7 +714,7 @@ function TUIsaveTemplate(ctrl::AbstractDict,
                          response::AbstractString)
     PAcutoff = isnothing(ctrl["PAcutoff"]) ? "nothing" : string(ctrl["PAcutoff"])
     open(response, "w") do file
-        write(file,"instrument = \"" * ctrl["instrument"] * "\"\n")
+        write(file,"format = \"" * ctrl["format"] * "\"\n")
         write(file,"multifile = " * string(ctrl["multifile"]) * "\n")
         write(file,"head2name = " * string(ctrl["head2name"]) * "\n")
         write(file,"method = \"" * ctrl["method"] * "\"\n")

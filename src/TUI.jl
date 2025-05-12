@@ -148,7 +148,7 @@ function getKJtree()
                 "c" => TUIclear!
             )
         ),
-        "instrument" => (
+        "format" => (
             message =
             "a: csv (Agilent)\n" * 
             "t: csv (ThermoFisher)\n" *
@@ -156,8 +156,8 @@ function getKJtree()
             "x: Exit\n" * 
             "?: Help",
             help = "Choose a file format. Email us if you don't " * 
-            "find your instrument in this list.",
-            action = TUIinstrument!
+            "find your format in this list.",
+            action = TUIformat!
         ),
         "dir|file" => (
             message =

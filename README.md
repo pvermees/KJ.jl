@@ -17,9 +17,8 @@ import Pkg; Pkg.add(url="https://github.com/pvermees/KJ.jl.git")
 There are four ways to interact with KJ:
 
 1. [TUI](#tui-text-based-user-interface): an interactive text-based user interface
-2. [TUI + GUI](#tui-gui-extension): a TUI augmented with graphical user interface elements
-3. [REPL](#repl-command-line-interface): the command-line interface
-4. [Hybrid](#tui-repl): combining the TUI, GUI and REPL
+2. [REPL](#repl-command-line-interface): the command-line interface
+3. [Hybrid](#tui-repl): combining the TUI and REPL
 
 ## TUI (text-based user interface)
 
@@ -81,48 +80,6 @@ v
 
 <img src="./img/plot.png" width="480px">
 
-## TUI + GUI extension
-
-You can augment the TUI with GUI elements (currently just file choosers) by installing the
-`KJgui` extension (installable from [here](https://github.com/pvermees/KJgui.jl)):
-
-```
-julia> using KJ, KJgui
-julia> TUI(KJgui)
-----------
- KJ 0.3.0
-----------
-
-r: Read data files[*]
-m: Specify the method[*]
-t: Tabulate the samples
-s: Mark mineral standards[*]
-g: Mark reference glasses[*]
-v: View and adjust each sample
-p: Process the data[*]
-e: Export the results
-l: Logs and templates
-o: Options
-u: Update
-c: Clear
-x: Exit
-?: Help
-r
-
-a: Agilent
-t: ThermoFisher
-x: Exit
-?: Help
-a
-
-d: Read a directory of individual data files
-p: Parse the data from a single file using a laser log
-(? for help, x to exit):
-d
-```
-
-<img src="./img/dialog.png" width="480px">
-
 ## REPL (command-line interface)
 
 Advanced users can interact with KJ via Julia's command line interface
@@ -135,7 +92,7 @@ be opened in IsoplotR:
 
 ```
 method = "U-Pb"
-run = load("data/carbonate",instrument="Agilent")
+run = load("data/carbonate",format="Agilent")
 standards = Dict("WC1"=>"WC1")
 glass = Dict("NIST612"=>"NIST612")
 channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")

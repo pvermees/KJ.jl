@@ -1,4 +1,4 @@
-instrument = "Agilent"
+format = "Agilent"
 multifile = true
 head2name = true
 method = "Lu-Hf"

@@ -1,6 +1,6 @@
 task,action
 top,r
-instrument,a
+format,a
 dir|file,d
 loadICPdir,/home/pvermees/git/KJ.jl/test/data/Lu-Hf
 top,m

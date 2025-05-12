@@ -2,7 +2,7 @@ using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
 import Plots
 
 function loadtest(verbose=false)
-    myrun = load("data/Lu-Hf";instrument="Agilent")
+    myrun = load("data/Lu-Hf";format="Agilent")
     if verbose summarise(myrun;verbose=true,n=5) end
     return myrun
 end
@@ -152,7 +152,7 @@ function fractionationtest(all=true)
 end
 
 function RbSrTest(show=true)
-    myrun = load("data/Rb-Sr",instrument="Agilent")
+    myrun = load("data/Rb-Sr",format="Agilent")
     method = "Rb-Sr"
     channels = Dict("d"=>"Sr88 -> 104",
                     "D"=>"Sr87 -> 103",
@@ -174,7 +174,7 @@ function RbSrTest(show=true)
 end
 
 function KCaTest(show=true)
-    myrun = load("data/K-Ca",instrument="Agilent")
+    myrun = load("data/K-Ca",format="Agilent")
     method = "K-Ca"
     channels = Dict("d"=>"Ca44 -> 63",
                     "D"=>"Ca40 -> 59",
@@ -248,7 +248,7 @@ function histest(;LuHf=false,show=true)
 end
 
 function processtest(show=true)
-    myrun = load("data/Lu-Hf",instrument="Agilent")
+    myrun = load("data/Lu-Hf",format="Agilent")
     method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -266,7 +266,7 @@ function processtest(show=true)
 end
 
 function PAtest(verbose=false)
-    myrun = load("data/Lu-Hf",instrument="Agilent")
+    myrun = load("data/Lu-Hf",format="Agilent")
     method = "Lu-Hf"
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -289,7 +289,7 @@ function exporttest()
 end
 
 function UPbtest()
-    myrun = load("data/U-Pb",instrument="Agilent",head2name=false)
+    myrun = load("data/U-Pb",format="Agilent",head2name=false)
     method = "U-Pb"
     standards = Dict("Plesovice_zr" => "STDCZ",
                      "91500_zr" => "91500")
@@ -306,13 +306,13 @@ function UPbtest()
 end
 
 function iCaptest(verbose=true)
-    myrun = load("data/iCap",instrument="ThermoFisher")
+    myrun = load("data/iCap",format="ThermoFisher")
     if verbose summarise(myrun;verbose=true,n=5) end
 end
 
 function carbonatetest(verbose=false)
     method = "U-Pb"
-    myrun = load("data/carbonate",instrument="Agilent")
+    myrun = load("data/carbonate",format="Agilent")
     standards = Dict("WC1_cc"=>"WC1")
     glass = Dict("NIST612"=>"NIST612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
@@ -328,7 +328,7 @@ end
 function timestamptest(verbose=true)
     myrun = load("data/timestamp/Moreira_data.csv",
                  "data/timestamp/Moreira_timestamps.csv";
-                 instrument="Agilent")
+                 format="Agilent")
     if verbose summarise(myrun;verbose=true,n=5) end
     p = KJ.plot(myrun[2];
                 transformation="sqrt")
@@ -341,7 +341,7 @@ end
 
 function concentrationtest()
     method = "concentrations"
-    myrun = load("data/Lu-Hf",instrument="Agilent")
+    myrun = load("data/Lu-Hf",format="Agilent")
     internal = ("Al27 -> 27",1.2e5)
     glass = Dict("NIST612" => "NIST612p")
     setGroup!(myrun,glass)
@@ -354,7 +354,7 @@ function concentrationtest()
 end
 
 function internochrontest(show=true)
-    myrun = load("data/lines",instrument="Agilent")
+    myrun = load("data/lines",format="Agilent")
     method = "Lu-Hf"
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -373,7 +373,7 @@ end
 
 function internochronUPbtest(show=true)
     method = "U-Pb"
-    myrun = load("data/carbonate",instrument="Agilent")
+    myrun = load("data/carbonate",format="Agilent")
     standards = Dict("WC1_cc"=>"WC1")
     glass = Dict("NIST612"=>"NIST612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
@@ -391,7 +391,7 @@ function maptest()
     method = "concentrations"
     myrun = load("data/timestamp/NHM_cropped.csv",
                  "data/timestamp/NHM_timestamps.csv";
-                 instrument="Agilent")
+                 format="Agilent")
     internal = getInternal("zircon","Si29")
     glass = Dict("NIST612" => "NIST612")
     setGroup!(myrun,glass)
@@ -408,7 +408,7 @@ function map_dating_test()
     method = "U-Pb"
     myrun = load("data/timestamp/NHM_cropped.csv",
                  "data/timestamp/NHM_timestamps.csv";
-                 instrument="Agilent")
+                 format="Agilent")
     standards = Dict("91500_zr"=>"91500")
     glass = Dict("NIST612" => "NIST612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
