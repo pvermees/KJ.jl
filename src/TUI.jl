@@ -38,7 +38,7 @@ function TUI(extensions...;logbook::AbstractString="",reset=false)
     while true
         if length(_KJ["ctrl"]["chain"])<1 return end
         try
-            dispatch!(_KJ["ctrl"],verbose=true)
+            dispatch!(_KJ["ctrl"],verbose=false)
         catch e
             println(e)
         end
