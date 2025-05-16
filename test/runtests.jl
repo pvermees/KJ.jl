@@ -432,6 +432,21 @@ function map_fail_test()
     @test display(p) != NaN
 end
 
+function glass_only_test()
+    myrun = load("data/U-Pb",format="Agilent",head2name=false)
+    method = "U-Pb"
+    glass = standards = Dict("NIST610" => "610",
+                             "NIST612" => "612")
+    channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
+    blank, pars = process!(myrun,"U-Pb",channels,standards,glass;
+                           nblank=2,ndrift=1,ndown=1)
+    export2IsoplotR(myrun,method,channels,blank,pars;
+                    fname="output/UPb_with_glass.json")
+    p = KJ.plot(myrun[37],method,channels,blank,pars,standards,glass;
+                transformation="log",den="Pb206")
+    display(p)
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -451,7 +466,7 @@ end
 
 Plots.closeall()
 
-if false
+if true
     @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
@@ -479,6 +494,7 @@ if false
     @testset "concentration map" begin maptest() end
     @testset "isotope ratio map" begin map_dating_test() end
     @testset "map fail test" begin map_fail_test() end
+    @testset "glass as age standard test" begin glass_only_test() end
     @testset "extension test" begin extensiontest() end
     #@testset "TUI test" begin TUItest() end
 else

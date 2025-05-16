@@ -17,7 +17,7 @@ function plot(samp::Sample,
               kw...)
     Sanchors = getAnchors(method,standards,false)
     Ganchors = getAnchors(method,glass,true)
-    anchors = merge(Sanchors,Ganchors)
+    anchors = merge(Ganchors,Sanchors)
     return plot(samp,channels,blank,pars,anchors;
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,

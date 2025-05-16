@@ -351,7 +351,7 @@ function getReferenceMaterials(csv::AbstractString=joinpath(@__DIR__,"../setting
             out[method] = Dict()
         end
         name = row["name"]
-        out[method][name] = (t=(row["t"],row["st"]),y0=(row["y0"],row["sy0"]))
+        out[method][name] = (t=(row["t"],row["st"]),y0=(row["y0"],row["sy0"]),type=row["type"])
     end
     return out
 end

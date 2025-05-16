@@ -1,4 +1,4 @@
-# ratios:
+# ratios (two steps):
 function process!(run::Vector{Sample},
                   method::AbstractString,
                   channels::AbstractDict,
