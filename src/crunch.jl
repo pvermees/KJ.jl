@@ -64,11 +64,15 @@ function SS(par::AbstractVector,
     adrift = isnothing(PAcutoff) ? drift : par[end-ndrift+1:end]
     out = 0.0
     for (refmat,dat) in dats
-        (x0,y0,y1) = anchors[refmat]
         Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
             SSprep(bP,bD,bd,dat,vars[refmat],channels,mfrac,drift,down;
                    PAcutoff=PAcutoff,adrift=adrift)
-        out += SS(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+        a = anchors[refmat]
+        if a.type == "isochron"
+            out += SS(Pm,Dm,dm,vP,vD,vd,a.x0,a.y0,a.y1,ft,FT,mf,bPt,bDt,bdt)
+        else # "point"
+            out += SS(Pm,Dm,dm,vP,vD,vd,a.x0,a.y0,ft,FT,mf,bPt,bDt,bdt)
+        end
     end
     return out
 end
@@ -92,6 +96,23 @@ function SS(Pm::AbstractVector,
     dD = @. pred[:,"D"] - Dm
     dd = @. pred[:,"d"] - dm
     return sum(@. (dP^2)/vP + (dD^2)/vD + (dd^2)/vd )
+end
+function SS(Pm::AbstractVector,
+            Dm::AbstractVector,
+            dm::AbstractVector,
+            vP::AbstractVector,
+            vD::AbstractVector,
+            vd::AbstractVector,
+            x0::AbstractFloat,
+            y0::AbstractFloat,
+            ft::AbstractVector,
+            FT::AbstractVector,
+            mf::AbstractFloat,
+            bPt::AbstractVector,
+            bDt::AbstractVector,
+            bdt::AbstractVector)
+    println("TODO")
+    return 0.0
 end
 # glass
 function SS(par::AbstractVector,
@@ -211,9 +232,15 @@ function predict(dat::AbstractDataFrame,
         SSprep(bP,bD,bd,dat,var,channels,
                pars.mfrac,pars.drift,pars.down;
                PAcutoff=pars.PAcutoff,adrift=pars.adrift)
-    return predict(Pm,Dm,dm,vP,vD,vd,
-                   anchor.x0,anchor.y0,anchor.y1,
-                   ft,FT,mf,bPt,bDt,bdt)
+    if anchor.type == "isochron"
+        return predict(Pm,Dm,dm,vP,vD,vd,
+                       anchor.x0,anchor.y0,anchor.y1,
+                       ft,FT,mf,bPt,bDt,bdt)
+    else
+        return predict(Pm,Dm,dm,vP,vD,vd,
+                       anchor.x0,anchor.y0,
+                       ft,FT,mf,bPt,bDt,bdt)        
+    end
 end
 function predict(Pm::AbstractVector,
                  Dm::AbstractVector,
@@ -234,6 +261,24 @@ function predict(Pm::AbstractVector,
     D = getD(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     return predict(P,D,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
 end
+function predict(Pm::AbstractVector,
+                 Dm::AbstractVector,
+                 dm::AbstractVector,
+                 vP::AbstractVector,
+                 vD::AbstractVector,
+                 vd::AbstractVector,
+                 x0::AbstractFloat,
+                 y0::AbstractFloat,
+                 ft::AbstractVector,
+                 FT::AbstractVector,
+                 mf::AbstractFloat,
+                 bPt::AbstractVector,
+                 bDt::AbstractVector,
+                 bdt::AbstractVector)
+    P = getP(Pm,Dm,dm,vP,vD,vd,x0,y0,ft,FT,mf,bPt,bDt,bdt)
+    D = getD(Pm,Dm,dm,vP,vD,vd,x0,y0,ft,FT,mf,bPt,bDt,bdt)
+    return predict(P,D,x0,y0,ft,FT,mf,bPt,bDt,bdt)
+end
 function predict(P::AbstractVector,
                  D::AbstractVector,
                  x0::AbstractFloat,
@@ -249,6 +294,19 @@ function predict(P::AbstractVector,
     Df = @. D + bDt
     df = @. D*y0*mf + P*ft*FT*(y1-y0)/x0 + bdt
     return DataFrame(P=Pf,D=Df,d=df)
+end
+function predict(P::AbstractVector,
+                 D::AbstractVector,
+                 x0::AbstractFloat,
+                 y0::AbstractFloat,
+                 ft::AbstractVector,
+                 FT::AbstractVector,
+                 mf::AbstractFloat,
+                 bPt::AbstractVector,
+                 bDt::AbstractVector,
+                 bdt::AbstractVector)
+    println("TODO")
+    return nothing
 end
 # glass
 function predict(dat::AbstractDataFrame,

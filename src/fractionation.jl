@@ -124,7 +124,7 @@ function SSfit(init::AbstractVector,
                ndown::Integer=0,
                PAcutoff=nothing,
                verbose::Bool=false)
-    
+
     objective = (par) -> SS(par,bP,bD,bd,dats,vars,channels,anchors,mf;
                             ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 

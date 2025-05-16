@@ -211,7 +211,8 @@ function getx0y0y1(method::AbstractString,
         y1 = 0.0
     end
     y0 = _KJ["refmat"][method][refmat].y0[1]
-    return (x0=x0,y0=y0,y1=y1)
+    type = _KJ["refmat"][method][refmat].type
+    return (x0=x0,y0=y0,y1=y1,type=type)
 end
 # glass
 function gety0(method::AbstractString,
