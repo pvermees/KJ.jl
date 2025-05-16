@@ -39,7 +39,7 @@ function standardtest(verbose=false)
     myrun, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    anchors = getAnchors("Lu-Hf",standards)
+    anchors = getMineralAnchors("Lu-Hf",standards)
     if verbose
         println(anchors)
         summarise(myrun;verbose=true,n=5)
@@ -97,7 +97,7 @@ function partest(parname,paroffsetfact)
                         mfrac=mfrac,
                         PAcutoff=nothing,
                         adrift=[drift])
-        anchors = getAnchors(method,standards,false)
+        anchors = getMineralAnchors(method,standards)
         plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
                     transformation="log",linecolor="red")
     end
@@ -144,8 +144,8 @@ function fractionationtest(all=true)
         println(fit)
         return myrun, blk, fit, channels, standards, glass
     else
-        Ganchors = getAnchors(method,glass,true)
-        Sanchors = getAnchors(method,standards,false)
+        Ganchors = getGlassAnchors(method,glass)
+        Sanchors = getMineralAnchors(method,standards)
         anchors = merge(Sanchors,Ganchors)
         return myrun, blk, fit, channels, standards, glass, anchors
     end
@@ -162,7 +162,7 @@ function RbSrTest(show=true)
     blank = fitBlanks(myrun;nblank=2)
     fit = fractionation(myrun,method,blank,channels,standards,8.37861;
                         ndown=0,ndrift=1,verbose=false)
-    anchors = getAnchors(method,standards)
+    anchors = getMineralAnchors(method,standards)
     if show
         p = KJ.plot(myrun[2],channels,blank,fit,anchors;
                     transformation="log",den="Sr87 -> 103")
@@ -184,7 +184,7 @@ function KCaTest(show=true)
     blank = fitBlanks(myrun;nblank=2)
     fit = fractionation(myrun,method,blank,channels,standards,nothing;
                         ndown=0,ndrift=1,verbose=false)
-    anchors = getAnchors(method,standards)
+    anchors = getMineralAnchors(method,standards)
     if show
         p = KJ.plot(myrun[3],channels,blank,fit,anchors,
                     transformation="log",den=nothing)

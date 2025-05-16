@@ -211,8 +211,8 @@ function getx0y0y1(method::AbstractString,
         y1 = 0.0
     end
     y0 = _KJ["refmat"][method][refmat].y0[1]
-    type = _KJ["refmat"][method][refmat].type
-    return (x0=x0,y0=y0,y1=y1,type=type)
+    t = _KJ["refmat"][method][refmat].type
+    return (x0=x0,y0=y0,y1=y1,type=t)
 end
 # glass
 function gety0(method::AbstractString,
@@ -225,8 +225,8 @@ end
 function getAnchors(method::AbstractString,
                     standards::AbstractVector,
                     glass::AbstractVector)
-    Sanchors = getAnchors(method,standards,false)
-    Ganchors = getAnchors(method,glass,true)
+    Sanchors = getMineralAnchors(method,standards)
+    Ganchors = getGlassAnchors(method,glass)
     return merge(Sanchors,Ganchors)
 end
 function getAnchors(method::AbstractString,
@@ -234,21 +234,36 @@ function getAnchors(method::AbstractString,
                     glass::AbstractDict)
     return getAnchors(method,collect(keys(standards)),collect(keys(glass)))
 end
-function getAnchors(method::AbstractString,
-                    refmats::AbstractVector,
-                    glass::Bool=false)
+export getAnchors
+
+function getMineralAnchors(method::AbstractString,
+                           refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
-        out[refmat] = glass ? gety0(method,refmat) : getx0y0y1(method,refmat)
+        out[refmat] = getx0y0y1(method,refmat)
     end
     return out
 end
-function getAnchors(method::AbstractString,
-                    refmats::AbstractDict,
-                    glass::Bool=false)
-    return getAnchors(method,collect(keys(refmats)),glass)
+function getMineralAnchors(method::AbstractString,
+                           refmats::AbstractDict)
+    return getMineralAnchors(method,collect(keys(refmats)))
 end
-export getAnchors
+export getMineralAnchors
+
+function getGlassAnchors(method::AbstractString,
+                         refmats::AbstractVector,
+                         glass::Bool=false)
+    out = Dict()
+    for refmat in refmats
+        out[refmat] = gety0(method,refmat)
+    end
+    return out
+end
+function getGlassAnchors(method::AbstractString,
+                                refmats::AbstractDict)
+    return getGlassAnchors(method,collect(keys(refmats)))
+end
+export getGlassAnchors
 
 function getSignals(dat::AbstractDataFrame)
     tail = count(x -> x in ["T","x","y"], names(dat)) + 1
