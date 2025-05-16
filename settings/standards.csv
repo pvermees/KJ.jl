@@ -1,4 +1,4 @@
-method,name,t,st,y0,sy0,type,reference
+method,name,tx,stx,y0,sy0,type,reference
 Lu-Hf,Hogsbo_gt,1029.7,0.7,3.55,0.05,isochron,Romer and Smeds (1996)
 Lu-Hf,BP_gt,1745,7,3.55,0.05,isochron,Lane (2011)
 Lu-Hf,ME-1_cc,1531,7,3.547973929,0.00046576,isochron,Simpson et al. (2021)
@@ -31,5 +31,5 @@ K-Ca,EntireCreek_bt,312.1,2.535,0.021569,0.00001,isochron,Mortimer et al. (1987)
 U-Pb,NW-1_ap,1060,2.5,0.9137766,0.0004,isochron,Li et al. (2012)
 U-Pb,EmeraldLake_ap,95.17,0.52,0.8318,0.002,isochron,Apen et al. (2025)
 U-Pb,ASH15_cc,2.965,0.0055,0.8306,0.00165,isochron,Nuriel et al. (2021)
-U-Pb,NIST612,5099.71,0.2,0.907336,0.000126,point,Woodhead and Hergt (2011)
-U-Pb,NIST610,5103.51,0.087,0.909779,0.0000563,point,Woodhead and Hergt (2011)
+U-Pb,NIST612,3.87358,0.001,0.907336,0.000126,point,Woodhead and Hergt (2001)
+U-Pb,NIST610,3.45934,0.001,0.909779,0.0000563,point,Woodhead and Hergt (2001)
