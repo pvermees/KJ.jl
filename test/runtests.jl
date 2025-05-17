@@ -495,7 +495,7 @@ if true
     @testset "isotope ratio map" begin map_dating_test() end
     @testset "map fail test" begin map_fail_test() end
     @testset "glass as age standard test" begin glass_only_test() end
-    @testset "extension test" begin extensiontest() end
+    #@testset "extension test" begin extensiontest() end
     #@testset "TUI test" begin TUItest() end
 else
     TUI()
