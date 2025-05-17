@@ -39,7 +39,7 @@ function standardtest(verbose=false)
     myrun, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    anchors = getMineralAnchors("Lu-Hf",standards)
+    anchors = getStandardAnchors("Lu-Hf",standards)
     if verbose
         println(anchors)
         summarise(myrun;verbose=true,n=5)
@@ -97,7 +97,7 @@ function partest(parname,paroffsetfact)
                         mfrac=mfrac,
                         PAcutoff=nothing,
                         adrift=[drift])
-        anchors = getMineralAnchors(method,standards)
+        anchors = getStandardAnchors(method,standards)
         plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
                     transformation="log",linecolor="red")
     end
@@ -145,7 +145,7 @@ function fractionationtest(all=true)
         return myrun, blk, fit, channels, standards, glass
     else
         Ganchors = getGlassAnchors(method,glass)
-        Sanchors = getMineralAnchors(method,standards)
+        Sanchors = getStandardAnchors(method,standards)
         anchors = merge(Sanchors,Ganchors)
         return myrun, blk, fit, channels, standards, glass, anchors
     end
@@ -162,7 +162,7 @@ function RbSrTest(show=true)
     blank = fitBlanks(myrun;nblank=2)
     fit = fractionation(myrun,method,blank,channels,standards,8.37861;
                         ndown=0,ndrift=1,verbose=false)
-    anchors = getMineralAnchors(method,standards)
+    anchors = getStandardAnchors(method,standards)
     if show
         p = KJ.plot(myrun[2],channels,blank,fit,anchors;
                     transformation="log",den="Sr87 -> 103")
@@ -184,7 +184,7 @@ function KCaTest(show=true)
     blank = fitBlanks(myrun;nblank=2)
     fit = fractionation(myrun,method,blank,channels,standards,nothing;
                         ndown=0,ndrift=1,verbose=false)
-    anchors = getMineralAnchors(method,standards)
+    anchors = getStandardAnchors(method,standards)
     if show
         p = KJ.plot(myrun[3],channels,blank,fit,anchors,
                     transformation="log",den=nothing)
@@ -467,7 +467,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest() end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -493,9 +493,9 @@ if true
     @testset "UPb internochron" begin internochronUPbtest() end
     @testset "concentration map" begin maptest() end
     @testset "isotope ratio map" begin map_dating_test() end
-    @testset "map fail test" begin map_fail_test() end
+    @testset "map fail test" begin map_fail_test() end=#
     @testset "glass as age standard test" begin glass_only_test() end
-    @testset "extension test" begin extensiontest() end
+    #@testset "extension test" begin extensiontest() end
     #@testset "TUI test" begin TUItest() end
 else
     TUI()

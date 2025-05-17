@@ -195,7 +195,7 @@ function sett0!(samp::Sample,t0::AbstractFloat)
 end
 export sett0!
 
-# mineral
+# isochron
 function getx0y0y1(method::AbstractString,
                    refmat::AbstractString)
     t = _KJ["refmat"][method][refmat].tx[1]
@@ -211,8 +211,14 @@ function getx0y0y1(method::AbstractString,
         y1 = 0.0
     end
     y0 = _KJ["refmat"][method][refmat].y0[1]
-    t = _KJ["refmat"][method][refmat].type
-    return (x0=x0,y0=y0,y1=y1,type=t)
+    return (x0=x0,y0=y0,y1=y1)
+end
+# point
+function getx0y0(method::AbstractString,
+                 refmat::AbstractString)
+    x0 = _KJ["refmat"][method][refmat].tx[1]
+    y0 = _KJ["refmat"][method][refmat].y0[1]
+    return (x0=x0,y0=y0)
 end
 # glass
 function gety0(method::AbstractString,
@@ -225,7 +231,7 @@ end
 function getAnchors(method::AbstractString,
                     standards::AbstractVector,
                     glass::AbstractVector)
-    Sanchors = getMineralAnchors(method,standards)
+    Sanchors = getStandardAnchors(method,standards)
     Ganchors = getGlassAnchors(method,glass)
     return merge(Sanchors,Ganchors)
 end
@@ -236,19 +242,32 @@ function getAnchors(method::AbstractString,
 end
 export getAnchors
 
-function getMineralAnchors(method::AbstractString,
+function isochronAnchor(anchor::NamedTuple)
+    return all(in(keys(anchor)), [:x0,:y0,:y1])
+end
+function pointAnchor(anchor::NamedTuple)
+    k = keys(anchor)
+    return in(:x0,k) & in(:y0,k) & !in(:y1,k)
+end
+
+function getStandardAnchors(method::AbstractString,
                            refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
-        out[refmat] = getx0y0y1(method,refmat)
+        t = _KJ["refmat"][method][refmat].type
+        if t == "isochron"
+            out[refmat] = getx0y0y1(method,refmat)
+        else # point
+            out[refmat] = getx0y0(method,refmat)
+        end
     end
     return out
 end
-function getMineralAnchors(method::AbstractString,
+function getStandardAnchors(method::AbstractString,
                            refmats::AbstractDict)
-    return getMineralAnchors(method,collect(keys(refmats)))
+    return getStandardAnchors(method,collect(keys(refmats)))
 end
-export getMineralAnchors
+export getStandardAnchors
 
 function getGlassAnchors(method::AbstractString,
                          refmats::AbstractVector,

@@ -26,7 +26,7 @@ function fractionation(run::Vector{Sample},
                        PAcutoff=nothing,
                        verbose::Bool=false)
     
-    anchors = getMineralAnchors(method,standards)
+    anchors = getStandardAnchors(method,standards)
     
     if ndrift<1 KJerror("ndriftzero") end
 
