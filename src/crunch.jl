@@ -1,59 +1,42 @@
-# minerals
-function getP(Pm::AbstractVector,
-              Dm::AbstractVector,
-              dm::AbstractVector,
-              vP::AbstractVector,
-              vD::AbstractVector,
-              vd::AbstractVector,
-              x0::AbstractFloat,
-              y0::AbstractFloat,
-              y1::AbstractFloat,
-              ft::AbstractVector,
-              FT::AbstractVector,
-              mf::AbstractFloat,
-              bPt::AbstractVector,
-              bDt::AbstractVector,
-              bdt::AbstractVector)
+# isochron
+function getP(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
+              vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
+              x0::AbstractFloat,y0::AbstractFloat,y1::AbstractFloat,
+              ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+              bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     return @. -((Dm*FT*ft*mf*vP*x0*y0-FT*dm*ft*vP*x0)*y1+((-Pm*mf^2*vD*x0^2)-Dm*FT*ft*mf*vP*x0)*y0^2+FT*dm*ft*vP*x0*y0-Pm*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
 end
-function getD(Pm::AbstractVector,
-              Dm::AbstractVector,
-              dm::AbstractVector,
-              vP::AbstractVector,
-              vD::AbstractVector,
-              vd::AbstractVector,
-              x0::AbstractFloat,
-              y0::AbstractFloat,
-              y1::AbstractFloat,
-              ft::AbstractVector,
-              FT::AbstractVector,
-              mf::AbstractFloat,
-              bPt::AbstractVector,
-              bDt::AbstractVector,
-              bdt::AbstractVector)
+# isochron
+function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
+              vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
+              x0::AbstractFloat,y0::AbstractFloat,y1::AbstractFloat,
+              ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+              bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     return @. (Dm*FT^2*ft^2*vP*y1^2+((-FT*Pm*ft*mf*vD*x0)-2*Dm*FT^2*ft^2*vP)*y0*y1+(FT*Pm*ft*mf*vD*x0+Dm*FT^2*ft^2*vP)*y0^2+dm*mf*vD*x0^2*y0+Dm*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
 end
+# point
+function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
+              vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
+              x0::AbstractFloat,y0::AbstractFloat,
+              ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+              bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
+    return @. (dm*vD*vP*y0+(FT*Pm-FT*bPt)*ft*vD*vd*x0+Dm*mf*vP*vd)/(vD*vP*y0^2+FT^2*ft^2*vD*vd*x0^2+mf^2*vP*vd)
+    return nothing
+end
 # glass
-function getD(Dm::AbstractVector,
-              dm::AbstractVector,
-              vD::AbstractVector,
-              vd::AbstractVector,
+function getD(Dm::AbstractVector,dm::AbstractVector,
+              vD::AbstractVector,vd::AbstractVector,
               y0::AbstractFloat,
               mf::AbstractFloat,
-              bDt::AbstractVector,
-              bdt::AbstractVector)
+              bDt::AbstractVector,bdt::AbstractVector)
     return @. (dm*mf*vD*y0+Dm*vd)/(mf^2*vD*y0^2+vd)
 end
 
-# mineral
+# mass fractionation + elemental fractionation
 function SS(par::AbstractVector,
-            bP::AbstractVector,
-            bD::AbstractVector,
-            bd::AbstractVector,
-            dats::AbstractDict,
-            vars::AbstractDict,
-            channels::AbstractDict,
-            anchors::AbstractDict,
+            bP::AbstractVector,bD::AbstractVector,bd::AbstractVector,
+            dats::AbstractDict,vars::AbstractDict,
+            channels::AbstractDict,anchors::AbstractDict,
             mf::Union{AbstractFloat,Nothing};
             ndrift::Integer=1,
             ndown::Integer=0,
@@ -64,30 +47,39 @@ function SS(par::AbstractVector,
     adrift = isnothing(PAcutoff) ? drift : par[end-ndrift+1:end]
     out = 0.0
     for (refmat,dat) in dats
-        (x0,y0,y1) = anchors[refmat]
         Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
             SSprep(bP,bD,bd,dat,vars[refmat],channels,mfrac,drift,down;
                    PAcutoff=PAcutoff,adrift=adrift)
-        out += SS(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+        a = anchors[refmat]
+        if isochronAnchor(a)
+            out += SS(Pm,Dm,dm,vP,vD,vd,a.x0,a.y0,a.y1,ft,FT,mf,bPt,bDt,bdt)
+        elseif pointAnchor(a)
+            out += SS(Pm,Dm,dm,vP,vD,vd,a.x0,a.y0,ft,FT,mf,bPt,bDt,bdt)
+        else
+            error("Invalid anchor.")
+        end
     end
     return out
 end
-function SS(Pm::AbstractVector,
-            Dm::AbstractVector,
-            dm::AbstractVector,
-            vP::AbstractVector,
-            vD::AbstractVector,
-            vd::AbstractVector,
-            x0::AbstractFloat,
-            y0::AbstractFloat,
-            y1::AbstractFloat,
-            ft::AbstractVector,
-            FT::AbstractVector,
-            mf::AbstractFloat,
-            bPt::AbstractVector,
-            bDt::AbstractVector,
-            bdt::AbstractVector)
+# isochron
+function SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
+            vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
+            x0::AbstractFloat,y0::AbstractFloat,y1::AbstractFloat,
+            ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+            bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     pred = predict(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    dP = @. pred[:,"P"] - Pm
+    dD = @. pred[:,"D"] - Dm
+    dd = @. pred[:,"d"] - dm
+    return sum(@. (dP^2)/vP + (dD^2)/vD + (dd^2)/vd )
+end
+# point
+function SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
+            vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
+            x0::AbstractFloat,y0::AbstractFloat,
+            ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+            bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
+    pred = predict(Pm,Dm,dm,vP,vD,vd,x0,y0,ft,FT,mf,bPt,bDt,bdt)
     dP = @. pred[:,"P"] - Pm
     dD = @. pred[:,"D"] - Dm
     dd = @. pred[:,"d"] - dm
@@ -95,10 +87,8 @@ function SS(Pm::AbstractVector,
 end
 # glass
 function SS(par::AbstractVector,
-            bD::AbstractVector,
-            bd::AbstractVector,
-            dats::AbstractDict,
-            vars::AbstractDict,
+            bD::AbstractVector,bd::AbstractVector,
+            dats::AbstractDict,vars::AbstractDict,
             channels::AbstractDict,
             anchors::AbstractDict)
     mf = exp(par[1])
@@ -110,14 +100,12 @@ function SS(par::AbstractVector,
     end
     return out
 end
-function SS(Dm::AbstractVector,
-            dm::AbstractVector,
-            vD::AbstractVector,
-            vd::AbstractVector,
+# glass
+function SS(Dm::AbstractVector,dm::AbstractVector,
+            vD::AbstractVector,vd::AbstractVector,
             y0::AbstractFloat,
             mf::AbstractFloat,
-            bDt::AbstractVector,
-            bdt::AbstractVector)
+            bDt::AbstractVector,bdt::AbstractVector)
     pred = predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
     dD = @. pred[:,"D"] - Dm
     dd = @. pred[:,"d"] - dm
@@ -125,16 +113,10 @@ function SS(Dm::AbstractVector,
 end
 export SS
 
-# minerals
-function SSprep(bP::AbstractVector,
-                bD::AbstractVector,
-                bd::AbstractVector,
-                dat::AbstractDataFrame,
-                var::AbstractDataFrame,
-                channels::AbstractDict,
-                mfrac::AbstractFloat,
-                drift::AbstractVector,
-                down::AbstractVector;
+# isochron or point
+function SSprep(bP::AbstractVector,bD::AbstractVector,bd::AbstractVector,
+                dat::AbstractDataFrame,var::AbstractDataFrame,channels::AbstractDict,
+                mfrac::AbstractFloat,drift::AbstractVector,down::AbstractVector;
                 PAcutoff::Union{AbstractFloat,Nothing}=nothing,
                 adrift::AbstractVector=drift)
     t = dat.t
@@ -155,10 +137,8 @@ function SSprep(bP::AbstractVector,
     return Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt
 end
 # glass
-function SSprep(bD::AbstractVector,
-                bd::AbstractVector,
-                dat::AbstractDataFrame,
-                var::AbstractDataFrame,
+function SSprep(bD::AbstractVector,bd::AbstractVector,
+                dat::AbstractDataFrame,var::AbstractDataFrame,
                 channels::AbstractDict)
     t = dat.t
     Dm = dat[:,channels["D"]]
@@ -170,7 +150,7 @@ function SSprep(bD::AbstractVector,
     return Dm,dm,vD,vd,bDt,bdt
 end
 
-# minerals
+# isochron or point
 function predict(samp::Sample,
                  method::AbstractString,
                  pars::NamedTuple,
@@ -211,43 +191,41 @@ function predict(dat::AbstractDataFrame,
         SSprep(bP,bD,bd,dat,var,channels,
                pars.mfrac,pars.drift,pars.down;
                PAcutoff=pars.PAcutoff,adrift=pars.adrift)
-    return predict(Pm,Dm,dm,vP,vD,vd,
-                   anchor.x0,anchor.y0,anchor.y1,
-                   ft,FT,mf,bPt,bDt,bdt)
+    if isochronAnchor(anchor)
+        return predict(Pm,Dm,dm,vP,vD,vd,
+                       anchor.x0,anchor.y0,anchor.y1,
+                       ft,FT,mf,bPt,bDt,bdt)
+    elseif pointAnchor(anchor)
+        return predict(Pm,Dm,dm,vP,vD,vd,
+                       anchor.x0,anchor.y0,
+                       ft,FT,mf,bPt,bDt,bdt)        
+    else
+        error("Invalid anchor")
+    end
 end
-function predict(Pm::AbstractVector,
-                 Dm::AbstractVector,
-                 dm::AbstractVector,
-                 vP::AbstractVector,
-                 vD::AbstractVector,
-                 vd::AbstractVector,
-                 x0::AbstractFloat,
-                 y0::AbstractFloat,
-                 y1::AbstractFloat,
-                 ft::AbstractVector,
-                 FT::AbstractVector,
-                 mf::AbstractFloat,
-                 bPt::AbstractVector,
-                 bDt::AbstractVector,
-                 bdt::AbstractVector)
+# isochron
+function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
+                 vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
+                 x0::AbstractFloat,y0::AbstractFloat,y1::AbstractFloat,
+                 ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+                 bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     P = getP(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     D = getD(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    return predict(P,D,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-end
-function predict(P::AbstractVector,
-                 D::AbstractVector,
-                 x0::AbstractFloat,
-                 y0::AbstractFloat,
-                 y1::AbstractFloat,
-                 ft::AbstractVector,
-                 FT::AbstractVector,
-                 mf::AbstractFloat,
-                 bPt::AbstractVector,
-                 bDt::AbstractVector,
-                 bdt::AbstractVector)
     Pf = @. P + bPt
     Df = @. D + bDt
     df = @. D*y0*mf + P*ft*FT*(y1-y0)/x0 + bdt
+    return DataFrame(P=Pf,D=Df,d=df)
+end
+# point
+function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
+                 vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
+                 x0::AbstractFloat,y0::AbstractFloat,
+                 ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+                 bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
+    D = getD(Pm,Dm,dm,vP,vD,vd,x0,y0,ft,FT,mf,bPt,bDt,bdt)
+    Pf = @. D*x0*ft*FT + bPt
+    Df = @. D + bDt
+    df = @. D*y0*mf + bdt
     return DataFrame(P=Pf,D=Df,d=df)
 end
 # glass
@@ -264,10 +242,8 @@ function predict(dat::AbstractDataFrame,
     Dm,dm,vD,vd,bDt,bdt = SSprep(bD,bd,dat,var,channels)
     return predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
 end
-function predict(Dm::AbstractVector,
-                 dm::AbstractVector,
-                 vD::AbstractVector,
-                 vd::AbstractVector,
+function predict(Dm::AbstractVector,dm::AbstractVector,
+                 vD::AbstractVector,vd::AbstractVector,
                  y0::AbstractFloat,
                  mf::AbstractFloat,
                  bDt::AbstractVector,

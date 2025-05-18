@@ -195,10 +195,10 @@ function sett0!(samp::Sample,t0::AbstractFloat)
 end
 export sett0!
 
-# mineral
+# isochron
 function getx0y0y1(method::AbstractString,
                    refmat::AbstractString)
-    t = _KJ["refmat"][method][refmat].t[1]
+    t = _KJ["refmat"][method][refmat].tx[1]
     if method=="U-Pb"
         L8 = _KJ["lambda"]["U238-Pb206"][1]
         L5 = _KJ["lambda"]["U235-Pb207"][1]
@@ -213,6 +213,13 @@ function getx0y0y1(method::AbstractString,
     y0 = _KJ["refmat"][method][refmat].y0[1]
     return (x0=x0,y0=y0,y1=y1)
 end
+# point
+function getx0y0(method::AbstractString,
+                 refmat::AbstractString)
+    x0 = _KJ["refmat"][method][refmat].tx[1]
+    y0 = _KJ["refmat"][method][refmat].y0[1]
+    return (x0=x0,y0=y0)
+end
 # glass
 function gety0(method::AbstractString,
                refmat::AbstractString)
@@ -224,30 +231,58 @@ end
 function getAnchors(method::AbstractString,
                     standards::AbstractVector,
                     glass::AbstractVector)
-    Sanchors = getAnchors(method,standards,false)
-    Ganchors = getAnchors(method,glass,true)
-    return merge(Sanchors,Ganchors)
+    Ganchors = getGlassAnchors(method,glass)
+    Sanchors = getStandardAnchors(method,standards)
+    return merge(Ganchors,Sanchors)
 end
 function getAnchors(method::AbstractString,
                     standards::AbstractDict,
                     glass::AbstractDict)
     return getAnchors(method,collect(keys(standards)),collect(keys(glass)))
 end
-function getAnchors(method::AbstractString,
-                    refmats::AbstractVector,
-                    glass::Bool=false)
+export getAnchors
+
+function isochronAnchor(anchor::NamedTuple)
+    return all(in(keys(anchor)), [:x0,:y0,:y1])
+end
+function pointAnchor(anchor::NamedTuple)
+    k = keys(anchor)
+    return in(:x0,k) & in(:y0,k) & !in(:y1,k)
+end
+
+function getStandardAnchors(method::AbstractString,
+                           refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
-        out[refmat] = glass ? gety0(method,refmat) : getx0y0y1(method,refmat)
+        t = _KJ["refmat"][method][refmat].type
+        if t == "isochron"
+            out[refmat] = getx0y0y1(method,refmat)
+        else # point
+            out[refmat] = getx0y0(method,refmat)
+        end
     end
     return out
 end
-function getAnchors(method::AbstractString,
-                    refmats::AbstractDict,
-                    glass::Bool=false)
-    return getAnchors(method,collect(keys(refmats)),glass)
+function getStandardAnchors(method::AbstractString,
+                           refmats::AbstractDict)
+    return getStandardAnchors(method,collect(keys(refmats)))
 end
-export getAnchors
+export getStandardAnchors
+
+function getGlassAnchors(method::AbstractString,
+                         refmats::AbstractVector,
+                         glass::Bool=false)
+    out = Dict()
+    for refmat in refmats
+        out[refmat] = gety0(method,refmat)
+    end
+    return out
+end
+function getGlassAnchors(method::AbstractString,
+                                refmats::AbstractDict)
+    return getGlassAnchors(method,collect(keys(refmats)))
+end
+export getGlassAnchors
 
 function getSignals(dat::AbstractDataFrame)
     tail = count(x -> x in ["T","x","y"], names(dat)) + 1
@@ -351,7 +386,7 @@ function getReferenceMaterials(csv::AbstractString=joinpath(@__DIR__,"../setting
             out[method] = Dict()
         end
         name = row["name"]
-        out[method][name] = (t=(row["t"],row["st"]),y0=(row["y0"],row["sy0"]))
+        out[method][name] = (tx=(row["tx"],row["stx"]),y0=(row["y0"],row["sy0"]),type=row["type"])
     end
     return out
 end

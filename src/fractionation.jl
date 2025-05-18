@@ -26,7 +26,7 @@ function fractionation(run::Vector{Sample},
                        PAcutoff=nothing,
                        verbose::Bool=false)
     
-    anchors = getAnchors(method,standards,false)
+    anchors = getStandardAnchors(method,standards)
     
     if ndrift<1 KJerror("ndriftzero") end
 
@@ -61,7 +61,7 @@ function fractionation(run::Vector{Sample},
                        glass::AbstractDict;
                        verbose::Bool=false)
     
-    anchors = getAnchors(method,glass,true)
+    anchors = getGlassAnchors(method,glass)
 
     dats = Dict()
     vars = Dict()
@@ -124,7 +124,7 @@ function SSfit(init::AbstractVector,
                ndown::Integer=0,
                PAcutoff=nothing,
                verbose::Bool=false)
-    
+
     objective = (par) -> SS(par,bP,bD,bd,dats,vars,channels,anchors,mf;
                             ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
 

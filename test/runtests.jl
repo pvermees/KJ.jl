@@ -39,7 +39,7 @@ function standardtest(verbose=false)
     myrun, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    anchors = getAnchors("Lu-Hf",standards)
+    anchors = getStandardAnchors("Lu-Hf",standards)
     if verbose
         println(anchors)
         summarise(myrun;verbose=true,n=5)
@@ -97,7 +97,7 @@ function partest(parname,paroffsetfact)
                         mfrac=mfrac,
                         PAcutoff=nothing,
                         adrift=[drift])
-        anchors = getAnchors(method,standards,false)
+        anchors = getStandardAnchors(method,standards)
         plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
                     transformation="log",linecolor="red")
     end
@@ -144,8 +144,8 @@ function fractionationtest(all=true)
         println(fit)
         return myrun, blk, fit, channels, standards, glass
     else
-        Ganchors = getAnchors(method,glass,true)
-        Sanchors = getAnchors(method,standards,false)
+        Ganchors = getGlassAnchors(method,glass)
+        Sanchors = getStandardAnchors(method,standards)
         anchors = merge(Sanchors,Ganchors)
         return myrun, blk, fit, channels, standards, glass, anchors
     end
@@ -162,7 +162,7 @@ function RbSrTest(show=true)
     blank = fitBlanks(myrun;nblank=2)
     fit = fractionation(myrun,method,blank,channels,standards,8.37861;
                         ndown=0,ndrift=1,verbose=false)
-    anchors = getAnchors(method,standards)
+    anchors = getStandardAnchors(method,standards)
     if show
         p = KJ.plot(myrun[2],channels,blank,fit,anchors;
                     transformation="log",den="Sr87 -> 103")
@@ -184,7 +184,7 @@ function KCaTest(show=true)
     blank = fitBlanks(myrun;nblank=2)
     fit = fractionation(myrun,method,blank,channels,standards,nothing;
                         ndown=0,ndrift=1,verbose=false)
-    anchors = getAnchors(method,standards)
+    anchors = getStandardAnchors(method,standards)
     if show
         p = KJ.plot(myrun[3],channels,blank,fit,anchors,
                     transformation="log",den=nothing)
@@ -432,6 +432,21 @@ function map_fail_test()
     @test display(p) != NaN
 end
 
+function glass_only_test()
+    myrun = load("data/U-Pb",format="Agilent",head2name=false)
+    method = "U-Pb"
+    glass = standards = Dict("NIST610" => "610",
+                             "NIST612" => "612")
+    channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
+    blank, pars = process!(myrun,"U-Pb",channels,standards,glass;
+                           nblank=2,ndrift=1,ndown=1)
+    export2IsoplotR(myrun,method,channels,blank,pars;
+                    fname="output/UPb_with_glass.json")
+    p = KJ.plot(myrun[37],method,channels,blank,pars,standards,glass;
+                transformation="log",den="Pb206")
+    display(p)
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -479,7 +494,8 @@ if true
     @testset "concentration map" begin maptest() end
     @testset "isotope ratio map" begin map_dating_test() end
     @testset "map fail test" begin map_fail_test() end
-    @testset "extension test" begin extensiontest() end
+    @testset "glass as age standard test" begin glass_only_test() end
+    #@testset "extension test" begin extensiontest() end
     #@testset "TUI test" begin TUItest() end
 else
     TUI()

@@ -15,9 +15,7 @@ function plot(samp::Sample,
               show_title=true,
               titlefontsize=10,
               kw...)
-    Sanchors = getAnchors(method,standards,false)
-    Ganchors = getAnchors(method,glass,true)
-    anchors = merge(Sanchors,Ganchors)
+    anchors = getAnchors(method,standards,glass)
     return plot(samp,channels,blank,pars,anchors;
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,
