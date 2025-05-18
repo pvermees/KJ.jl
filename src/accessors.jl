@@ -231,9 +231,9 @@ end
 function getAnchors(method::AbstractString,
                     standards::AbstractVector,
                     glass::AbstractVector)
-    Sanchors = getStandardAnchors(method,standards)
     Ganchors = getGlassAnchors(method,glass)
-    return merge(Sanchors,Ganchors)
+    Sanchors = getStandardAnchors(method,standards)
+    return merge(Ganchors,Sanchors)
 end
 function getAnchors(method::AbstractString,
                     standards::AbstractDict,
