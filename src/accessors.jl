@@ -198,7 +198,7 @@ export sett0!
 # isochron
 function getx0y0y1(method::AbstractString,
                    refmat::AbstractString)
-    t = _KJ["refmat"][method][refmat].tx[1]
+    t = getRefmat(method,refmat).tx[1]
     if method=="U-Pb"
         L8 = _KJ["lambda"]["U238-Pb206"][1]
         L5 = _KJ["lambda"]["U235-Pb207"][1]
@@ -210,14 +210,14 @@ function getx0y0y1(method::AbstractString,
         x0 = 1/(exp(L*t)-1)
         y1 = 0.0
     end
-    y0 = _KJ["refmat"][method][refmat].y0[1]
+    y0 = getRefmat(method,refmat).y0[1]
     return (x0=x0,y0=y0,y1=y1)
 end
 # point
 function getx0y0(method::AbstractString,
                  refmat::AbstractString)
-    x0 = _KJ["refmat"][method][refmat].tx[1]
-    y0 = _KJ["refmat"][method][refmat].y0[1]
+    x0 = getRefmat(method,refmat).tx[1]
+    y0 = getRefmat(method,refmat).y0[1]
     return (x0=x0,y0=y0)
 end
 # glass
@@ -225,7 +225,7 @@ function gety0(method::AbstractString,
                refmat::AbstractString)
     i = findfirst(==(method),_KJ["methods"][:,"method"])
     ratio = _KJ["methods"][i,"d"] * _KJ["methods"][i,"D"]
-    return _KJ["glass"][refmat][ratio]
+    return getGlass(refmat)[ratio]
 end
 
 function getAnchors(method::AbstractString,
@@ -254,7 +254,7 @@ function getStandardAnchors(method::AbstractString,
                            refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
-        t = _KJ["refmat"][method][refmat].type
+        t = getRefmat(method,refmat).type
         if t == "isochron"
             out[refmat] = getx0y0y1(method,refmat)
         else # point
@@ -309,3 +309,24 @@ function getInternal(mineral::AbstractString,channel::AbstractString)
     return (channel,concentration)
 end
 export getInternal
+
+function getGlass(i::Integer)
+    refmat = _KJ["glass"]["names"][i]
+    return getGlass(refmat)
+end
+function getGlass(refmat::AbstractString)
+    return _KJ["glass"]["dict"][refmat]
+end
+
+function getRefmats(method::AbstractString)
+    return _KJ["refmat"][method]
+end
+function getRefmat(method::AbstractString,
+                   i::Integer)
+    refmat = getRefmatNames()[i]
+    return getRefmat(method,refmat)
+end
+function getRefmat(method::AbstractString,
+                   refmat::AbstractString)
+    return _KJ["refmat"][method]["dict"][refmat]
+end

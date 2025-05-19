@@ -83,9 +83,10 @@ export init_stoichiometry!
 
 function init_glass(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv"))
     tab = CSV.read(csv, DataFrame)
-    out = Dict()
+    out = Dict("names" => tab[:,"SRM"],
+               "dict" => Dict())
     for row in eachrow(tab)
-        out[row["SRM"]] = row[2:end]
+        out["dict"][row["SRM"]] = row[2:end]
     end
     return out
 end
@@ -102,10 +103,14 @@ function init_referenceMaterials(csv::AbstractString=joinpath(@__DIR__,"../setti
     for row in eachrow(tab)
         method = row["method"]
         if !(method in keys(out))
-            out[method] = Dict()
+            out[method] = Dict("names" => Vector{String}(),
+                               "dict" => Dict())
         end
         name = row["name"]
-        out[method][name] = (tx=(row["tx"],row["stx"]),y0=(row["y0"],row["sy0"]),type=row["type"])
+        push!(out[method]["names"],name)
+        out[method]["dict"][name] = (tx=(row["tx"],row["stx"]),
+                                     y0=(row["y0"],row["sy0"]),
+                                     type=row["type"])
     end
     return out
 end

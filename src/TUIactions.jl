@@ -216,7 +216,7 @@ end
 function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)
-    standards = collect(keys(_KJ["refmat"][ctrl["method"]]))
+    standards = getRefmats().names
     ctrl["cache"] = standards[i]
     ctrl["standards"][standards[i]] = nothing
     return "addStandardGroup"
@@ -260,7 +260,7 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIrefmatTab(ctrl::AbstractDict)
-    for (key, value) in _KJ["refmat"][ctrl["method"]]
+    for (key, value) in getRefmats().dict
         print(key)
         print(": ")
         if !ismissing(value.t[1])
@@ -278,9 +278,9 @@ end
 function TUIchooseGlass!(ctrl::AbstractDict,
                          response::AbstractString)
     i = parse(Int,response)
-    glass = collect(keys(_KJ["glass"]))
-    ctrl["cache"] = glass[i]
-    ctrl["glass"][glass[i]] = nothing
+    glass = getGlass(i)
+    ctrl["cache"] = glass
+    ctrl["glass"][glass] = nothing
     return "addGlassGroup"
 end
 
@@ -322,8 +322,8 @@ function TUIremoveGlassByNumber!(ctrl::AbstractDict,
 end
 
 function TUIglassTab(ctrl::AbstractDict)
-    for (key, value) in _KJ["glass"]
-        println(key)
+    for name in _KJ["glass"]["names"]
+        println(name)
     end
     return "x"
 end

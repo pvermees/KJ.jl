@@ -70,7 +70,7 @@ end
 
 function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg = "Choose one of the following standards:\n"
-    standards = collect(keys(_KJ["refmat"][ctrl["method"]]))
+    standards = getRefmats(ctrl["method"]).names
     for i in eachindex(standards)
         msg *= string(i)*": "*standards[i]*"\n"
     end
@@ -80,7 +80,7 @@ end
 
 function TUIchooseGlassMessage(ctrl::AbstractDict)
     msg = "Choose one of the following reference glasses:\n"
-    glasses = collect(keys(_KJ["glass"]))
+    glasses = _KJ["glass"].names
     for i in eachindex(glasses)
         msg *= string(i)*": "*glasses[i]*"\n"
     end

@@ -260,7 +260,7 @@ function predict(samp::Sample,
                  elements::AbstractDataFrame,
                  internal::AbstractString;
                  debug::Bool=false)
-    if samp.group in collect(keys(_KJ["glass"]))
+    if samp.group in _KJ["glass"]["names"]
         dat = windowData(samp;signal=true)
         sig = getSignals(dat)
         Xm = sig[:,Not(internal)]
