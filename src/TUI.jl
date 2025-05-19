@@ -38,7 +38,7 @@ function TUI(extensions...;logbook::AbstractString="",reset=false)
     while true
         if length(_KJ["ctrl"]["chain"])<1 return end
         try
-            dispatch!(_KJ["ctrl"],verbose=false)
+            dispatch!(_KJ["ctrl"];verbose=false)
         catch e
             println(e)
         end
@@ -125,7 +125,7 @@ function KJtree()
 end
 export KJtree
 
-function getKJtree()
+function init_KJtree()
     Dict(
         "top" => (
             message = TUIwelcomeMessage,
