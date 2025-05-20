@@ -9,18 +9,7 @@ mutable struct Sample
 end
 export Sample
 
-_KJ::AbstractDict = Dict()
-
-function init_KJ!()
-    _KJ["methods"] = getMethods()
-    _KJ["lambda"] = getLambdas()
-    _KJ["iratio"] = getiratios()
-    _KJ["nuclides"] = getNuclides()
-    _KJ["refmat"] = getReferenceMaterials()
-    _KJ["glass"] = getGlass()
-    _KJ["stoichiometry"] = getStoichiometry()
-    _KJ["tree"] = getKJtree()
-    _KJ["ctrl"] = nothing
-    _KJ["extensions"] = nothing
+mutable struct OrderedDict
+    names::Vector{String}
+    dict::Dict
 end
-export init_KJ!

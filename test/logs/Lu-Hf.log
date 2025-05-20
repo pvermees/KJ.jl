@@ -8,14 +8,15 @@ method,1
 columns,"15,17,18"
 top,s
 standards,a
-chooseStandard,3
+chooseStandard,2
 addStandardGroup,p
 addStandardsByPrefix,BP
 standards,x
 top,g
 glass,a
-chooseGlass,3
+chooseGlass,2
 addGlassGroup,p
 addGlassByPrefix,NIST612
 glass,x
 top,p
+top,x

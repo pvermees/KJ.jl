@@ -198,7 +198,7 @@ export sett0!
 # isochron
 function getx0y0y1(method::AbstractString,
                    refmat::AbstractString)
-    t = _KJ["refmat"][method][refmat].tx[1]
+    t = get(_KJ["refmat"][method],refmat).tx[1]
     if method=="U-Pb"
         L8 = _KJ["lambda"]["U238-Pb206"][1]
         L5 = _KJ["lambda"]["U235-Pb207"][1]
@@ -210,22 +210,22 @@ function getx0y0y1(method::AbstractString,
         x0 = 1/(exp(L*t)-1)
         y1 = 0.0
     end
-    y0 = _KJ["refmat"][method][refmat].y0[1]
+    y0 = get(_KJ["refmat"][method],refmat).y0[1]
     return (x0=x0,y0=y0,y1=y1)
 end
 # point
 function getx0y0(method::AbstractString,
                  refmat::AbstractString)
-    x0 = _KJ["refmat"][method][refmat].tx[1]
-    y0 = _KJ["refmat"][method][refmat].y0[1]
+    x0 = get(_KJ["refmat"][method],refmat).tx[1]
+    y0 = get(_KJ["refmat"][method],refmat).y0[1]
     return (x0=x0,y0=y0)
 end
 # glass
 function gety0(method::AbstractString,
                refmat::AbstractString)
-    i = findfirst(==(method),_KJ["methods"][:,"method"])
-    ratio = _KJ["methods"][i,"d"] * _KJ["methods"][i,"D"]
-    return _KJ["glass"][refmat][ratio]
+    P, D, d = getPDd(method)
+    ratio = d * D
+    return get(_KJ["glass"],refmat)[ratio]
 end
 
 function getAnchors(method::AbstractString,
@@ -254,7 +254,7 @@ function getStandardAnchors(method::AbstractString,
                            refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
-        t = _KJ["refmat"][method][refmat].type
+        t = get(_KJ["refmat"][method],refmat).type
         if t == "isochron"
             out[refmat] = getx0y0y1(method,refmat)
         else # point
@@ -297,107 +297,25 @@ end
 export getSignals
 
 function getPDd(method::AbstractString)
-    i = findfirst(==(method),_KJ["methods"][:,"method"])
-    PDd = _KJ["methods"][i,2:end]
+    PDd = get(_KJ["methods"],method)
     return PDd.P, PDd.D, PDd.d
 end
 export getPDd
-function getMethods(csv::AbstractString=joinpath(@__DIR__,"../settings/methods.csv"))
-    return CSV.read(csv, DataFrame)
-end
-export getMethods
-function getLambdas(csv::AbstractString=joinpath(@__DIR__,"../settings/lambda.csv"))
-    tab = CSV.read(csv, DataFrame)
-    out = Dict()
-    for row in eachrow(tab)
-        out[row.method] = (row["lambda"],row["err"])
-    end
-    return out
-end
-export getLambdas
-function getiratios(csv::AbstractString=joinpath(@__DIR__,"../settings/iratio.csv"))
-    tab = CSV.read(csv, DataFrame)
-    out = Dict()
-    for row in eachrow(tab)
-        isotope = row.isotope
-        abundance = row.abundance
-        method = row.method
-        entry = NamedTuple{(Symbol(isotope),)}((abundance))
-        if !(method in keys(out))
-            out[method] = entry
-        end
-        out[method] = merge(out[method],entry)
-    end
-    return out
-end
-export getiratios
-function getNuclides(csv::AbstractString=joinpath(@__DIR__,"../settings/nuclides.csv"))
-    tab = CSV.read(csv, DataFrame)
-    elements = unique(tab[:,:element])
-    out = Dict()
-    for element in elements
-        i = findall(tab[:,:element] .== element)
-        out[element] = tab[i,:isotope]
-    end
-    return out
-end
-export getNuclides
-function getStoichiometry(csv::AbstractString=joinpath(@__DIR__,"../settings/stoichiometry.csv"))
-    tab = CSV.read(csv, DataFrame)
-    out = Dict()
-    good = .!ismissing.(tab)
-    (nr,nc) = size(tab)
-    for i in 1:nr
-        mineral = tab[i,"mineral"]
-        out[mineral] = Dict()
-        for j in 2:nc
-            element = names(tab)[j]
-            concentration = tab[i,j]
-            if !ismissing(concentration)
-                out[mineral][element] = concentration
-            end
-        end
-    end
-    return out
-end
-export getStoichiometry
-function setStoichiometry(csv::AbstractString=joinpath(@__DIR__,"../settings/stoichiometry.csv"))
-    _KJ["stoichiometry"] = getStoichiometry(csv)
-end
-export setStoichiometry
-function getGlass(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv"))
-    tab = CSV.read(csv, DataFrame)
-    out = Dict()
-    for row in eachrow(tab)
-        out[row["SRM"]] = row[2:end]
-    end
-    return out
-end
-export getGlass
-function setGlass!(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv"))
-    _KJ["glass"] = getGlass(csv)
-end
-function getReferenceMaterials(csv::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"))
-    tab = CSV.read(csv, DataFrame)
-    out = Dict()
-    for row in eachrow(tab)
-        method = row["method"]
-        if !(method in keys(out))
-            out[method] = Dict()
-        end
-        name = row["name"]
-        out[method][name] = (tx=(row["tx"],row["stx"]),y0=(row["y0"],row["sy0"]),type=row["type"])
-    end
-    return out
-end
-export getReferenceMaterials
-function setReferenceMaterials!(csv::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"))
-    _KJ["refmat"] = getReferenceMaterials(csv)
-end
-export setReferenceMaterials!
+
 function getInternal(mineral::AbstractString,channel::AbstractString)
     element = channel2element(channel,collect(keys(_KJ["nuclides"])))
     concentration = _KJ["stoichiometry"][mineral][element[1]] * 1e5
     return (channel,concentration)
 end
 export getInternal
+
+function get(od::OrderedDict,
+             i::Integer)
+    n = length(od.names)
+    key = od.names[mod1(i,n)]
+    return get(od,key)
+end
+function get(od::OrderedDict,
+             key::AbstractString)
+    return od.dict[string(key)]
+end

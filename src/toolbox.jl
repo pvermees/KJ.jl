@@ -498,7 +498,7 @@ end
 # returns a 1-row dataframe with the concentrations
 function elements2concs(elements::AbstractDataFrame,
                         SRM::AbstractString)
-    refconc = _KJ["glass"][SRM]
+    refconc = get(_KJ["glass"],SRM)
     out = copy(elements)
     for col in names(elements)
         element = elements[1,col]

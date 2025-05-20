@@ -151,18 +151,13 @@ end
 
 function TUImethod!(ctrl::AbstractDict,
                     response::AbstractString)
-    methods = _KJ["methods"].method
     if response=="c"
         ctrl["method"] = "concentrations"
         return "internal"
     else
         i = parse(Int,response)
-        if i > length(methods)
-            return "x"
-        else
-            ctrl["method"] = methods[i]
-            return "columns"
-        end
+        ctrl["method"] = _KJ["methods"].names[i]
+        return "columns"
     end
 end
 
@@ -216,9 +211,8 @@ end
 function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)
-    standards = collect(keys(_KJ["refmat"][ctrl["method"]]))
-    ctrl["cache"] = standards[i]
-    ctrl["standards"][standards[i]] = nothing
+    ctrl["cache"] = _KJ["refmat"][ctrl["method"]].names[i]
+    ctrl["standards"][ctrl["cache"]] = nothing
     return "addStandardGroup"
 end
 
@@ -239,10 +233,12 @@ function TUIaddStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIremoveAllStandards!(ctrl::AbstractDict)
+    for (standard,prefix) in ctrl["standards"]
+        setGroup!(ctrl["run"],prefix,"sample")
+    end
     empty!(ctrl["standards"])
-    setGroup!(ctrl["run"],"sample")
     ctrl["priority"]["standards"] = true
-    return "xx"
+    return "x"
 end
 
 function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
@@ -260,27 +256,37 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIrefmatTab(ctrl::AbstractDict)
-    for (key, value) in _KJ["refmat"][ctrl["method"]]
+    for (key, value) in _KJ["refmat"][ctrl["method"]].dict
         print(key)
         print(": ")
-        if !ismissing(value.t[1])
-            print("t=")
-            print(value.t[1])
-            print("Ma, ")
-        end
+        print_refmat_tx(value)
         print("y0=")
         print(value.y0[1])
         print("\n")
     end
-    return "x"
+    return nothing
+end
+function print_refmat_tx(entry::NamedTuple)
+    if ismissing(entry.tx[1])
+        nothing
+    elseif entry.type == "isochron"
+        print("t=")
+        print(entry.tx[1])
+        print("Ma, ")
+    elseif entry.type == "point"
+        print("x0=")
+        print(entry.tx[1])
+    else
+        nothing
+    end
 end
 
 function TUIchooseGlass!(ctrl::AbstractDict,
                          response::AbstractString)
     i = parse(Int,response)
-    glass = collect(keys(_KJ["glass"]))
-    ctrl["cache"] = glass[i]
-    ctrl["glass"][glass[i]] = nothing
+    glass = _KJ["glass"].names[i]
+    ctrl["cache"] = glass
+    ctrl["glass"][glass] = nothing
     return "addGlassGroup"
 end
 
@@ -301,10 +307,12 @@ function TUIaddGlassByNumber!(ctrl::AbstractDict,
 end
 
 function TUIremoveAllGlass!(ctrl::AbstractDict)
-    empty!(ctrl["standards"])
-    setGroup!(ctrl["run"],"sample")
+    for (glass,prefix) in ctrl["glass"]
+        setGroup!(ctrl["run"],prefix,"sample")
+    end
+    empty!(ctrl["glass"])
     ctrl["priority"]["glass"] = true
-    return "xx"
+    return "x"
 end
 
 function TUIremoveGlassByNumber!(ctrl::AbstractDict,
@@ -322,10 +330,10 @@ function TUIremoveGlassByNumber!(ctrl::AbstractDict,
 end
 
 function TUIglassTab(ctrl::AbstractDict)
-    for (key, value) in _KJ["glass"]
-        println(key)
+    for name in _KJ["glass"].names
+        println(name)
     end
-    return "x"
+    return nothing
 end
 
 function TUIviewer(ctrl::AbstractDict)
@@ -617,24 +625,6 @@ function TUIprocess!(ctrl::AbstractDict)
     return nothing
 end
 
-function TUIsubset!(ctrl::AbstractDict,
-                    response::AbstractString)
-    if response=="a"
-        ctrl["cache"] = 1:length(ctrl["run"])
-    elseif response=="s"
-        ctrl["cache"] = findall(contains("sample"),getGroups(ctrl["run"]))
-    elseif response=="x"
-        return "x"
-    else
-        ctrl["cache"] = findall(contains(response),getSnames(ctrl["run"]))
-    end
-    if ctrl["method"] == "concentrations"
-        return "csv"
-    else
-        return "exportformat"
-    end
-end
-
 function TUIexport2csv(ctrl::AbstractDict,
                        response::AbstractString)
     if ctrl["method"]=="concentrations"
@@ -644,11 +634,11 @@ function TUIexport2csv(ctrl::AbstractDict,
                      method=ctrl["method"])
     end
     fname = splitext(response)[1]*".csv"
-    CSV.write(fname,out[ctrl["cache"],:])
+    CSV.write(fname,out)
     if ctrl["method"] == "concentrations"
-        return "xx"
+        return "x"
     else
-        return "xxx"
+        return "xx"
     end
 end
 
@@ -656,8 +646,8 @@ function TUIexport2json(ctrl::AbstractDict,
                         response::AbstractString)
     ratios = averat(ctrl["run"],ctrl["channels"],ctrl["blank"],ctrl["par"])
     fname = splitext(response)[1]*".json"
-    export2IsoplotR(ratios[ctrl["cache"],:],ctrl["method"];fname=fname)
-    return "xxx"
+    export2IsoplotR(ratios,ctrl["method"];fname=fname)
+    return "xx"
 end
 
 function TUIimportLog!(ctrl::AbstractDict,
