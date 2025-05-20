@@ -69,19 +69,15 @@ export init_nuclides
 
 function init_stoichiometry(csv::AbstractString=joinpath(@__DIR__,"../settings/stoichiometry.csv"))
     tab = CSV.read(csv, DataFrame)
-    out = Dict()
+    out = OrderedDict()
     good = .!ismissing.(tab)
     (nr,nc) = size(tab)
     for i in 1:nr
         mineral = tab[i,"mineral"]
-        out[mineral] = Dict()
-        for j in 2:nc
-            element = names(tab)[j]
-            concentration = tab[i,j]
-            if !ismissing(concentration)
-                out[mineral][element] = concentration
-            end
-        end
+        conc = tab[i,2:end]
+        concvec = collect(conc)
+        good = .!ismissing.(concvec)
+        add2od!(out,mineral,conc[good])
     end
     return out
 end

@@ -266,7 +266,9 @@ function init_KJtree()
             help =
             "Choose one or more primary reference materials. " * 
             "Note that secondary reference materials should be " * 
-            "treated as regular samples.",
+            "treated as regular samples. It is always better to use " *
+            "matrix matched reference materials. Only use (NIST) glass " *
+            "if no matrix matched standard is available.",
             action = Dict(
                 "a" => "chooseStandard",
                 "r" => "removeStandard",

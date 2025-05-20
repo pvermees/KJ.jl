@@ -189,7 +189,7 @@ function TUIchooseMineral!(ctrl::AbstractDict,
         return "stoichiometry"
     else
         i = parse(Int,response)
-        mineral = collect(keys(_KJ["stoichiometry"]))[i]
+        mineral = _KJ["stoichiometry"].names[i]
         channel = ctrl["cache"]
         ctrl["internal"] = getInternal(mineral,channel)
         ctrl["priority"]["method"] = false

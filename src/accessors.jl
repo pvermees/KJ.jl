@@ -304,7 +304,7 @@ export getPDd
 
 function getInternal(mineral::AbstractString,channel::AbstractString)
     element = channel2element(channel,collect(keys(_KJ["nuclides"])))
-    concentration = _KJ["stoichiometry"][mineral][element[1]] * 1e5
+    concentration = get(_KJ["stoichiometry"],mineral)[element[1]] * 1e5
     return (channel,concentration)
 end
 export getInternal
