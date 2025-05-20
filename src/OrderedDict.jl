@@ -9,10 +9,11 @@ end
 
 function get(od::OrderedDict,
              i::Integer)
-    key = od.names[i]
-    return get(dict,key)
+    n = length(od.names)
+    key = od.names[mod1(i,n)]
+    return get(od,key)
 end
 function get(od::OrderedDict,
              key::AbstractString)
-    return od.dict[key]
+    return od.dict[string(key)]
 end
