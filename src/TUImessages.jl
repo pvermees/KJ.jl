@@ -39,11 +39,11 @@ end
 function TUImineralMessage(ctrl::AbstractDict)
     msg = "Automatically set the concentration of the internal standard " *
         "by selecting one of the following minerals, or specify a value manually:\n"
-    minerals = collect(keys(_KJ["stoichiometry"]))
+    minerals = _KJ["stoichiometry"].names
     for i in eachindex(minerals)
         msg *= string(i)*". "*minerals[i]*"\n"
     end
-    msg *= "m. manual\n"
+    msg *= "m. manual"
     return msg
 end
 
