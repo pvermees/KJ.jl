@@ -308,14 +308,3 @@ function getInternal(mineral::AbstractString,channel::AbstractString)
     return (channel,concentration)
 end
 export getInternal
-
-function get(od::OrderedDict,
-             i::Integer)
-    n = length(od.names)
-    key = od.names[mod1(i,n)]
-    return get(od,key)
-end
-function get(od::OrderedDict,
-             key::AbstractString)
-    return od.dict[string(key)]
-end
