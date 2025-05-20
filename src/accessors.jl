@@ -198,7 +198,7 @@ export sett0!
 # isochron
 function getx0y0y1(method::AbstractString,
                    refmat::AbstractString)
-    t = getRefmat(method,refmat).tx[1]
+    t = get(_KJ["refmat"][method],refmat).tx[1]
     if method=="U-Pb"
         L8 = _KJ["lambda"]["U238-Pb206"][1]
         L5 = _KJ["lambda"]["U235-Pb207"][1]
@@ -210,22 +210,22 @@ function getx0y0y1(method::AbstractString,
         x0 = 1/(exp(L*t)-1)
         y1 = 0.0
     end
-    y0 = getRefmat(method,refmat).y0[1]
+    y0 = get(_KJ["refmat"][method],refmat).y0[1]
     return (x0=x0,y0=y0,y1=y1)
 end
 # point
 function getx0y0(method::AbstractString,
                  refmat::AbstractString)
-    x0 = getRefmat(method,refmat).tx[1]
-    y0 = getRefmat(method,refmat).y0[1]
+    x0 = get(_KJ["refmat"][method],refmat).tx[1]
+    y0 = get(_KJ["refmat"][method],refmat).y0[1]
     return (x0=x0,y0=y0)
 end
 # glass
 function gety0(method::AbstractString,
                refmat::AbstractString)
-    i = findfirst(==(method),_KJ["methods"][:,"method"])
-    ratio = _KJ["methods"][i,"d"] * _KJ["methods"][i,"D"]
-    return getGlass(refmat)[ratio]
+    P, D, d = getPDd(method)
+    ratio = d * D
+    return get(_KJ["glass"],refmat)[ratio]
 end
 
 function getAnchors(method::AbstractString,
@@ -254,7 +254,7 @@ function getStandardAnchors(method::AbstractString,
                            refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
-        t = getRefmat(method,refmat).type
+        t = get(_KJ["refmat"][method],refmat).type
         if t == "isochron"
             out[refmat] = getx0y0y1(method,refmat)
         else # point
@@ -297,8 +297,7 @@ end
 export getSignals
 
 function getPDd(method::AbstractString)
-    i = findfirst(==(method),_KJ["methods"][:,"method"])
-    PDd = _KJ["methods"][i,2:end]
+    PDd = get(_KJ["methods"],method)
     return PDd.P, PDd.D, PDd.d
 end
 export getPDd
@@ -310,23 +309,13 @@ function getInternal(mineral::AbstractString,channel::AbstractString)
 end
 export getInternal
 
-function getGlass(i::Integer)
-    refmat = _KJ["glass"]["names"][i]
-    return getGlass(refmat)
+function get(od::OrderedDict,
+             i::Integer)
+    n = length(od.names)
+    key = od.names[mod1(i,n)]
+    return get(od,key)
 end
-function getGlass(refmat::AbstractString)
-    return _KJ["glass"]["dict"][refmat]
-end
-
-function getRefmats(method::AbstractString)
-    return _KJ["refmat"][method]
-end
-function getRefmat(method::AbstractString,
-                   i::Integer)
-    refmat = getRefmatNames()[i]
-    return getRefmat(method,refmat)
-end
-function getRefmat(method::AbstractString,
-                   refmat::AbstractString)
-    return _KJ["refmat"][method]["dict"][refmat]
+function get(od::OrderedDict,
+             key::AbstractString)
+    return od.dict[string(key)]
 end

@@ -1,3 +1,5 @@
+_KJ::AbstractDict = Dict()
+
 function init_KJ!()
     _KJ["methods"] = init_methods()
     _KJ["lambda"] = init_lambdas()
@@ -13,7 +15,16 @@ end
 export init_KJ!
 
 function init_methods(csv::AbstractString=joinpath(@__DIR__,"../settings/methods.csv"))
-    return CSV.read(csv, DataFrame)
+    df = CSV.read(csv, DataFrame)
+    out = OrderedDict()
+    for row in eachrow(df)
+        key = row[1]
+        value = (P=String(row[2]),
+                 D=String(row[3]),
+                 d=String(row[4]))
+        add2od!(out,key,value)
+    end
+    return out
 end
 export init_methods
 
@@ -83,10 +94,9 @@ export init_stoichiometry!
 
 function init_glass(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv"))
     tab = CSV.read(csv, DataFrame)
-    out = Dict("names" => tab[:,"SRM"],
-               "dict" => Dict())
+    out = OrderedDict()
     for row in eachrow(tab)
-        out["dict"][row["SRM"]] = row[2:end]
+        add2od!(out,row["SRM"],row[2:end])
     end
     return out
 end
@@ -103,23 +113,16 @@ function init_referenceMaterials(csv::AbstractString=joinpath(@__DIR__,"../setti
     for row in eachrow(tab)
         method = row["method"]
         if !(method in keys(out))
-            out[method] = Dict("names" => Vector{String}(),
-                               "dict" => Dict())
+            out[method] = OrderedDict()
         end
-        name = row["name"]
-        push!(out[method]["names"],name)
-        out[method]["dict"][name] = (tx=(row["tx"],row["stx"]),
-                                     y0=(row["y0"],row["sy0"]),
-                                     type=row["type"])
+        val = (tx=(row["tx"],row["stx"]),
+               y0=(row["y0"],row["sy0"]),
+               type=row["type"])
+        add2od!(out[method],row["name"],val)
     end
     return out
 end
 export init_referenceMaterials
-
-function init_referenceMaterials!(csv::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"))
-    _KJ["refmat"] = init_referenceMaterials(csv)
-end
-export init_referenceMaterials!
 
 function init_referenceMaterials!(csv::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"))
     _KJ["refmat"] = init_referenceMaterials(csv)

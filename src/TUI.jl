@@ -41,6 +41,8 @@ function TUI(extensions...;logbook::AbstractString="",reset=false)
             dispatch!(_KJ["ctrl"];verbose=false)
         catch e
             println(e)
+            println("Press 'x' to quit or any other key to continue")
+            if readline() == "x" break end
         end
     end
 end

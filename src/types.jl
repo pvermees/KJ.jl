@@ -9,4 +9,7 @@ mutable struct Sample
 end
 export Sample
 
-_KJ::AbstractDict = Dict()
+mutable struct OrderedDict
+    names::Vector{String}
+    dict::Dict
+end

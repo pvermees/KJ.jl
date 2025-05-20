@@ -6,6 +6,7 @@ import Plots, Statistics, Distributions, Optim, CSV
 include("errors.jl")
 include("json.jl")
 include("types.jl")
+include("OrderedDict.jl")
 include("accessors.jl")
 include("toolbox.jl")
 include("init.jl")
