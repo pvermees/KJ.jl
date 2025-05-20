@@ -683,19 +683,6 @@ function init_KJtree()
             action = TUItransformation!
         ),
         "export" => (
-            message =
-            "a: All analyses\n" * 
-            "s: Samples only (no standards)\n" *
-            "x: Exit\n" * 
-            "?: Help\n" * 
-            "or enter the prefix of the analyses that you want to select",
-            help =
-            "Select some or all of the samples to export to a " * 
-            ".csv or .json file for further analysis in higher " * 
-            "level data reduction software such as IsoplotR.",
-            action = TUIsubset!
-        ),
-        "exportformat" => (
             message = TUIexportFormatMessage,
             help =
             "Export to a comma-separated variable format with " * 

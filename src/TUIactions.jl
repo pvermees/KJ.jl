@@ -625,24 +625,6 @@ function TUIprocess!(ctrl::AbstractDict)
     return nothing
 end
 
-function TUIsubset!(ctrl::AbstractDict,
-                    response::AbstractString)
-    if response=="a"
-        ctrl["cache"] = 1:length(ctrl["run"])
-    elseif response=="s"
-        ctrl["cache"] = findall(contains("sample"),getGroups(ctrl["run"]))
-    elseif response=="x"
-        return "x"
-    else
-        ctrl["cache"] = findall(contains(response),getSnames(ctrl["run"]))
-    end
-    if ctrl["method"] == "concentrations"
-        return "csv"
-    else
-        return "exportformat"
-    end
-end
-
 function TUIexport2csv(ctrl::AbstractDict,
                        response::AbstractString)
     if ctrl["method"]=="concentrations"
@@ -652,11 +634,11 @@ function TUIexport2csv(ctrl::AbstractDict,
                      method=ctrl["method"])
     end
     fname = splitext(response)[1]*".csv"
-    CSV.write(fname,out[ctrl["cache"],:])
+    CSV.write(fname,out)
     if ctrl["method"] == "concentrations"
-        return "xx"
+        return "x"
     else
-        return "xxx"
+        return "xx"
     end
 end
 
@@ -664,8 +646,8 @@ function TUIexport2json(ctrl::AbstractDict,
                         response::AbstractString)
     ratios = averat(ctrl["run"],ctrl["channels"],ctrl["blank"],ctrl["par"])
     fname = splitext(response)[1]*".json"
-    export2IsoplotR(ratios[ctrl["cache"],:],ctrl["method"];fname=fname)
-    return "xxx"
+    export2IsoplotR(ratios,ctrl["method"];fname=fname)
+    return "xx"
 end
 
 function TUIimportLog!(ctrl::AbstractDict,
