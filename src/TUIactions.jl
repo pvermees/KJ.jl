@@ -546,7 +546,7 @@ function TUIoneMultiSignalWindow!(ctrl::AbstractDict,
     swin = string2windows(samp,response,false)
     setSwin!(samp,swin)
     TUIplotter(ctrl)
-    return "x"
+    return "xx"
 end
 
 function TUIallAutoSignalWindow!(ctrl::AbstractDict)
