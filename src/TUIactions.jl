@@ -776,7 +776,7 @@ end
 
 function TUIaddStandard!(ctrl::AbstractDict,
                          response::AbstractString)
-    setReferenceMaterials!(response)
+    init_referenceMaterials!(response)
     return "x"
 end
 
