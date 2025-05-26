@@ -782,7 +782,7 @@ end
 
 function TUIaddGlass!(ctrl::AbstractDict,
                       response::AbstractString)
-    setGlass!(response)
+    init_glass!(response)
     return "x"
 end
 
