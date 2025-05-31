@@ -145,12 +145,13 @@ function autoSwin(t::AbstractVector,
                   absolute_buffer::AbstractFloat=2.0,
                   relative_buffer::AbstractFloat=0.1)
     selection = (t.>=start .&& t.<=stop)
-    if (off-on) > 2*absolute_buffer
+    duration = off - on 
+    if duration > 2*absolute_buffer
         t1 = on + absolute_buffer
         t2 = off - absolute_buffer
     else
-        t1 = on + (off - on)*(1 - relative_buffer)
-        t2 = off - (off - on)*(1 - relative_buffer)
+        t1 = on + duration*(1 - relative_buffer)
+        t2 = off - duration*(1 - relative_buffer)
     end
     i1 = findall(t[selection] .< t1)[end]
     i2 = findall(t[selection] .< t2)[end]
@@ -529,4 +530,14 @@ function chauvenet(data::Vector{<:Real})
     z_scores = @. abs((data - mu) / sigma)
     probabilities = @. 2 * (1 - Distributions.cdf(Distributions.Normal(),z_scores))
     return probabilities .>= criterion
+end
+
+function dataframe_sum(df::DataFrame)
+    total = 0.0
+    for col in eachcol(df)
+        if eltype(col) <: Number
+            total += sum(col)
+        end
+    end
+    return total
 end
