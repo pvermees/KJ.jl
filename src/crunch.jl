@@ -1,24 +1,24 @@
 # isochron
 function getP(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
-              x0::AbstractFloat,y0::AbstractFloat,y1::AbstractFloat,
-              ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+              x0::Real,y0::Real,y1::Real,
+              ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     return @. -((Dm*FT*ft*mf*vP*x0*y0-FT*dm*ft*vP*x0)*y1+((-Pm*mf^2*vD*x0^2)-Dm*FT*ft*mf*vP*x0)*y0^2+FT*dm*ft*vP*x0*y0-Pm*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
 end
 # isochron
 function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
-              x0::AbstractFloat,y0::AbstractFloat,y1::AbstractFloat,
-              ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+              x0::Real,y0::Real,y1::Real,
+              ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     return @. (Dm*FT^2*ft^2*vP*y1^2+((-FT*Pm*ft*mf*vD*x0)-2*Dm*FT^2*ft^2*vP)*y0*y1+(FT*Pm*ft*mf*vD*x0+Dm*FT^2*ft^2*vP)*y0^2+dm*mf*vD*x0^2*y0+Dm*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
 end
 # point
 function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
-              x0::AbstractFloat,y0::AbstractFloat,
-              ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+              x0::Real,y0::Real,
+              ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     return @. (dm*vD*vP*y0+(FT*Pm-FT*bPt)*ft*vD*vd*x0+Dm*mf*vP*vd)/(vD*vP*y0^2+FT^2*ft^2*vD*vd*x0^2+mf^2*vP*vd)
     return nothing
@@ -26,8 +26,8 @@ end
 # glass
 function getD(Dm::AbstractVector,dm::AbstractVector,
               vD::AbstractVector,vd::AbstractVector,
-              y0::AbstractFloat,
-              mf::AbstractFloat,
+              y0::Real,
+              mf::Real,
               bDt::AbstractVector,bdt::AbstractVector)
     return @. (dm*mf*vD*y0+Dm*vd)/(mf^2*vD*y0^2+vd)
 end
@@ -37,10 +37,10 @@ function SS(par::AbstractVector,
             bP::AbstractVector,bD::AbstractVector,bd::AbstractVector,
             dats::AbstractDict,vars::AbstractDict,
             channels::AbstractDict,anchors::AbstractDict,
-            mf::Union{AbstractFloat,Nothing};
+            mf::Union{Real,Nothing};
             ndrift::Integer=1,
             ndown::Integer=0,
-            PAcutoff::Union{AbstractFloat,Nothing}=nothing)
+            PAcutoff::Union{Real,Nothing}=nothing)
     drift = par[1:ndrift]
     down = vcat(0.0,par[ndrift+1:ndrift+ndown])
     mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
@@ -64,8 +64,8 @@ end
 # isochron
 function SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
             vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
-            x0::AbstractFloat,y0::AbstractFloat,y1::AbstractFloat,
-            ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+            x0::Real,y0::Real,y1::Real,
+            ft::AbstractVector,FT::AbstractVector,mf::Real,
             bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     pred = predict(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     dP = @. pred[:,"P"] - Pm
@@ -76,8 +76,8 @@ end
 # point
 function SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
             vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
-            x0::AbstractFloat,y0::AbstractFloat,
-            ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+            x0::Real,y0::Real,
+            ft::AbstractVector,FT::AbstractVector,mf::Real,
             bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     pred = predict(Pm,Dm,dm,vP,vD,vd,x0,y0,ft,FT,mf,bPt,bDt,bdt)
     dP = @. pred[:,"P"] - Pm
@@ -103,8 +103,8 @@ end
 # glass
 function SS(Dm::AbstractVector,dm::AbstractVector,
             vD::AbstractVector,vd::AbstractVector,
-            y0::AbstractFloat,
-            mf::AbstractFloat,
+            y0::Real,
+            mf::Real,
             bDt::AbstractVector,bdt::AbstractVector)
     pred = predict(Dm,dm,vD,vd,y0,mf,bDt,bdt)
     dD = @. pred[:,"D"] - Dm
@@ -116,8 +116,8 @@ export SS
 # isochron or point
 function SSprep(bP::AbstractVector,bD::AbstractVector,bd::AbstractVector,
                 dat::AbstractDataFrame,var::AbstractDataFrame,channels::AbstractDict,
-                mfrac::AbstractFloat,drift::AbstractVector,down::AbstractVector;
-                PAcutoff::Union{AbstractFloat,Nothing}=nothing,
+                mfrac::Real,drift::AbstractVector,down::AbstractVector;
+                PAcutoff::Union{Real,Nothing}=nothing,
                 adrift::AbstractVector=drift)
     t = dat.t
     T = dat.T
@@ -206,8 +206,8 @@ end
 # isochron
 function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
                  vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
-                 x0::AbstractFloat,y0::AbstractFloat,y1::AbstractFloat,
-                 ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+                 x0::Real,y0::Real,y1::Real,
+                 ft::AbstractVector,FT::AbstractVector,mf::Real,
                  bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     P = getP(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     D = getD(Pm,Dm,dm,vP,vD,vd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
@@ -219,8 +219,8 @@ end
 # point
 function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
                  vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
-                 x0::AbstractFloat,y0::AbstractFloat,
-                 ft::AbstractVector,FT::AbstractVector,mf::AbstractFloat,
+                 x0::Real,y0::Real,
+                 ft::AbstractVector,FT::AbstractVector,mf::Real,
                  bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     D = getD(Pm,Dm,dm,vP,vD,vd,x0,y0,ft,FT,mf,bPt,bDt,bdt)
     Pf = @. D*x0*ft*FT + bPt
@@ -234,7 +234,7 @@ function predict(dat::AbstractDataFrame,
                  pars::NamedTuple,
                  blank::AbstractDataFrame,
                  channels::AbstractDict,
-                 y0::AbstractFloat;
+                 y0::Real;
                  debug::Bool=false)
     mf = exp(pars.mfrac)
     bD = blank[:,channels["D"]]
@@ -244,8 +244,8 @@ function predict(dat::AbstractDataFrame,
 end
 function predict(Dm::AbstractVector,dm::AbstractVector,
                  vD::AbstractVector,vd::AbstractVector,
-                 y0::AbstractFloat,
-                 mf::AbstractFloat,
+                 y0::Real,
+                 mf::Real,
                  bDt::AbstractVector,
                  bdt::AbstractVector)
     D = getD(Dm,dm,vD,vd,y0,mf,bDt,bdt)

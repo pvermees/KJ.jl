@@ -46,18 +46,10 @@ end
 function polyFit(t::AbstractVector,
                  y::AbstractVector,
                  n::Integer)
-    if any(y.>0.0)
-        function misfit(par)
-            pred = polyVal(par,t)
-            sum((y.-pred).^2)
-        end
-        b0 = log(abs(Statistics.mean(y)))
-        init = [b0;fill(-10,n-1)]
-        fit = Optim.optimize(misfit,init)
-        return Optim.minimizer(fit)
-    else
-        return fill(-Inf,n)
-    end
+    # Create the Vandermonde matrix
+    A = [t[i]^p for i in eachindex(t), p in 0:n-1]
+    # Solve the least squares problem A'*A*coeffs = A'*y
+    return (A' * A) \ (A' * y)
 end
 
 function polyVal(p::AbstractVector,
@@ -67,7 +59,7 @@ function polyVal(p::AbstractVector,
     out = fill(0.0,nt)
     if np>0
         for i in 1:np
-            out .+= exp(p[i]).*t.^(i-1)
+            out .+= p[i].*t.^(i-1)
         end
     end
     out
@@ -526,10 +518,15 @@ function chauvenet(data::Vector{<:Real})
     n = length(data)
     mu = Statistics.mean(data)
     sigma = Statistics.std(data)
-    criterion = 1.0 / (2 * n)
-    z_scores = @. abs((data - mu) / sigma)
-    probabilities = @. 2 * (1 - Distributions.cdf(Distributions.Normal(),z_scores))
-    return probabilities .>= criterion
+    if sigma > 0
+        criterion = 1.0 / (2 * n)
+        z_scores = @. abs((data - mu) / sigma)
+        probabilities = @. 2 * (1 - Distributions.cdf(Distributions.Normal(),z_scores))
+        out = probabilities .>= criterion
+    else
+        out = fill(true,n)
+    end
+    return out
 end
 
 function dataframe_sum(df::DataFrame)

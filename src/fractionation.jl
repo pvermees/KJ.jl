@@ -20,7 +20,7 @@ function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
                        standards::AbstractDict,
-                       mf::Union{AbstractFloat,Nothing};
+                       mf::Union{Real,Nothing};
                        ndrift::Integer=1,
                        ndown::Integer=0,
                        PAcutoff=nothing,
@@ -119,7 +119,7 @@ function SSfit(init::AbstractVector,
                vars::AbstractDict,
                channels::AbstractDict,
                anchors::AbstractDict,
-               mf::Union{AbstractFloat,Nothing};
+               mf::Union{Real,Nothing};
                ndrift::Integer=1,
                ndown::Integer=0,
                PAcutoff=nothing,
