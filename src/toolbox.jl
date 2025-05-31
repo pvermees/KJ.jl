@@ -42,27 +42,20 @@ function formRatios(df::AbstractDataFrame,
     DataFrame(ratios,ratlabs)
 end
 
-# polynomial fit with logarithmic coefficients
 function polyFit(t::AbstractVector,
                  y::AbstractVector,
                  n::Integer)
     # Create the Vandermonde matrix
-    A = [t[i]^p for i in eachindex(t), p in 0:n-1]
-    # Solve the least squares problem A'*A*coeffs = A'*y
-    return (A' * A) \ (A' * y)
+    V = vandermonde(t,n-1)
+    # Solve the least squares problem V'*V*coeffs = V'*y
+    return (V' * V) \ (V' * y)
 end
 
 function polyVal(p::AbstractVector,
                  t::AbstractVector)
-    np = length(p)
-    nt = length(t)
-    out = fill(0.0,nt)
-    if np>0
-        for i in 1:np
-            out .+= p[i].*t.^(i-1)
-        end
-    end
-    out
+    n = length(p)
+    V = vandermonde(t,n-1)
+    return V * p
 end
 function polyVal(p::AbstractDataFrame,
                  t::AbstractVector)
@@ -75,6 +68,10 @@ function polyVal(p::AbstractDataFrame,
     return out
 end
 export polyVal
+
+function vandermonde(x,degree)
+    return [x[i]^p for i in eachindex(x), p in 0:degree]
+end
 
 function polyFac(p::AbstractVector,
                  t::AbstractVector)
