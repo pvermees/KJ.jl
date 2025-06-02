@@ -20,8 +20,7 @@ function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               x0::Real,y0::Real,
               ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. (dm*vD*vP*y0+(FT*Pm-FT*bPt)*ft*vD*vd*x0+Dm*mf*vP*vd)/(vD*vP*y0^2+FT^2*ft^2*vD*vd*x0^2+mf^2*vP*vd)
-    return nothing
+    return @. -((FT*bPt-FT*Pm)*ft*vD*x0+(bDt-Dm)*vP)/(FT^2*ft^2*vD*x0^2+vP)
 end
 # glass
 function getD(Dm::AbstractVector,dm::AbstractVector,
