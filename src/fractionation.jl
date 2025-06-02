@@ -130,7 +130,6 @@ function SSfit(init::AbstractVector,
 
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)
-
     if verbose
         println("Drift and downhole fractionation correction:\n")
         println(fit)

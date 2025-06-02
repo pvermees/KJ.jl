@@ -45,9 +45,7 @@ end
 function polyFit(t::AbstractVector,
                  y::AbstractVector,
                  n::Integer)
-    # Create the Vandermonde matrix
     V = vandermonde(t,n-1)
-    # Solve the least squares problem V'*V*coeffs = V'*y
     return (V' * V) \ (V' * y)
 end
 
