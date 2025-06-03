@@ -4,7 +4,7 @@ function getP(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               x0::Real,y0::Real,y1::Real,
               ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. -((Dm*FT*ft*mf*vP*x0*y0-FT*dm*ft*vP*x0)*y1+((-Pm*mf^2*vD*x0^2)-Dm*FT*ft*mf*vP*x0)*y0^2+FT*dm*ft*vP*x0*y0-Pm*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
+    return @. ((FT*(bDt-Dm)*ft*mf*vP*x0*y0+(FT*dm-FT*bdt)*ft*vP*x0)*y1+(mf^2*(Pm*vD-bPt*vD)*x0^2+FT*(Dm-bDt)*ft*mf*vP*x0)*y0^2+(FT*bdt-FT*dm)*ft*vP*x0*y0+(Pm-bPt)*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
 end
 # isochron
 function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
@@ -12,7 +12,7 @@ function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               x0::Real,y0::Real,y1::Real,
               ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. (Dm*FT^2*ft^2*vP*y1^2+((-FT*Pm*ft*mf*vD*x0)-2*Dm*FT^2*ft^2*vP)*y0*y1+(FT*Pm*ft*mf*vD*x0+Dm*FT^2*ft^2*vP)*y0^2+dm*mf*vD*x0^2*y0+Dm*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
+    return @. -(FT^2*(bDt-Dm)*ft^2*vP*y1^2+(ft*mf*(FT*Pm*vD-FT*bPt*vD)*x0+FT^2*(2*Dm-2*bDt)*ft^2*vP)*y0*y1+(ft*mf*(FT*bPt*vD-FT*Pm*vD)*x0+FT^2*(bDt-Dm)*ft^2*vP)*y0^2+mf*(bdt*vD-dm*vD)*x0^2*y0+(bDt-Dm)*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
 end
 # point
 function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
@@ -28,7 +28,7 @@ function getD(Dm::AbstractVector,dm::AbstractVector,
               y0::Real,
               mf::Real,
               bDt::AbstractVector,bdt::AbstractVector)
-    return @. (dm*mf*vD*y0+Dm*vd)/(mf^2*vD*y0^2+vd)
+    return @. ((dm-bdt)*mf*vD*y0+(Dm-bDt)*vd)/(mf^2*vD*y0^2+vd)
 end
 
 # mass fractionation + elemental fractionation
