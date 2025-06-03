@@ -20,7 +20,7 @@ function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               x0::Real,y0::Real,
               ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. -((FT*bPt-FT*Pm)*ft*vD*x0+(bDt-Dm)*vP)/(FT^2*ft^2*vD*x0^2+vP)
+    return @. -((FT*bPt-FT*Pm)*ft*mf*vD*x0+(FT^2*bDt-Dm*FT^2)*ft^2*vP)/(mf^2*vD*x0^2+FT^2*ft^2*vP)
 end
 # glass
 function getD(Dm::AbstractVector,dm::AbstractVector,
@@ -222,9 +222,9 @@ function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
                  ft::AbstractVector,FT::AbstractVector,mf::Real,
                  bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
     D = getD(Pm,Dm,dm,vP,vD,vd,x0,y0,ft,FT,mf,bPt,bDt,bdt)
-    Pf = @. D*x0*ft*FT + bPt
+    Pf = @. x0*D*mf/(ft*FT) + bPt
     Df = @. D + bDt
-    df = @. D*y0*mf + bdt
+    df = @. y0*D*mf + bdt
     return DataFrame(P=Pf,D=Df,d=df)
 end
 # glass
