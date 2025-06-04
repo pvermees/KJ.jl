@@ -42,35 +42,18 @@ function formRatios(df::AbstractDataFrame,
     DataFrame(ratios,ratlabs)
 end
 
-# polynomial fit with logarithmic coefficients
 function polyFit(t::AbstractVector,
                  y::AbstractVector,
                  n::Integer)
-    if any(y.>0.0)
-        function misfit(par)
-            pred = polyVal(par,t)
-            sum((y.-pred).^2)
-        end
-        b0 = log(abs(Statistics.mean(y)))
-        init = [b0;fill(-10,n-1)]
-        fit = Optim.optimize(misfit,init)
-        return Optim.minimizer(fit)
-    else
-        return fill(-Inf,n)
-    end
+    V = vandermonde(t,n-1)
+    return (V' * V) \ (V' * y)
 end
 
 function polyVal(p::AbstractVector,
                  t::AbstractVector)
-    np = length(p)
-    nt = length(t)
-    out = fill(0.0,nt)
-    if np>0
-        for i in 1:np
-            out .+= exp(p[i]).*t.^(i-1)
-        end
-    end
-    out
+    n = length(p)
+    V = vandermonde(t,n-1)
+    return V * p
 end
 function polyVal(p::AbstractDataFrame,
                  t::AbstractVector)
@@ -83,6 +66,10 @@ function polyVal(p::AbstractDataFrame,
     return out
 end
 export polyVal
+
+function vandermonde(x,degree)
+    return [x[i]^p for i in eachindex(x), p in 0:degree]
+end
 
 function polyFac(p::AbstractVector,
                  t::AbstractVector)
@@ -145,12 +132,13 @@ function autoSwin(t::AbstractVector,
                   absolute_buffer::AbstractFloat=2.0,
                   relative_buffer::AbstractFloat=0.1)
     selection = (t.>=start .&& t.<=stop)
-    if (off-on) > 2*absolute_buffer
+    duration = off - on 
+    if duration > 2*absolute_buffer
         t1 = on + absolute_buffer
         t2 = off - absolute_buffer
     else
-        t1 = on + (off - on)*(1 - relative_buffer)
-        t2 = off - (off - on)*(1 - relative_buffer)
+        t1 = on + duration*(1 - relative_buffer)
+        t2 = off - duration*(1 - relative_buffer)
     end
     i1 = findall(t[selection] .< t1)[end]
     i2 = findall(t[selection] .< t2)[end]
@@ -525,8 +513,23 @@ function chauvenet(data::Vector{<:Real})
     n = length(data)
     mu = Statistics.mean(data)
     sigma = Statistics.std(data)
-    criterion = 1.0 / (2 * n)
-    z_scores = @. abs((data - mu) / sigma)
-    probabilities = @. 2 * (1 - Distributions.cdf(Distributions.Normal(),z_scores))
-    return probabilities .>= criterion
+    if sigma > 0
+        criterion = 1.0 / (2 * n)
+        z_scores = @. abs((data - mu) / sigma)
+        probabilities = @. 2 * (1 - Distributions.cdf(Distributions.Normal(),z_scores))
+        out = probabilities .>= criterion
+    else
+        out = fill(true,n)
+    end
+    return out
+end
+
+function dataframe_sum(df::DataFrame)
+    total = 0.0
+    for col in eachcol(df)
+        if eltype(col) <: Number
+            total += sum(col)
+        end
+    end
+    return total
 end
