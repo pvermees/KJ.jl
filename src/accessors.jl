@@ -65,6 +65,11 @@ function getGroups(run::Vector{Sample})
 end
 export getGroups
 
+function getIndicesInGroup(run::Vector{Sample},group::AbstractString)
+    return findall(getGroups(myrun) .== group)
+end
+export getIndicesInGroup
+
 function getAttr(run::Vector{Sample},
                  attr::Symbol)
     ns = length(run)
@@ -180,7 +185,7 @@ function sett0!(run::Vector{Sample})
         sett0!(samp)
     end
 end
-function sett0!(run::Vector{Sample},t0::AbstractFloat)
+function sett0!(run::Vector{Sample},t0::Number)
     for samp in run
         sett0!(samp,t0)
     end
@@ -190,7 +195,7 @@ function sett0!(samp::Sample)
     i0 = geti0(dat)
     sett0!(samp,samp.dat[i0,1])
 end
-function sett0!(samp::Sample,t0::AbstractFloat)
+function sett0!(samp::Sample,t0::Number)
     samp.t0 = t0
 end
 export sett0!
