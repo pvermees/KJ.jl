@@ -46,12 +46,13 @@ function atomic(samp::Sample,
                 pars::NamedTuple;
                 add_xy::Bool=false)
     dat = windowData(samp;signal=true,add_xy=add_xy)
-    var = dat2var(dat,collect(values(channels)))
+    covmat = dat2cov(dat,collect(values(channels)))
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
         SSprep(blank[:,channels["P"]],
                blank[:,channels["D"]],
                blank[:,channels["d"]],
-               dat,var,
+               dat,
+               covmat,
                channels,
                pars.mfrac,pars.drift,pars.down;
                PAcutoff=pars.PAcutoff,

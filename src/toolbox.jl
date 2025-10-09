@@ -197,10 +197,14 @@ function pool(run::Vector{Sample};
 end
 export pool
 
-function dat2var(dat::AbstractDataFrame,
+function dat2cov(dat::AbstractDataFrame,
                  channels::AbstractVector)
     diff = dat[2:end,channels] .- dat[1:end-1,channels]
-    covmat = Statistics.cov(Matrix(diff))
+    return Statistics.cov(Matrix(diff))
+end
+function dat2var(dat::AbstractDataFrame,
+                 channels::AbstractVector)
+    covmat = dat2cov(dat,channels)
     mat = repeat(diag(covmat)',inner=[nrow(dat),1])./2
     return DataFrame(mat,channels)
 end

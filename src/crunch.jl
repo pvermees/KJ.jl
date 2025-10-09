@@ -1,34 +1,37 @@
 # isochron
 function getP(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
+              sPD::AbstractVector,sPd::AbstractVector,sDd::AbstractVector,
               x0::Real,y0::Real,y1::Real,
               ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. ((FT*(bDt-Dm)*ft*mf*vP*x0*y0+(FT*dm-FT*bdt)*ft*vP*x0)*y1+(mf^2*(Pm*vD-bPt*vD)*x0^2+FT*(Dm-bDt)*ft*mf*vP*x0)*y0^2+(FT*bdt-FT*dm)*ft*vP*x0*y0+(Pm-bPt)*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
+    return @. -((((bDt-Dm)*m*vP+(Pm-bPt)*m*sPD)*x0*y0+((dm-bdt)*m^2*vP+(bPt-Pm)*m^2*sPd)*x0)*y1+(((FT*bPt-FT*Pm)*ft*vD+(Dm*FT-FT*bDt)*ft*sPD)*x0^2+((Dm-bDt)*m*vP+(bPt-Pm)*m*sPD)*x0)*y0^2+(((FT*bDt-Dm*FT)*ft*m*sPd+(FT*bdt-FT*dm)*ft*m*sPD+(2*FT*Pm-2*FT*bPt)*ft*m*sDd)*x0^2+((bdt-dm)*m^2*vP+(Pm-bPt)*m^2*sPd)*x0)*y0+((FT*bPt-FT*Pm)*ft*m^2*vd+(FT*dm-FT*bdt)*ft*m^2*sPd)*x0^2)/(m^2*vP*y1^2+(((-2*FT*ft*m*sPD*x0)-2*m^2*vP)*y0+2*FT*ft*m^2*sPd*x0)*y1+(FT^2*ft^2*vD*x0^2+2*FT*ft*m*sPD*x0+m^2*vP)*y0^2+((-2*FT^2*ft^2*m*sDd*x0^2)-2*FT*ft*m^2*sPd*x0)*y0+FT^2*ft^2*m^2*vd*x0^2)
 end
 # isochron
 function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
+              sPD::AbstractVector,sPd::AbstractVector,sDd::AbstractVector,
               x0::Real,y0::Real,y1::Real,
               ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. -(FT^2*(bDt-Dm)*ft^2*vP*y1^2+(ft*mf*(FT*Pm*vD-FT*bPt*vD)*x0+FT^2*(2*Dm-2*bDt)*ft^2*vP)*y0*y1+(ft*mf*(FT*bPt*vD-FT*Pm*vD)*x0+FT^2*(bDt-Dm)*ft^2*vP)*y0^2+mf*(bdt*vD-dm*vD)*x0^2*y0+(bDt-Dm)*vd*x0^2)/(FT^2*ft^2*vP*y1^2-2*FT^2*ft^2*vP*y0*y1+(mf^2*vD*x0^2+FT^2*ft^2*vP)*y0^2+vd*x0^2)
+    return @. -(((bDt-Dm)*m*vP+(Pm-bPt)*m*sPD)*y1^2+((((FT*bPt-FT*Pm)*ft*vD+(Dm*FT-FT*bDt)*ft*sPD)*x0+(2*Dm-2*bDt)*m*vP+(2*bPt-2*Pm)*m*sPD)*y0+((2*FT*bDt-2*Dm*FT)*ft*m*sPd+(FT*dm-FT*bdt)*ft*m*sPD+(FT*Pm-FT*bPt)*ft*m*sDd)*x0)*y1+(((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*x0+(bDt-Dm)*m*vP+(Pm-bPt)*m*sPD)*y0^2+(((FT^2*bdt-FT^2*dm)*ft^2*vD+(Dm*FT^2-FT^2*bDt)*ft^2*sDd)*x0^2+((2*Dm*FT-2*FT*bDt)*ft*m*sPd+(FT*bdt-FT*dm)*ft*m*sPD+(FT*bPt-FT*Pm)*ft*m*sDd)*x0)*y0+((FT^2*bDt-Dm*FT^2)*ft^2*m*vd+(FT^2*dm-FT^2*bdt)*ft^2*m*sDd)*x0^2)/(m^2*vP*y1^2+(((-2*FT*ft*m*sPD*x0)-2*m^2*vP)*y0+2*FT*ft*m^2*sPd*x0)*y1+(FT^2*ft^2*vD*x0^2+2*FT*ft*m*sPD*x0+m^2*vP)*y0^2+((-2*FT^2*ft^2*m*sDd*x0^2)-2*FT*ft*m^2*sPd*x0)*y0+FT^2*ft^2*m^2*vd*x0^2)
 end
 # point
 function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               vP::AbstractVector,vD::AbstractVector,vd::AbstractVector,
-              x0::Real,y0::Real,
+              sPD::AbstractVector,sPd::AbstractVector,sDd::AbstractVector,
+              x::Real,y::Real,
               ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. -((FT*bPt-FT*Pm)*ft*mf*vD*x0+(FT^2*bDt-Dm*FT^2)*ft^2*vP)/(mf^2*vD*x0^2+FT^2*ft^2*vP)
+    return @. ((((dm-bdt)*vD+(bDt-Dm)*sDd)*vP+(bPt-Pm)*sPd*vD+(Dm-bDt)*sPD*sPd+(bdt-dm)*sPD^2+(Pm-bPt)*sDd*sPD)*y+(((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*vd+(FT*bdt-FT*dm)*ft*sPd*vD+(Dm*FT-FT*bDt)*ft*sDd*sPd+(FT*dm-FT*bdt)*ft*sDd*sPD+(FT*bPt-FT*Pm)*ft*sDd^2)*x+((Dm-bDt)*m*vP+(bPt-Pm)*m*sPD)*vd+(bdt-dm)*m*sDd*vP+(bDt-Dm)*m*sPd^2+((dm-bdt)*m*sPD+(Pm-bPt)*m*sDd)*sPd)/((vD*vP-sPD^2)*y^2+((2*FT*ft*sDd*sPD-2*FT*ft*sPd*vD)*x-2*m*sDd*vP+2*m*sPD*sPd)*y+(FT^2*ft^2*vD*vd-FT^2*ft^2*sDd^2)*x^2+(2*FT*ft*m*sDd*sPd-2*FT*ft*m*sPD*vd)*x+m^2*vP*vd-m^2*sPd^2)
 end
 # glass
 function getD(Dm::AbstractVector,dm::AbstractVector,
-              vD::AbstractVector,vd::AbstractVector,
-              y0::Real,
+              vD::AbstractVector,vd::AbstractVector,sDd::AbstractVector,
+              y::Real,
               mf::Real,
               bDt::AbstractVector,bdt::AbstractVector)
-    return @. ((dm-bdt)*mf*vD*y0+(Dm-bDt)*vd)/(mf^2*vD*y0^2+vd)
+    return @. (((dm-bdt)*vD+(bDt-Dm)*sDd)*y+(Dm-bDt)*m*vd+(bdt-dm)*m*sDd)/(vD*y^2-2*m*sDd*y+m^2*vd)
 end
 
 # mass fractionation + elemental fractionation
