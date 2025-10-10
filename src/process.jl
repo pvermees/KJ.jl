@@ -48,8 +48,8 @@ function atomic(samp::Sample,
                 add_xy::Bool=false)
     dat = windowData(samp;signal=true,add_xy=add_xy)
     sig = getSignals(dat)
-    covmat = df2cov(dat)
-    Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
+    covmat = df2cov(sig)
+    Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,ft,FT,mf,bPt,bDt,bdt =
         SSprep(blank[:,channels["P"]],
                blank[:,channels["D"]],
                blank[:,channels["d"]],
@@ -59,8 +59,8 @@ function atomic(samp::Sample,
                pars.mfrac,pars.drift,pars.down;
                PAcutoff=pars.PAcutoff,
                adrift=pars.adrift)
-    Phat = @. (Pm-bPt)*ft*FT
-    Dhat = @. (Dm-bDt)*mf
+    Phat = @. (Pm-bPt)/(ft*FT)
+    Dhat = @. (Dm-bDt)/mf
     dhat = @. (dm-bdt)
     if add_xy
         if all([cname in names(dat) for cname in ["x";"y"]])
