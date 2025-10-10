@@ -168,7 +168,7 @@ function pool(run::Vector{Sample};
               blank::Bool=false,
               signal::Bool=false,
               group::Union{Nothing,AbstractString}=nothing,
-              include_variances::Bool=false,
+              include_covmats::Bool=false,
               add_xy::Bool=false)
     if isnothing(group)
         selection = 1:length(run)
@@ -184,29 +184,22 @@ function pool(run::Vector{Sample};
                              signal=signal,
                              add_xy=add_xy)
     end
-    if include_variances
-        vars = Vector{DataFrame}(undef,ns)
-        channels = getChannels(run)
+    if include_covmats
+        covs = Vector{Matrix}(undef,ns)
         for i in eachindex(selection)
-            vars[i] = dat2var(dats[i],channels)
+            sig = getSignals(dats[i])
+            covs[i] = df2cov(sig)
         end
-        return reduce(vcat,dats), reduce(vcat,vars)
+        return dats, covs
     else
-        return reduce(vcat,dats)
+        return dats
     end
 end
 export pool
 
-function dat2cov(dat::AbstractDataFrame,
-                 channels::AbstractVector)
-    diff = dat[2:end,channels] .- dat[1:end-1,channels]
+function df2cov(df::AbstractDataFrame)
+    diff = df[2:end,:] .- df[1:end-1,:]
     return Statistics.cov(Matrix(diff))
-end
-function dat2var(dat::AbstractDataFrame,
-                 channels::AbstractVector)
-    covmat = dat2cov(dat,channels)
-    mat = repeat(diag(covmat)',inner=[nrow(dat),1])./2
-    return DataFrame(mat,channels)
 end
 
 function var_timeseries(cps::AbstractVector)

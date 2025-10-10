@@ -28,7 +28,8 @@ export process!
 
 function fitBlanks(run::Vector{Sample};
                    nblank=2)
-    blk = pool(run;blank=true)
+    blks = pool(run;blank=true)
+    blk = reduce(vcat,blks)
     channels = getChannels(run)
     nc = length(channels)
     bpar = DataFrame(zeros(nblank,nc),channels)
@@ -46,7 +47,8 @@ function atomic(samp::Sample,
                 pars::NamedTuple;
                 add_xy::Bool=false)
     dat = windowData(samp;signal=true,add_xy=add_xy)
-    covmat = dat2cov(dat,collect(values(channels)))
+    sig = getSignals(dat)
+    covmat = df2cov(dat)
     Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
         SSprep(blank[:,channels["P"]],
                blank[:,channels["D"]],
