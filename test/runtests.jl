@@ -2,9 +2,13 @@ using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
 import Plots
 
 function loadtest(verbose=false)
-    myrun = load("data/Lu-Hf";format="Agilent")
-    if verbose summarise(myrun;verbose=true,n=5) end
+    myrun = load("data/MWE";format="Agilent")
+    if verbose summarise(myrun;verbose=true) end
     return myrun
+end
+
+function synthetictest()
+    include("synthetic.jl")
 end
 
 function plottest()
@@ -29,9 +33,14 @@ function windowtest()
     @test display(p) != NaN
 end
 
-function blanktest()
+function blanktest(;doplot=false,ylim=:auto,transformation=nothing)
     myrun = loadtest()
     blk = fitBlanks(myrun;nblank=2)
+    if doplot
+        p = KJ.plot(myrun[1],ylim=ylim,transformation=transformation)
+        plotFittedBlank!(p,myrun[1],blk,transformation=transformation)
+        @test display(p) != NaN
+    end
     return myrun, blk
 end
 
@@ -46,7 +55,7 @@ function standardtest(verbose=false)
     end
 end
 
-function fixedLuHf()
+function fixedLuHf(drift,down,mfrac,PAcutoff,adrift)
     myrun, blk = blanktest()
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
@@ -56,27 +65,29 @@ function fixedLuHf()
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[-3.9225],
-           down=[0.0,0.03362],
-           mfrac=0.38426,
-           PAcutoff=nothing,
-           adrift=[-3.9225])
+    fit = (drift=drift,down=down,mfrac=mfrac,PAcutoff=PAcutoff,adrift=adrift)
     return myrun, blk, method, channels, glass, standards, fit
 end
 
 function predictest()
-    myrun, blk, method, channels, glass, standards, fit = fixedLuHf()
-    samp = myrun[105]
+    drift = [3.91]
+    down = [0.0,0.0045]
+    mfrac = -0.38
+    myrun, blk, method, channels, glass, standards, fit =
+        fixedLuHf(drift,down,mfrac,nothing,drift)
+    samp = myrun[1]
     if samp.group == "sample"
         println("Not a standard")
+        return samp,method,fit,blk,channels,standards,glass
     else
         pred = predict(samp,method,fit,blk,channels,
                        standards,glass)
         p = KJ.plot(samp,method,channels,blk,fit,standards,glass;
+                    den="Hf176 -> 258",
                     transformation="log")
         @test display(p) != NaN
+        return samp,method,fit,blk,channels,standards,glass,p
     end
-    return samp,method,fit,blk,channels,standards,glass,p
 end
     
 function partest(parname,paroffsetfact)
@@ -160,7 +171,7 @@ function RbSrTest(show=true)
     standards = Dict("MDC_bt" => "MDC -")
     setGroup!(myrun,standards)
     blank = fitBlanks(myrun;nblank=2)
-    fit = fractionation(myrun,method,blank,channels,standards,8.37861;
+    fit = fractionation(myrun,method,blank,channels,standards,0.11935;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getStandardAnchors(method,standards)
     if show
@@ -230,9 +241,14 @@ function histest(;LuHf=false,show=true)
         standard = "MDC_bt"
     end
     print(fit)
-    pooled, vars = pool(myrun;signal=true,group=standard,include_variances=true)
+    dats, covs = pool(myrun;signal=true,group=standard,include_covmats=true)
     anchor = anchors[standard]
-    pred = predict(pooled,vars,fit,blk,channels,anchor)
+    pooled = DataFrame()
+    pred = DataFrame()
+    for i in eachindex(dats)
+        pooled = vcat(pooled,dats[i])
+        pred = vcat(pred,predict(dats[i],covs[i],fit,blk,channels,anchor))
+    end
     Pm = pooled[:,channels["P"]]
     Dm = pooled[:,channels["D"]]
     dm = pooled[:,channels["d"]]
@@ -248,7 +264,7 @@ function histest(;LuHf=false,show=true)
 end
 
 function processtest(show=true)
-    myrun = load("data/Lu-Hf",format="Agilent")
+    myrun = load("data/MWE",format="Agilent")
     method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -256,7 +272,7 @@ function processtest(show=true)
     standards = Dict("Hogsbo_gt" => "hogsbo")
     glass = Dict("NIST612" => "NIST612p")
     blk, fit = process!(myrun,method,channels,standards,glass;
-                        nblank=2,ndrift=1,ndown=1)
+                        nblank=2,ndrift=1,ndown=1,verbose=false)
     if show
         p = KJ.plot(myrun[2],method,channels,blk,fit,standards,glass;
                     transformation="log",den="Hf176 -> 258")

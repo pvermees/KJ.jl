@@ -199,8 +199,9 @@ export pool
 
 function df2cov(df::AbstractDataFrame)
     diff = df[2:end,:] .- df[1:end-1,:]
-    return Statistics.cov(Matrix(diff))
+    return Statistics.cov(Matrix(diff))./2
 end
+export df2cov
 
 function var_timeseries(cps::AbstractVector)
     var = Statistics.var((cps[2:end].-cps[1:end-1]))./2

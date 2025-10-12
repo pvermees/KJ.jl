@@ -5,8 +5,9 @@ function getP(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               x0::Real,y0::Real,y1::Real,
               ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. -((((bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*x0*y0+((dm-bdt)*mf^2*vP+(bPt-Pm)*mf^2*sPd)*x0)*y1+(((FT*bPt-FT*Pm)*ft*vD+(Dm*FT-FT*bDt)*ft*sPD)*x0^2+((Dm-bDt)*mf*vP+(bPt-Pm)*mf*sPD)*x0)*y0^2+(((FT*bDt-Dm*FT)*ft*mf*sPd+(FT*bdt-FT*dm)*ft*mf*sPD+(2*FT*Pm-2*FT*bPt)*ft*mf*sDd)*x0^2+((bdt-dm)*mf^2*vP+(Pm-bPt)*mf^2*sPd)*x0)*y0+((FT*bPt-FT*Pm)*ft*mf^2*vd+(FT*dm-FT*bdt)*ft*mf^2*sPd)*x0^2)/(mf^2*vP*y1^2+(((-2*FT*ft*mf*sPD*x0)-2*mf^2*vP)*y0+2*FT*ft*mf^2*sPd*x0)*y1+(FT^2*ft^2*vD*x0^2+2*FT*ft*mf*sPD*x0+mf^2*vP)*y0^2+((-2*FT^2*ft^2*mf*sDd*x0^2)-2*FT*ft*mf^2*sPd*x0)*y0+FT^2*ft^2*mf^2*vd*x0^2)
+    return @. ((((bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*x0*y0+((dm-bdt)*mf^2*vP+(bPt-Pm)*mf^2*sPd)*x0)*y1+(((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*x0^2+((Dm-bDt)*mf*vP+(bPt-Pm)*mf*sPD)*x0)*y0^2+(((Dm*FT-FT*bDt)*ft*mf*sPd+(FT*dm-FT*bdt)*ft*mf*sPD+(2*FT*bPt-2*FT*Pm)*ft*mf*sDd)*x0^2+((bdt-dm)*mf^2*vP+(Pm-bPt)*mf^2*sPd)*x0)*y0+((FT*Pm-FT*bPt)*ft*mf^2*vd+(FT*bdt-FT*dm)*ft*mf^2*sPd)*x0^2)/(mf^2*vP*y1^2+((2*FT*ft*mf*sPD*x0-2*mf^2*vP)*y0-2*FT*ft*mf^2*sPd*x0)*y1+(FT^2*ft^2*vD*x0^2-2*FT*ft*mf*sPD*x0+mf^2*vP)*y0^2+(2*FT*ft*mf^2*sPd*x0-2*FT^2*ft^2*mf*sDd*x0^2)*y0+FT^2*ft^2*mf^2*vd*x0^2)
 end
+export getP
 # isochron
 function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               vP::Real,vD::Real,vd::Real,
@@ -14,7 +15,7 @@ function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               x0::Real,y0::Real,y1::Real,
               ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. -(((bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*y1^2+((((FT*bPt-FT*Pm)*ft*vD+(Dm*FT-FT*bDt)*ft*sPD)*x0+(2*Dm-2*bDt)*mf*vP+(2*bPt-2*Pm)*mf*sPD)*y0+((2*FT*bDt-2*Dm*FT)*ft*mf*sPd+(FT*dm-FT*bdt)*ft*mf*sPD+(FT*Pm-FT*bPt)*ft*mf*sDd)*x0)*y1+(((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*x0+(bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*y0^2+(((FT^2*bdt-FT^2*dm)*ft^2*vD+(Dm*FT^2-FT^2*bDt)*ft^2*sDd)*x0^2+((2*Dm*FT-2*FT*bDt)*ft*mf*sPd+(FT*bdt-FT*dm)*ft*mf*sPD+(FT*bPt-FT*Pm)*ft*mf*sDd)*x0)*y0+((FT^2*bDt-Dm*FT^2)*ft^2*mf*vd+(FT^2*dm-FT^2*bdt)*ft^2*mf*sDd)*x0^2)/(mf^2*vP*y1^2+(((-2*FT*ft*mf*sPD*x0)-2*mf^2*vP)*y0+2*FT*ft*mf^2*sPd*x0)*y1+(FT^2*ft^2*vD*x0^2+2*FT*ft*mf*sPD*x0+mf^2*vP)*y0^2+((-2*FT^2*ft^2*mf*sDd*x0^2)-2*FT*ft*mf^2*sPd*x0)*y0+FT^2*ft^2*mf^2*vd*x0^2)
+    return @. -((((bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*y1^2+((((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*x0+(2*Dm-2*bDt)*mf*vP+(2*bPt-2*Pm)*mf*sPD)*y0+((2*Dm*FT-2*FT*bDt)*ft*mf*sPd+(FT*bdt-FT*dm)*ft*mf*sPD+(FT*bPt-FT*Pm)*ft*mf*sDd)*x0)*y1+(((FT*bPt-FT*Pm)*ft*vD+(Dm*FT-FT*bDt)*ft*sPD)*x0+(bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*y0^2+(((FT^2*bdt-FT^2*dm)*ft^2*vD+(Dm*FT^2-FT^2*bDt)*ft^2*sDd)*x0^2+((2*FT*bDt-2*Dm*FT)*ft*mf*sPd+(FT*dm-FT*bdt)*ft*mf*sPD+(FT*Pm-FT*bPt)*ft*mf*sDd)*x0)*y0+((FT^2*bDt-Dm*FT^2)*ft^2*mf*vd+(FT^2*dm-FT^2*bdt)*ft^2*mf*sDd)*x0^2)/(mf^2*vP*y1^2+((2*FT*ft*mf*sPD*x0-2*mf^2*vP)*y0-2*FT*ft*mf^2*sPd*x0)*y1+(FT^2*ft^2*vD*x0^2-2*FT*ft*mf*sPD*x0+mf^2*vP)*y0^2+(2*FT*ft*mf^2*sPd*x0-2*FT^2*ft^2*mf*sDd*x0^2)*y0+FT^2*ft^2*mf^2*vd*x0^2))
 end
 # point
 function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
@@ -23,7 +24,6 @@ function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
               x::Real,y::Real,
               ft::AbstractVector,FT::AbstractVector,mf::Real,
               bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    
     return @. ((((dm-bdt)*vD+(bDt-Dm)*sDd)*vP+(bPt-Pm)*sPd*vD+(Dm-bDt)*sPD*sPd+(bdt-dm)*sPD^2+(Pm-bPt)*sDd*sPD)*y+(((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*vd+(FT*bdt-FT*dm)*ft*sPd*vD+(Dm*FT-FT*bDt)*ft*sDd*sPd+(FT*dm-FT*bdt)*ft*sDd*sPD+(FT*bPt-FT*Pm)*ft*sDd^2)*x+((Dm-bDt)*mf*vP+(bPt-Pm)*mf*sPD)*vd+(bdt-dm)*mf*sDd*vP+(bDt-Dm)*mf*sPd^2+((dm-bdt)*mf*sPD+(Pm-bPt)*mf*sDd)*sPd)/((vD*vP-sPD^2)*y^2+((2*FT*ft*sDd*sPD-2*FT*ft*sPd*vD)*x-2*mf*sDd*vP+2*mf*sPD*sPd)*y+(FT^2*ft^2*vD*vd-FT^2*ft^2*sDd^2)*x^2+(2*FT*ft*mf*sDd*sPd-2*FT*ft*mf*sPD*vd)*x+mf^2*vP*vd-mf^2*sPd^2)
 end
 # glass
@@ -32,8 +32,9 @@ function getD(Dm::AbstractVector,dm::AbstractVector,
               y::Real,
               mf::Real,
               bDt::AbstractVector,bdt::AbstractVector)
-    return @. (((dm-bdt)*vD+(bDt-Dm)*sDd)*y+(Dm-bDt)*mf*vd+(bdt-dm)*mf*sDd)/(vD*y^2-2*mf*sDd*y+mf^2*vd)
+    return (((dm-bdt)*vD+(bDt-Dm)*sDd)*y+(Dm-bDt)*mf*vd+(bdt-dm)*mf*sDd)/(vD*y^2-2*mf*sDd*y+mf^2*vd)
 end
+export getD
 
 # mass fractionation + elemental fractionation
 function SS(par::AbstractVector,
@@ -54,7 +55,8 @@ function SS(par::AbstractVector,
         a = anchors[refmat]
         for spot in eachindex(dat)
             Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,ft,FT,mf,bPt,bDt,bdt =
-                SSprep(bP,bD,bd,dat[spot],covmat[spot],channels,mfrac,drift,down;
+                SSprep(bP,bD,bd,dat[spot],covmat[spot],
+                       channels,mfrac,drift,down;
                        PAcutoff=PAcutoff,adrift=adrift)
             if is_isochron_anchor(a)
                 out += SS(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,
@@ -76,7 +78,9 @@ function SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
             x0::Real,y0::Real,y1::Real,
             ft::AbstractVector,FT::AbstractVector,mf::Real,
             bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    maha = @. ((P*(y1-y0))/x0-D*y0+dm-bdt)*(((vD*vP-sPD^2)*((P*(y1-y0))/x0-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sPD*sPd-sDd*vP))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(sDd*sPD-sPd*vD))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(D*mf)-bDt+Dm)*(((sPD*sPd-sDd*vP)*((P*(y1-y0))/x0-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(vP*vd-sPd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(FT*P*ft)-bPt+Pm)*(((sDd*sPD-sPd*vD)*((P*(y1-y0))/x0-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(vD*vd-sDd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))
+    P = getP(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
+    maha = @. (-((P*(y1-y0))/x0)-D*y0+dm-bdt)*(((vD*vP-sPD^2)*(-((P*(y1-y0))/x0)-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sPD*sPd-sDd*vP))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(sDd*sPD-sPd*vD))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(D*mf)-bDt+Dm)*(((sPD*sPd-sDd*vP)*(-((P*(y1-y0))/x0)-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(vP*vd-sPd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(FT*P*ft)-bPt+Pm)*(((sDd*sPD-sPd*vD)*(-((P*(y1-y0))/x0)-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(vD*vd-sDd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))
     return sum(@. maha )
 end
 # point
@@ -115,6 +119,7 @@ function SS(Dm::AbstractVector,dm::AbstractVector,
             y::Real,
             mf::Real,
             bDt::AbstractVector,bdt::AbstractVector)
+    D = getD(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
     maha = @. (-(D*y)+dm-bdt)*((vD*(-(D*y)+dm-bdt))/(vD*vd-sDd^2)-((-(D*mf)-bDt+Dm)*sDd)/(vD*vd-sDd^2))+(-(D*mf)-bDt+Dm)*(((-(D*mf)-bDt+Dm)*vd)/(vD*vd-sDd^2)-(sDd*(-(D*y)+dm-bdt))/(vD*vd-sDd^2))
     return sum(@. maha )
 end
@@ -122,8 +127,9 @@ export SS
 
 # isochron or point
 function SSprep(bP::AbstractVector,bD::AbstractVector,bd::AbstractVector,
-                dat::AbstractDataFrame,covmat::Matrix,channels::AbstractDict,
-                mfrac::Real,drift::AbstractVector,down::AbstractVector;
+                dat::AbstractDataFrame,covmat::Matrix,
+                channels::AbstractDict,mfrac::Real,
+                drift::AbstractVector,down::AbstractVector;
                 PAcutoff::Union{Real,Nothing}=nothing,
                 adrift::AbstractVector=drift)
     t = dat.t
@@ -156,8 +162,8 @@ function SSprep(bD::AbstractVector,bd::AbstractVector,
                 channels::AbstractDict)
     t = dat.t
     sig = getSignals(dat)
-    iD = columnindex(dat,channels["D"])
-    id = columnindex(dat,channels["d"])
+    iD = columnindex(sig,channels["D"])
+    id = columnindex(sig,channels["d"])
     Dm = sig[:,iD]
     dm = sig[:,id]
     vD = covmat[iD,iD]
@@ -167,6 +173,7 @@ function SSprep(bD::AbstractVector,bd::AbstractVector,
     bdt = polyVal(bd,t)
     return Dm,dm,vD,vd,sDd,bDt,bdt
 end
+export SSprep
 
 # isochron or point
 function predict(samp::Sample,
@@ -228,7 +235,8 @@ function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
                  sPD::Real,sPd::Real,sDd::Real,
                  x0::Real,y0::Real,y1::Real,
                  ft::AbstractVector,FT::AbstractVector,mf::Real,
-                 bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
+                 bPt::AbstractVector,bDt::AbstractVector,
+                 bdt::AbstractVector)
     P = getP(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
     Pf = @. P*ft*FT + bPt
@@ -242,11 +250,12 @@ function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
                  sPD::Real,sPd::Real,sDd::Real,
                  x::Real,y::Real,
                  ft::AbstractVector,FT::AbstractVector,mf::Real,
-                 bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
+                 bPt::AbstractVector,bDt::AbstractVector,
+                 bdt::AbstractVector)
     D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x,y,ft,FT,mf,bPt,bDt,bdt)
-    Pf = @. x*D*ft*FT + bPt
+    Pf = @. D*x*ft*FT + bPt
     Df = @. D*mf + bDt
-    df = @. y*D + bdt
+    df = @. D*y + bdt
     return DataFrame(P=Pf,D=Df,d=df)
 end
 # glass
@@ -264,7 +273,7 @@ function predict(dat::AbstractDataFrame,
     return predict(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
 end
 function predict(Dm::AbstractVector,dm::AbstractVector,
-                 vD::AbstractVector,vd::AbstractVector,sDd::AbstractVector,
+                 vD::Real,vd::Real,sDd::Real,
                  y::Real,
                  mf::Real,
                  bDt::AbstractVector,

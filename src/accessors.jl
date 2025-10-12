@@ -234,7 +234,8 @@ function get_glass_anchor(method::AbstractString,
                           refmat::AbstractString)
     P, D, d = getPDd(method)
     ratio = d * D
-    return get(_KJ["glass"],refmat)[ratio]
+    y = get(_KJ["glass"],refmat)[ratio]
+    return (y=y)
 end
 
 function getAnchors(method::AbstractString,

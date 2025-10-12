@@ -92,19 +92,23 @@ function fractionation(run::Vector{Sample},
     ne = size(elements,2)
     num = den = fill(0.0,ne-1)
     for (SRM,name)  in glass
-        dat = pool(run;signal=true,group=SRM)
+        dats = pool(run;signal=true,group=SRM)
         concs = elements2concs(elements,SRM)
-        bt = polyVal(blank,dat.t)
-        sig = getSignals(dat)
-        (nr,nc) = size(sig)
-        Xm = sig[:,Not(internal[1])]
-        Sm = sig[:,internal[1]]
-        bXt = bt[:,Not(internal[1])]
-        bSt = bt[:,internal[1]]
-        S = Sm.-bSt
-        R = collect((concs[:,Not(internal[1])]./concs[:,internal[1]])[1,:])
-        num += sum.(eachcol(R'.*(Xm.-bXt).*S))
-        den += sum.(eachcol((R'.*S).^2))
+        for dat in dats
+            bt = polyVal(blank,dat.t)
+            sig = getSignals(dat)
+            (nr,nc) = size(sig)
+            Xm = sig[:,Not(internal[1])]
+            Sm = sig[:,internal[1]]
+            bXt = bt[:,Not(internal[1])]
+            bSt = bt[:,internal[1]]
+            S = Sm.-bSt
+            Cint = concs[:,internal[1]]
+            Coth = concs[:,Not(internal[1])]
+            R = collect((Coth./Cint)[1,:])
+            num += sum.(eachcol(R'.*(Xm.-bXt).*S))
+            den += sum.(eachcol((R'.*S).^2))
+        end
     end
     return num./den
 end
