@@ -498,7 +498,7 @@ Plots.closeall()
 if true
     @testset "load" begin loadtest(true) end
     @testset "synthetic data" begin synthetictest() end
-    @testset "plot raw data" begin plottest(1) end
+    @testset "plot raw data" begin plottest(2) end
     #=@testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
