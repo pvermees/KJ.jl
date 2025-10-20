@@ -9,8 +9,7 @@ function loadtest(verbose=false)
 end
 
 function plottest(option="all")
-    #myrun = loadtest()
-    myrun = synthetictest()
+    myrun = loadtest()
     if option in (1,"all")
         p = KJ.plot(myrun[1];
                     channels=["Hf176 -> 258","Hf178 -> 260"])
@@ -489,7 +488,7 @@ function accuracytest(;show=true)
                         nblank=2,ndrift=1,ndown=1)
     #fit = (drift=[0.0],down=[0.0],mfrac=0.0,PAcutoff=nothing,adrift=[0.0])
     if show
-        den = "Hf176 -> 258" # nothing # 
+        den = "Hf176 -> 258" # nothing #
         p1 = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;
                      transformation="log",den=den)
         p2 = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;
@@ -518,7 +517,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -546,9 +545,9 @@ if true
     @testset "isotope ratio map" begin map_dating_test() end
     @testset "map fail test" begin map_fail_test() end
     @testset "glass as age standard test" begin glass_only_test() end
-    @testset "extension test" begin extensiontest() end=#
+    @testset "extension test" begin extensiontest() end
     @testset "synthetic data" begin accuracytest() end
-    #@testset "TUI test" begin TUItest() end=#
+    @testset "TUI test" begin TUItest() end
 else
     TUI()
 end

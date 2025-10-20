@@ -402,17 +402,20 @@ function rle(v::AbstractVector{T}) where T
 end
     
 function transformeer(df::AbstractDataFrame,
-                      transformation::Union{Nothing,AbstractString})
+                      transformation::Union{Nothing,AbstractString};
+                      offset::Union{Nothing,Real}=nothing)
     if isnothing(transformation)
         out = df
     else
         out = copy(df)
-        offset = get_offset(df,transformation)
+        if isnothing(offset)
+            offset = get_offset(df,transformation)
+        end
         for key in names(out)
             out[:,key] = eval(Symbol(transformation)).(df[:,key] .+ offset)
         end
     end
-    return out
+    return out, offset
 end
 
 function get_offset(df::AbstractDataFrame,
