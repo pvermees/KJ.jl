@@ -83,16 +83,17 @@ function predictest()
     else
         pred = predict(samp,method,fit,blk,channels,
                        standards,glass)
-        p = KJ.plot(samp,method,channels,blk,fit,standards,glass;
-                    den="Hf176 -> 258",
-                    transformation="log")
+        p, offset = KJ.plot(samp,method,channels,blk,fit,standards,glass;
+                            den="Hf176 -> 258",
+                            transformation="log",
+                            return_offset=true)
         @test display(p) != NaN
-        return samp,method,fit,blk,channels,standards,glass,p
+        return samp,method,fit,blk,channels,standards,glass,p,offset
     end
 end
     
 function partest(parname,paroffsetfact)
-    samp,method,fit,blk,channels,standards,glass,p = predictest()
+    samp,method,fit,blk,channels,standards,glass,p,offset = predictest()
     drift = fit.drift[1]
     down = fit.down[2]
     mfrac = fit.mfrac[1]
@@ -111,7 +112,7 @@ function partest(parname,paroffsetfact)
                         adrift=[drift])
         anchors = getStandardAnchors(method,standards)
         plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
-                    transformation="log",linecolor="red")
+                    transformation="log",offset=offset,linecolor="red")
     end
     @test display(p) != NaN
 end
@@ -488,7 +489,7 @@ function accuracytest(;show=true)
                         nblank=2,ndrift=1,ndown=1)
     #fit = (drift=[0.0],down=[0.0],mfrac=0.0,PAcutoff=nothing,adrift=[0.0])
     if show
-        den = "Hf176 -> 258" # nothing #
+        den = nothing # "Hf176 -> 258" #
         p1 = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;
                      transformation="log",den=den)
         p2 = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;

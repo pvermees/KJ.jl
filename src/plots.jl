@@ -40,6 +40,7 @@ function plot(samp::Sample,
               legend=:topleft,
               show_title=true,
               titlefontsize=10,
+              return_offset::Bool=false,
               kw...)
 
     channelvec = collect(values(channels))
@@ -48,7 +49,7 @@ function plot(samp::Sample,
                                                    num=num,den=den,
                                                    ylim=ylim,
                                                    transformation=transformation)
-
+    
     p = plot(samp,x,y,ty;
              ms=ms,ma=ma,seriestype=seriestype,
              label=permutedims(names(y)),
@@ -70,7 +71,11 @@ function plot(samp::Sample,
                      transformation=transformation,offset=offset,
                      linecolor=linecol,linestyle=linestyle)
 
-    return p
+    if return_offset
+        return p, offset
+    else
+        return p
+    end
 end
 # concentrations
 function plot(samp::Sample,
@@ -265,7 +270,7 @@ function plotFitted!(p,
     rename!(pred,[channels[i] for i in names(pred)])
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
-                linecolor=linecolor,linestyle=linestyle)
+                offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
 # concentrations
 function plotFitted!(p,
@@ -298,6 +303,9 @@ function plotFitted!(p,
                      linecolor="black",linestyle=:solid)
     x = windowData(samp,blank=blank,signal=signal)[:,1]
     y = formRatios(pred,num,den)
+    if transformation=="log" && !isnothing(offset)
+        y .= ifelse.(y .<= 0, NaN, y)
+    end
     ty, offset = transformeer(y,transformation;offset=offset)
     for tyi in eachcol(ty)
         Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
