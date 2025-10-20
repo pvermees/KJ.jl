@@ -32,7 +32,7 @@ function random_sample(i::Int,
     bt = polyVal(blank,t)
     p = mu_p .+ randn(nsig) .* sigma_p
     x = p*x0
-    y = y0 + (y1-y0)*x/x0
+    y = @. y0 + (y1-y0)*x/x0
     isig = nblk.+(1:nsig)
     P = x.*D
     d = y.*D
@@ -50,8 +50,13 @@ function random_sample(i::Int,
     return Sample(sname,dtime,dat,t0,bwin,swin,group)
 end
 
-function synthetic(;lambda::T,t_std::T,y0_std::T,
-                   t_smp::T,y0_smp::T,y0_glass::T) where T <: Real
+function synthetic(;
+                   lambda::T,
+                   t_std::T,
+                   y0_std::T,
+                   t_smp::T,
+                   y0_smp::T,
+                   y0_glass::T) where T <: Real
     nblk = 10
     nsig = 50
     Time = range(start=0.0,stop=60.0,length=nblk+nsig)
@@ -73,27 +78,30 @@ function synthetic(;lambda::T,t_std::T,y0_std::T,
                       dtime=DateTime("2025-01-01T08:00:00"),
                       Time=Time,t0=t0,bwin=bwin,swin=swin,blank=blank,
                       mu_p=0.5,sigma_p=0.1,x0=x0_std,y0=y0_std,
+                      D=1e4,
                       mfrac=mfrac,drift=drift,down=down,
                       group="BP_gt"),
         random_sample(2,4;
                       nblk=nblk,nsig=nsig,sname="Hog_1",
                       dtime=DateTime("2025-01-01T08:01:00"),
                       Time=Time,t0=t0,bwin=bwin,swin=swin,blank=blank,
-                      mu_D=2000,sigma_D=75,x0=x0_smp,y0=y0_smp,
-                      p=0.5,mfrac=mfrac,drift=drift,down=down,
+                      mu_p=0.5,sigma_p=0.1,x0=x0_smp,y0=y0_smp,
+                      mfrac=mfrac,drift=drift,down=down,
                       group="sample"),
         random_sample(3,4;
                       nblk=nblk,nsig=nsig,sname="NIST612_1",
                       dtime=DateTime("2025-01-01T08:02:00"),
                       Time=Time,t0=t0,bwin=bwin,swin=swin,blank=blank,
-                      mu_D=1000,sigma_D=50,y0=y0_glass,
-                      p=0.0,mfrac=mfrac,group="NIST612"),
+                      mu_p=0.5,sigma_p=0.1,y0=y0_glass,
+                      mfrac=mfrac,drift=drift,down=down,
+                      group="NIST612"),
         random_sample(4,4;
                       nblk=nblk,nsig=nsig,sname="BP_2",
                       dtime=DateTime("2025-01-01T08:03:00"),
                       Time=Time,t0=t0,bwin=bwin,swin=swin,blank=blank,
-                      mu_D=1000,sigma_D=50,x0=x0_std,y0=y0_std,
-                      p=0.5,mfrac=mfrac,drift=drift,down=down,
+                      mu_p=0.5,sigma_p=0.1,x0=x0_smp,y0=y0_smp,
+                      D=2e4,
+                      mfrac=mfrac,drift=drift,down=down,
                       group="BP_gt")
     ]
     return run

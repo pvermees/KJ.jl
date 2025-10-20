@@ -1,7 +1,7 @@
 name = "KJ"
 uuid = "c976074e-2e5b-4ac6-9301-394412a2f0b0"
-authors = ["pvermees <p.vermeesch@ucl.ac.uk>"]
 version = "0.7.0"
+authors = ["pvermees <p.vermeesch@ucl.ac.uk>"]
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -16,6 +16,7 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 CSV = "0.10"
@@ -28,6 +29,7 @@ Optim = "1.10"
 Plots = "1.40"
 Printf = "1.10"
 Statistics = "1.10"
+Test = "1.11.0"
 julia = "1.10"
 
 [extras]

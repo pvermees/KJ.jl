@@ -9,7 +9,8 @@ function loadtest(verbose=false)
 end
 
 function synthetictest()
-    myrun = synthetic(;lambda=1.867e-5,
+    myrun = synthetic(;
+                      lambda=1.867e-5,
                       t_std=1745.0,
                       y0_std=3.55,
                       t_smp=1029.7,
@@ -285,7 +286,6 @@ function processtest(show=true)
     glass = Dict("NIST612" => "NIST612p")
     blk, fit = process!(myrun,method,channels,standards,glass;
                         nblank=2,ndrift=1,ndown=1,verbose=false)
-    @infiltrate
     if show
         p = KJ.plot(myrun[2],method,channels,blk,fit,standards,glass;
                     transformation="log",den="Hf176 -> 258")
@@ -499,7 +499,7 @@ if true
     @testset "load" begin loadtest(true) end
     @testset "synthetic data" begin synthetictest() end
     @testset "plot raw data" begin plottest(2) end
-    #=@testset "set selection window" begin windowtest() end
+    @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
@@ -526,7 +526,7 @@ if true
     @testset "map fail test" begin map_fail_test() end
     @testset "glass as age standard test" begin glass_only_test() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end=#
+    @testset "TUI test" begin TUItest() end
 else
     TUI()
 end
