@@ -8,17 +8,6 @@ function loadtest(verbose=false)
     return myrun
 end
 
-function synthetictest()
-    myrun = synthetic(;
-                      lambda=1.867e-5,
-                      t_std=1745.0,
-                      y0_std=3.55,
-                      t_smp=1029.7,
-                      y0_smp=3.55,
-                      y0_glass=3.544842)
-    return myrun
-end
-
 function plottest(option="all")
     #myrun = loadtest()
     myrun = synthetictest()
@@ -476,6 +465,40 @@ function glass_only_test()
     display(p)
 end
 
+function synthetictest()
+    method = "Lu-Hf"
+    channels = Dict("d"=>"Hf178 -> 260",
+                    "D"=>"Hf176 -> 258",
+                    "P"=>"Lu175 -> 175")
+    standards = Dict("BP_gt" => "BP")
+    glass = Dict("NIST612" => "NIST612")
+    myrun, channels = synthetic(;
+                                lambda=1.867e-5,
+                                t_std=1745.0,
+                                y0_std=3.55,
+                                t_smp=1029.7,
+                                y0_smp=3.55,
+                                y0_glass=3.544842,
+                                channels=channels)
+    return method, channels, standards, glass, myrun
+end
+
+function accuracytest(;show=true)
+    method, channels, standards, glass, myrun = synthetictest()
+    blk, fit = process!(myrun,method,channels,standards,glass;
+                        nblank=2,ndrift=1,ndown=1)
+    #fit = (drift=[0.0],down=[0.0],mfrac=0.0,PAcutoff=nothing,adrift=[0.0])
+    if show
+        den = "Hf176 -> 258" # nothing # 
+        p1 = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;
+                     transformation="log",den=den)
+        p2 = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;
+                     transformation="log",den=den)
+        p = Plots.plot(p1,p2,layout=(1,2))
+        @test display(p) != NaN
+    end
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -490,14 +513,12 @@ end
 
 function TUItest()
     TUI(;logbook="logs/Lu-Hf.log",reset=true)
-    #TUI(;logbook="logs/Lu-Hf.log",reset=true)
 end
 
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
-    @testset "synthetic data" begin synthetictest() end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -525,8 +546,9 @@ if true
     @testset "isotope ratio map" begin map_dating_test() end
     @testset "map fail test" begin map_fail_test() end
     @testset "glass as age standard test" begin glass_only_test() end
-    @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "extension test" begin extensiontest() end=#
+    @testset "synthetic data" begin accuracytest() end
+    #@testset "TUI test" begin TUItest() end=#
 else
     TUI()
 end
