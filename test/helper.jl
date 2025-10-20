@@ -31,6 +31,9 @@ function random_sample(i::Int,
     ft = polyFac(drift,t)
     FT = polyFac(down,T)
     bt = polyVal(blank,t)
+    for col in eachcol(bt)
+        col .+= (sqrt(median(col)) .* randn(nsig+nblk))
+    end
     p = fill(mu_p + randn() * sigma_p, nsig)
     x = p.*x0
     y = @. y0 + (y1-y0)*x/x0

@@ -212,24 +212,16 @@ function prep_plot(samp::Sample,
     end
     ty = transformeer(y,transformation)
     if ylim == :auto && ratsig == "ratio"
-        ylim = get_ylim(samp,channels,num,den,transformation;
-                        padding=padding)
+        ylim = get_ylim(ty,samp.swin)
     end
     return x, y, ty, xlab, ylab, ylim
 end
 export prep_plot
-function get_ylim(samp::Sample,
-                  channels::AbstractVector,
-                  num::Union{Nothing,AbstractString}=nothing,
-                  den::Union{Nothing,AbstractString}=nothing,
-                  transformation::Union{Nothing,AbstractString}=nothing;
+function get_ylim(dat::AbstractDataFrame,
+                  window::AbstractVector;
                   padding::Number=0.1)
-    dat = windowData(samp,blank=false,signal=true)
-    meas = dat[:,channels]
-    ratsig = isnothing(den) ? "signal" : "ratio"
-    y = (ratsig == "signal") ? meas : formRatios(meas,num,den)
-    ty = transformeer(y,transformation)
-    miny, maxy = extrema(Matrix(ty))
+    selection, x, y = windows2selection(window)
+    miny, maxy = extrema(Matrix(dat[selection,:]))
     buffer = (maxy-miny)*padding
     return (miny-buffer,maxy+buffer)
 end
