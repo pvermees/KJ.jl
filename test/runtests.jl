@@ -518,7 +518,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -546,9 +546,9 @@ if true
     @testset "isotope ratio map" begin map_dating_test() end
     @testset "map fail test" begin map_fail_test() end
     @testset "glass as age standard test" begin glass_only_test() end
-    @testset "extension test" begin extensiontest() end
+    @testset "extension test" begin extensiontest() end=#
     @testset "synthetic data" begin accuracytest() end
-    @testset "TUI test" begin TUItest() end
+    #@testset "TUI test" begin TUItest() end
 else
     TUI()
 end

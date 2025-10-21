@@ -108,11 +108,7 @@ function SSfitprep(run::Vector{Sample},
     end
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]
-    if "P" in keys(channels)
-        bP = blank[:,channels["P"]]
-    else
-        bP = nothing
-    end
+    bP = blank[:,channels["P"]]
     return dats, covs, bP, bD, bd
 end
 
