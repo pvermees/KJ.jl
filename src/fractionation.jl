@@ -25,24 +25,13 @@ function fractionation(run::Vector{Sample},
                        ndown::Integer=0,
                        PAcutoff=nothing,
                        verbose::Bool=false)
-    
+
     anchors = getStandardAnchors(method,standards)
     
+    dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
+
     if ndrift<1 KJerror("ndriftzero") end
-
-    dats = Dict()
-    covs = Dict()
-    for (refmat,anchor) in anchors
-        dats[refmat], covs[refmat] = pool(run;
-                                          signal=true,
-                                          group=refmat,
-                                          include_covmats=true)
-    end
-
-    bD = blank[:,channels["D"]]
-    bd = blank[:,channels["d"]]
-    bP = blank[:,channels["P"]]
-
+    
     init = fill(0.0,ndrift)
     if (ndown>0) init = vcat(init,fill(0.0,ndown)) end
     if isnothing(mf) init = vcat(init,0.0) end
@@ -60,19 +49,11 @@ function fractionation(run::Vector{Sample},
                        channels::AbstractDict,
                        glass::AbstractDict;
                        verbose::Bool=false)
-    
+
     anchors = getGlassAnchors(method,glass)
-
-    dats = Dict()
-    covs = Dict()
-    for (refmat,anchor) in anchors
-        dats[refmat], covs[refmat] = pool(run;signal=true,group=refmat,
-                                          include_covmats=true)
-    end
-
-    bD = blank[:,channels["D"]]
-    bd = blank[:,channels["d"]]
-
+    
+    dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
+    
     return SSfit([0.0],bD,bd,dats,covs,channels,anchors;verbose=verbose)
     
 end
@@ -113,6 +94,27 @@ function fractionation(run::Vector{Sample},
     return num./den
 end
 export fractionation
+
+function SSfitprep(run::Vector{Sample},
+                   blank::AbstractDataFrame,
+                   anchors::AbstractDict,
+                   channels::AbstractDict)
+
+    dats = Dict()
+    covs = Dict()
+    for (refmat,anchor) in anchors
+        dats[refmat], covs[refmat] = pool(run;signal=true,group=refmat,
+                                          include_covmats=true)
+    end
+    bD = blank[:,channels["D"]]
+    bd = blank[:,channels["d"]]
+    if "P" in keys(channels)
+        bP = blank[:,channels["P"]]
+    else
+        bP = nothing
+    end
+    return dats, covs, bP, bD, bd
+end
 
 # minerals
 function SSfit(init::AbstractVector,
