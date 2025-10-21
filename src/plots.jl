@@ -265,12 +265,14 @@ function plotFitted!(p,
                      transformation::Union{Nothing,AbstractString}=nothing,
                      offset::Number=0.0,
                      linecolor="black",
-                     linestyle=:solid)
+                     linestyle=:solid,
+                     debug::Bool=false)
     pred = predict(samp,pars,blank,channels,anchors)
     rename!(pred,[channels[i] for i in names(pred)])
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
-                offset=offset,linecolor=linecolor,linestyle=linestyle)
+                offset=offset,linecolor=linecolor,
+                linestyle=linestyle,debug=debug)
 end
 # concentrations
 function plotFitted!(p,
@@ -284,7 +286,8 @@ function plotFitted!(p,
                      transformation::Union{Nothing,AbstractString}=nothing,
                      offset::Union{Nothing,Number}=nothing,
                      linecolor="black",
-                     linestyle=:solid)
+                     linestyle=:solid,
+                     debug::Bool=false)
     pred = predict(samp,pars,blank,elements,internal)
     plotFitted!(p,samp,pred;
                 num=num,den=den,
@@ -300,13 +303,12 @@ function plotFitted!(p,
                      den::Union{Nothing,AbstractString}=nothing,
                      transformation::Union{Nothing,AbstractString}=nothing,
                      offset::Union{Nothing,Number}=nothing,
-                     linecolor="black",linestyle=:solid)
+                     linecolor="black",linestyle=:solid,
+                     debug::Bool=false)
     x = windowData(samp,blank=blank,signal=signal)[:,1]
     y = formRatios(pred,num,den)
-    if transformation=="log" && !isnothing(offset)
-        y .= ifelse.(y .<= 0, NaN, y)
-    end
-    ty, offset = transformeer(y,transformation;offset=offset)
+    ty, offset = transformeer(y,transformation;
+                              offset=offset,debug=debug)
     for tyi in eachcol(ty)
         Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
     end
@@ -323,7 +325,7 @@ function plotFittedBlank!(p,
                           transformation::Union{Nothing,AbstractString}=nothing,
                           offset::Union{Nothing,Number}=0.0,
                           linecolor="black",
-                          linestyle=:solid)
+                          linestyle::Symbol=:solid)
     pred = predict(samp,blank[:,channels])
     plotFitted!(p,samp,pred;
                 blank=true,signal=false,
@@ -338,7 +340,8 @@ function plotFittedBlank!(p,
                           den::Union{Nothing,AbstractString}=nothing,
                           transformation::Union{Nothing,AbstractString}=nothing,
                           offset::Union{Nothing,Number}=0.0,
-                          linecolor="black",linestyle=:solid)
+                          linecolor::AbstractString="black",
+                          linestyle::Symbol=:solid)
     pred = predict(samp,blank)
     plotFitted!(p,samp,pred;
                 blank=true,signal=false,

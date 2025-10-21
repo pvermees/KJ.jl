@@ -112,7 +112,8 @@ function partest(parname,paroffsetfact)
                         adrift=[drift])
         anchors = getStandardAnchors(method,standards)
         plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
-                    transformation="log",offset=offset,linecolor="red")
+                    transformation="log",offset=offset,
+                    linecolor="red",debug=false)
     end
     @test display(p) != NaN
 end
@@ -487,7 +488,6 @@ function accuracytest(;show=true)
     method, channels, standards, glass, myrun = synthetictest()
     blk, fit = process!(myrun,method,channels,standards,glass;
                         nblank=2,ndrift=1,ndown=1)
-    #fit = (drift=[0.0],down=[0.0],mfrac=0.0,PAcutoff=nothing,adrift=[0.0])
     if show
         den = nothing # "Hf176 -> 258" #
         p1 = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;

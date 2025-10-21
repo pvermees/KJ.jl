@@ -403,16 +403,19 @@ end
     
 function transformeer(df::AbstractDataFrame,
                       transformation::Union{Nothing,AbstractString};
-                      offset::Union{Nothing,Real}=nothing)
+                      offset::Union{Nothing,Real}=nothing,
+                      debug::Bool=false)
     if isnothing(transformation)
         out = df
     else
         out = copy(df)
         if isnothing(offset)
             offset = get_offset(df,transformation)
+        elseif transformation=="log"
+            out .= ifelse.(df .<= 0, NaN, df)
         end
         for key in names(out)
-            out[:,key] = eval(Symbol(transformation)).(df[:,key] .+ offset)
+            out[:,key] = eval(Symbol(transformation)).(out[:,key] .+ offset)
         end
     end
     return out, offset
