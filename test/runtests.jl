@@ -491,9 +491,9 @@ function accuracytest(;show=true)
     if show
         den = nothing # "Hf176 -> 258" #
         p1 = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;
-                     transformation="log",den=den)
+                     transformation="sqrt",den=den)
         p2 = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;
-                     transformation="log",den=den)
+                     transformation="sqrt",den=den)
         p = Plots.plot(p1,p2,layout=(1,2))
         @test display(p) != NaN
     end
@@ -502,7 +502,9 @@ end
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
-    _KJ["tree"]["top"] = (message = "test", help = "test", action = old.action)
+    _KJ["tree"]["top"] = (message = "test",
+                          help = "test",
+                          action = old.action)
 end
 export KJtree!
 end

@@ -56,7 +56,7 @@ function plot(samp::Sample,
              xlimits=xlim,ylimits=ylim,
              i=i,legend=legend,show_title=show_title,
              titlefontsize=titlefontsize,
-             kw...)
+             xlab=xlab,ylab=ylab,kw...)
     
     if samp.group != "sample"
 
@@ -102,7 +102,8 @@ function plot(samp::Sample,
              seriestype=seriestype,ms=ms,ma=ma,
              xlim=xlim,ylim=ylim,i=i,
              legend=legend,show_title=show_title,
-             titlefontsize=titlefontsize,kw...)
+             titlefontsize=titlefontsize,
+             xlab=xlab,ylab=ylab,kw...)
 
     if samp.group != "sample"
 
