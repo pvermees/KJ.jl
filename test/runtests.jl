@@ -488,6 +488,10 @@ function accuracytest(;show=true)
     method, channels, standards, glass, myrun = synthetictest()
     blk, fit = process!(myrun,method,channels,standards,glass;
                         nblank=2,ndrift=1,ndown=1)
+    println(SS(fit,myrun,method,standards,blk,channels))
+    truefit = (drift=[0.0],down=[0.0],mfrac=0.0,
+               PAcutoff=nothing,adrift=[0.0])
+    println(SS(truefit,myrun,method,standards,blk,channels))
     if show
         den = nothing # "Hf176 -> 258" #
         p1 = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;

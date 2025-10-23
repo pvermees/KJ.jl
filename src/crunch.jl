@@ -33,14 +33,35 @@ function getD(Dm::AbstractVector,dm::AbstractVector,
               mf::Real,
               bDt::AbstractVector,bdt::AbstractVector)
     return (((dm-bdt)*vD+(bDt-Dm)*sDd)*y+(Dm-bDt)*mf*vd+(bdt-dm)*mf*sDd)/(vD*y^2-2*mf*sDd*y+mf^2*vd)
+
 end
 export getD
 
+# to evaluate SS in tests
+function SS(par::NamedTuple,
+            run::Vector{Sample},
+            method::AbstractString,
+            standards::AbstractDict,
+            blank::AbstractDataFrame,
+            channels::AbstractDict)
+    anchors = getStandardAnchors(method,standards)
+    dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
+    parvec = [par.drift; par.down]
+    ndrift = length(par.drift)
+    ndown = length(par.down)
+    mf = exp(par.mfrac)
+    return SS(parvec,bP,bD,bd,dats,covs,channels,anchors,mf;
+              ndrift=ndrift,ndown=ndown,PAcutoff=par.PAcutoff)
+end
 # mass fractionation + elemental fractionation
 function SS(par::AbstractVector,
-            bP::AbstractVector,bD::AbstractVector,bd::AbstractVector,
-            dats::AbstractDict,covs::AbstractDict,
-            channels::AbstractDict,anchors::AbstractDict,
+            bP::AbstractVector,
+            bD::AbstractVector,
+            bd::AbstractVector,
+            dats::AbstractDict,
+            covs::AbstractDict,
+            channels::AbstractDict,
+            anchors::AbstractDict,
             mf::Union{Real,Nothing};
             ndrift::Integer=1,
             ndown::Integer=0,
@@ -114,8 +135,11 @@ function SS(par::AbstractVector,
     return out
 end
 # glass
-function SS(Dm::AbstractVector,dm::AbstractVector,
-            vD::Real,vd::Real,sDd::Real,
+function SS(Dm::AbstractVector,
+            dm::AbstractVector,
+            vD::Real,
+            vd::Real,
+            sDd::Real,
             y::Real,
             mf::Real,
             bDt::AbstractVector,bdt::AbstractVector)
@@ -126,10 +150,15 @@ end
 export SS
 
 # isochron or point
-function SSprep(bP::AbstractVector,bD::AbstractVector,bd::AbstractVector,
-                dat::AbstractDataFrame,covmat::Matrix,
-                channels::AbstractDict,mfrac::Real,
-                drift::AbstractVector,down::AbstractVector;
+function SSprep(bP::AbstractVector,
+                bD::AbstractVector,
+                bd::AbstractVector,
+                dat::AbstractDataFrame,
+                covmat::Matrix,
+                channels::AbstractDict,
+                mfrac::Number,
+                drift::AbstractVector,
+                down::AbstractVector;
                 PAcutoff::Union{Real,Nothing}=nothing,
                 adrift::AbstractVector=drift)
     t = dat.t
