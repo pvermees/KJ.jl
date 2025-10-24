@@ -5,8 +5,10 @@ function process!(run::Vector{Sample},
                   standards::AbstractDict,
                   glass::AbstractDict;
                   nblank::Integer=2,ndrift::Integer=1,ndown::Integer=1,
-                  PAcutoff=nothing,verbose::Bool=false)
-    blank = fitBlanks(run;nblank=nblank)
+                  PAcutoff=nothing,
+                  reject_outliers::Bool=true,
+                  verbose::Bool=false)
+    blank = fitBlanks(run;nblank=nblank,reject_outliers=reject_outliers)
     setGroup!(run,glass)
     setGroup!(run,standards)
     fit = fractionation(run,method,blank,channels,standards,glass;
@@ -18,23 +20,28 @@ end
 function process!(run::Vector{Sample},
                   internal::Tuple,
                   glass::AbstractDict;
-                  nblank::Integer=2)
-    blank = fitBlanks(run;nblank=nblank)
+                  nblank::Integer=2,
+                  reject_outliers::Bool=true)
+    blank = fitBlanks(run;
+                      nblank=nblank,
+                      reject_outliers=reject_outliers)
     setGroup!(run,glass)
-    fit = fractionation(run,blank,internal,glass)
+    fit = fractionation(run,blank,internal,glass;
+                        reject_outliers=reject_outliers)
     return blank, fit
 end
 export process!
 
 function fitBlanks(run::Vector{Sample};
-                   nblank=2)
+                   nblank=2,
+                   reject_outliers::Bool=true)
     blks = pool(run;blank=true)
     blk = reduce(vcat,blks)
     channels = getChannels(run)
     nc = length(channels)
     bpar = DataFrame(zeros(nblank,nc),channels)
     for channel in channels
-        good = chauvenet(blk[:,channel])
+        good = ifelse(reject_outliers, chauvenet(blk[:,channel]), :)
         bpar[:,channel] = polyFit(blk.t[good],blk[good,channel],nblank)
     end
     return bpar

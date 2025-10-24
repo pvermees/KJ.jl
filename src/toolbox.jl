@@ -168,6 +168,7 @@ function pool(run::Vector{Sample};
               blank::Bool=false,
               signal::Bool=false,
               group::Union{Nothing,AbstractString}=nothing,
+              reject_outliers::Bool=false,
               include_covmats::Bool=false,
               add_xy::Bool=false)
     if isnothing(group)
