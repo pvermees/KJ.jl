@@ -466,7 +466,7 @@ function glass_only_test()
     display(p)
 end
 
-function synthetictest()
+function synthetictest(truefit)
     method = "Lu-Hf"
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -474,6 +474,7 @@ function synthetictest()
     standards = Dict("BP_gt" => "BP")
     glass = Dict("NIST612" => "NIST612")
     myrun, channels = synthetic(;
+                                truefit=truefit,
                                 lambda=1.867e-5,
                                 t_std=1745.0,
                                 y0_std=3.55,
@@ -485,20 +486,25 @@ function synthetictest()
 end
 
 function accuracytest(;show=true)
-    method, channels, standards, glass, myrun = synthetictest()
-    blk, fit = process!(myrun,method,channels,standards,glass;
-                        nblank=2,ndrift=1,ndown=1)
-    println(SS(fit,myrun,method,standards,blk,channels))
     truefit = (drift=[0.0],down=[0.0],mfrac=0.0,
                PAcutoff=nothing,adrift=[0.0])
-    println(SS(truefit,myrun,method,standards,blk,channels))
+    method, channels, standards, glass, myrun = synthetictest(truefit)
+    blk, fit = process!(myrun,method,channels,standards,glass;
+                        nblank=2,ndrift=1,ndown=1)
+    SS_solution = SS(fit,myrun,method,standards,blk,channels)
+    SS_truth = SS(truefit,myrun,method,standards,blk,channels)
+    @test SS_solution < SS_truth
     if show
         den = nothing # "Hf176 -> 258" #
         p1 = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;
                      transformation="sqrt",den=den)
-        p2 = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;
+        p2 = KJ.plot(myrun[1],method,channels,blk,truefit,standards,glass;
                      transformation="sqrt",den=den)
-        p = Plots.plot(p1,p2,layout=(1,2))
+        p3 = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;
+                     transformation="sqrt",den=den)
+        p4 = KJ.plot(myrun[4],method,channels,blk,truefit,standards,glass;
+                     transformation="sqrt",den=den)
+        p = Plots.plot(p1,p2,p3,p4,layout=(2,2))
         @test display(p) != NaN
     end
 end

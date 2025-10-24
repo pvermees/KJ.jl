@@ -17,8 +17,8 @@ function random_sample(i::Int,
                        mu_p::Real=0.5,
                        sigma_p::Real=0.2,
                        D::Real=1e4,
-                       relerr_D::Real=0.3,
-                       relerr_P::Real=0.001,
+                       relerr_D::Real=0.1,
+                       relerr_P::Real=0.1,
                        relerr_d::Real=0.1,
                        mfrac::Real=0.0,
                        drift::AbstractVector=[0.0],
@@ -61,6 +61,9 @@ function random_sample(i::Int,
 end
 
 function synthetic(;
+                   truefit::NamedTuple=(drift=[0.0],
+                                        down=[0.0],
+                                        mfrac=0.0),
                    lambda::T,
                    t_std::T,
                    y0_std::T,
@@ -73,10 +76,10 @@ function synthetic(;
     spot_time = range(start=0.0,stop=60.0,length=nblk+nsig)
     t0 = 10.0
     bwin = [(1,9)]
-    swin = [(12,59)]
-    mfrac = 0.0
-    drift = [0.0]
-    down = [0.0]
+    swin = [(11,59)]
+    mfrac = truefit.mfrac
+    drift = truefit.drift
+    down = truefit.down
     x0_std = 1/(exp(lambda*t_std)-1)
     x0_smp = 1/(exp(lambda*t_smp)-1)
     D_blank = 1.0
