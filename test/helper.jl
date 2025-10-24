@@ -82,7 +82,7 @@ function synthetic(;
     x0_std = 1/(exp(lambda*t_std)-1)
     x0_smp = 1/(exp(lambda*t_smp)-1)
     D_blank = 1.0
-    blank = DataFrame("P" => [x0_std*D_blank*exp(down[1])*exp(drift[1])],
+    blank = DataFrame("P" => [x0_std*D_blank*exp(drift[1])],
                       "D" => [D_blank*exp(mfrac[1])],
                       "d" => [y0_std*D_blank])
     run = [

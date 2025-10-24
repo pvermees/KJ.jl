@@ -518,9 +518,8 @@ function SStest()
     display(p)
 end
 
-function accuracytest(;show=true)
-    truefit = (drift=[0.0],down=[0.0],mfrac=0.0,
-               PAcutoff=nothing,adrift=[0.0])
+function accuracytest(;drift=[0.0],down=[0.0],mfrac=0.0,show=true)
+    truefit=(drift=drift,down=down,mfrac=mfrac,PAcutoff=nothing,adrift=drift)
     method, channels, standards, glass, myrun = synthetictest(truefit)
     blk, fit = process!(myrun,method,channels,standards,glass;
                         nblank=2,ndrift=1,ndown=1,verbose=false)
@@ -591,7 +590,10 @@ if true
     @testset "glass as age standard test" begin glass_only_test() end
     @testset "extension test" begin extensiontest() end
     @testset "synthetic data" begin SStest() end
-    @testset "synthetic data" begin accuracytest() end
+    @testset "accuracy test 1" begin accuracytest() end
+    @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
+    @testset "accuracy test 3" begin accuracytest(down=[0.0,-1.0]) end
+    @testset "accuracy test 4" begin accuracytest(mfrac=2.0) end
     @testset "TUI test" begin TUItest() end
 else
     TUI()
