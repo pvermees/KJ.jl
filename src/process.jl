@@ -28,7 +28,8 @@ export process!
 
 function fitBlanks(run::Vector{Sample};
                    nblank=2)
-    blk = pool(run;blank=true)
+    blks = pool(run;blank=true)
+    blk = reduce(vcat,blks)
     channels = getChannels(run)
     nc = length(channels)
     bpar = DataFrame(zeros(nblank,nc),channels)
@@ -46,18 +47,20 @@ function atomic(samp::Sample,
                 pars::NamedTuple;
                 add_xy::Bool=false)
     dat = windowData(samp;signal=true,add_xy=add_xy)
-    var = dat2var(dat,collect(values(channels)))
-    Pm,Dm,dm,vP,vD,vd,ft,FT,mf,bPt,bDt,bdt =
+    sig = getSignals(dat)
+    covmat = df2cov(sig)
+    Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,ft,FT,mf,bPt,bDt,bdt =
         SSprep(blank[:,channels["P"]],
                blank[:,channels["D"]],
                blank[:,channels["d"]],
-               dat,var,
+               dat,
+               covmat,
                channels,
                pars.mfrac,pars.drift,pars.down;
                PAcutoff=pars.PAcutoff,
                adrift=pars.adrift)
-    Phat = @. (Pm-bPt)*ft*FT
-    Dhat = @. (Dm-bDt)*mf
+    Phat = @. (Pm-bPt)/(ft*FT)
+    Dhat = @. (Dm-bDt)/mf
     dhat = @. (dm-bdt)
     if add_xy
         if all([cname in names(dat) for cname in ["x";"y"]])

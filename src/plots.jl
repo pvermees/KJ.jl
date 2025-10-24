@@ -40,41 +40,42 @@ function plot(samp::Sample,
               legend=:topleft,
               show_title=true,
               titlefontsize=10,
+              return_offset::Bool=false,
               kw...)
 
     channelvec = collect(values(channels))
 
-    if samp.group == "sample"
-
-        p = plot(samp;
-                 channels=channelvec,
-                 num=num,den=den,transformation=transformation,
-                 seriestype=seriestype,ms=ms,ma=ma,
-                 xlim=xlim,ylim=ylim,i=i,
-                 legend=legend,show_title=show_title,
-                 titlefontsize=titlefontsize,kw...)
-        
-    else
-
-        p = plot(samp;
-                 channels=channelvec,
-                 num=num,den=den,transformation=transformation,
-                 seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
-                 i=i,legend=legend,show_title=show_title,
-                 titlefontsize=titlefontsize,kw...)
+    x, y, ty, xlab, ylab, ylim, offset = prep_plot(samp,channelvec;
+                                                   num=num,den=den,
+                                                   ylim=ylim,
+                                                   transformation=transformation)
+    
+    p = plot(samp,x,y,ty;
+             ms=ms,ma=ma,seriestype=seriestype,
+             label=permutedims(names(y)),
+             xlimits=xlim,ylimits=ylim,
+             i=i,legend=legend,show_title=show_title,
+             titlefontsize=titlefontsize,
+             xlab=xlab,ylab=ylab,kw...)
+    
+    if samp.group != "sample"
 
         plotFitted!(p,samp,blank,pars,channels,anchors;
                     num=num,den=den,transformation=transformation,
-                    linecolor=linecol,linestyle=linestyle)
+                    offset=offset,linecolor=linecol,linestyle=linestyle)
         
     end
 
     plotFittedBlank!(p,samp,blank,channelvec;
                      num=num,den=den,
-                     transformation=transformation,
+                     transformation=transformation,offset=offset,
                      linecolor=linecol,linestyle=linestyle)
 
-    return p
+    if return_offset
+        return p, offset
+    else
+        return p
+    end
 end
 # concentrations
 function plot(samp::Sample,
@@ -89,32 +90,32 @@ function plot(samp::Sample,
               linecol="black",linestyle=:solid,i=nothing,
               legend=:topleft,show_title=true,
               titlefontsize=10,kw...)
-    if samp.group == "sample"
 
-        p = plot(samp;
-                 num=num,den=den,transformation=transformation,
-                 seriestype=seriestype,ms=ms,ma=ma,
-                 xlim=xlim,ylim=ylim,i=i,
-                 legend=legend,show_title=show_title,
-                 titlefontsize=titlefontsize,kw...)
-        
-    else
+    channelvec = collect(getChannels(samp))
 
-        p = plot(samp;
-                 num=num,den=den,transformation=transformation,
-                 seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
-                 i=i,legend=legend,show_title=show_title,
-                 titlefontsize=titlefontsize,kw...)
+    x, y, ty, xlab, ylab, ylim, offset = prep_plot(samp,channelvec;
+                                                   num=num,den=den,
+                                                   ylim=ylim,
+                                                   transformation=transformation)
+    p = plot(samp;
+             num=num,den=den,transformation=transformation,
+             seriestype=seriestype,ms=ms,ma=ma,
+             xlim=xlim,ylim=ylim,i=i,
+             legend=legend,show_title=show_title,
+             titlefontsize=titlefontsize,
+             xlab=xlab,ylab=ylab,kw...)
+
+    if samp.group != "sample"
 
         plotFitted!(p,samp,blank,pars,elements,internal;
                     num=num,den=den,transformation=transformation,
-                    linecolor=linecol,linestyle=linestyle)
+                    offset=offset,linecolor=linecol,linestyle=linestyle)
         
     end
     
     plotFittedBlank!(p,samp,blank;
                      num=num,den=den,transformation=transformation,
-                     linecolor=linecol,linestyle=linestyle)
+                     offset=offset,linecolor=linecol,linestyle=linestyle)
 
     return p
 end
@@ -143,7 +144,7 @@ function plot(samp::Sample;
               num::Union{Nothing,AbstractString}=nothing,
               den::Union{Nothing,AbstractString}=nothing,
               transformation::Union{Nothing,AbstractString}=nothing,
-              seriestype=:scatter,ms=2,ma=0.5,
+              seriestype=:scatter,ms::Number=2,ma::Number=0.5,
               xlim=:auto,ylim=:auto,
               i::Union{Nothing,Integer}=nothing,
               legend=:topleft,
@@ -151,7 +152,34 @@ function plot(samp::Sample;
               titlefontsize=10,
               padding::Number=0.1,
               kw...)
-    x, y, ty, xlab, ylab, ylim = prep_plot(samp,channels,num,den,ylim,transformation)
+
+    x, y, ty, xlab, ylab, ylim, offset = prep_plot(samp,channels;
+                                                   num=num,den=den,ylim=ylim,
+                                                   transformation=transformation)
+
+    p = plot(samp,x,y,ty;
+             seriestype=seriestype,ms=ms,ma=ma,
+             xlim=xlim,ylim=ylim,i=i,legend=legend,
+             show_title=show_title,titlefontsize=titlefontsize,
+             padding=padding,xlab=xlab,ylab=ylab,kw...)
+
+    return p
+end
+function plot(samp::Sample,
+              x::AbstractVector,
+              y::AbstractDataFrame,
+              ty::AbstractDataFrame;
+              xlab::AbstractString="x",
+              ylab::AbstractString="y",
+              seriestype=:scatter,
+              ms::Number=2,ma::Number=0.5,
+              xlim=:auto,ylim=:auto,
+              i::Union{Nothing,Integer}=nothing,
+              legend=:topleft,
+              show_title=true,
+              titlefontsize=10,
+              padding::Number=0.1,
+              kw...)
     p = Plots.plot(x,Matrix(ty);
                    ms=ms,ma=ma,seriestype=seriestype,
                    label=permutedims(names(y)),
@@ -189,11 +217,11 @@ end
 export plot
 
 function prep_plot(samp::Sample,
-                   channels::AbstractVector,
+                   channels::AbstractVector;
                    num::Union{Nothing,AbstractString}=nothing,
                    den::Union{Nothing,AbstractString}=nothing,
                    ylim=:auto,
-                   transformation::Union{Nothing,AbstractString}=nothing;
+                   transformation::Union{Nothing,AbstractString}=nothing,
                    padding::Number=0.1)
     xlab = names(samp.dat)[1]
     x = samp.dat[:,xlab]
@@ -210,26 +238,18 @@ function prep_plot(samp::Sample,
     else
         ylab = transformation*"("*ratsig*")"
     end
-    ty = transformeer(y,transformation)
+    ty, offset = transformeer(y,transformation)
     if ylim == :auto && ratsig == "ratio"
-        ylim = get_ylim(samp,channels,num,den,transformation;
-                        padding=padding)
+        ylim = get_ylim(ty,samp.swin)
     end
-    return x, y, ty, xlab, ylab, ylim
+    return x, y, ty, xlab, ylab, ylim, offset
 end
 export prep_plot
-function get_ylim(samp::Sample,
-                  channels::AbstractVector,
-                  num::Union{Nothing,AbstractString}=nothing,
-                  den::Union{Nothing,AbstractString}=nothing,
-                  transformation::Union{Nothing,AbstractString}=nothing;
+function get_ylim(dat::AbstractDataFrame,
+                  window::AbstractVector;
                   padding::Number=0.1)
-    dat = windowData(samp,blank=false,signal=true)
-    meas = dat[:,channels]
-    ratsig = isnothing(den) ? "signal" : "ratio"
-    y = (ratsig == "signal") ? meas : formRatios(meas,num,den)
-    ty = transformeer(y,transformation)
-    miny, maxy = extrema(Matrix(ty))
+    selection, x, y = windows2selection(window)
+    miny, maxy = extrema(Matrix(dat[selection,:]))
     buffer = (maxy-miny)*padding
     return (miny-buffer,maxy+buffer)
 end
@@ -244,13 +264,16 @@ function plotFitted!(p,
                      num::Union{Nothing,AbstractString}=nothing,
                      den::Union{Nothing,AbstractString}=nothing,
                      transformation::Union{Nothing,AbstractString}=nothing,
+                     offset::Number=0.0,
                      linecolor="black",
-                     linestyle=:solid)
+                     linestyle=:solid,
+                     debug::Bool=false)
     pred = predict(samp,pars,blank,channels,anchors)
     rename!(pred,[channels[i] for i in names(pred)])
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
-                linecolor=linecolor,linestyle=linestyle)
+                offset=offset,linecolor=linecolor,
+                linestyle=linestyle,debug=debug)
 end
 # concentrations
 function plotFitted!(p,
@@ -262,11 +285,14 @@ function plotFitted!(p,
                      num::Union{Nothing,AbstractString}=nothing,
                      den::Union{Nothing,AbstractString}=nothing,
                      transformation::Union{Nothing,AbstractString}=nothing,
+                     offset::Union{Nothing,Number}=nothing,
                      linecolor="black",
-                     linestyle=:solid)
+                     linestyle=:solid,
+                     debug::Bool=false)
     pred = predict(samp,pars,blank,elements,internal)
     plotFitted!(p,samp,pred;
-                num=num,den=den,transformation=transformation,
+                num=num,den=den,
+                transformation=transformation,offset=offset,
                 linecolor=linecolor,linestyle=linestyle)
 end
 # helper
@@ -277,10 +303,13 @@ function plotFitted!(p,
                      num::Union{Nothing,AbstractString}=nothing,
                      den::Union{Nothing,AbstractString}=nothing,
                      transformation::Union{Nothing,AbstractString}=nothing,
-                     linecolor="black",linestyle=:solid)
+                     offset::Union{Nothing,Number}=nothing,
+                     linecolor="black",linestyle=:solid,
+                     debug::Bool=false)
     x = windowData(samp,blank=blank,signal=signal)[:,1]
     y = formRatios(pred,num,den)
-    ty = transformeer(y,transformation)
+    ty, offset = transformeer(y,transformation;
+                              offset=offset,debug=debug)
     for tyi in eachcol(ty)
         Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
     end
@@ -295,13 +324,14 @@ function plotFittedBlank!(p,
                           num::Union{Nothing,AbstractString}=nothing,
                           den::Union{Nothing,AbstractString}=nothing,
                           transformation::Union{Nothing,AbstractString}=nothing,
+                          offset::Union{Nothing,Number}=0.0,
                           linecolor="black",
-                          linestyle=:solid)
+                          linestyle::Symbol=:solid)
     pred = predict(samp,blank[:,channels])
     plotFitted!(p,samp,pred;
                 blank=true,signal=false,
                 num=num,den=den,transformation=transformation,
-                linecolor=linecolor,linestyle=linestyle)
+                offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
 # concentrations
 function plotFittedBlank!(p,
@@ -310,13 +340,14 @@ function plotFittedBlank!(p,
                           num::Union{Nothing,AbstractString}=nothing,
                           den::Union{Nothing,AbstractString}=nothing,
                           transformation::Union{Nothing,AbstractString}=nothing,
-                          linecolor="black",
-                          linestyle=:solid)
+                          offset::Union{Nothing,Number}=0.0,
+                          linecolor::AbstractString="black",
+                          linestyle::Symbol=:solid)
     pred = predict(samp,blank)
     plotFitted!(p,samp,pred;
                 blank=true,signal=false,
                 num=num,den=den,transformation=transformation,
-                linecolor=linecolor,linestyle=linestyle)
+                offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
 export plotFittedBlank!
 

@@ -64,7 +64,7 @@ function TUIread(ctrl::AbstractDict)
 end
 
 function TUIformat!(ctrl::AbstractDict,
-                        response::AbstractString)
+                    response::AbstractString)
     if response=="a"
         ctrl["format"] = "Agilent"
     elseif response=="t"

@@ -168,7 +168,7 @@ function pool(run::Vector{Sample};
               blank::Bool=false,
               signal::Bool=false,
               group::Union{Nothing,AbstractString}=nothing,
-              include_variances::Bool=false,
+              include_covmats::Bool=false,
               add_xy::Bool=false)
     if isnothing(group)
         selection = 1:length(run)
@@ -184,26 +184,24 @@ function pool(run::Vector{Sample};
                              signal=signal,
                              add_xy=add_xy)
     end
-    if include_variances
-        vars = Vector{DataFrame}(undef,ns)
-        channels = getChannels(run)
+    if include_covmats
+        covs = Vector{Matrix}(undef,ns)
         for i in eachindex(selection)
-            vars[i] = dat2var(dats[i],channels)
+            sig = getSignals(dats[i])
+            covs[i] = df2cov(sig)
         end
-        return reduce(vcat,dats), reduce(vcat,vars)
+        return dats, covs
     else
-        return reduce(vcat,dats)
+        return dats
     end
 end
 export pool
 
-function dat2var(dat::AbstractDataFrame,
-                 channels::AbstractVector)
-    diff = dat[2:end,channels] .- dat[1:end-1,channels]
-    covmat = Statistics.cov(Matrix(diff))
-    mat = repeat(diag(covmat)',inner=[nrow(dat),1])./2
-    return DataFrame(mat,channels)
+function df2cov(df::AbstractDataFrame)
+    diff = df[2:end,:] .- df[1:end-1,:]
+    return Statistics.cov(Matrix(diff))./2
 end
+export df2cov
 
 function var_timeseries(cps::AbstractVector)
     var = Statistics.var((cps[2:end].-cps[1:end-1]))./2
@@ -404,17 +402,23 @@ function rle(v::AbstractVector{T}) where T
 end
     
 function transformeer(df::AbstractDataFrame,
-                      transformation::Union{Nothing,AbstractString})
+                      transformation::Union{Nothing,AbstractString};
+                      offset::Union{Nothing,Real}=nothing,
+                      debug::Bool=false)
     if isnothing(transformation)
         out = df
     else
         out = copy(df)
-        offset = get_offset(df,transformation)
+        if isnothing(offset)
+            offset = get_offset(df,transformation)
+        elseif transformation=="log"
+            out .= ifelse.(df .<= 0, NaN, df)
+        end
         for key in names(out)
-            out[:,key] = eval(Symbol(transformation)).(df[:,key] .+ offset)
+            out[:,key] = eval(Symbol(transformation)).(out[:,key] .+ offset)
         end
     end
-    return out
+    return out, offset
 end
 
 function get_offset(df::AbstractDataFrame,

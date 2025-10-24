@@ -65,6 +65,11 @@ function getGroups(run::Vector{Sample})
 end
 export getGroups
 
+function getIndicesInGroup(run::Vector{Sample},group::AbstractString)
+    return findall(getGroups(myrun) .== group)
+end
+export getIndicesInGroup
+
 function getAttr(run::Vector{Sample},
                  attr::Symbol)
     ns = length(run)
@@ -180,7 +185,7 @@ function sett0!(run::Vector{Sample})
         sett0!(samp)
     end
 end
-function sett0!(run::Vector{Sample},t0::AbstractFloat)
+function sett0!(run::Vector{Sample},t0::Number)
     for samp in run
         sett0!(samp,t0)
     end
@@ -190,14 +195,13 @@ function sett0!(samp::Sample)
     i0 = geti0(dat)
     sett0!(samp,samp.dat[i0,1])
 end
-function sett0!(samp::Sample,t0::AbstractFloat)
+function sett0!(samp::Sample,t0::Number)
     samp.t0 = t0
 end
 export sett0!
 
-# isochron
-function getx0y0y1(method::AbstractString,
-                   refmat::AbstractString)
+function get_isochron_anchor(method::AbstractString,
+                             refmat::AbstractString)
     t = get(_KJ["refmat"][method],refmat).tx[1]
     if method=="U-Pb"
         L8 = _KJ["lambda"]["U238-Pb206"][1]
@@ -213,19 +217,25 @@ function getx0y0y1(method::AbstractString,
     y0 = get(_KJ["refmat"][method],refmat).y0[1]
     return (x0=x0,y0=y0,y1=y1)
 end
-# point
-function getx0y0(method::AbstractString,
-                 refmat::AbstractString)
-    x0 = get(_KJ["refmat"][method],refmat).tx[1]
-    y0 = get(_KJ["refmat"][method],refmat).y0[1]
-    return (x0=x0,y0=y0)
+function is_isochron_anchor(anchor::NamedTuple)
+    return all(in(keys(anchor)), [:x0,:y0,:y1])
 end
-# glass
-function gety0(method::AbstractString,
-               refmat::AbstractString)
+function get_point_anchor(method::AbstractString,
+                          refmat::AbstractString)
+    x = get(_KJ["refmat"][method],refmat).tx[1]
+    y = get(_KJ["refmat"][method],refmat).y0[1]
+    return (x=x,y=y)
+end
+function is_point_anchor(anchor::NamedTuple)
+    k = keys(anchor)
+    return all(in(keys(anchor)), [:x,:y])
+end
+function get_glass_anchor(method::AbstractString,
+                          refmat::AbstractString)
     P, D, d = getPDd(method)
     ratio = d * D
-    return get(_KJ["glass"],refmat)[ratio]
+    y = get(_KJ["glass"],refmat)[ratio]
+    return (y=y)
 end
 
 function getAnchors(method::AbstractString,
@@ -242,23 +252,15 @@ function getAnchors(method::AbstractString,
 end
 export getAnchors
 
-function isochronAnchor(anchor::NamedTuple)
-    return all(in(keys(anchor)), [:x0,:y0,:y1])
-end
-function pointAnchor(anchor::NamedTuple)
-    k = keys(anchor)
-    return in(:x0,k) & in(:y0,k) & !in(:y1,k)
-end
-
 function getStandardAnchors(method::AbstractString,
                            refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
         t = get(_KJ["refmat"][method],refmat).type
         if t == "isochron"
-            out[refmat] = getx0y0y1(method,refmat)
-        else # point
-            out[refmat] = getx0y0(method,refmat)
+            out[refmat] = get_isochron_anchor(method,refmat)
+        else
+            out[refmat] = get_point_anchor(method,refmat)
         end
     end
     return out
@@ -274,7 +276,7 @@ function getGlassAnchors(method::AbstractString,
                          glass::Bool=false)
     out = Dict()
     for refmat in refmats
-        out[refmat] = gety0(method,refmat)
+        out[refmat] = get_glass_anchor(method,refmat)
     end
     return out
 end

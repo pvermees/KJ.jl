@@ -1,22 +1,27 @@
 using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
 import Plots
+include("helper.jl")
 
 function loadtest(verbose=false)
-    myrun = load("data/Lu-Hf";format="Agilent")
-    if verbose summarise(myrun;verbose=true,n=5) end
+    myrun = load("data/MWE";format="Agilent")
+    if verbose summarise(myrun;verbose=true) end
     return myrun
 end
 
-function plottest()
+function plottest(option="all")
     myrun = loadtest()
-    p = KJ.plot(myrun[1];
-                channels=["Hf176 -> 258","Hf178 -> 260"])
-    @test display(p) != NaN
-    p = KJ.plot(myrun[1];
-                channels=["Lu175 -> 175","Hf176 -> 258","Hf178 -> 260"],
-                den="Hf178 -> 260",
-                transformation = "log")
-    @test display(p) != NaN
+    if option in (1,"all")
+        p = KJ.plot(myrun[1];
+                    channels=["Hf176 -> 258","Hf178 -> 260"])
+        @test display(p) != NaN
+    end
+    if option in (2,"all")
+        p = KJ.plot(myrun[1];
+                    channels=["Lu175 -> 175","Hf176 -> 258","Hf178 -> 260"],
+                    den="Hf178 -> 260",
+                    transformation = "log")
+        @test display(p) != NaN
+    end
 end
 
 function windowtest()
@@ -29,9 +34,14 @@ function windowtest()
     @test display(p) != NaN
 end
 
-function blanktest()
+function blanktest(;doplot=false,ylim=:auto,transformation=nothing)
     myrun = loadtest()
     blk = fitBlanks(myrun;nblank=2)
+    if doplot
+        p = KJ.plot(myrun[1],ylim=ylim,transformation=transformation)
+        plotFittedBlank!(p,myrun[1],blk,transformation=transformation)
+        @test display(p) != NaN
+    end
     return myrun, blk
 end
 
@@ -46,7 +56,7 @@ function standardtest(verbose=false)
     end
 end
 
-function fixedLuHf()
+function fixedLuHf(drift,down,mfrac,PAcutoff,adrift)
     myrun, blk = blanktest()
     method = "Lu-Hf"
     channels = Dict("d" => "Hf178 -> 260",
@@ -56,31 +66,34 @@ function fixedLuHf()
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=[-3.9225],
-           down=[0.0,0.03362],
-           mfrac=0.38426,
-           PAcutoff=nothing,
-           adrift=[-3.9225])
+    fit = (drift=drift,down=down,mfrac=mfrac,PAcutoff=PAcutoff,adrift=adrift)
     return myrun, blk, method, channels, glass, standards, fit
 end
 
 function predictest()
-    myrun, blk, method, channels, glass, standards, fit = fixedLuHf()
-    samp = myrun[105]
+    drift = [3.91]
+    down = [0.0,0.0045]
+    mfrac = -0.38
+    myrun, blk, method, channels, glass, standards, fit =
+        fixedLuHf(drift,down,mfrac,nothing,drift)
+    samp = myrun[1]
     if samp.group == "sample"
         println("Not a standard")
+        return samp,method,fit,blk,channels,standards,glass
     else
         pred = predict(samp,method,fit,blk,channels,
                        standards,glass)
-        p = KJ.plot(samp,method,channels,blk,fit,standards,glass;
-                    transformation="log")
+        p, offset = KJ.plot(samp,method,channels,blk,fit,standards,glass;
+                            den="Hf176 -> 258",
+                            transformation="log",
+                            return_offset=true)
         @test display(p) != NaN
+        return samp,method,fit,blk,channels,standards,glass,p,offset
     end
-    return samp,method,fit,blk,channels,standards,glass,p
 end
     
 function partest(parname,paroffsetfact)
-    samp,method,fit,blk,channels,standards,glass,p = predictest()
+    samp,method,fit,blk,channels,standards,glass,p,offset = predictest()
     drift = fit.drift[1]
     down = fit.down[2]
     mfrac = fit.mfrac[1]
@@ -99,7 +112,8 @@ function partest(parname,paroffsetfact)
                         adrift=[drift])
         anchors = getStandardAnchors(method,standards)
         plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
-                    transformation="log",linecolor="red")
+                    transformation="log",offset=offset,
+                    linecolor="red",debug=false)
     end
     @test display(p) != NaN
 end
@@ -160,7 +174,7 @@ function RbSrTest(show=true)
     standards = Dict("MDC_bt" => "MDC -")
     setGroup!(myrun,standards)
     blank = fitBlanks(myrun;nblank=2)
-    fit = fractionation(myrun,method,blank,channels,standards,8.37861;
+    fit = fractionation(myrun,method,blank,channels,standards,0.11935;
                         ndown=0,ndrift=1,verbose=false)
     anchors = getStandardAnchors(method,standards)
     if show
@@ -230,9 +244,14 @@ function histest(;LuHf=false,show=true)
         standard = "MDC_bt"
     end
     print(fit)
-    pooled, vars = pool(myrun;signal=true,group=standard,include_variances=true)
+    dats, covs = pool(myrun;signal=true,group=standard,include_covmats=true)
     anchor = anchors[standard]
-    pred = predict(pooled,vars,fit,blk,channels,anchor)
+    pooled = DataFrame()
+    pred = DataFrame()
+    for i in eachindex(dats)
+        pooled = vcat(pooled,dats[i])
+        pred = vcat(pred,predict(dats[i],covs[i],fit,blk,channels,anchor))
+    end
     Pm = pooled[:,channels["P"]]
     Dm = pooled[:,channels["D"]]
     dm = pooled[:,channels["d"]]
@@ -248,7 +267,7 @@ function histest(;LuHf=false,show=true)
 end
 
 function processtest(show=true)
-    myrun = load("data/Lu-Hf",format="Agilent")
+    myrun = load("data/MWE",format="Agilent")
     method = "Lu-Hf";
     channels = Dict("d"=>"Hf178 -> 260",
                     "D"=>"Hf176 -> 258",
@@ -256,7 +275,7 @@ function processtest(show=true)
     standards = Dict("Hogsbo_gt" => "hogsbo")
     glass = Dict("NIST612" => "NIST612p")
     blk, fit = process!(myrun,method,channels,standards,glass;
-                        nblank=2,ndrift=1,ndown=1)
+                        nblank=2,ndrift=1,ndown=1,verbose=false)
     if show
         p = KJ.plot(myrun[2],method,channels,blk,fit,standards,glass;
                     transformation="log",den="Hf176 -> 258")
@@ -447,10 +466,86 @@ function glass_only_test()
     display(p)
 end
 
+function synthetictest(truefit;kw...)
+    method = "Lu-Hf"
+    channels = Dict("d"=>"Hf178 -> 260",
+                    "D"=>"Hf176 -> 258",
+                    "P"=>"Lu175 -> 175")
+    standards = Dict("BP_gt" => "BP")
+    glass = Dict("NIST612" => "NIST612")
+    myrun, channels = synthetic(;
+                                truefit=truefit,
+                                lambda=1.867e-5,
+                                t_std=1745.0,
+                                y0_std=3.55,
+                                t_smp=1029.7,
+                                y0_smp=3.55,
+                                y0_glass=3.544842,
+                                channels=channels,
+                                kw...)
+    return method, channels, standards, glass, myrun
+end
+
+function SStest()
+    truefit = (drift=[0.0],down=[0.0],mfrac=0.0,
+               PAcutoff=nothing,adrift=[0.0])
+    x0_std = 1.0
+    y0_std = 1.0
+    D_blank = 1.0
+    down = truefit.down
+    drift = truefit.drift
+    mfrac = truefit.mfrac
+    method, channels, standards, glass, myrun = synthetictest(truefit)
+    blk, fit = process!(myrun,method,channels,standards,glass;
+                        nblank=2,ndrift=length(drift),
+                        ndown=length(down),verbose=false)
+    nstep = 20
+    ss = fill(0.0,nstep)
+    fit = deepcopy(truefit)
+    dd = range(start=fit.drift[1]-1.0,stop=fit.drift[1]+1.0,length=nstep)
+    for i in eachindex(dd)
+        fit.drift[1] = dd[i]
+        ss[i] = SS(fit,myrun,method,standards,blk,channels)
+    end
+    p = Plots.plot(dd,ss,seriestype=:line,label="drift")
+    dwn = range(start=fit.down[1]-1.0,stop=fit.down[1]+1.0,length=nstep)
+    fit = deepcopy(truefit)
+    for i in eachindex(dwn)
+        fit.down[1] = dwn[i]
+        ss[i] = SS(fit,myrun,method,standards,blk,channels)
+    end
+    Plots.plot!(p,dwn,ss,seriestype=:line,linecolor=:red,label="down")
+    SS_truth = SS(truefit,myrun,method,standards,blk,channels;verbose=true)
+    display(p)
+end
+
+function accuracytest(;drift=[0.0],down=[0.0],mfrac=0.0,show=true,kw...)
+    truefit=(drift=drift,down=down,mfrac=mfrac,PAcutoff=nothing,adrift=drift)
+    method, channels, standards, glass, myrun = synthetictest(truefit,kw...)
+    blk, fit = process!(myrun,method,channels,standards,glass;
+                        nblank=2,ndrift=1,ndown=1,verbose=false)
+    SS_solution = SS(fit,myrun,method,standards,blk,channels)
+    SS_truth = SS(truefit,myrun,method,standards,blk,channels)
+    @test SS_solution < SS_truth
+    if show
+        den = nothing # "Hf176 -> 258" #
+        p1 = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;
+                     transformation="sqrt",den=den)
+        p2 = KJ.plot(myrun[3],method,channels,blk,fit,standards,glass;
+                     transformation="sqrt",den=den)
+        p3 = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;
+                     transformation="sqrt",den=den)
+        p = Plots.plot(p1,p2,p3,layout=(1,3))
+        @test display(p) != NaN
+    end
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
-    _KJ["tree"]["top"] = (message = "test", help = "test", action = old.action)
+    _KJ["tree"]["top"] = (message = "test",
+                          help = "test",
+                          action = old.action)
 end
 export KJtree!
 end
@@ -461,14 +556,13 @@ end
 
 function TUItest()
     TUI(;logbook="logs/Lu-Hf.log",reset=true)
-    #TUI(;logbook="logs/Lu-Hf.log",reset=true)
 end
 
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
-    @testset "plot raw data" begin plottest() end
+    #=@testset "load" begin loadtest(true) end
+    @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "assign standards" begin standardtest(true) end
@@ -496,7 +590,12 @@ if true
     @testset "map fail test" begin map_fail_test() end
     @testset "glass as age standard test" begin glass_only_test() end
     @testset "extension test" begin extensiontest() end
-    @testset "TUI test" begin TUItest() end
+    @testset "synthetic data" begin SStest() end=#
+    @testset "accuracy test 1" begin accuracytest() end
+    @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
+    @testset "accuracy test 3" begin accuracytest(down=[0.0,-1.0]) end
+    @testset "accuracy test 4" begin accuracytest(mfrac=2.0) end
+    #@testset "TUI test" begin TUItest() end
 else
     TUI()
 end
