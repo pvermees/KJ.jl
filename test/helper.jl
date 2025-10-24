@@ -69,7 +69,11 @@ function synthetic(;
                    t_smp::T,
                    y0_smp::T,
                    y0_glass::T,
-                   channels::AbstractDict) where T <: Real
+                   channels::AbstractDict,
+                   relerr_D::T=0.1,
+                   relerr_P::T=0.1,
+                   relerr_d::T=0.1,
+                   ) where T <: Real
     nblk = 10
     nsig = 50
     spot_time = range(start=0.0,stop=60.0,length=nblk+nsig)
@@ -93,19 +97,22 @@ function synthetic(;
                       mu_p=0.5,sigma_p=0.1,x0=x0_std,y0=y0_std,
                       D=1e4,channels=channels,
                       mfrac=mfrac,drift=drift,down=down,
+                      relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
                       group="BP_gt"),
         random_sample(2,4;
                       nblk=nblk,nsig=nsig,sname="Hog_1",
                       dtime=DateTime("2025-01-01T08:01:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,blank=blank,
                       mu_p=0.5,sigma_p=0.1,x0=x0_smp,y0=y0_smp,
-                      D=1e4,channels=channels,mfrac=mfrac,drift=drift,down=down),
+                      D=1e4,channels=channels,mfrac=mfrac,drift=drift,down=down,
+                      relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d),
         random_sample(3,4;
                       nblk=nblk,nsig=nsig,sname="NIST612_1",
                       dtime=DateTime("2025-01-01T08:02:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,blank=blank,
                       mu_p=0.5,sigma_p=0.0,y0=2*y0_glass,
                       D=1e4,channels=channels,mfrac=mfrac,drift=drift,down=down,
+                      relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
                       group="NIST612"),
         random_sample(4,4;
                       nblk=nblk,nsig=nsig,sname="BP_2",
@@ -114,6 +121,7 @@ function synthetic(;
                       mu_p=0.5,sigma_p=0.1,x0=x0_std,y0=y0_std,
                       D=2e4,channels=channels,
                       mfrac=mfrac,drift=drift,down=down,
+                      relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
                       group="BP_gt")
     ]
     return run, channels
