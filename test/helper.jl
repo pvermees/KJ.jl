@@ -1,5 +1,4 @@
 using Dates
-
 function random_sample(i::Int,
                        n::Int;
                        nblk::Int,
@@ -83,9 +82,9 @@ function synthetic(;
     x0_std = 1/(exp(lambda*t_std)-1)
     x0_smp = 1/(exp(lambda*t_smp)-1)
     D_blank = 1.0
-    blank = DataFrame("P" => [x0_std*D_blank*exp(down[1])*exp(drift[1]),0.1],
-                      "D" => [D_blank*exp(mfrac[1]),0.1],
-                      "d" => [y0_std*D_blank,0.1])
+    blank = DataFrame("P" => [x0_std*D_blank*exp(down[1])*exp(drift[1])],
+                      "D" => [D_blank*exp(mfrac[1])],
+                      "d" => [y0_std*D_blank])
     run = [
         random_sample(1,4;
                       nblk=nblk,nsig=nsig,sname="BP_1",
@@ -93,7 +92,8 @@ function synthetic(;
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,blank=blank,
                       mu_p=0.5,sigma_p=0.1,x0=x0_std,y0=y0_std,
                       D=1e4,channels=channels,
-                      mfrac=mfrac,drift=drift,down=down),
+                      mfrac=mfrac,drift=drift,down=down,
+                      group="BP_gt"),
         random_sample(2,4;
                       nblk=nblk,nsig=nsig,sname="Hog_1",
                       dtime=DateTime("2025-01-01T08:01:00"),
@@ -104,16 +104,17 @@ function synthetic(;
                       nblk=nblk,nsig=nsig,sname="NIST612_1",
                       dtime=DateTime("2025-01-01T08:02:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,blank=blank,
-                      mu_p=0.5,sigma_p=0.1,y0=y0_glass,channels=channels,
-                      D=1e4,relerr_D=0.1,relerr_P=0.01,relerr_d=0.1,
-                      mfrac=mfrac,drift=drift,down=down),
+                      mu_p=0.5,sigma_p=0.0,y0=2*y0_glass,
+                      D=1e4,channels=channels,mfrac=mfrac,drift=drift,down=down,
+                      group="NIST612"),
         random_sample(4,4;
                       nblk=nblk,nsig=nsig,sname="BP_2",
                       dtime=DateTime("2025-01-01T08:03:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,blank=blank,
                       mu_p=0.5,sigma_p=0.1,x0=x0_std,y0=y0_std,
                       D=2e4,channels=channels,
-                      mfrac=mfrac,drift=drift,down=down)
+                      mfrac=mfrac,drift=drift,down=down,
+                      group="BP_gt")
     ]
     return run, channels
 end

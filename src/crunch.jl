@@ -43,7 +43,8 @@ function SS(par::NamedTuple,
             method::AbstractString,
             standards::AbstractDict,
             blank::AbstractDataFrame,
-            channels::AbstractDict)
+            channels::AbstractDict;
+            verbose::Bool=false)
     anchors = getStandardAnchors(method,standards)
     dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
     parvec = [par.drift; par.down]
@@ -51,7 +52,8 @@ function SS(par::NamedTuple,
     ndown = length(par.down)
     mf = exp(par.mfrac)
     return SS(parvec,bP,bD,bd,dats,covs,channels,anchors,mf;
-              ndrift=ndrift,ndown=ndown,PAcutoff=par.PAcutoff)
+              ndrift=ndrift,ndown=ndown,PAcutoff=par.PAcutoff,
+              verbose=verbose)
 end
 # mass fractionation + elemental fractionation
 function SS(par::AbstractVector,
@@ -65,7 +67,8 @@ function SS(par::AbstractVector,
             mf::Union{Real,Nothing};
             ndrift::Integer=1,
             ndown::Integer=0,
-            PAcutoff::Union{Real,Nothing}=nothing)
+            PAcutoff::Union{Real,Nothing}=nothing,
+            verbose::Bool=false)
     drift = par[1:ndrift]
     down = vcat(0.0,par[ndrift+1:ndrift+ndown])
     mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
@@ -89,6 +92,9 @@ function SS(par::AbstractVector,
                 error("Invalid anchor.")
             end
         end
+    end
+    if verbose
+        println(par,": ",out)
     end
     return out
 end
@@ -120,7 +126,8 @@ function SS(par::AbstractVector,
             bD::AbstractVector,bd::AbstractVector,
             dats::AbstractDict,covs::AbstractDict,
             channels::AbstractDict,
-            anchors::AbstractDict)
+            anchors::AbstractDict;
+            verbose::Bool=false)
     mf = exp(par[1])
     out = 0.0
     for (refmat,dat) in dats
@@ -131,6 +138,9 @@ function SS(par::AbstractVector,
                 SSprep(bD,bd,dat[spot],covmat[spot],channels)
             out += SS(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
         end
+    end
+    if verbose
+        println(par,out)
     end
     return out
 end

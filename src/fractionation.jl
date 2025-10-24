@@ -128,7 +128,8 @@ function SSfit(init::AbstractVector,
                verbose::Bool=false)
 
     objective = (par) -> SS(par,bP,bD,bd,dats,covs,channels,anchors,mf;
-                            ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff)
+                            ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff,
+                            verbose=verbose)
 
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)
@@ -164,7 +165,8 @@ function SSfit(init::AbstractVector,
                anchors::AbstractDict;
                verbose::Bool=false)
 
-    objective = (par) -> SS(par,bD,bd,dats,vars,channels,anchors)
+    objective = (par) -> SS(par,bD,bd,dats,vars,channels,anchors;
+                            verbose=verbose)
     
     fit = Optim.optimize(objective,init)
     pars = Optim.minimizer(fit)

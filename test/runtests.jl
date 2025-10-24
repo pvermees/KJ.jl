@@ -485,12 +485,45 @@ function synthetictest(truefit)
     return method, channels, standards, glass, myrun
 end
 
+function SStest()
+    truefit = (drift=[0.0],down=[0.0],mfrac=0.0,
+               PAcutoff=nothing,adrift=[0.0])
+    x0_std = 1.0
+    y0_std = 1.0
+    D_blank = 1.0
+    down = truefit.down
+    drift = truefit.drift
+    mfrac = truefit.mfrac
+    method, channels, standards, glass, myrun = synthetictest(truefit)
+    blk, fit = process!(myrun,method,channels,standards,glass;
+                        nblank=2,ndrift=length(drift),
+                        ndown=length(down),verbose=false)
+    nstep = 20
+    ss = fill(0.0,nstep)
+    fit = deepcopy(truefit)
+    dd = range(start=fit.drift[1]-1.0,stop=fit.drift[1]+1.0,length=nstep)
+    for i in eachindex(dd)
+        fit.drift[1] = dd[i]
+        ss[i] = SS(fit,myrun,method,standards,blk,channels)
+    end
+    p = Plots.plot(dd,ss,seriestype=:line,label="drift")
+    dwn = range(start=fit.down[1]-1.0,stop=fit.down[1]+1.0,length=nstep)
+    fit = deepcopy(truefit)
+    for i in eachindex(dwn)
+        fit.down[1] = dwn[i]
+        ss[i] = SS(fit,myrun,method,standards,blk,channels)
+    end
+    Plots.plot!(p,dwn,ss,seriestype=:line,linecolor=:red,label="down")
+    SS_truth = SS(truefit,myrun,method,standards,blk,channels;verbose=true)
+    display(p)
+end
+
 function accuracytest(;show=true)
     truefit = (drift=[0.0],down=[0.0],mfrac=0.0,
                PAcutoff=nothing,adrift=[0.0])
     method, channels, standards, glass, myrun = synthetictest(truefit)
     blk, fit = process!(myrun,method,channels,standards,glass;
-                        nblank=2,ndrift=1,ndown=1)
+                        nblank=2,ndrift=1,ndown=1,verbose=false)
     SS_solution = SS(fit,myrun,method,standards,blk,channels)
     SS_truth = SS(truefit,myrun,method,standards,blk,channels)
     @test SS_solution < SS_truth
@@ -498,13 +531,11 @@ function accuracytest(;show=true)
         den = nothing # "Hf176 -> 258" #
         p1 = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;
                      transformation="sqrt",den=den)
-        p2 = KJ.plot(myrun[1],method,channels,blk,truefit,standards,glass;
+        p2 = KJ.plot(myrun[3],method,channels,blk,fit,standards,glass;
                      transformation="sqrt",den=den)
         p3 = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;
                      transformation="sqrt",den=den)
-        p4 = KJ.plot(myrun[4],method,channels,blk,truefit,standards,glass;
-                     transformation="sqrt",den=den)
-        p = Plots.plot(p1,p2,p3,p4,layout=(2,2))
+        p = Plots.plot(p1,p2,p3,layout=(1,3))
         @test display(p) != NaN
     end
 end
@@ -530,7 +561,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -558,9 +589,10 @@ if true
     @testset "isotope ratio map" begin map_dating_test() end
     @testset "map fail test" begin map_fail_test() end
     @testset "glass as age standard test" begin glass_only_test() end
-    @testset "extension test" begin extensiontest() end=#
+    @testset "extension test" begin extensiontest() end
+    @testset "synthetic data" begin SStest() end
     @testset "synthetic data" begin accuracytest() end
-    #@testset "TUI test" begin TUItest() end
+    @testset "TUI test" begin TUItest() end
 else
     TUI()
 end
