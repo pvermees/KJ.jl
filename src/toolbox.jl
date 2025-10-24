@@ -515,18 +515,25 @@ function hessian2xyerr(H::Matrix,
 end
 
 function chauvenet(data::Vector{<:Real})
-    n = length(data)
-    mu = Statistics.mean(data)
-    sigma = Statistics.std(data)
-    if sigma > 0
+    N = length(data)
+    good = collect(1:N)
+    for n in N:-1:1
+        surviving_data = data[good]
+        mu = Statistics.mean(surviving_data)
+        sigma = Statistics.std(surviving_data)
+        if sigma == 0 return good end
         criterion = 1.0 / (2 * n)
-        z_scores = @. abs((data - mu) / sigma)
-        probabilities = @. 2 * (1 - Distributions.cdf(Distributions.Normal(),z_scores))
-        out = probabilities .>= criterion
-    else
-        out = fill(true,n)
+        z_scores = @. abs((surviving_data - mu) / sigma)
+        cdf = Distributions.cdf(Distributions.Normal(),z_scores)
+        probabilities = @. 2 * (1 - cdf)
+        furthest_removed = argmin(probabilities)
+        if probabilities[furthest_removed] >= criterion
+            return good
+        else
+            splice!(good,furthest_removed)
+        end
     end
-    return out
+    return good
 end
 
 function dataframe_sum(df::DataFrame)

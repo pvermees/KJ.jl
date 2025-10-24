@@ -66,15 +66,18 @@ end
 function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        internal::Tuple,
-                       glass::AbstractDict)
+                       glass::AbstractDict;
+                       reject_outliers::Bool=true)
     elements = channels2elements(run)
-    return fractionation(run,blank,elements,internal,glass)
+    return fractionation(run,blank,elements,internal,glass;
+                         reject_outliers=reject_outliers)
 end
 function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        elements::AbstractDataFrame,
                        internal::Tuple,
-                       glass::AbstractDict)
+                       glass::AbstractDict;
+                       reject_outliers::Bool=true)
     ne = size(elements,2)
     num = den = fill(0.0,ne-1)
     for (SRM,name)  in glass
