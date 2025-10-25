@@ -51,7 +51,6 @@ end
 
 """
 polyVal(p::AbstractVector,t::AbstractVector)
-polyVal(p::AbstractDataFrame,t::AbstractVector)
 
 Evaluates polynomial function with parameters p at times t.
 """
@@ -61,6 +60,9 @@ function polyVal(p::AbstractVector,
     V = vandermonde(t,n-1)
     return V * p
 end
+"""
+polyVal(p::AbstractDataFrame,t::AbstractVector)
+"""
 function polyVal(p::AbstractDataFrame,
                  t::AbstractVector)
     nc = size(p,2)
@@ -100,7 +102,6 @@ export polyFac
 
 """
 summarise(run::Vector{Sample};verbose=false,n=length(run))
-summarize(run::Vector{Sample};verbose=false,n=length(run))
 
 Prints a table with the sample names in run.
 """
@@ -118,6 +119,9 @@ function summarise(run::Vector{Sample};
     if verbose println(first(out,n)) end
     return out
 end
+"""
+summarize(run::Vector{Sample};verbose=false,n=length(run))
+"""
 function summarize(run::Vector{Sample};
                    verbose=true,n=length(run))
     summarise(run;verbose,n)
@@ -363,7 +367,6 @@ export i2t
 
 """
 time2window(samp::Sample,start::Number,finish::Number)
-time2window(samp::Sample,twin::AbstractVector)
 
 Returns a tuple or a vector of tuples with the indices
 corresponding to the start and finish times.
@@ -374,6 +377,9 @@ function time2window(samp::Sample,start::Number,finish::Number)
     to = min(ni,t2i(samp,finish))
     return (from,to)
 end
+"""
+time2window(samp::Sample,twin::AbstractVector)
+"""
 function time2window(samp::Sample,twin::AbstractVector)
     out = Tuple[]
     for win in twin
@@ -385,7 +391,6 @@ export time2window
 
 """
 prefix2subset(run::Vector{Sample},prefix::AbstractString)
-prefix2subset(ratios::AbstractDataFrame,prefix::AbstractString)
 
 Subset selected samples from run.
 """
@@ -394,6 +399,9 @@ function prefix2subset(run::Vector{Sample},
     selection = findall(contains(prefix),getSnames(run))
     return run[selection]
 end
+"""
+prefix2subset(ratios::AbstractDataFrame,prefix::AbstractString)
+"""
 function prefix2subset(ratios::AbstractDataFrame,
                        prefix::AbstractString)
     return ratios[findall(contains(prefix),ratios[:,1]),:]
@@ -526,7 +534,6 @@ end
 
 """
 channels2elements(samp::Sample)
-channels2elements(run::AbstractVector)
 
 Export the names of the elements corresponding to the channels in a
 sample or run.
@@ -540,6 +547,9 @@ function channels2elements(samp::Sample)
     end
     return out    
 end
+"""
+channels2elements(run::AbstractVector)
+"""
 function channels2elements(run::AbstractVector)
     return channels2elements(run[1])
 end
@@ -597,7 +607,6 @@ end
 
 """
 chauvenet(df::AbstractDataFrame)
-chauvenet(data::AbstractVector)
 
 Identifies outliers in a vector from the second order differences
 between its elements. It returns the indices of the good values.
@@ -606,6 +615,9 @@ function chauvenet(df::AbstractDataFrame)
     colsum = sum(eachcol(df))
     return chauvenet(colsum)
 end
+"""
+chauvenet(data::AbstractVector)
+"""
 function chauvenet(data::AbstractVector)
     N = length(data)
     good = collect(1:N)

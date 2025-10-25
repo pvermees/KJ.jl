@@ -82,7 +82,8 @@ function fixedLuHf(drift,down,mfrac,PAcutoff,adrift)
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=drift,down=down,mfrac=mfrac,PAcutoff=PAcutoff,adrift=adrift)
+    fit = (drift=drift,down=down,mfrac=mfrac,
+           PAcutoff=PAcutoff,adrift=adrift)
     return myrun, blk, method, channels, glass, standards, fit
 end
 
@@ -95,16 +96,15 @@ function predictest()
     samp = myrun[1]
     if samp.group == "sample"
         println("Not a standard")
-        return samp,method,fit,blk,channels,standards,glass
+        return samp, method, fit, blk, channels, standards, glass
     else
-        pred = predict(samp,method,fit,blk,channels,
-                       standards,glass)
+        pred = predict(samp,method,fit,blk,channels,standards,glass)
         p, offset = KJ.plot(samp,method,channels,blk,fit,standards,glass;
                             den="Hf176 -> 258",
                             transformation="log",
                             return_offset=true)
         @test display(p) != NaN
-        return samp,method,fit,blk,channels,standards,glass,p,offset
+        return samp, method, fit, blk, channels, standards, glass, p, offset
     end
 end
     
@@ -331,11 +331,11 @@ function UPbtest()
     glass = Dict("NIST610" => "610",
                  "NIST612" => "612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blank, pars = process!(myrun,"U-Pb",channels,standards,glass;
-                           nblank=2,ndrift=1,ndown=1)
-    export2IsoplotR(myrun,method,channels,blank,pars;
+    blank, fit = process!(myrun,"U-Pb",channels,standards,glass;
+                          nblank=2,ndrift=1,ndown=1)
+    export2IsoplotR(myrun,method,channels,blank,fit;
                     fname="output/UPb.json")
-    p = KJ.plot(myrun[37],method,channels,blank,pars,standards,glass;
+    p = KJ.plot(myrun[37],method,channels,blank,fit,standards,glass;
                 transformation="log",den="Pb206")
     @test display(p) != NaN
 end
@@ -473,11 +473,11 @@ function glass_only_test()
     glass = standards = Dict("NIST610" => "610",
                              "NIST612" => "612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blank, pars = process!(myrun,"U-Pb",channels,standards,glass;
-                           nblank=2,ndrift=1,ndown=1)
-    export2IsoplotR(myrun,method,channels,blank,pars;
+    blank, fit = process!(myrun,"U-Pb",channels,standards,glass;
+                          nblank=2,ndrift=1,ndown=1)
+    export2IsoplotR(myrun,method,channels,blank,fit;
                     fname="output/UPb_with_glass.json")
-    p = KJ.plot(myrun[37],method,channels,blank,pars,standards,glass;
+    p = KJ.plot(myrun[37],method,channels,blank,fit,standards,glass;
                 transformation="log",den="Pb206")
     display(p)
 end
