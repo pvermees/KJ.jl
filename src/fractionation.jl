@@ -81,7 +81,10 @@ function fractionation(run::Vector{Sample},
     ne = size(elements,2)
     num = den = fill(0.0,ne-1)
     for (SRM,name)  in glass
-        dats = pool(run;signal=true,group=SRM)
+        dats, good = pool(run;
+                          signal=true,
+                          group=SRM,
+                          reject_outliers=reject_outliers)
         concs = elements2concs(elements,SRM)
         for dat in dats
             bt = polyVal(blank,dat.t)
@@ -110,10 +113,12 @@ function SSfitprep(run::Vector{Sample},
                    reject_outliers::Bool=true)
     dats = Dict()
     covs = Dict()
+    good = Dict()
     for (refmat,anchor) in anchors
-        dats[refmat], covs[refmat] = pool(run;signal=true,group=refmat,
-                                          include_covmats=true,
-                                          reject_outliers=reject_outliers)
+        dats[refmat], covs[refmat], good[refmat] =
+            pool(run;signal=true,group=refmat,
+                 include_covmats=true,
+                 reject_outliers=reject_outliers)
     end
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]

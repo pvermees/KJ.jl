@@ -260,7 +260,10 @@ function histest(;LuHf=false,show=true)
         standard = "MDC_bt"
     end
     print(fit)
-    dats, covs = pool(myrun;signal=true,group=standard,include_covmats=true)
+    dats, covs, good = pool(myrun;
+                            signal=true,
+                            group=standard,
+                            include_covmats=true)
     anchor = anchors[standard]
     pooled = DataFrame()
     pred = DataFrame()

@@ -213,21 +213,25 @@ function pool(run::Vector{Sample};
     end
     ns = length(selection)
     dats = Vector{DataFrame}(undef,ns)
+    good = Vector{Vector}(undef,ns)
     for i in eachindex(selection)
         dats[i] = windowData(run[selection[i]];
                              blank=blank,
                              signal=signal,
                              add_xy=add_xy)
+        good[i] = ifelse(reject_outliers,
+                         chauvenet(dats[i]),
+                         collect(1:size(dats[i],2)))
     end
     if include_covmats
         covs = Vector{Matrix}(undef,ns)
         for i in eachindex(selection)
             sig = getSignals(dats[i])
-            covs[i] = df2cov(sig)
+            covs[i] = df2cov(sig[good[i],:])
         end
-        return dats, covs
+        return dats, covs, good
     else
-        return dats
+        return dats, good
     end
 end
 export pool

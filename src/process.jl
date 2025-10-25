@@ -68,18 +68,26 @@ Fit a polynomial to the blanks in run.
 function fitBlanks(run::Vector{Sample};
                    nblank=2,
                    reject_outliers::Bool=true)
-    blks = pool(run;blank=true)
-    blk = reduce(vcat,blks)
+    blks, goods = pool(run;
+                       blank=true,
+                       reject_outliers=reject_outliers)
+    blk, good = pool_combine(blks,goods)
     channels = getChannels(run)
     nc = length(channels)
     bpar = DataFrame(zeros(nblank,nc),channels)
-    good = ifelse(reject_outliers, chauvenet(blk[:,channels]), :)
     for channel in channels
         bpar[:,channel] = polyFit(blk.t[good],blk[good,channel],nblank)
     end
     return bpar
 end
 export fitBlanks
+
+function pool_combine(dfs::AbstractVector,
+                      good::AbstractVector)
+    combined_dfs = reduce(vcat,dfs)
+    combined_good = reduce((acc, v) -> [acc; v .+ acc[end]], good)
+    return combined_dfs, combined_good
+end
 
 """
 function atomic(samp::Sample,
