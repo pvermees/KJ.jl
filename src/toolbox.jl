@@ -49,6 +49,12 @@ function polyFit(t::AbstractVector,
     return (V' * V) \ (V' * y)
 end
 
+"""
+polyVal(p::AbstractVector,t::AbstractVector)
+polyVal(p::AbstractDataFrame,t::AbstractVector)
+
+Evaluates polynomial function with parameters p at times t.
+"""
 function polyVal(p::AbstractVector,
                  t::AbstractVector)
     n = length(p)
@@ -71,6 +77,11 @@ function vandermonde(x,degree)
     return [x[i]^p for i in eachindex(x), p in 0:degree]
 end
 
+"""
+polyFac(p::AbstractVector,t::AbstractVector)
+
+Returns the sum od p[i].*t.^(i-1) for all values of p
+"""
 function polyFac(p::AbstractVector,
                  t::AbstractVector)
     np = length(p)
@@ -87,6 +98,12 @@ function polyFac(p::AbstractVector,
 end
 export polyFac
 
+"""
+summarise(run::Vector{Sample};verbose=false,n=length(run))
+summarize(run::Vector{Sample};verbose=false,n=length(run))
+
+Prints a table with the sample names in run.
+"""
 function summarise(run::Vector{Sample};
                    verbose=false,n=length(run))
     ns = length(run)
@@ -164,6 +181,19 @@ function autoWindow(samp::Sample;
     return autoWindow(samp.dat[:,1],samp.t0;blank=blank)
 end
 
+"""
+pool(run::Vector{Sample};
+              blank::Bool=false,
+              signal::Bool=false,
+              group::Union{Nothing,AbstractString}=nothing,
+              reject_outliers::Bool=false,
+              include_covmats::Bool=false,
+              add_xy::Bool=false)
+
+Returns a vector of blanks and/or signals plus
+(if include_covmats is true),
+a vector of their covariance matrices.
+"""
 function pool(run::Vector{Sample};
               blank::Bool=false,
               signal::Bool=false,
@@ -198,18 +228,38 @@ function pool(run::Vector{Sample};
 end
 export pool
 
+"""
+df2cov(df::AbstractDataFrame)
+
+Estimate the covariance matrix of df's columns
+from its differenced rows.
+"""
 function df2cov(df::AbstractDataFrame)
-    diff = df[2:end,:] .- df[1:end-1,:]
-    return Statistics.cov(Matrix(diff))./2
+    d = diff(Matrix(df),dims=1)
+    return Statistics.cov(d)./2
 end
 export df2cov
 
+"""
+var_timeseries(cps::AbstractVector)
+
+Estimate the variance of the differenced vector cps.
+Returns a vector of replicate values.
+"""
 function var_timeseries(cps::AbstractVector)
-    var = Statistics.var((cps[2:end].-cps[1:end-1]))./2
+    var = Statistics.var(diff(cps))./2
     return fill(var,length(cps))
 end
 export var_timeseries
 
+"""
+function windowData(samp::Sample;
+                    blank::Bool=false,
+                    signal::Bool=false,
+                    add_xy::Bool=false)
+
+Return the blank and/or signal data from samp.
+"""
 function windowData(samp::Sample;
                     blank::Bool=false,
                     signal::Bool=false,
@@ -287,12 +337,23 @@ function string2windows(samp::Sample,text::AbstractString,single::Bool)
     return windows
 end
 
+"""
+t2i(samp::Sample,t::Number)
+
+Returns the index of time t in sample samp.
+"""
 function t2i(samp::Sample,t::Number)
     nt = size(samp.dat,1)
     maxt = samp.dat[end,1]
     return Int(round(nt*t/maxt))
 end
 export t2i
+
+"""
+i2t(samp::Sample,i::Integer)
+
+Returns the time at index t
+"""
 function i2t(samp::Sample,i::Integer)
     ni = size(samp.dat,1)
     maxt = samp.dat[end,1]
@@ -300,6 +361,13 @@ function i2t(samp::Sample,i::Integer)
 end
 export i2t
 
+"""
+time2window(samp::Sample,start::Number,finish::Number)
+time2window(samp::Sample,twin::AbstractVector)
+
+Returns a tuple or a vector of tuples with the indices
+corresponding to the start and finish times.
+"""
 function time2window(samp::Sample,start::Number,finish::Number)
     ni = size(samp.dat,1)
     from = max(1,t2i(samp,start))
@@ -315,6 +383,12 @@ function time2window(samp::Sample,twin::AbstractVector)
 end
 export time2window
 
+"""
+prefix2subset(run::Vector{Sample},prefix::AbstractString)
+prefix2subset(ratios::AbstractDataFrame,prefix::AbstractString)
+
+Subset selected samples from run.
+"""
 function prefix2subset(run::Vector{Sample},
                        prefix::AbstractString)
     selection = findall(contains(prefix),getSnames(run))
@@ -450,6 +524,13 @@ function vec2string(v::AbstractVector)
     return "[\"" * join(v .* "\",\"")[1:end-3] * "\"]"
 end
 
+"""
+channels2elements(samp::Sample)
+channels2elements(run::AbstractVector)
+
+Export the names of the elements corresponding to the channels in a
+sample or run.
+"""
 function channels2elements(samp::Sample)
     channels = getChannels(samp)
     out = DataFrame()
@@ -514,27 +595,42 @@ function hessian2xyerr(H::Matrix,
     end
 end
 
-function chauvenet(data::Vector{<:Real})
+"""
+chauvenet(df::AbstractDataFrame)
+chauvenet(data::AbstractVector)
+
+Identifies outliers in a vector from the second order differences
+between its elements. It returns the indices of the good values.
+"""
+function chauvenet(df::AbstractDataFrame)
+    colsum = sum(eachcol(df))
+    return chauvenet(colsum)
+end
+function chauvenet(data::AbstractVector)
     N = length(data)
     good = collect(1:N)
-    for n in N:-1:1
+    if Statistics.std(data) == 0
+        return good
+    end
+    for n in N:-1:3
         surviving_data = data[good]
-        mu = Statistics.mean(surviving_data)
-        sigma = Statistics.std(surviving_data)
-        if sigma == 0 return good end
+        d2 = diff(diff(surviving_data))
+        mu = Statistics.mean(d2)
+        sigma = Statistics.std(d2)
         criterion = 1.0 / (2 * n)
-        z_scores = @. abs((surviving_data - mu) / sigma)
+        z_scores = @. abs((d2 - mu) / sigma)
         cdf = Distributions.cdf(Distributions.Normal(),z_scores)
         probabilities = @. 2 * (1 - cdf)
         furthest_removed = argmin(probabilities)
         if probabilities[furthest_removed] >= criterion
             return good
         else
-            splice!(good,furthest_removed)
+            splice!(good,furthest_removed+1)
         end
     end
     return good
 end
+export chauvenet
 
 function dataframe_sum(df::DataFrame)
     total = 0.0

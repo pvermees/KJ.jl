@@ -40,8 +40,8 @@ function fitBlanks(run::Vector{Sample};
     channels = getChannels(run)
     nc = length(channels)
     bpar = DataFrame(zeros(nblank,nc),channels)
+    good = ifelse(reject_outliers, chauvenet(blk[:,channels]), :)
     for channel in channels
-        good = ifelse(reject_outliers, chauvenet(blk[:,channel]), :)
         bpar[:,channel] = polyFit(blk.t[good],blk[good,channel],nblank)
     end
     return bpar

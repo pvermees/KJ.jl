@@ -1,4 +1,5 @@
-using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
+using KJ, Test, CSV, Infiltrator, DataFrames,
+    Statistics, Distributions, Random
 import Plots
 include("helper.jl")
 
@@ -43,6 +44,21 @@ function blanktest(;doplot=false,ylim=:auto,transformation=nothing)
         @test display(p) != NaN
     end
     return myrun, blk
+end
+
+function outliertest()
+    n = 100
+    Random.seed!(5)
+    random_values = rand(Distributions.Normal(0,1), n)
+    random_values[50] = rand(Distributions.Normal(0,10),1)[1]
+    good = chauvenet(random_values)
+    col = fill(1,n)
+    col[good] .= 0
+    p = Plots.scatter(1:n,random_values;
+                      label=nothing,
+                      marker_z=col,
+                      legend=false)
+    display(p)
 end
 
 function standardtest(verbose=false)
@@ -565,6 +581,7 @@ if true
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
+    @testset "outlier detection" begin outliertest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
     @testset "predict drift" begin driftest() end
