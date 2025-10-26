@@ -287,7 +287,7 @@ end
 export getGlassAnchors
 
 function getSignals(dat::AbstractDataFrame)
-    tail = count(x -> x in ["T","x","y"], names(dat)) + 1
+    tail = count(x -> x in ["outlier","t","T","x","y"], names(dat))
     return dat[:,2:end-tail]
 end
 function getSignals(samp::Sample)

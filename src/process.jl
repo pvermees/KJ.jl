@@ -1,15 +1,15 @@
 """
 process!(run::Vector{Sample},
-                  method::AbstractString,
-                  channels::AbstractDict,
-                  standards::AbstractDict,
-                  glass::AbstractDict;
-                  nblank::Integer=2,
-                  ndrift::Integer=1,
-                  ndown::Integer=1,
-                  PAcutoff=nothing,
-                  reject_outliers::Bool=true,
-                  verbose::Bool=false)
+         method::AbstractString,
+         channels::AbstractDict,
+         standards::AbstractDict,
+         glass::AbstractDict;
+         nblank::Integer=2,
+         ndrift::Integer=1,
+         ndown::Integer=1,
+         PAcutoff=nothing,
+         reject_outliers::Bool=true,
+         verbose::Bool=false)
 
 Two-step processing of KJ data for ratios
 """
@@ -36,10 +36,10 @@ function process!(run::Vector{Sample},
 end
 """
 process!(run::Vector{Sample},
-                  internal::Tuple,
-                  glass::AbstractDict;
-                  nblank::Integer=2,
-                  reject_outliers::Bool=true)
+         internal::Tuple,
+         glass::AbstractDict;
+         nblank::Integer=2,
+         reject_outliers::Bool=true)
 
 KJ processing of concentration data
 """
@@ -59,9 +59,9 @@ end
 export process!
 
 """
-function fitBlanks(run::Vector{Sample};
-                   nblank=2,
-                   reject_outliers::Bool=true)
+fitBlanks(run::Vector{Sample};
+          nblank=2,
+          reject_outliers::Bool=true)
 
 Fit a polynomial to the blanks in run.
 """
@@ -90,11 +90,11 @@ function pool_combine(dfs::AbstractVector,
 end
 
 """
-function atomic(samp::Sample,
-                channels::AbstractDict,
-                blank::AbstractDataFrame,
-                pars::NamedTuple;
-                add_xy::Bool=false)
+atomic(samp::Sample,
+       channels::AbstractDict,
+       blank::AbstractDataFrame,
+       pars::NamedTuple;
+       add_xy::Bool=false)
 
 Estimate atomic ratios for channels.
 returns Phat, Dhat, dhat(, dat.x, dat.y)
@@ -133,10 +133,10 @@ end
 export atomic
 
 """
-function concentrations(samp::Sample,
-                        blank::AbstractDataFrame,
-                        pars::AbstractVector,
-                        internal::Tuple)
+concentrations(samp::Sample,
+               blank::AbstractDataFrame,
+               pars::AbstractVector,
+               internal::Tuple)
 
 Estimates the concentrations (in ppm)
 """
@@ -148,11 +148,11 @@ function concentrations(samp::Sample,
     return concentrations(samp,elements,blank,pars,internal)
 end
 """
-function concentrations(samp::Sample,
-                        elements::AbstractDataFrame,
-                        blank::AbstractDataFrame,
-                        pars::AbstractVector,
-                        internal::Tuple)
+concentrations(samp::Sample,
+               elements::AbstractDataFrame,
+               blank::AbstractDataFrame,
+               pars::AbstractVector,
+               internal::Tuple)
 """
 function concentrations(samp::Sample,
                         elements::AbstractDataFrame,
@@ -183,10 +183,10 @@ function concentrations(samp::Sample,
     return out
 end
 """
-function concentrations(run::Vector{Sample},
-                        blank::AbstractDataFrame,
-                        pars::AbstractVector,
-                        internal::Tuple)
+concentrations(run::Vector{Sample},
+               blank::AbstractDataFrame,
+               pars::AbstractVector,
+               internal::Tuple)
 """
 function concentrations(run::Vector{Sample},
                         blank::AbstractDataFrame,
@@ -196,11 +196,11 @@ function concentrations(run::Vector{Sample},
     return concentrations(run,elements,blank,pars,internal)
 end
 """
-function concentrations(run::Vector{Sample},
-                        elements::AbstractDataFrame,
-                        blank::AbstractDataFrame,
-                        pars::AbstractVector,
-                        internal::Tuple)
+concentrations(run::Vector{Sample},
+               elements::AbstractDataFrame,
+               blank::AbstractDataFrame,
+               pars::AbstractVector,
+               internal::Tuple)
 """
 function concentrations(run::Vector{Sample},
                         elements::AbstractDataFrame,

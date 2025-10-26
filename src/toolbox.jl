@@ -187,12 +187,12 @@ end
 
 """
 pool(run::Vector{Sample};
-              blank::Bool=false,
-              signal::Bool=false,
-              group::Union{Nothing,AbstractString}=nothing,
-              reject_outliers::Bool=false,
-              include_covmats::Bool=false,
-              add_xy::Bool=false)
+     blank::Bool=false,
+     signal::Bool=false,
+     group::Union{Nothing,AbstractString}=nothing,
+     reject_outliers::Bool=false,
+     include_covmats::Bool=false,
+     add_xy::Bool=false)
 
 Returns a vector of blanks and/or signals plus
 (if include_covmats is true),
@@ -205,12 +205,7 @@ function pool(run::Vector{Sample};
               reject_outliers::Bool=false,
               include_covmats::Bool=false,
               add_xy::Bool=false)
-    if isnothing(group)
-        selection = 1:length(run)
-    else
-        groups = getGroups(run)
-        selection = findall(contains(group),groups)
-    end
+    selection = group2selection(run,group)
     ns = length(selection)
     dats = Vector{DataFrame}(undef,ns)
     good = Vector{Vector}(undef,ns)
@@ -235,6 +230,17 @@ function pool(run::Vector{Sample};
     end
 end
 export pool
+
+function group2selection(run::Vector{Sample},
+                         group::Union{Nothing,AbstractString}=nothing)
+    if isnothing(group)
+        selection = 1:length(run)
+    else
+        groups = getGroups(run)
+        selection = findall(contains(group),groups)
+    end
+    return selection
+end
 
 """
 df2cov(df::AbstractDataFrame)
@@ -261,10 +267,10 @@ end
 export var_timeseries
 
 """
-function windowData(samp::Sample;
-                    blank::Bool=false,
-                    signal::Bool=false,
-                    add_xy::Bool=false)
+windowData(samp::Sample;
+           blank::Bool=false,
+           signal::Bool=false,
+           add_xy::Bool=false)
 
 Return the blank and/or signal data from samp.
 """
@@ -647,6 +653,27 @@ function chauvenet(data::AbstractVector)
     return good
 end
 export chauvenet
+
+"""
+chauvenet!(run::Vector{Sample};
+           group::Union{Nothing,AbstractString}=nothing)
+
+Identifies outliers in a vector from the second order differences
+between its elements. Modifies run using chauvenet().
+"""
+function chauvenet!(run::Vector{Sample};
+                    channels::AbstractVector=getChannels(run),
+                    include_samples::Bool=false)
+    for samp in run
+        if include_samples || samp.group != "sample"
+            blk = windowData(samp;blank=true)
+            outliers_blk = chauvenet(blk[:,channels])
+            sig = windowData(samp;signal=true)
+            outliers_sig = chauvenet(sig[:,channels])
+        end
+    end
+end
+export chauvenet!
 
 function dataframe_sum(df::DataFrame)
     total = 0.0

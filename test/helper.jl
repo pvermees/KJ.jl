@@ -24,6 +24,7 @@ function random_sample(i::Int,
                        down::AbstractVector=[0.0],
                        group::AbstractString="sample",
                        channels::AbstractDict)
+    Random.seed!(3)
     t = range((i-1)/n,i/n,length=nblk+nsig)
     T = (spot_time .- t0)./60
     mf = exp(mfrac)

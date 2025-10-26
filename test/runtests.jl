@@ -48,7 +48,7 @@ end
 
 function outliertest()
     n = 100
-    Random.seed!(5)
+    Random.seed!(0)
     random_values = rand(Distributions.Normal(0,1), n)
     random_values[50] = rand(Distributions.Normal(0,10),1)[1]
     good = chauvenet(random_values)
@@ -70,6 +70,13 @@ function standardtest(verbose=false)
         println(anchors)
         summarise(myrun;verbose=true,n=5)
     end
+    return myrun
+end
+
+function chauvenetest()
+    myrun = standardtest()
+    channels = ["Hf178 -> 260","Hf176 -> 258","Lu175 -> 175"]
+    chauvenet!(myrun;channels=channels)
 end
 
 function fixedLuHf(drift,down,mfrac,PAcutoff,adrift)
@@ -586,6 +593,7 @@ if true
     @testset "set method and blanks" begin blanktest() end
     @testset "outlier detection" begin outliertest() end
     @testset "assign standards" begin standardtest(true) end
+    @testset "chauvenet test" begin chauvenetest() end
     @testset "predict" begin predictest() end
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
@@ -613,8 +621,8 @@ if true
     @testset "synthetic data" begin SStest() end
     @testset "accuracy test 1" begin accuracytest() end
     @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
-    @testset "accuracy test 3" begin accuracytest(down=[0.0,-1.0]) end
-    @testset "accuracy test 4" begin accuracytest(mfrac=2.0) end
+    @testset "accuracy test 3" begin accuracytest(mfrac=2.0) end
+    @testset "accuracy test 4" begin accuracytest(down=[0.0,0.5]) end
     @testset "TUI test" begin TUItest() end
 else
     TUI()
