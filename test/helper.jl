@@ -56,6 +56,7 @@ function random_sample(i::Int,
                     channels["P"] => Pm,
                     channels["D"] => Dm,
                     channels["d"] => dm,
+                    "outlier" => falses(nblk+nsig),
                     "t" => t)
     return Sample(sname,dtime,dat,t0,bwin,swin,group)
 end

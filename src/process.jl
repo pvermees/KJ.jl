@@ -8,6 +8,7 @@ process!(run::Vector{Sample},
          ndrift::Integer=1,
          ndown::Integer=1,
          PAcutoff=nothing,
+         reject_outliers::Bool=true,
          verbose::Bool=false)
 
 Two-step processing of KJ data for ratios
@@ -23,6 +24,7 @@ function process!(run::Vector{Sample},
                   PAcutoff=nothing,
                   reject_outliers::Bool=true,
                   verbose::Bool=false)
+    chauvenet!(run;channels=collect(values(channels)))
     blank = fitBlanks(run;nblank=nblank)
     setGroup!(run,glass)
     setGroup!(run,standards)
@@ -35,14 +37,17 @@ end
 process!(run::Vector{Sample},
          internal::Tuple,
          glass::AbstractDict;
-         nblank::Integer=2)
+         nblank::Integer=2,
+         reject_outliers::Bool=true)
 
 KJ processing of concentration data
 """
 function process!(run::Vector{Sample},
                   internal::Tuple,
                   glass::AbstractDict;
-                  nblank::Integer=2)
+                  nblank::Integer=2,
+                  reject_outliers::Bool=true)
+    chauvenet!(run)
     blank = fitBlanks(run;nblank=nblank)
     setGroup!(run,glass)
     fit = fractionation(run,blank,internal,glass)
@@ -63,8 +68,9 @@ function fitBlanks(run::Vector{Sample};
     channels = getChannels(run)
     nc = length(channels)
     bpar = DataFrame(zeros(nblank,nc),channels)
+    good = .!blk.outlier
     for channel in channels
-        bpar[:,channel] = polyFit(blk.t,blk[:,channel],nblank)
+        bpar[:,channel] = polyFit(blk.t[good],blk[good,channel],nblank)
     end
     return bpar
 end

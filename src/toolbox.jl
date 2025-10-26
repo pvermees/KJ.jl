@@ -194,8 +194,9 @@ pool(run::Vector{Sample};
      add_xy::Bool=false)
 
 Returns a vector of blanks and/or signals plus
-(if include_covmats is true),
-a vector of their covariance matrices.
+(if include_covmats is true), a vector of their
+covariance matrices. Does not include any values
+marked as outliers.
 """
 function pool(run::Vector{Sample};
               blank::Bool=false,
@@ -677,8 +678,8 @@ function win2outliers!(samp::Sample,
         append!(i,collect(win[1]:win[2]))
     end
     outliers = chauvenet(dat)
-    selection = i[outliers]
-    samp.dat.outlier[selection] .= true
+    samp.dat.outlier .= false
+    samp.dat.outlier[i[outliers]] .= true
 end
 
 function dataframe_sum(df::DataFrame)
