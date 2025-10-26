@@ -190,7 +190,6 @@ pool(run::Vector{Sample};
      blank::Bool=false,
      signal::Bool=false,
      group::Union{Nothing,AbstractString}=nothing,
-     reject_outliers::Bool=false,
      include_covmats::Bool=false,
      add_xy::Bool=false)
 
@@ -202,31 +201,26 @@ function pool(run::Vector{Sample};
               blank::Bool=false,
               signal::Bool=false,
               group::Union{Nothing,AbstractString}=nothing,
-              reject_outliers::Bool=false,
               include_covmats::Bool=false,
               add_xy::Bool=false)
     selection = group2selection(run,group)
     ns = length(selection)
     dats = Vector{DataFrame}(undef,ns)
-    good = Vector{Vector}(undef,ns)
     for i in eachindex(selection)
         dats[i] = windowData(run[selection[i]];
                              blank=blank,
                              signal=signal,
                              add_xy=add_xy)
-        good[i] = ifelse(reject_outliers,
-                         chauvenet(dats[i]),
-                         collect(1:size(dats[i],2)))
     end
     if include_covmats
         covs = Vector{Matrix}(undef,ns)
         for i in eachindex(selection)
             sig = getSignals(dats[i])
-            covs[i] = df2cov(sig[good[i],:])
+            covs[i] = df2cov(sig)
         end
-        return dats, covs, good
+        return dats, covs
     else
-        return dats, good
+        return dats
     end
 end
 export pool
@@ -619,7 +613,7 @@ end
 chauvenet(df::AbstractDataFrame)
 
 Identifies outliers in a vector from the second order differences
-between its elements. It returns the indices of the good values.
+between its elements. It returns the indices of the outliers.
 """
 function chauvenet(df::AbstractDataFrame)
     colsum = sum(eachcol(df))
@@ -630,9 +624,9 @@ chauvenet(data::AbstractVector)
 """
 function chauvenet(data::AbstractVector)
     N = length(data)
-    good = collect(1:N)
+    good = trues(N)
     if Statistics.std(data) == 0
-        return good
+        return Int[]
     end
     for n in N:-1:3
         surviving_data = data[good]
@@ -645,12 +639,12 @@ function chauvenet(data::AbstractVector)
         probabilities = @. 2 * (1 - cdf)
         furthest_removed = argmin(probabilities)
         if probabilities[furthest_removed] >= criterion
-            return good
+            break
         else
-            splice!(good,furthest_removed+1)
+            good[furthest_removed+1] = false
         end
     end
-    return good
+    return findall(.!good)
 end
 export chauvenet
 
@@ -667,13 +661,25 @@ function chauvenet!(run::Vector{Sample};
     for samp in run
         if include_samples || samp.group != "sample"
             blk = windowData(samp;blank=true)
-            outliers_blk = chauvenet(blk[:,channels])
+            win2outliers!(samp,blk[:,channels],:bwin)
             sig = windowData(samp;signal=true)
-            outliers_sig = chauvenet(sig[:,channels])
+            win2outliers!(samp,sig[:,channels],:swin)
         end
     end
 end
 export chauvenet!
+
+function win2outliers!(samp::Sample,
+                       dat::AbstractDataFrame,
+                       window::Symbol)
+    i = []
+    for win in getfield(samp,window)
+        append!(i,collect(win[1]:win[2]))
+    end
+    outliers = chauvenet(dat)
+    selection = i[outliers]
+    samp.dat.outlier[selection] .= true
+end
 
 function dataframe_sum(df::DataFrame)
     total = 0.0

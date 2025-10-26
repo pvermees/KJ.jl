@@ -8,15 +8,12 @@ function fractionation(run::Vector{Sample},
                        ndrift::Integer=1,
                        ndown::Integer=0,
                        PAcutoff=nothing,
-                       reject_outliers::Bool=true,
                        verbose::Bool=false)
     mf = fractionation(run,method,blank,channels,glass;
-                       reject_outliers=reject_outliers,
                        verbose=verbose)
     return fractionation(run,method,blank,channels,standards,mf;
                          ndrift=ndrift,ndown=ndown,
                          PAcutoff=PAcutoff,
-                         reject_outliers=reject_outliers,
                          verbose=verbose)
 end
 # one-step isotope fractionation using mineral standards
@@ -29,13 +26,11 @@ function fractionation(run::Vector{Sample},
                        ndrift::Integer=1,
                        ndown::Integer=0,
                        PAcutoff=nothing,
-                       reject_outliers::Bool=true,
                        verbose::Bool=false)
 
     anchors = getStandardAnchors(method,standards)
     
-    dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels;
-                                       reject_outliers=reject_outliers)
+    dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
 
     if ndrift<1 KJerror("ndriftzero") end
     
@@ -55,36 +50,28 @@ function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        channels::AbstractDict,
                        glass::AbstractDict;
-                       reject_outliers::Bool=true,
                        verbose::Bool=false)
     anchors = getGlassAnchors(method,glass)
-    dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels;
-                                       reject_outliers=reject_outliers)
+    dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
     return SSfit([0.0],bD,bd,dats,covs,channels,anchors;verbose=verbose)
 end
 # for concentration measurements:
 function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        internal::Tuple,
-                       glass::AbstractDict;
-                       reject_outliers::Bool=true)
+                       glass::AbstractDict)
     elements = channels2elements(run)
-    return fractionation(run,blank,elements,internal,glass;
-                         reject_outliers=reject_outliers)
+    return fractionation(run,blank,elements,internal,glass)
 end
 function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        elements::AbstractDataFrame,
                        internal::Tuple,
-                       glass::AbstractDict;
-                       reject_outliers::Bool=true)
+                       glass::AbstractDict)
     ne = size(elements,2)
     num = den = fill(0.0,ne-1)
     for (SRM,name)  in glass
-        dats, good = pool(run;
-                          signal=true,
-                          group=SRM,
-                          reject_outliers=reject_outliers)
+        dats = pool(run;signal=true,group=SRM)
         concs = elements2concs(elements,SRM)
         for dat in dats
             bt = polyVal(blank,dat.t)
@@ -109,16 +96,13 @@ export fractionation
 function SSfitprep(run::Vector{Sample},
                    blank::AbstractDataFrame,
                    anchors::AbstractDict,
-                   channels::AbstractDict;
-                   reject_outliers::Bool=true)
+                   channels::AbstractDict)
     dats = Dict()
     covs = Dict()
-    good = Dict()
     for (refmat,anchor) in anchors
-        dats[refmat], covs[refmat], good[refmat] =
+        dats[refmat], covs[refmat] =
             pool(run;signal=true,group=refmat,
-                 include_covmats=true,
-                 reject_outliers=reject_outliers)
+                 include_covmats=true)
     end
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]

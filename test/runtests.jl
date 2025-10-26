@@ -51,9 +51,9 @@ function outliertest()
     Random.seed!(0)
     random_values = rand(Distributions.Normal(0,1), n)
     random_values[50] = rand(Distributions.Normal(0,10),1)[1]
-    good = chauvenet(random_values)
+    outliers = chauvenet(random_values)
     col = fill(1,n)
-    col[good] .= 0
+    col[outliers] .= 0
     p = Plots.scatter(1:n,random_values;
                       label=nothing,
                       marker_z=col,
@@ -267,10 +267,7 @@ function histest(;LuHf=false,show=true)
         standard = "MDC_bt"
     end
     print(fit)
-    dats, covs, good = pool(myrun;
-                            signal=true,
-                            group=standard,
-                            include_covmats=true)
+    dats, covs = pool(myrun;signal=true,group=standard,include_covmats=true)
     anchor = anchors[standard]
     pooled = DataFrame()
     pred = DataFrame()
