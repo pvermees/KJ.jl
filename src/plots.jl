@@ -45,12 +45,12 @@ function plot(samp::Sample,
 
     channelvec = collect(values(channels))
 
-    x, y, ty, xlab, ylab, ylim, offset = prep_plot(samp,channelvec;
-                                                   num=num,den=den,
-                                                   ylim=ylim,
-                                                   transformation=transformation)
+    x, y, xlab, ylab, ylim, offset = prep_plot(samp,channelvec;
+                                               num=num,den=den,
+                                               ylim=ylim,
+                                               transformation=transformation)
     
-    p = plot(samp,x,y,ty;
+    p = plot(samp,x,y;
              ms=ms,ma=ma,seriestype=seriestype,
              label=permutedims(names(y)),
              xlimits=xlim,ylimits=ylim,
@@ -93,10 +93,10 @@ function plot(samp::Sample,
 
     channelvec = collect(getChannels(samp))
 
-    x, y, ty, xlab, ylab, ylim, offset = prep_plot(samp,channelvec;
-                                                   num=num,den=den,
-                                                   ylim=ylim,
-                                                   transformation=transformation)
+    x, y, xlab, ylab, ylim, offset = prep_plot(samp,channelvec;
+                                               num=num,den=den,
+                                               ylim=ylim,
+                                               transformation=transformation)
     p = plot(samp;
              num=num,den=den,transformation=transformation,
              seriestype=seriestype,ms=ms,ma=ma,
@@ -153,11 +153,11 @@ function plot(samp::Sample;
               padding::Number=0.1,
               kw...)
 
-    x, y, ty, xlab, ylab, ylim, offset = prep_plot(samp,channels;
-                                                   num=num,den=den,ylim=ylim,
-                                                   transformation=transformation)
+    x, y, xlab, ylab, ylim, offset = prep_plot(samp,channels;
+                                               num=num,den=den,ylim=ylim,
+                                               transformation=transformation)
 
-    p = plot(samp,x,y,ty;
+    p = plot(samp,x,y;
              seriestype=seriestype,ms=ms,ma=ma,
              xlim=xlim,ylim=ylim,i=i,legend=legend,
              show_title=show_title,titlefontsize=titlefontsize,
@@ -167,11 +167,9 @@ function plot(samp::Sample;
 end
 function plot(samp::Sample,
               x::AbstractVector,
-              y::AbstractDataFrame,
-              ty::AbstractDataFrame;
+              y::AbstractDataFrame;
               xlab::AbstractString="x",
               ylab::AbstractString="y",
-              seriestype=:scatter,
               ms::Number=2,ma::Number=0.5,
               xlim=:auto,ylim=:auto,
               i::Union{Nothing,Integer}=nothing,
@@ -180,11 +178,11 @@ function plot(samp::Sample,
               titlefontsize=10,
               padding::Number=0.1,
               kw...)
-    p = Plots.plot(x,Matrix(ty);
-                   ms=ms,ma=ma,seriestype=seriestype,
-                   label=permutedims(names(y)),
-                   legend=legend,xlimits=xlim,ylimits=ylim,
-                   kw...)
+    p = Plots.scatter(x,Matrix(y);
+                      ms=ms,ma=ma,
+                      label=permutedims(names(y)),
+                      legend=legend,xlimits=xlim,ylimits=ylim,
+                      kw...)
     Plots.xlabel!(xlab)
     Plots.ylabel!(ylab)
     if show_title
@@ -208,7 +206,8 @@ function plot(samp::Sample,
         for w in win
             from = x[w[1]]
             to = x[w[2]]
-            Plots.plot!(p,[from,from,to,to,from],collect(dy_win[[1,2,2,1,1]]);
+            Plots.plot!(p,[from,from,to,to,from],
+                        collect(dy_win[[1,2,2,1,1]]);
                         linecolor="black",linestyle=:dot,label="")
         end
     end
@@ -242,9 +241,10 @@ function prep_plot(samp::Sample,
     if ylim == :auto && ratsig == "ratio"
         ylim = get_ylim(ty,samp.swin)
     end
-    return x, y, ty, xlab, ylab, ylim, offset
+    return x, ty, xlab, ylab, ylim, offset
 end
 export prep_plot
+
 function get_ylim(dat::AbstractDataFrame,
                   window::AbstractVector;
                   padding::Number=0.1)

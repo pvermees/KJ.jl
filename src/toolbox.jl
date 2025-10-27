@@ -625,12 +625,12 @@ chauvenet(data::AbstractVector)
 """
 function chauvenet(data::AbstractVector)
     N = length(data)
-    good = trues(N)
+    isgood = trues(N)
     if Statistics.std(data) == 0
         return Int[]
     end
     for n in N:-1:3
-        surviving_data = data[good]
+        surviving_data = data[isgood]
         d2 = diff(diff(surviving_data))
         mu = Statistics.mean(d2)
         sigma = Statistics.std(d2)
@@ -642,10 +642,10 @@ function chauvenet(data::AbstractVector)
         if probabilities[furthest_removed] >= criterion
             break
         else
-            good[furthest_removed+1] = false
+            isgood[furthest_removed+1] = false
         end
     end
-    return findall(.!good)
+    return findall(.!isgood)
 end
 export chauvenet
 
