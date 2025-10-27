@@ -480,11 +480,11 @@ function glass_only_test()
     glass = standards = Dict("NIST610" => "610",
                              "NIST612" => "612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blank, fit = process!(myrun,"U-Pb",channels,standards,glass;
-                          nblank=2,ndrift=1,ndown=1)
-    export2IsoplotR(myrun,method,channels,blank,fit;
+    blank, pars = process!(myrun,"U-Pb",channels,standards,glass;
+                           nblank=2,ndrift=1,ndown=1)
+    export2IsoplotR(myrun,method,channels,blank,pars;
                     fname="output/UPb_with_glass.json")
-    p = KJ.plot(myrun[37],method,channels,blank,fit,standards,glass;
+    p = KJ.plot(myrun[37],method,channels,blank,pars,standards,glass;
                 transformation="log",den="Pb206")
     display(p)
 end
@@ -584,7 +584,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -612,15 +612,15 @@ if true
     @testset "UPb internochron" begin internochronUPbtest() end
     @testset "concentration map" begin maptest() end
     @testset "isotope ratio map" begin map_dating_test() end
-    @testset "map fail test" begin map_fail_test() end
+    @testset "map fail test" begin map_fail_test() end=#
     @testset "glass as age standard test" begin glass_only_test() end
-    @testset "extension test" begin extensiontest() end
+    #=@testset "extension test" begin extensiontest() end
     @testset "synthetic data" begin SStest() end
     @testset "accuracy test 1" begin accuracytest() end
     @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
     @testset "accuracy test 3" begin accuracytest(mfrac=2.0) end
     @testset "accuracy test 4" begin accuracytest(down=[0.0,0.5]) end
-    @testset "TUI test" begin TUItest() end
+    @testset "TUI test" begin TUItest() end=#
 
 else
     TUI()

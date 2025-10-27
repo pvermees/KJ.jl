@@ -613,52 +613,37 @@ function hessian2xyerr(H::Matrix,
 end
 
 """
-chauvenet(df::AbstractDataFrame)
+detect_outliers(df::AbstractDataFrame)
 
 Identifies outliers in a vector from the second order differences
 between its elements. It returns the indices of the outliers.
 """
-function chauvenet(df::AbstractDataFrame)
+function detect_outliers(df::AbstractDataFrame)
     colsum = sum(eachcol(df))
-    return chauvenet(colsum)
+    return detect_outliers(colsum)
 end
 """
-chauvenet(data::AbstractVector)
+detect_outliers(data::AbstractVector)
 """
-function chauvenet(data::AbstractVector)
-    N = length(data)
-    isgood = trues(N)
-    if Statistics.std(data) == 0
-        return Int[]
-    end
-    for n in N:-1:3
-        surviving_data = data[isgood]
-        d2 = diff(diff(surviving_data))
-        mu = Statistics.mean(d2)
-        sigma = Statistics.std(d2)
-        criterion = 1.0 / (2 * n)
-        z_scores = @. abs((d2 - mu) / sigma)
-        cdf = Distributions.cdf(Distributions.Normal(),z_scores)
-        probabilities = @. 2 * (1 - cdf)
-        furthest_removed = argmin(probabilities)
-        if probabilities[furthest_removed] >= criterion
-            break
-        else
-            isgood[furthest_removed+1] = false
-        end
-    end
-    return findall(.!isgood)
+function detect_outliers(data::AbstractVector)
+    Q1 = Statistics.quantile(data,0.25)
+    Q3 = Statistics.quantile(data,0.75)
+    IQR = Q3 - Q1
+    ll = Q1 - 1.5 * IQR
+    ul = Q1 + 1.5 * IQR
+    outliers = @. data > ul || data < ll
+    return findall(outliers)
 end
-export chauvenet
+export detect_outliers
 
 """
-chauvenet!(run::Vector{Sample};
+detect_outliers!(run::Vector{Sample};
            group::Union{Nothing,AbstractString}=nothing)
 
 Identifies outliers in a vector from the second order differences
-between its elements. Modifies run using chauvenet().
+between its elements. Modifies run using detect_outliers().
 """
-function chauvenet!(run::Vector{Sample};
+function detect_outliers!(run::Vector{Sample};
                     channels::AbstractVector=getChannels(run),
                     include_samples::Bool=false)
     for samp in run
@@ -671,7 +656,7 @@ function chauvenet!(run::Vector{Sample};
         end
     end
 end
-export chauvenet!
+export detect_outliers!
 
 function win2outliers!(samp::Sample,
                        dat::AbstractDataFrame,
@@ -680,8 +665,12 @@ function win2outliers!(samp::Sample,
     for win in getfield(samp,window)
         append!(i,collect(win[1]:win[2]))
     end
-    outliers = chauvenet(dat)
+    outliers = detect_outliers(dat)
     samp.dat.outlier[i[outliers]] .= true
+end
+
+function IQR(vec::AbstractVector)
+    return diff(Statistics.quantile([0.25,0.75]))
 end
 
 function dataframe_sum(df::DataFrame)
