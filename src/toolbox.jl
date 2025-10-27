@@ -208,10 +208,12 @@ function pool(run::Vector{Sample};
     ns = length(selection)
     dats = Vector{DataFrame}(undef,ns)
     for i in eachindex(selection)
-        dats[i] = windowData(run[selection[i]];
-                             blank=blank,
-                             signal=signal,
-                             add_xy=add_xy)
+        dat = windowData(run[selection[i]];
+                         blank=blank,
+                         signal=signal,
+                         add_xy=add_xy)
+        good = .!dat.outlier
+        dats[i] = dat[good,:]
     end
     if include_covmats
         covs = Vector{Matrix}(undef,ns)

@@ -309,8 +309,10 @@ function plotFitted!(p,
                      transformation::Union{Nothing,AbstractString}=nothing,
                      offset::Union{Nothing,Number}=nothing,
                      linecolor="black",linestyle=:solid)
-    x = windowData(samp,blank=blank,signal=signal)[:,1]
-    y = formRatios(pred,num,den)
+    dat = windowData(samp,blank=blank,signal=signal)
+    good = .!dat.outlier
+    x = dat[good,1]
+    y = formRatios(pred[good,:],num,den)
     ty, offset = transformeer(y,transformation;offset=offset)
     for tyi in eachcol(ty)
         Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
