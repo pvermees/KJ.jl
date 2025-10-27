@@ -12,6 +12,7 @@ function plot(samp::Sample,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
               linecol="black",linestyle=:solid,
               i=nothing,legend=:topleft,
+              cpalette=:viridis,
               show_title=true,
               titlefontsize=10,
               kw...)
@@ -20,7 +21,8 @@ function plot(samp::Sample,
                 num=num,den=den,transformation=transformation,
                 seriestype=seriestype,
                 ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
-                legend=legend,show_title=show_title,
+                legend=legend,cpalette=cpalette,
+                show_title=show_title,
                 titlefontsize=titlefontsize,
                 kw...)
 end
@@ -38,6 +40,7 @@ function plot(samp::Sample,
               linestyle=:solid,
               i=nothing,
               legend=:topleft,
+              cpalette=:viridis,
               show_title=true,
               titlefontsize=10,
               return_offset::Bool=false,
@@ -54,7 +57,8 @@ function plot(samp::Sample,
              ms=ms,ma=ma,seriestype=seriestype,
              label=permutedims(names(y)),
              xlimits=xlim,ylimits=ylim,
-             i=i,legend=legend,show_title=show_title,
+             i=i,legend=legend,cpalette=cpalette,
+             show_title=show_title,
              titlefontsize=titlefontsize,
              xlab=xlab,ylab=ylab,kw...)
     
@@ -88,7 +92,8 @@ function plot(samp::Sample,
               seriestype=:scatter,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
               linecol="black",linestyle=:solid,i=nothing,
-              legend=:topleft,show_title=true,
+              legend=:topleft,cpalette=:viridis,
+              show_title=true,
               titlefontsize=10,kw...)
 
     channelvec = collect(getChannels(samp))
@@ -101,7 +106,8 @@ function plot(samp::Sample,
              num=num,den=den,transformation=transformation,
              seriestype=seriestype,ms=ms,ma=ma,
              xlim=xlim,ylim=ylim,i=i,
-             legend=legend,show_title=show_title,
+             legend=legend,cpalette=cpalette,
+             show_title=show_title,
              titlefontsize=titlefontsize,
              xlab=xlab,ylab=ylab,kw...)
 
@@ -128,7 +134,9 @@ function plot(samp::Sample,
               seriestype=:scatter,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
               linecol="black",linestyle=:solid,i=nothing,
-              legend=:topleft,show_title=true,
+              legend=:topleft,
+              cpalette=:viridis,
+              show_title=true,
               titlefontsize=10,kw...)
     elements = channels2elements(samp)
     return plot(samp,blank,pars,elements,internal;
@@ -136,7 +144,8 @@ function plot(samp::Sample,
                 transformation=transformation,
                 seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
                 linecol=linecol,linestyle=linestyle,i=i,
-                legend=legend,show_title=show_title,
+                legend=legend,cpalette=cpalette,
+                show_title=show_title,
                 titlefontsize=titlefontsize,kw...)
 end
 function plot(samp::Sample;
@@ -148,6 +157,7 @@ function plot(samp::Sample;
               xlim=:auto,ylim=:auto,
               i::Union{Nothing,Integer}=nothing,
               legend=:topleft,
+              cpalette=:viridis,
               show_title=true,
               titlefontsize=10,
               padding::Number=0.1,
@@ -160,7 +170,8 @@ function plot(samp::Sample;
     p = plot(samp,x,y;
              seriestype=seriestype,ms=ms,ma=ma,
              xlim=xlim,ylim=ylim,i=i,legend=legend,
-             show_title=show_title,titlefontsize=titlefontsize,
+             cpalette=cpalette,show_title=show_title,
+             titlefontsize=titlefontsize,
              padding=padding,xlab=xlab,ylab=ylab,kw...)
 
     return p
@@ -174,15 +185,19 @@ function plot(samp::Sample,
               xlim=:auto,ylim=:auto,
               i::Union{Nothing,Integer}=nothing,
               legend=:topleft,
+              cpalette=:viridis,
               show_title=true,
               titlefontsize=10,
               padding::Number=0.1,
               kw...)
-    p = Plots.scatter(x,Matrix(y);
-                      ms=ms,ma=ma,
-                      label=permutedims(names(y)),
-                      legend=legend,xlimits=xlim,ylimits=ylim,
-                      kw...)
+    p = Plots.plot(xlimits=xlim,ylimits=ylim,legend=legend)
+    channels = names(y)
+    cols = Plots.palette(cpalette,length(channels))
+    for i in eachindex(channels)
+        Plots.scatter!(p,x,y[:,channels[i]];
+                       ms=ms,ma=ma,label=channels[i],
+                       markercolor=cols[i],kw...)
+    end
     Plots.xlabel!(xlab)
     Plots.ylabel!(ylab)
     if show_title
