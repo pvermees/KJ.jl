@@ -55,7 +55,6 @@ function plot(samp::Sample,
     
     p = plot(samp,x,y;
              ms=ms,ma=ma,seriestype=seriestype,
-             label=permutedims(names(y)),
              xlimits=xlim,ylimits=ylim,
              i=i,legend=legend,cpalette=cpalette,
              show_title=show_title,
@@ -94,7 +93,8 @@ function plot(samp::Sample,
               linecol="black",linestyle=:solid,i=nothing,
               legend=:topleft,cpalette=:viridis,
               show_title=true,
-              titlefontsize=10,kw...)
+              titlefontsize=10,
+              kw...)
 
     channelvec = collect(getChannels(samp))
 
@@ -109,7 +109,8 @@ function plot(samp::Sample,
              legend=legend,cpalette=cpalette,
              show_title=show_title,
              titlefontsize=titlefontsize,
-             xlab=xlab,ylab=ylab,kw...)
+             xlab=xlab,ylab=ylab,
+             kw...)
 
     if samp.group != "sample"
 
@@ -137,7 +138,8 @@ function plot(samp::Sample,
               legend=:topleft,
               cpalette=:viridis,
               show_title=true,
-              titlefontsize=10,kw...)
+              titlefontsize=10,
+              kw...)
     elements = channels2elements(samp)
     return plot(samp,blank,pars,elements,internal;
                 num=num,den=den,
@@ -146,7 +148,8 @@ function plot(samp::Sample,
                 linecol=linecol,linestyle=linestyle,i=i,
                 legend=legend,cpalette=cpalette,
                 show_title=show_title,
-                titlefontsize=titlefontsize,kw...)
+                titlefontsize=titlefontsize,
+                kw...)
 end
 function plot(samp::Sample;
               channels::AbstractVector=getChannels(samp),
@@ -172,7 +175,8 @@ function plot(samp::Sample;
              xlim=xlim,ylim=ylim,i=i,legend=legend,
              cpalette=cpalette,show_title=show_title,
              titlefontsize=titlefontsize,
-             padding=padding,xlab=xlab,ylab=ylab,kw...)
+             padding=padding,xlab=xlab,ylab=ylab,
+             kw...)
 
     return p
 end
@@ -193,9 +197,12 @@ function plot(samp::Sample,
     p = Plots.plot(xlimits=xlim,ylimits=ylim,legend=legend)
     channels = names(y)
     cols = Plots.palette(cpalette,length(channels))
+    marker = fill(:circle,length(x))
+    marker[samp.dat.outlier] .= :xcross
     for i in eachindex(channels)
         Plots.scatter!(p,x,y[:,channels[i]];
-                       ms=ms,ma=ma,label=channels[i],
+                       ms=ms,ma=ma,marker=marker,
+                       label=String(channels[i]),
                        markercolor=cols[i],kw...)
     end
     Plots.xlabel!(xlab)
@@ -374,8 +381,7 @@ function plotMap(df::AbstractDataFrame,
                  colorbar_scale::Symbol=:log10,
                  aspect_ratio::Symbol=:equal,
                  color::Symbol=:viridis,
-                 ignore_negative::Bool=true,
-                 kw...)
+                 ignore_negative::Bool=true)
     has_x = "x" in names(df) && !any(isnothing.(df[:,"x"]))
     has_y = "y" in names(df) && !any(isnothing.(df[:,"y"]))
     if has_x & has_y
@@ -401,8 +407,7 @@ function plotMap(df::AbstractDataFrame,
                        markersize=markersize,
                        markershape=markershape,
                        markerstrokewidth=0,
-                       colorbar_title=column,
-                       kw...)
+                       colorbar_title=column)
     else
         @warn "This dataset does not contain x and y coordinates."
         return nothing
