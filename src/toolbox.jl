@@ -628,13 +628,14 @@ end
 detect_outliers(data::AbstractVector)
 """
 function detect_outliers(data::AbstractVector)
-    Q1 = Statistics.quantile(data,0.25)
-    Q3 = Statistics.quantile(data,0.75)
+    d2 = diff(diff(data))
+    Q1 = Statistics.quantile(d2,0.25)
+    Q3 = Statistics.quantile(d2,0.75)
     IQR = Q3 - Q1
     ll = Q1 - 1.5 * IQR
-    ul = Q1 + 1.5 * IQR
-    outliers = @. data > ul || data < ll
-    return findall(outliers)
+    ul = Q3 + 1.5 * IQR
+    outliers = @. d2 > ul || d2 < ll
+    return findall(outliers) .+ 1
 end
 export detect_outliers
 
@@ -669,10 +670,6 @@ function win2outliers!(samp::Sample,
     end
     outliers = detect_outliers(dat)
     samp.dat.outlier[i[outliers]] .= true
-end
-
-function IQR(vec::AbstractVector)
-    return diff(Statistics.quantile([0.25,0.75]))
 end
 
 function dataframe_sum(df::DataFrame)
