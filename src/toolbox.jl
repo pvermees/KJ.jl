@@ -501,6 +501,8 @@ function transformeer(df::AbstractDataFrame,
             offset = get_offset(df,transformation)
         elseif transformation=="log"
             out .= ifelse.(df .<= 0, NaN, df)
+        elseif transformation=="sqrt"
+            out .= ifelse.(df .< 0, NaN, df)
         end
         for key in names(out)
             out[:,key] = eval(Symbol(transformation)).(out[:,key] .+ offset)
@@ -660,6 +662,7 @@ function chauvenet!(run::Vector{Sample};
                     channels::AbstractVector=getChannels(run),
                     include_samples::Bool=false)
     for samp in run
+        samp.dat.outlier = falses(size(samp.dat,1))
         if include_samples || samp.group != "sample"
             blk = windowData(samp;blank=true)
             win2outliers!(samp,blk[:,channels],:bwin)
@@ -678,7 +681,6 @@ function win2outliers!(samp::Sample,
         append!(i,collect(win[1]:win[2]))
     end
     outliers = chauvenet(dat)
-    samp.dat.outlier .= false
     samp.dat.outlier[i[outliers]] .= true
 end
 

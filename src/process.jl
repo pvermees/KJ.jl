@@ -24,10 +24,10 @@ function process!(run::Vector{Sample},
                   PAcutoff=nothing,
                   reject_outliers::Bool=true,
                   verbose::Bool=false)
-    chauvenet!(run;channels=collect(values(channels)))
-    blank = fitBlanks(run;nblank=nblank)
     setGroup!(run,glass)
     setGroup!(run,standards)
+    chauvenet!(run;channels=collect(values(channels)))
+    blank = fitBlanks(run;nblank=nblank)
     fit = fractionation(run,method,blank,channels,standards,glass;
                         ndrift=ndrift,ndown=ndown,
                         PAcutoff=PAcutoff,verbose=verbose)
@@ -47,9 +47,9 @@ function process!(run::Vector{Sample},
                   glass::AbstractDict;
                   nblank::Integer=2,
                   reject_outliers::Bool=true)
+    setGroup!(run,glass)
     chauvenet!(run)
     blank = fitBlanks(run;nblank=nblank)
-    setGroup!(run,glass)
     fit = fractionation(run,blank,internal,glass)
     return blank, fit
 end
