@@ -1,0 +1,80 @@
+"""
+detect_outliers(vec::AbstractVector)
+
+Identifies outliers in a vector from the second order differences
+between its elements. It returns the indices of the outliers.
+"""
+function detect_outliers(vec::AbstractVector)
+    pred = [vec[2] + vec[3];
+            vec[1:end-2] .+ vec[3:end];
+            vec[end-2] + vec[end-1]
+            ] ./ 2.0
+    d = pred .- vec
+    Q1 = Statistics.quantile(d,0.25)
+    Q3 = Statistics.quantile(d,0.75)
+    IQR = Q3 - Q1
+    ll = Q1 - 1.5 * IQR
+    ul = Q3 + 1.5 * IQR
+    outliers = @. d > ul || d < ll
+    return findall(outliers)
+end
+"""
+detect_outliers(mat::Matrix)
+"""
+function detect_outliers(mat::Matrix)
+    Sigma = df2cov(mat)
+    pred = vcat(mat[2,:]' + mat[3,:]',
+                mat[1:end-2,:] .+ mat[3:end,:],
+                mat[end-2,:]' + mat[end-1,:]') ./ 2.0
+    d = pred .- mat
+    M = d * inv(Sigma) * transpose(d)
+    maha = sqrt.(diag(M))
+    return detect_outliers(vec(maha))
+end
+export detect_outliers
+
+"""
+detect_outliers!(run::Vector{Sample};
+                 group::Union{Nothing,AbstractString}=nothing)
+
+Identifies outliers in a vector from the second order differences
+between its elements. Modifies run using detect_outliers().
+"""
+function detect_outliers!(run::Vector{Sample};
+                          channels::AbstractVector=getChannels(run),
+                          include_samples::Bool=false)
+    for samp in run
+        samp.dat.outlier = falses(size(samp.dat,1))
+        if include_samples || samp.group != "sample"
+            blk = windowData(samp;blank=true)
+            win2outliers!(samp,blk[:,channels],:bwin)
+            sig = windowData(samp;signal=true)
+            win2outliers!(samp,sig[:,channels],:swin)
+        end
+    end
+end
+export detect_outliers!
+
+function win2outliers!(samp::Sample,
+                       df::AbstractDataFrame,
+                       window::Symbol)
+    i = []
+    for win in getfield(samp,window)
+        append!(i,collect(win[1]:win[2]))
+    end
+    M = Matrix(df)
+    if all(M .> 0)
+        L = log.(M)
+        x = L[:,1] .- L[:,2:end]
+    else
+        x = sum(eachcol(M))
+    end
+    outliers = detect_outliers(x)
+    samp.dat.outlier[i[outliers]] .= true
+end
+
+function moving_median_indices(n::Int;b::Int=2)
+    M = repeat([1:n],outer=n)
+    return 1:b
+end
+export moving_median_indices

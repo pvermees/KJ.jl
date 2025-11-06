@@ -46,12 +46,17 @@ function blanktest(;doplot=false,ylim=:auto,transformation=nothing)
     return myrun, blk
 end
 
+function mmediantest()
+    i = moving_median_indices(10;b=2)
+    println(i)
+end
+
 function outliertest()
     n = 100
     Random.seed!(0)
     random_values = rand(Distributions.Normal(0,1), n)
     random_values[50] = rand(Distributions.Normal(0,10),1)[1]
-    outliers = chauvenet(random_values)
+    outliers = detect_outliers(random_values)
     col = fill(1,n)
     col[outliers] .= 0
     p = Plots.scatter(1:n,random_values;
@@ -587,8 +592,9 @@ if true
     #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
-    @testset "set method and blanks" begin blanktest() end
-    @testset "outlier detection" begin outliertest() end
+    @testset "set method and blanks" begin blanktest() end=#
+    @testset "moving median test" begin mmediantest() end
+    #=@testset "outlier detection" begin outliertest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "chauvenet test" begin chauvenetest() end
     @testset "predict" begin predictest() end
@@ -612,9 +618,9 @@ if true
     @testset "UPb internochron" begin internochronUPbtest() end
     @testset "concentration map" begin maptest() end
     @testset "isotope ratio map" begin map_dating_test() end
-    @testset "map fail test" begin map_fail_test() end=#
+    @testset "map fail test" begin map_fail_test() end
     @testset "glass as age standard test" begin glass_only_test() end
-    #=@testset "extension test" begin extensiontest() end
+    @testset "extension test" begin extensiontest() end
     @testset "synthetic data" begin SStest() end
     @testset "accuracy test 1" begin accuracytest() end
     @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end

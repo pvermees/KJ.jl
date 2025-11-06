@@ -240,14 +240,20 @@ function group2selection(run::Vector{Sample},
 end
 
 """
-df2cov(df::AbstractDataFrame)
+df2cov(mat::Matrix)
 
-Estimate the covariance matrix of df's columns
+Estimate the covariance matrix of mat's columns
 from its differenced rows.
 """
-function df2cov(df::AbstractDataFrame)
-    d = diff(Matrix(df),dims=1)
+function df2cov(mat::Matrix)
+    d = diff(mat,dims=1)
     return Statistics.cov(d)./2
+end
+"""
+function df2cov(df::AbstractDataFrame)
+"""
+function df2cov(df::AbstractDataFrame)
+    return df2cov(Matrix(df))
 end
 export df2cov
 
@@ -614,65 +620,7 @@ function hessian2xyerr(H::Matrix,
     end
 end
 
-"""
-detect_outliers(df::AbstractDataFrame)
-
-Identifies outliers in a vector from the second order differences
-between its elements. It returns the indices of the outliers.
-"""
-function detect_outliers(df::AbstractDataFrame)
-    colsum = sum(eachcol(df))
-    return detect_outliers(colsum)
-end
-"""
-detect_outliers(data::AbstractVector)
-"""
-function detect_outliers(data::AbstractVector)
-    d2 = diff(diff(data))
-    Q1 = Statistics.quantile(d2,0.25)
-    Q3 = Statistics.quantile(d2,0.75)
-    IQR = Q3 - Q1
-    ll = Q1 - 1.5 * IQR
-    ul = Q3 + 1.5 * IQR
-    outliers = @. d2 > ul || d2 < ll
-    return findall(outliers) .+ 1
-end
-export detect_outliers
-
-"""
-detect_outliers!(run::Vector{Sample};
-           group::Union{Nothing,AbstractString}=nothing)
-
-Identifies outliers in a vector from the second order differences
-between its elements. Modifies run using detect_outliers().
-"""
-function detect_outliers!(run::Vector{Sample};
-                    channels::AbstractVector=getChannels(run),
-                    include_samples::Bool=false)
-    for samp in run
-        samp.dat.outlier = falses(size(samp.dat,1))
-        if include_samples || samp.group != "sample"
-            blk = windowData(samp;blank=true)
-            win2outliers!(samp,blk[:,channels],:bwin)
-            sig = windowData(samp;signal=true)
-            win2outliers!(samp,sig[:,channels],:swin)
-        end
-    end
-end
-export detect_outliers!
-
-function win2outliers!(samp::Sample,
-                       dat::AbstractDataFrame,
-                       window::Symbol)
-    i = []
-    for win in getfield(samp,window)
-        append!(i,collect(win[1]:win[2]))
-    end
-    outliers = detect_outliers(dat)
-    samp.dat.outlier[i[outliers]] .= true
-end
-
-function dataframe_sum(df::DataFrame)
+function dataframe_sum(df::AbstractDataFrame)
     total = 0.0
     for col in eachcol(df)
         if eltype(col) <: Number
