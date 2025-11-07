@@ -64,10 +64,24 @@ function outliertest()
     outliers = detect_outliers(random_values)
     col = fill(1,n)
     col[outliers] .= 0
-    p = Plots.scatter(1:n,random_values;
-                      label=nothing,
-                      marker_z=col,
-                      legend=false)
+    p1 = Plots.scatter(1:n,random_values;
+                       label=nothing,
+                       marker_z=col,
+                       legend=false)
+    mu = [0.0; 2.0]
+    Sigma = [1.0 -1.2; -1.2 2.0]
+    mvn = Distributions.MvNormal(mu, Sigma)
+    random_matrix = Matrix(rand(mvn, n)')
+    #random_matrix[50,1] = rand(Distributions.Normal(3,10),1)[1]
+    outliers_2 = detect_outliers(random_matrix)
+    col = fill(1,n)
+    col[outliers_2] .= 0
+    p2 = Plots.scatter(random_matrix[:,1],
+                       random_matrix[:,2];
+                       label=nothing,
+                       marker_z=col,
+                       legend=false)
+    p = Plots.plot(p1,p2;layout=(1,2))
     display(p)
 end
 
@@ -597,10 +611,10 @@ if true
     #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
-    @testset "set method and blanks" begin blanktest() end=#
-    @testset "moving median test" begin mmediantest() end
-    #=@testset "outlier detection" begin outliertest() end
-    @testset "assign standards" begin standardtest(true) end
+    @testset "set method and blanks" begin blanktest() end
+    @testset "moving median test" begin mmediantest() end=#
+    @testset "outlier detection" begin outliertest() end
+    #=@testset "assign standards" begin standardtest(true) end
     @testset "chauvenet test" begin chauvenetest() end
     @testset "predict" begin predictest() end
     @testset "predict drift" begin driftest() end

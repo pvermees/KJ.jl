@@ -4,11 +4,11 @@ detect_outliers(vec::AbstractVector)
 Identifies outliers in a vector from the second order differences
 between its elements. It returns the indices of the outliers.
 """
-function detect_outliers(vec::AbstractVector)
-    pred = [vec[2] + vec[3];
-            vec[1:end-2] .+ vec[3:end];
-            vec[end-2] + vec[end-1]
-            ] ./ 2.0
+function detect_outliers(vec::AbstractVector;
+                         b::Int=2)
+    n = length(vec)
+    i = moving_median_indices(n;b=b)
+    pred = moving_median(vec,i)
     d = pred .- vec
     Q1 = Statistics.quantile(d,0.25)
     Q3 = Statistics.quantile(d,0.75)
@@ -21,12 +21,13 @@ end
 """
 detect_outliers(mat::Matrix)
 """
-function detect_outliers(mat::Matrix)
-    Sigma = df2cov(mat)
-    pred = vcat(mat[2,:]' + mat[3,:]',
-                mat[1:end-2,:] .+ mat[3:end,:],
-                mat[end-2,:]' + mat[end-1,:]') ./ 2.0
+function detect_outliers(mat::Matrix;
+                         b::Int=2)
+    n = size(mat,1)
+    i = moving_median_indices(n;b=b)
+    pred = moving_median(mat,i)
     d = pred .- mat
+    Sigma = df2cov(mat)
     M = d * inv(Sigma) * transpose(d)
     maha = sqrt.(diag(M))
     return detect_outliers(vec(maha))
@@ -89,3 +90,15 @@ function moving_median_indices(n::Int;b::Int=2)
     return out
 end
 export moving_median_indices
+
+function moving_median(vec::AbstractVector, i::Matrix{Int})
+    n = length(vec)
+    return [Statistics.median(vec[i[j, :]]) for j in 1:n]
+end
+function moving_median(mat::Matrix, i::Matrix{Int})
+    out = copy(mat)
+    for j in 1:size(mat,2)
+        out[:,j] = moving_median(mat[:,j],i)
+    end
+    return out
+end
