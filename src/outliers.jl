@@ -74,7 +74,18 @@ function win2outliers!(samp::Sample,
 end
 
 function moving_median_indices(n::Int;b::Int=2)
-    M = repeat([1:n],outer=n)
-    return 1:b
+    offset = [collect(-b:-1);collect(1:b)]
+    i = collect(1:n)
+    out = i .+ offset[1]
+    for o in offset[2:end]
+        out = hcat(out,i .+ o)
+    end
+    for j in 1:b
+        out[j,1:b+1-j] .= out[j,end] .+ 1 .- out[j,1:b+1-j]
+    end
+    for j in n-b+1:n
+        out[j,b+1+n-j:2*b] .= out[j,1] .- collect(1:b+j-n)
+    end
+    return out
 end
 export moving_median_indices

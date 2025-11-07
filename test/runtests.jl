@@ -47,8 +47,13 @@ function blanktest(;doplot=false,ylim=:auto,transformation=nothing)
 end
 
 function mmediantest()
-    i = moving_median_indices(10;b=2)
-    println(i)
+    n = 10
+    v = collect(1:10)
+    i = moving_median_indices(n;b=2)
+    m = [median(v[i[j, :]]) for j in 1:n]
+    println(v)
+    display(i)
+    println(m)
 end
 
 function outliertest()
