@@ -1,5 +1,5 @@
 using KJ, Test, CSV, Infiltrator, DataFrames,
-    Statistics, Distributions, Random
+    Statistics, Distributions, Random, LinearAlgebra
 import Plots
 include("helper.jl")
 
@@ -72,7 +72,7 @@ function outliertest()
     Sigma = [1.0 -1.2; -1.2 2.0]
     mvn = Distributions.MvNormal(mu, Sigma)
     random_matrix = Matrix(rand(mvn, n)')
-    #random_matrix[50,1] = rand(Distributions.Normal(3,10),1)[1]
+    random_matrix[50,1] = rand(Distributions.Normal(3,10),1)[1]
     outliers_2 = detect_outliers(random_matrix)
     col = fill(1,n)
     col[outliers_2] .= 0
@@ -608,13 +608,13 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
-    @testset "moving median test" begin mmediantest() end=#
+    @testset "moving median test" begin mmediantest() end
     @testset "outlier detection" begin outliertest() end
-    #=@testset "assign standards" begin standardtest(true) end
+    @testset "assign standards" begin standardtest(true) end
     @testset "chauvenet test" begin chauvenetest() end
     @testset "predict" begin predictest() end
     @testset "predict drift" begin driftest() end
@@ -645,8 +645,7 @@ if true
     @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
     @testset "accuracy test 3" begin accuracytest(mfrac=2.0) end
     @testset "accuracy test 4" begin accuracytest(down=[0.0,0.5]) end
-    @testset "TUI test" begin TUItest() end=#
-
+    @testset "TUI test" begin TUItest() end
 else
     TUI()
 end

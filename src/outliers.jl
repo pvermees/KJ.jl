@@ -27,7 +27,8 @@ function detect_outliers(mat::Matrix;
     i = moving_median_indices(n;b=b)
     pred = moving_median(mat,i)
     d = pred .- mat
-    Sigma = df2cov(mat)
+    mcd = fast_mcd(d, num_starts=100)
+    Sigma = mcd.scatter_raw
     M = d * inv(Sigma) * transpose(d)
     maha = sqrt.(diag(M))
     return detect_outliers(vec(maha))
