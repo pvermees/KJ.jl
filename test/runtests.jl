@@ -580,10 +580,6 @@ function accuracytest(;drift=[0.0],down=[0.0],mfrac=0.0,show=true,kw...)
     end
 end
 
-function dependencytest()
-    Aqua.test_all(KJ)
-end
-
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -600,6 +596,10 @@ end
 
 function TUItest()
     TUI(;logbook="logs/Lu-Hf.log",reset=true)
+end
+
+function dependencytest()
+    Aqua.test_all(KJ;undocumented_names=false)
 end
 
 Plots.closeall()
@@ -642,7 +642,7 @@ if true
     @testset "accuracy test 3" begin accuracytest(mfrac=2.0) end
     @testset "accuracy test 4" begin accuracytest(down=[0.0,0.5]) end
     @testset "TUI test" begin TUItest() end
-    #@testset "dependency test" begin dependencytest() end
+    @testset "dependency test" begin dependencytest() end
 else
     TUI()
 end
