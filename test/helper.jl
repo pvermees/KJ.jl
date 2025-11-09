@@ -1,4 +1,3 @@
-using Dates
 function random_sample(i::Int,
                        n::Int;
                        nblk::Int,
@@ -32,7 +31,7 @@ function random_sample(i::Int,
     FT = polyFac(down,T)
     bt = polyVal(blank,t)
     for col in eachcol(bt)
-        col .+= (sqrt(median(col)) .* randn(nsig+nblk))
+        col .+= (sqrt(Distributions.median(col)) .* randn(nsig+nblk))
     end
     p = fill(mu_p + randn() * sigma_p, nsig)
     x = p.*x0
@@ -46,9 +45,9 @@ function random_sample(i::Int,
     Dm[isig] .+= D.*mf
     Pm[isig] .+= P.*ft[isig].*FT[isig]
     dm[isig] .+= d
-    eD = median(Dm[isig]).*relerr_D.*randn(nsig)
-    eP = median(Pm[isig]).*relerr_P.*randn(nsig)
-    ed = median(dm[isig]).*relerr_d.*randn(nsig)
+    eD = Distributions.median(Dm[isig]).*relerr_D.*randn(nsig)
+    eP = Distributions.median(Pm[isig]).*relerr_P.*randn(nsig)
+    ed = Distributions.median(dm[isig]).*relerr_d.*randn(nsig)
     Pm[isig] .+= eP
     Dm[isig] .+= eD
     dm[isig] .+= ed
