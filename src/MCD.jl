@@ -13,8 +13,8 @@ function calculate_subset_stats(X::AbstractMatrix, indices::Vector{Int})
     X_H = X[indices, :]
     
     # Calculate Location (Mean) and Scatter (Covariance)
-    mu = vec(mean(X_H, dims=1))
-    Sigma = cov(X_H)
+    mu = vec(Statistics.mean(X_H, dims=1))
+    Sigma = Statistics.cov(X_H)
     
     # Calculate Determinant
     local d

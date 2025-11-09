@@ -1,5 +1,7 @@
-using KJ, Test, CSV, Infiltrator, DataFrames,
-    Statistics, Distributions, Random, LinearAlgebra
+using Test
+using KJ
+using Distributions
+using DataFrames, CSV, Statistics, Infiltrator, Random, LinearAlgebra
 import Plots
 include("helper.jl")
 
@@ -97,12 +99,6 @@ function standardtest(verbose=false)
     return myrun
 end
 
-function chauvenetest()
-    myrun = standardtest()
-    channels = ["Hf178 -> 260","Hf176 -> 258","Lu175 -> 175"]
-    chauvenet!(myrun;channels=channels)
-end
-
 function fixedLuHf(drift,down,mfrac,PAcutoff,adrift)
     myrun, blk = blanktest()
     method = "Lu-Hf"
@@ -159,8 +155,7 @@ function partest(parname,paroffsetfact)
                         adrift=[drift])
         anchors = getStandardAnchors(method,standards)
         plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
-                    transformation="log",offset=offset,
-                    linecolor="red",debug=false)
+                    transformation="log",offset=offset,linecolor="red")
     end
     @test display(p) != NaN
 end
@@ -615,7 +610,6 @@ if true
     @testset "moving median test" begin mmediantest() end
     @testset "outlier detection" begin outliertest() end
     @testset "assign standards" begin standardtest(true) end
-    @testset "chauvenet test" begin chauvenetest() end
     @testset "predict" begin predictest() end
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end

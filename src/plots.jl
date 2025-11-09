@@ -13,14 +13,16 @@ function plot(samp::Sample,
               i=nothing,legend=:topleft,
               cpalette=:viridis,
               show_title=true,
-              titlefontsize::Real=10)
+              titlefontsize::Real=10,
+              return_offset::Bool=false)
     anchors = getAnchors(method,standards,glass)
     return plot(samp,channels,blank,pars,anchors;
                 num=num,den=den,transformation=transformation,
                 ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
                 legend=legend,cpalette=cpalette,
                 show_title=show_title,
-                titlefontsize=titlefontsize)
+                titlefontsize=titlefontsize,
+                return_offset=return_offset)
 end
 function plot(samp::Sample,
               channels::AbstractDict,
@@ -42,33 +44,31 @@ function plot(samp::Sample,
 
     channelvec = collect(values(channels))
 
-    x, y, xlab, ylab, ylim, offset = prep_plot(samp,channelvec;
-                                               num=num,den=den,
-                                               ylim=ylim,
-                                               transformation=transformation)
-    p = plot(samp,x,y;
-             ms=ms,ma=ma,
-             xlim=xlim,ylim=ylim,
+    pp = prep_plot(samp,channelvec;
+                   num=num,den=den,ylim=ylim,
+                   transformation=transformation)
+    p = plot(samp,pp.x,pp.y;
+             ms=ms,ma=ma,ylim=pp.ylim,
              i=i,legend=legend,cpalette=cpalette,
              show_title=show_title,
              titlefontsize=titlefontsize,
-             xlab=xlab,ylab=ylab)
+             xlab=pp.xlab,ylab=pp.ylab)
     
     if samp.group != "sample"
 
         plotFitted!(p,samp,blank,pars,channels,anchors;
                     num=num,den=den,transformation=transformation,
-                    offset=offset,linecolor=linecol,linestyle=linestyle)
+                    offset=pp.offset,linecolor=linecol,linestyle=linestyle)
         
     end
 
     plotFittedBlank!(p,samp,blank,channelvec;
                      num=num,den=den,
-                     transformation=transformation,offset=offset,
+                     transformation=transformation,offset=pp.offset,
                      linecolor=linecol,linestyle=linestyle)
 
     if return_offset
-        return p, offset
+        return p, pp.offset
     else
         return p
     end
@@ -87,20 +87,13 @@ function plot(samp::Sample,
               show_title=true,
               titlefontsize=10)
 
-    channelvec = collect(getChannels(samp))
-
-    x, y, xlab, ylab, ylim, offset = prep_plot(samp,channelvec;
-                                               num=num,den=den,
-                                               ylim=ylim,
-                                               transformation=transformation)
-    p = plot(samp;
-             num=num,den=den,transformation=transformation,
-             ms=ms,ma=ma,
-             xlim=xlim,ylim=ylim,i=i,
-             legend=legend,cpalette=cpalette,
-             show_title=show_title,
-             titlefontsize=titlefontsize,
-             xlab=xlab,ylab=ylab)
+    p, offset = plot(samp;
+                     num=num,den=den,transformation=transformation,
+                     ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
+                     legend=legend,cpalette=cpalette,
+                     show_title=show_title,
+                     titlefontsize=titlefontsize,
+                     return_offset=true)
 
     if samp.group != "sample"
 
@@ -150,20 +143,22 @@ function plot(samp::Sample;
               cpalette=:viridis,
               show_title=true,
               titlefontsize=10,
-              padding::Number=0.1)
+              padding::Number=0.1,
+              return_offset::Bool=false)
 
-    x, y, xlab, ylab, ylim, offset = prep_plot(samp,channels;
-                                               num=num,den=den,ylim=ylim,
-                                               transformation=transformation)
-
-    p = plot(samp,x,y;
-             ms=ms,ma=ma,
-             xlim=xlim,ylim=ylim,i=i,legend=legend,
+    pp = prep_plot(samp,channels;
+                   num=num,den=den,ylim=ylim,
+                   transformation=transformation)
+    p = plot(samp,pp.x,pp.y;
+             ms=ms,ma=ma,xlim=xlim,ylim=pp.ylim,i=i,legend=legend,
              cpalette=cpalette,show_title=show_title,
              titlefontsize=titlefontsize,
-             padding=padding,xlab=xlab,ylab=ylab)
-
-    return p
+             padding=padding,xlab=pp.xlab,ylab=pp.ylab)
+    if return_offset
+        return p, pp.offset
+    else
+        return p
+    end
 end
 function plot(samp::Sample,
               x::AbstractVector,
@@ -247,7 +242,7 @@ function prep_plot(samp::Sample,
     if ylim == :auto && ratsig == "ratio"
         ylim = get_ylim(ty,samp.swin)
     end
-    return x, ty, xlab, ylab, ylim, offset
+    return (x=x, y=ty, xlab=xlab, ylab=ylab, ylim=ylim, offset=offset)
 end
 export prep_plot
 
