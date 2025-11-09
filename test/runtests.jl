@@ -1,8 +1,6 @@
-using Test
-using KJ
-using Distributions
-using DataFrames, CSV, Statistics, Infiltrator, Random, LinearAlgebra
-import Plots
+using Test, KJ, Dates, DataFrames
+import Plots, Distributions, CSV, Statistics,
+    Infiltrator, Random, LinearAlgebra, Aqua
 include("helper.jl")
 
 function loadtest(verbose=false)
@@ -52,7 +50,7 @@ function mmediantest()
     n = 10
     v = collect(1:10)
     i = moving_median_indices(n;b=2)
-    m = [median(v[i[j, :]]) for j in 1:n]
+    m = [Distributions.median(v[i[j, :]]) for j in 1:n]
     println(v)
     display(i)
     println(m)
@@ -600,6 +598,10 @@ function TUItest()
     TUI(;logbook="logs/Lu-Hf.log",reset=true)
 end
 
+function dependencytest()
+    Aqua.test_all(KJ;undocumented_names=false)
+end
+
 Plots.closeall()
 
 if true
@@ -640,6 +642,7 @@ if true
     @testset "accuracy test 3" begin accuracytest(mfrac=2.0) end
     @testset "accuracy test 4" begin accuracytest(down=[0.0,0.5]) end
     @testset "TUI test" begin TUItest() end
+    @testset "dependency test" begin dependencytest() end
 else
     TUI()
 end

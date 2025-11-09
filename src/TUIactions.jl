@@ -902,7 +902,7 @@ function TUItimeresolved2csv(ctrl::AbstractDict,
     end
     return "x"
 end
-export TUItimeresolved
+export TUItimeresolved2csv
 
 function TUImapper(ctrl::AbstractDict)
     TUImap(ctrl)
