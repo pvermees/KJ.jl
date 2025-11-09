@@ -1,4 +1,7 @@
-using KJ, Test, CSV, Infiltrator, DataFrames, Statistics
+using Test
+using KJ
+using Distributions
+using DataFrames, CSV, Statistics, Infiltrator, Random, LinearAlgebra
 import Plots
 include("helper.jl")
 
@@ -45,6 +48,45 @@ function blanktest(;doplot=false,ylim=:auto,transformation=nothing)
     return myrun, blk
 end
 
+function mmediantest()
+    n = 10
+    v = collect(1:10)
+    i = moving_median_indices(n;b=2)
+    m = [median(v[i[j, :]]) for j in 1:n]
+    println(v)
+    display(i)
+    println(m)
+end
+
+function outliertest()
+    n = 100
+    Random.seed!(0)
+    random_values = rand(Distributions.Normal(0,1), n)
+    random_values[50] = rand(Distributions.Normal(0,10),1)[1]
+    outliers = detect_outliers(random_values)
+    col = fill(1,n)
+    col[outliers] .= 0
+    p1 = Plots.scatter(1:n,random_values;
+                       label=nothing,
+                       marker_z=col,
+                       legend=false)
+    mu = [0.0; 2.0]
+    Sigma = [1.0 -1.2; -1.2 2.0]
+    mvn = Distributions.MvNormal(mu, Sigma)
+    random_matrix = Matrix(rand(mvn, n)')
+    random_matrix[50,1] = rand(Distributions.Normal(3,10),1)[1]
+    outliers_2 = detect_outliers(random_matrix)
+    col = fill(1,n)
+    col[outliers_2] .= 0
+    p2 = Plots.scatter(random_matrix[:,1],
+                       random_matrix[:,2];
+                       label=nothing,
+                       marker_z=col,
+                       legend=false)
+    p = Plots.plot(p1,p2;layout=(1,2))
+    display(p)
+end
+
 function standardtest(verbose=false)
     myrun, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
@@ -54,6 +96,7 @@ function standardtest(verbose=false)
         println(anchors)
         summarise(myrun;verbose=true,n=5)
     end
+    return myrun
 end
 
 function fixedLuHf(drift,down,mfrac,PAcutoff,adrift)
@@ -66,7 +109,8 @@ function fixedLuHf(drift,down,mfrac,PAcutoff,adrift)
     setGroup!(myrun,glass)
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=drift,down=down,mfrac=mfrac,PAcutoff=PAcutoff,adrift=adrift)
+    fit = (drift=drift,down=down,mfrac=mfrac,
+           PAcutoff=PAcutoff,adrift=adrift)
     return myrun, blk, method, channels, glass, standards, fit
 end
 
@@ -79,16 +123,15 @@ function predictest()
     samp = myrun[1]
     if samp.group == "sample"
         println("Not a standard")
-        return samp,method,fit,blk,channels,standards,glass
+        return samp, method, fit, blk, channels, standards, glass
     else
-        pred = predict(samp,method,fit,blk,channels,
-                       standards,glass)
+        pred = predict(samp,method,fit,blk,channels,standards,glass)
         p, offset = KJ.plot(samp,method,channels,blk,fit,standards,glass;
                             den="Hf176 -> 258",
                             transformation="log",
                             return_offset=true)
         @test display(p) != NaN
-        return samp,method,fit,blk,channels,standards,glass,p,offset
+        return samp, method, fit, blk, channels, standards, glass, p, offset
     end
 end
     
@@ -112,8 +155,7 @@ function partest(parname,paroffsetfact)
                         adrift=[drift])
         anchors = getStandardAnchors(method,standards)
         plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
-                    transformation="log",offset=offset,
-                    linecolor="red",debug=false)
+                    transformation="log",offset=offset,linecolor="red")
     end
     @test display(p) != NaN
 end
@@ -315,11 +357,11 @@ function UPbtest()
     glass = Dict("NIST610" => "610",
                  "NIST612" => "612")
     channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blank, pars = process!(myrun,"U-Pb",channels,standards,glass;
-                           nblank=2,ndrift=1,ndown=1)
-    export2IsoplotR(myrun,method,channels,blank,pars;
+    blank, fit = process!(myrun,"U-Pb",channels,standards,glass;
+                          nblank=2,ndrift=1,ndown=1)
+    export2IsoplotR(myrun,method,channels,blank,fit;
                     fname="output/UPb.json")
-    p = KJ.plot(myrun[37],method,channels,blank,pars,standards,glass;
+    p = KJ.plot(myrun[37],method,channels,blank,fit,standards,glass;
                 transformation="log",den="Pb206")
     @test display(p) != NaN
 end
@@ -561,10 +603,12 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
+    @testset "moving median test" begin mmediantest() end
+    @testset "outlier detection" begin outliertest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
     @testset "predict drift" begin driftest() end
@@ -590,12 +634,12 @@ if true
     @testset "map fail test" begin map_fail_test() end
     @testset "glass as age standard test" begin glass_only_test() end
     @testset "extension test" begin extensiontest() end
-    @testset "synthetic data" begin SStest() end=#
+    @testset "synthetic data" begin SStest() end
     @testset "accuracy test 1" begin accuracytest() end
     @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
-    @testset "accuracy test 3" begin accuracytest(down=[0.0,-1.0]) end
-    @testset "accuracy test 4" begin accuracytest(mfrac=2.0) end
-    #@testset "TUI test" begin TUItest() end
+    @testset "accuracy test 3" begin accuracytest(mfrac=2.0) end
+    @testset "accuracy test 4" begin accuracytest(down=[0.0,0.5]) end
+    @testset "TUI test" begin TUItest() end
 else
     TUI()
 end

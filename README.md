@@ -14,6 +14,13 @@ at the Julia REPL:
 import Pkg; Pkg.add(url="https://github.com/pvermees/KJ.jl.git")
 ```
 
+To save yourself some time when you run `KJ` later on, it is useful
+(but not strictly necessary) to *precompile* the package now:
+
+```
+Pkg.build("KJ")
+```
+
 There are four ways to interact with KJ:
 
 1. [TUI](#tui-text-based-user-interface): an interactive text-based user interface

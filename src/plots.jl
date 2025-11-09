@@ -8,21 +8,21 @@ function plot(samp::Sample,
               glass::Union{AbstractDict,AbstractVector};
               num=nothing,den=nothing,
               transformation=nothing,
-              seriestype=:scatter,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
               linecol="black",linestyle=:solid,
               i=nothing,legend=:topleft,
+              cpalette=:viridis,
               show_title=true,
-              titlefontsize=10,
-              kw...)
+              titlefontsize::Real=10,
+              return_offset::Bool=false)
     anchors = getAnchors(method,standards,glass)
     return plot(samp,channels,blank,pars,anchors;
                 num=num,den=den,transformation=transformation,
-                seriestype=seriestype,
                 ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
-                legend=legend,show_title=show_title,
+                legend=legend,cpalette=cpalette,
+                show_title=show_title,
                 titlefontsize=titlefontsize,
-                kw...)
+                return_offset=return_offset)
 end
 function plot(samp::Sample,
               channels::AbstractDict,
@@ -31,48 +31,44 @@ function plot(samp::Sample,
               anchors::AbstractDict;
               num=nothing,den=nothing,
               transformation=nothing,
-              seriestype=:scatter,
               ms=2,ma=0.5,
               xlim=:auto,ylim=:auto,
               linecol="black",
               linestyle=:solid,
               i=nothing,
               legend=:topleft,
+              cpalette=:viridis,
               show_title=true,
               titlefontsize=10,
-              return_offset::Bool=false,
-              kw...)
+              return_offset::Bool=false)
 
     channelvec = collect(values(channels))
 
-    x, y, ty, xlab, ylab, ylim, offset = prep_plot(samp,channelvec;
-                                                   num=num,den=den,
-                                                   ylim=ylim,
-                                                   transformation=transformation)
-    
-    p = plot(samp,x,y,ty;
-             ms=ms,ma=ma,seriestype=seriestype,
-             label=permutedims(names(y)),
-             xlimits=xlim,ylimits=ylim,
-             i=i,legend=legend,show_title=show_title,
+    pp = prep_plot(samp,channelvec;
+                   num=num,den=den,ylim=ylim,
+                   transformation=transformation)
+    p = plot(samp,pp.x,pp.y;
+             ms=ms,ma=ma,ylim=pp.ylim,
+             i=i,legend=legend,cpalette=cpalette,
+             show_title=show_title,
              titlefontsize=titlefontsize,
-             xlab=xlab,ylab=ylab,kw...)
+             xlab=pp.xlab,ylab=pp.ylab)
     
     if samp.group != "sample"
 
         plotFitted!(p,samp,blank,pars,channels,anchors;
                     num=num,den=den,transformation=transformation,
-                    offset=offset,linecolor=linecol,linestyle=linestyle)
+                    offset=pp.offset,linecolor=linecol,linestyle=linestyle)
         
     end
 
     plotFittedBlank!(p,samp,blank,channelvec;
                      num=num,den=den,
-                     transformation=transformation,offset=offset,
+                     transformation=transformation,offset=pp.offset,
                      linecolor=linecol,linestyle=linestyle)
 
     if return_offset
-        return p, offset
+        return p, pp.offset
     else
         return p
     end
@@ -85,25 +81,19 @@ function plot(samp::Sample,
               internal::AbstractString;
               num=nothing,den=nothing,
               transformation=nothing,
-              seriestype=:scatter,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
               linecol="black",linestyle=:solid,i=nothing,
-              legend=:topleft,show_title=true,
-              titlefontsize=10,kw...)
+              legend=:topleft,cpalette=:viridis,
+              show_title=true,
+              titlefontsize=10)
 
-    channelvec = collect(getChannels(samp))
-
-    x, y, ty, xlab, ylab, ylim, offset = prep_plot(samp,channelvec;
-                                                   num=num,den=den,
-                                                   ylim=ylim,
-                                                   transformation=transformation)
-    p = plot(samp;
-             num=num,den=den,transformation=transformation,
-             seriestype=seriestype,ms=ms,ma=ma,
-             xlim=xlim,ylim=ylim,i=i,
-             legend=legend,show_title=show_title,
-             titlefontsize=titlefontsize,
-             xlab=xlab,ylab=ylab,kw...)
+    p, offset = plot(samp;
+                     num=num,den=den,transformation=transformation,
+                     ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
+                     legend=legend,cpalette=cpalette,
+                     show_title=show_title,
+                     titlefontsize=titlefontsize,
+                     return_offset=true)
 
     if samp.group != "sample"
 
@@ -125,66 +115,75 @@ function plot(samp::Sample,
               internal::AbstractString;
               num=nothing,den=nothing,
               transformation=nothing,
-              seriestype=:scatter,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
               linecol="black",linestyle=:solid,i=nothing,
-              legend=:topleft,show_title=true,
-              titlefontsize=10,kw...)
+              legend=:topleft,
+              cpalette=:viridis,
+              show_title=true,
+              titlefontsize=10)
     elements = channels2elements(samp)
     return plot(samp,blank,pars,elements,internal;
                 num=num,den=den,
                 transformation=transformation,
-                seriestype=seriestype,ms=ms,ma=ma,xlim=xlim,ylim=ylim,
+                ms=ms,ma=ma,xlim=xlim,ylim=ylim,
                 linecol=linecol,linestyle=linestyle,i=i,
-                legend=legend,show_title=show_title,
-                titlefontsize=titlefontsize,kw...)
+                legend=legend,cpalette=cpalette,
+                show_title=show_title,
+                titlefontsize=titlefontsize)
 end
 function plot(samp::Sample;
               channels::AbstractVector=getChannels(samp),
               num::Union{Nothing,AbstractString}=nothing,
               den::Union{Nothing,AbstractString}=nothing,
               transformation::Union{Nothing,AbstractString}=nothing,
-              seriestype=:scatter,ms::Number=2,ma::Number=0.5,
-              xlim=:auto,ylim=:auto,
-              i::Union{Nothing,Integer}=nothing,
-              legend=:topleft,
-              show_title=true,
-              titlefontsize=10,
-              padding::Number=0.1,
-              kw...)
-
-    x, y, ty, xlab, ylab, ylim, offset = prep_plot(samp,channels;
-                                                   num=num,den=den,ylim=ylim,
-                                                   transformation=transformation)
-
-    p = plot(samp,x,y,ty;
-             seriestype=seriestype,ms=ms,ma=ma,
-             xlim=xlim,ylim=ylim,i=i,legend=legend,
-             show_title=show_title,titlefontsize=titlefontsize,
-             padding=padding,xlab=xlab,ylab=ylab,kw...)
-
-    return p
-end
-function plot(samp::Sample,
-              x::AbstractVector,
-              y::AbstractDataFrame,
-              ty::AbstractDataFrame;
-              xlab::AbstractString="x",
-              ylab::AbstractString="y",
-              seriestype=:scatter,
               ms::Number=2,ma::Number=0.5,
               xlim=:auto,ylim=:auto,
               i::Union{Nothing,Integer}=nothing,
               legend=:topleft,
+              cpalette=:viridis,
               show_title=true,
               titlefontsize=10,
               padding::Number=0.1,
-              kw...)
-    p = Plots.plot(x,Matrix(ty);
-                   ms=ms,ma=ma,seriestype=seriestype,
-                   label=permutedims(names(y)),
-                   legend=legend,xlimits=xlim,ylimits=ylim,
-                   kw...)
+              return_offset::Bool=false)
+
+    pp = prep_plot(samp,channels;
+                   num=num,den=den,ylim=ylim,
+                   transformation=transformation)
+    p = plot(samp,pp.x,pp.y;
+             ms=ms,ma=ma,xlim=xlim,ylim=pp.ylim,i=i,legend=legend,
+             cpalette=cpalette,show_title=show_title,
+             titlefontsize=titlefontsize,
+             padding=padding,xlab=pp.xlab,ylab=pp.ylab)
+    if return_offset
+        return p, pp.offset
+    else
+        return p
+    end
+end
+function plot(samp::Sample,
+              x::AbstractVector,
+              y::AbstractDataFrame;
+              xlab::AbstractString="x",
+              ylab::AbstractString="y",
+              ms::Number=2,ma::Number=0.5,
+              xlim=:auto,ylim=:auto,
+              i::Union{Nothing,Integer}=nothing,
+              legend=:topleft,
+              cpalette=:viridis,
+              show_title=true,
+              titlefontsize=10,
+              padding::Number=0.1)
+    p = Plots.plot(xlimits=xlim,ylimits=ylim,legend=legend)
+    channels = names(y)
+    cols = Plots.palette(cpalette,length(channels))
+    marker = fill(:circle,length(x))
+    marker[samp.dat.outlier] .= :xcross
+    for i in eachindex(channels)
+        Plots.scatter!(p,x,y[:,channels[i]];
+                       ms=ms,ma=ma,marker=marker,
+                       label=String(channels[i]),
+                       markercolor=cols[i])
+    end
     Plots.xlabel!(xlab)
     Plots.ylabel!(ylab)
     if show_title
@@ -208,7 +207,8 @@ function plot(samp::Sample,
         for w in win
             from = x[w[1]]
             to = x[w[2]]
-            Plots.plot!(p,[from,from,to,to,from],collect(dy_win[[1,2,2,1,1]]);
+            Plots.plot!(p,[from,from,to,to,from],
+                        collect(dy_win[[1,2,2,1,1]]);
                         linecolor="black",linestyle=:dot,label="")
         end
     end
@@ -242,9 +242,10 @@ function prep_plot(samp::Sample,
     if ylim == :auto && ratsig == "ratio"
         ylim = get_ylim(ty,samp.swin)
     end
-    return x, y, ty, xlab, ylab, ylim, offset
+    return (x=x, y=ty, xlab=xlab, ylab=ylab, ylim=ylim, offset=offset)
 end
 export prep_plot
+
 function get_ylim(dat::AbstractDataFrame,
                   window::AbstractVector;
                   padding::Number=0.1)
@@ -264,16 +265,15 @@ function plotFitted!(p,
                      num::Union{Nothing,AbstractString}=nothing,
                      den::Union{Nothing,AbstractString}=nothing,
                      transformation::Union{Nothing,AbstractString}=nothing,
-                     offset::Number=0.0,
+                     offset::Union{Nothing,Number}=nothing,
                      linecolor="black",
-                     linestyle=:solid,
-                     debug::Bool=false)
+                     linestyle=:solid)
     pred = predict(samp,pars,blank,channels,anchors)
     rename!(pred,[channels[i] for i in names(pred)])
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,
-                linestyle=linestyle,debug=debug)
+                linestyle=linestyle)
 end
 # concentrations
 function plotFitted!(p,
@@ -287,8 +287,7 @@ function plotFitted!(p,
                      transformation::Union{Nothing,AbstractString}=nothing,
                      offset::Union{Nothing,Number}=nothing,
                      linecolor="black",
-                     linestyle=:solid,
-                     debug::Bool=false)
+                     linestyle=:solid)
     pred = predict(samp,pars,blank,elements,internal)
     plotFitted!(p,samp,pred;
                 num=num,den=den,
@@ -304,12 +303,12 @@ function plotFitted!(p,
                      den::Union{Nothing,AbstractString}=nothing,
                      transformation::Union{Nothing,AbstractString}=nothing,
                      offset::Union{Nothing,Number}=nothing,
-                     linecolor="black",linestyle=:solid,
-                     debug::Bool=false)
-    x = windowData(samp,blank=blank,signal=signal)[:,1]
-    y = formRatios(pred,num,den)
-    ty, offset = transformeer(y,transformation;
-                              offset=offset,debug=debug)
+                     linecolor="black",linestyle=:solid)
+    dat = windowData(samp,blank=blank,signal=signal)
+    good = .!dat.outlier
+    x = dat[good,1]
+    y = formRatios(pred[good,:],num,den)
+    ty, offset = transformeer(y,transformation;offset=offset)
     for tyi in eachcol(ty)
         Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
     end
@@ -359,8 +358,7 @@ function plotMap(df::AbstractDataFrame,
                  colorbar_scale::Symbol=:log10,
                  aspect_ratio::Symbol=:equal,
                  color::Symbol=:viridis,
-                 ignore_negative::Bool=true,
-                 kw...)
+                 ignore_negative::Bool=true)
     has_x = "x" in names(df) && !any(isnothing.(df[:,"x"]))
     has_y = "y" in names(df) && !any(isnothing.(df[:,"y"]))
     if has_x & has_y
@@ -373,21 +371,19 @@ function plotMap(df::AbstractDataFrame,
         if isnothing(clims)
             clims = (minimum(z),maximum(z))
         end
-        p = Plots.plot(df.x[selection],
-                       df.y[selection];
-                       seriestype=:scatter,
-                       marker_z=z,
-                       color=color,
-                       aspect_ratio=aspect_ratio,
-                       legend=false, 
-                       colorbar=true,
-                       colorbar_scale=colorbar_scale,
-                       clims=clims,
-                       markersize=markersize,
-                       markershape=markershape,
-                       markerstrokewidth=0,
-                       colorbar_title=column,
-                       kw...)
+        p = Plots.scatter(df.x[selection],
+                          df.y[selection];
+                          marker_z=z,
+                          color=color,
+                          aspect_ratio=aspect_ratio,
+                          legend=false, 
+                          colorbar=true,
+                          colorbar_scale=colorbar_scale,
+                          clims=clims,
+                          markersize=markersize,
+                          markershape=markershape,
+                          markerstrokewidth=0,
+                          colorbar_title=column)
     else
         @warn "This dataset does not contain x and y coordinates."
         return nothing

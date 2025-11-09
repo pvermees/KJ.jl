@@ -9,10 +9,12 @@ function fractionation(run::Vector{Sample},
                        ndown::Integer=0,
                        PAcutoff=nothing,
                        verbose::Bool=false)
-    mf = fractionation(run,method,blank,channels,glass;verbose=verbose)
+    mf = fractionation(run,method,blank,channels,glass;
+                       verbose=verbose)
     return fractionation(run,method,blank,channels,standards,mf;
                          ndrift=ndrift,ndown=ndown,
-                         PAcutoff=PAcutoff,verbose=verbose)
+                         PAcutoff=PAcutoff,
+                         verbose=verbose)
 end
 # one-step isotope fractionation using mineral standards
 function fractionation(run::Vector{Sample},
@@ -49,13 +51,9 @@ function fractionation(run::Vector{Sample},
                        channels::AbstractDict,
                        glass::AbstractDict;
                        verbose::Bool=false)
-
     anchors = getGlassAnchors(method,glass)
-    
     dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
-    
     return SSfit([0.0],bD,bd,dats,covs,channels,anchors;verbose=verbose)
-    
 end
 # for concentration measurements:
 function fractionation(run::Vector{Sample},
@@ -99,12 +97,12 @@ function SSfitprep(run::Vector{Sample},
                    blank::AbstractDataFrame,
                    anchors::AbstractDict,
                    channels::AbstractDict)
-
     dats = Dict()
     covs = Dict()
     for (refmat,anchor) in anchors
-        dats[refmat], covs[refmat] = pool(run;signal=true,group=refmat,
-                                          include_covmats=true)
+        dats[refmat], covs[refmat] =
+            pool(run;signal=true,group=refmat,
+                 include_covmats=true)
     end
     bD = blank[:,channels["D"]]
     bd = blank[:,channels["d"]]

@@ -27,6 +27,7 @@ function load(dname::AbstractString;
     duration = runtime[end] + sortedsamples[end].dat[end,1]
     for i in eachindex(sortedsamples)
         samp = sortedsamples[i]
+        samp.dat.outlier = falses(size(samp.dat,1))
         samp.dat.t = (samp.dat[:,1] .+ runtime[i])./duration
     end
     return sortedsamples
@@ -39,6 +40,7 @@ function load(dfile::AbstractString,
     dat = timestamps = DataFrame()
     try
         dat = readDat(dfile,format,false)[1]
+        dat.outlier = falses(size(dat,1))
         dat.t = dat[:,1] ./ dat[end,1]
     catch e
         println("Failed to read "*dfile)

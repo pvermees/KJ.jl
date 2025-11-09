@@ -1,31 +1,70 @@
-# ratios (two steps):
+"""
+process!(run::Vector{Sample},
+         method::AbstractString,
+         channels::AbstractDict,
+         standards::AbstractDict,
+         glass::AbstractDict;
+         nblank::Integer=2,
+         ndrift::Integer=1,
+         ndown::Integer=1,
+         PAcutoff=nothing,
+         reject_outliers::Bool=true,
+         verbose::Bool=false)
+
+Two-step processing of KJ data for ratios
+"""
 function process!(run::Vector{Sample},
                   method::AbstractString,
                   channels::AbstractDict,
                   standards::AbstractDict,
                   glass::AbstractDict;
-                  nblank::Integer=2,ndrift::Integer=1,ndown::Integer=1,
-                  PAcutoff=nothing,verbose::Bool=false)
-    blank = fitBlanks(run;nblank=nblank)
+                  nblank::Integer=2,
+                  ndrift::Integer=1,
+                  ndown::Integer=1,
+                  PAcutoff=nothing,
+                  reject_outliers::Bool=true,
+                  verbose::Bool=false)
     setGroup!(run,glass)
     setGroup!(run,standards)
+    if reject_outliers
+        detect_outliers!(run;channels=collect(values(channels)))
+    end
+    blank = fitBlanks(run;nblank=nblank)
     fit = fractionation(run,method,blank,channels,standards,glass;
                         ndrift=ndrift,ndown=ndown,
                         PAcutoff=PAcutoff,verbose=verbose)
     return blank, fit
 end
-# concentrations:
+"""
+process!(run::Vector{Sample},
+         internal::Tuple,
+         glass::AbstractDict;
+         nblank::Integer=2,
+         reject_outliers::Bool=true)
+
+KJ processing of concentration data
+"""
 function process!(run::Vector{Sample},
                   internal::Tuple,
                   glass::AbstractDict;
-                  nblank::Integer=2)
-    blank = fitBlanks(run;nblank=nblank)
+                  nblank::Integer=2,
+                  reject_outliers::Bool=true)
     setGroup!(run,glass)
+    if reject_outliers
+        detect_outliers!(run)
+    end
+    blank = fitBlanks(run;nblank=nblank)
     fit = fractionation(run,blank,internal,glass)
     return blank, fit
 end
 export process!
 
+"""
+fitBlanks(run::Vector{Sample};
+          nblank=2)
+
+Fit a polynomial to the blanks in run.
+"""
 function fitBlanks(run::Vector{Sample};
                    nblank=2)
     blks = pool(run;blank=true)
@@ -33,14 +72,24 @@ function fitBlanks(run::Vector{Sample};
     channels = getChannels(run)
     nc = length(channels)
     bpar = DataFrame(zeros(nblank,nc),channels)
+    good = .!blk.outlier
     for channel in channels
-        good = chauvenet(blk[:,channel])
         bpar[:,channel] = polyFit(blk.t[good],blk[good,channel],nblank)
     end
     return bpar
 end
 export fitBlanks
 
+"""
+atomic(samp::Sample,
+       channels::AbstractDict,
+       blank::AbstractDataFrame,
+       pars::NamedTuple;
+       add_xy::Bool=false)
+
+Estimate atomic ratios for channels.
+returns Phat, Dhat, dhat(, dat.x, dat.y)
+"""
 function atomic(samp::Sample,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
@@ -74,6 +123,14 @@ function atomic(samp::Sample,
 end
 export atomic
 
+"""
+concentrations(samp::Sample,
+               blank::AbstractDataFrame,
+               pars::AbstractVector,
+               internal::Tuple)
+
+Estimates the concentrations (in ppm)
+"""
 function concentrations(samp::Sample,
                         blank::AbstractDataFrame,
                         pars::AbstractVector,
@@ -81,6 +138,13 @@ function concentrations(samp::Sample,
     elements = channels2elements(samp)
     return concentrations(samp,elements,blank,pars,internal)
 end
+"""
+concentrations(samp::Sample,
+               elements::AbstractDataFrame,
+               blank::AbstractDataFrame,
+               pars::AbstractVector,
+               internal::Tuple)
+"""
 function concentrations(samp::Sample,
                         elements::AbstractDataFrame,
                         blank::AbstractDataFrame,
@@ -109,6 +173,12 @@ function concentrations(samp::Sample,
     rename!(out,Symbol.(nms))
     return out
 end
+"""
+concentrations(run::Vector{Sample},
+               blank::AbstractDataFrame,
+               pars::AbstractVector,
+               internal::Tuple)
+"""
 function concentrations(run::Vector{Sample},
                         blank::AbstractDataFrame,
                         pars::AbstractVector,
@@ -116,6 +186,13 @@ function concentrations(run::Vector{Sample},
     elements = channels2elements(run)
     return concentrations(run,elements,blank,pars,internal)
 end
+"""
+concentrations(run::Vector{Sample},
+               elements::AbstractDataFrame,
+               blank::AbstractDataFrame,
+               pars::AbstractVector,
+               internal::Tuple)
+"""
 function concentrations(run::Vector{Sample},
                         elements::AbstractDataFrame,
                         blank::AbstractDataFrame,
