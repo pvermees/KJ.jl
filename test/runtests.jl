@@ -124,7 +124,8 @@ function predictest()
         return samp, method, fit, blk, channels, standards, glass
     else
         pred = predict(samp,method,fit,blk,channels,standards,glass)
-        p, offset = KJ.plot(samp,method,channels,blk,fit,standards,glass;
+        anchors = getAnchors(method,standards,glass)
+        p, offset = KJ.plot(samp,channels,blk,fit,anchors;
                             den="Hf176 -> 258",
                             transformation="log",
                             return_offset=true)
@@ -317,8 +318,10 @@ function processtest(show=true)
     blk, fit = process!(myrun,method,channels,standards,glass;
                         nblank=2,ndrift=1,ndown=1,verbose=false)
     if show
-        p = KJ.plot(myrun[2],method,channels,blk,fit,standards,glass;
-                    transformation="log",den="Hf176 -> 258")
+        anchors = getAnchors(method,standards,glass)
+        p = KJ.plot(myrun[2],channels,blk,fit,anchors;
+                    transformation="log",
+                    den="Hf176 -> 258")
         @test display(p) != NaN
     end
     return myrun, method, channels, blk, fit
@@ -359,8 +362,10 @@ function UPbtest()
                           nblank=2,ndrift=1,ndown=1)
     export2IsoplotR(myrun,method,channels,blank,fit;
                     fname="output/UPb.json")
-    p = KJ.plot(myrun[37],method,channels,blank,fit,standards,glass;
-                transformation="log",den="Pb206")
+    anchors = getAnchors(method,standards,glass)
+    p = KJ.plot(myrun[37],channels,blank,fit,anchors;
+                transformation="log",
+                den="Pb206")
     @test display(p) != NaN
 end
 
@@ -379,7 +384,8 @@ function carbonatetest(verbose=false)
                         nblank=2,ndrift=1,ndown=1,verbose=verbose)
     export2IsoplotR(myrun,method,channels,blk,fit;
                     prefix="Duff",fname="output/Duff.json")
-    p = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;
+    anchors = getAnchors(method,standards,glass)
+    p = KJ.plot(myrun[4],channels,blk,fit,anchors;
                 transformation="log")
     @test display(p) != NaN
 end
@@ -501,7 +507,8 @@ function glass_only_test()
                            nblank=2,ndrift=1,ndown=1)
     export2IsoplotR(myrun,method,channels,blank,pars;
                     fname="output/UPb_with_glass.json")
-    p = KJ.plot(myrun[37],method,channels,blank,pars,standards,glass;
+    anchors = getAnchors(method,standards,glass)
+    p = KJ.plot(myrun[37],channels,blank,pars,anchors;
                 transformation="log",den="Pb206")
     display(p)
 end
@@ -569,11 +576,12 @@ function accuracytest(;drift=[0.0],down=[0.0],mfrac=0.0,show=true,kw...)
     @test SS_solution < SS_truth
     if show
         den = nothing # "Hf176 -> 258" #
-        p1 = KJ.plot(myrun[1],method,channels,blk,fit,standards,glass;
+        anchors = getAnchors(method,standards,glass)
+        p1 = KJ.plot(myrun[1],channels,blk,fit,anchors;
                      transformation="sqrt",den=den)
-        p2 = KJ.plot(myrun[3],method,channels,blk,fit,standards,glass;
+        p2 = KJ.plot(myrun[3],channels,blk,fit,anchors;
                      transformation="sqrt",den=den)
-        p3 = KJ.plot(myrun[4],method,channels,blk,fit,standards,glass;
+        p3 = KJ.plot(myrun[4],channels,blk,fit,anchors;
                      transformation="sqrt",den=den)
         p = Plots.plot(p1,p2,p3,layout=(1,3))
         @test display(p) != NaN

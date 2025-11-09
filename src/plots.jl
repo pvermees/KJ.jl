@@ -1,30 +1,5 @@
 # ratios
 function plot(samp::Sample,
-              method::AbstractString,
-              channels::AbstractDict,
-              blank::AbstractDataFrame,
-              pars::NamedTuple,
-              standards::Union{AbstractDict,AbstractVector},
-              glass::Union{AbstractDict,AbstractVector};
-              num=nothing,den=nothing,
-              transformation=nothing,
-              ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-              linecol="black",linestyle=:solid,
-              i=nothing,legend=:topleft,
-              cpalette=:viridis,
-              show_title=true,
-              titlefontsize::Real=10,
-              return_offset::Bool=false)
-    anchors = getAnchors(method,standards,glass)
-    return plot(samp,channels,blank,pars,anchors;
-                num=num,den=den,transformation=transformation,
-                ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
-                legend=legend,cpalette=cpalette,
-                show_title=show_title,
-                titlefontsize=titlefontsize,
-                return_offset=return_offset)
-end
-function plot(samp::Sample,
               channels::AbstractDict,
               blank::AbstractDataFrame,
               pars::NamedTuple,
