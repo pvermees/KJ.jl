@@ -1,4 +1,24 @@
-# ratios
+"""
+plot(samp::Sample,
+     channels::AbstractDict,
+     blank::AbstractDataFrame,
+     pars::NamedTuple,
+     anchors::AbstractDict;
+     num=nothing,den=nothing,
+     transformation=nothing,
+     ms=2,ma=0.5,
+     xlim=:auto,ylim=:auto,
+     linecol="black",
+     linestyle=:solid,
+     i=nothing,
+     legend=:topleft,
+     cpalette=:viridis,
+     show_title=true,
+     titlefontsize=10,
+     return_offset::Bool=false)
+
+Plot isotopic ratios and fit of a reference material.
+"""
 function plot(samp::Sample,
               channels::AbstractDict,
               blank::AbstractDataFrame,
@@ -18,42 +38,57 @@ function plot(samp::Sample,
               return_offset::Bool=false)
 
     channelvec = collect(values(channels))
-
-    pp = prep_plot(samp,channelvec;
-                   num=num,den=den,ylim=ylim,
-                   transformation=transformation)
-    p = plot(samp,pp.x,pp.y;
-             ms=ms,ma=ma,ylim=pp.ylim,
-             i=i,legend=legend,cpalette=cpalette,
-             show_title=show_title,
-             titlefontsize=titlefontsize,
-             xlab=pp.xlab,ylab=pp.ylab)
+    
+    p, offset = plot(samp;
+                     channels=channelvec,
+                     num=num,den=den,
+                     transformation=transformation,
+                     ms=ms,ma=ma,xlim=xlim,ylim=ylim,
+                     i=i,legend=legend,cpalette=cpalette,
+                     show_title=show_title,
+                     titlefontsize=titlefontsize,
+                     return_offset=true)
     
     if samp.group != "sample"
 
         plotFitted!(p,samp,blank,pars,channels,anchors;
                     num=num,den=den,transformation=transformation,
-                    offset=pp.offset,linecolor=linecol,linestyle=linestyle)
+                    offset=offset,linecolor=linecol,linestyle=linestyle)
         
     end
 
     plotFittedBlank!(p,samp,blank,channelvec;
                      num=num,den=den,
-                     transformation=transformation,offset=pp.offset,
+                     transformation=transformation,offset=offset,
                      linecolor=linecol,linestyle=linestyle)
 
     if return_offset
-        return p, pp.offset
+        return p, offset
     else
         return p
     end
 end
-# concentrations
+"""
+plot(samp::Sample,
+     blank::AbstractDataFrame,
+     pars::AbstractVector,
+     internal::AbstractString;
+     elements::AbstractDataFrame=channels2elements(samp),
+     num=nothing,den=nothing,
+     transformation=nothing,
+     ms=2,ma=0.5,xlim=:auto,ylim=:auto,
+     linecol="black",linestyle=:solid,i=nothing,
+     legend=:topleft,cpalette=:viridis,
+     show_title=true,
+     titlefontsize=10)
+
+Plot concentration data and fit of a reference material.
+"""
 function plot(samp::Sample,
               blank::AbstractDataFrame,
               pars::AbstractVector,
-              elements::AbstractDataFrame,
               internal::AbstractString;
+              elements::AbstractDataFrame=channels2elements(samp),
               num=nothing,den=nothing,
               transformation=nothing,
               ms=2,ma=0.5,xlim=:auto,ylim=:auto,
@@ -84,28 +119,24 @@ function plot(samp::Sample,
 
     return p
 end
-function plot(samp::Sample,
-              blank::AbstractDataFrame,
-              pars::AbstractVector,
-              internal::AbstractString;
-              num=nothing,den=nothing,
-              transformation=nothing,
-              ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-              linecol="black",linestyle=:solid,i=nothing,
-              legend=:topleft,
-              cpalette=:viridis,
-              show_title=true,
-              titlefontsize=10)
-    elements = channels2elements(samp)
-    return plot(samp,blank,pars,elements,internal;
-                num=num,den=den,
-                transformation=transformation,
-                ms=ms,ma=ma,xlim=xlim,ylim=ylim,
-                linecol=linecol,linestyle=linestyle,i=i,
-                legend=legend,cpalette=cpalette,
-                show_title=show_title,
-                titlefontsize=titlefontsize)
-end
+"""
+plot(samp::Sample;
+     channels::AbstractVector=getChannels(samp),
+     num::Union{Nothing,AbstractString}=nothing,
+     den::Union{Nothing,AbstractString}=nothing,
+     transformation::Union{Nothing,AbstractString}=nothing,
+     ms::Number=2,ma::Number=0.5,
+     xlim=:auto,ylim=:auto,
+     i::Union{Nothing,Integer}=nothing,
+     legend=:topleft,
+     cpalette=:viridis,
+     show_title=true,
+     titlefontsize=10,
+     padding::Number=0.1,
+     return_offset::Bool=false)
+
+Plot LA-ICP-MS data without a fit
+"""
 function plot(samp::Sample;
               channels::AbstractVector=getChannels(samp),
               num::Union{Nothing,AbstractString}=nothing,
@@ -121,33 +152,10 @@ function plot(samp::Sample;
               padding::Number=0.1,
               return_offset::Bool=false)
 
-    pp = prep_plot(samp,channels;
-                   num=num,den=den,ylim=ylim,
-                   transformation=transformation)
-    p = plot(samp,pp.x,pp.y;
-             ms=ms,ma=ma,xlim=xlim,ylim=pp.ylim,i=i,legend=legend,
-             cpalette=cpalette,show_title=show_title,
-             titlefontsize=titlefontsize,
-             padding=padding,xlab=pp.xlab,ylab=pp.ylab)
-    if return_offset
-        return p, pp.offset
-    else
-        return p
-    end
-end
-function plot(samp::Sample,
-              x::AbstractVector,
-              y::AbstractDataFrame;
-              xlab::AbstractString="x",
-              ylab::AbstractString="y",
-              ms::Number=2,ma::Number=0.5,
-              xlim=:auto,ylim=:auto,
-              i::Union{Nothing,Integer}=nothing,
-              legend=:topleft,
-              cpalette=:viridis,
-              show_title=true,
-              titlefontsize=10,
-              padding::Number=0.1)
+    x, y, xlab, ylab, offset = prep_plot(samp,channels;
+                                         num=num,den=den,ylim=ylim,
+                                         transformation=transformation)
+
     p = Plots.plot(xlimits=xlim,ylimits=ylim,legend=legend)
     channels = names(y)
     cols = Plots.palette(cpalette,length(channels))
@@ -187,7 +195,12 @@ function plot(samp::Sample,
                         linecolor="black",linestyle=:dot,label="")
         end
     end
-    return p
+    
+    if return_offset
+        return p, offset
+    else
+        return p
+    end
 end
 export plot
 
@@ -214,21 +227,9 @@ function prep_plot(samp::Sample,
         ylab = transformation*"("*ratsig*")"
     end
     ty, offset = transformeer(y,transformation)
-    if ylim == :auto && ratsig == "ratio"
-        ylim = get_ylim(ty,samp.swin)
-    end
-    return (x=x, y=ty, xlab=xlab, ylab=ylab, ylim=ylim, offset=offset)
+    return x, ty, xlab, ylab, offset
 end
 export prep_plot
-
-function get_ylim(dat::AbstractDataFrame,
-                  window::AbstractVector;
-                  padding::Number=0.1)
-    selection, x, y = windows2selection(window)
-    miny, maxy = extrema(Matrix(dat[selection,:]))
-    buffer = (maxy-miny)*padding
-    return (miny-buffer,maxy+buffer)
-end
 
 # minerals
 function plotFitted!(p,
