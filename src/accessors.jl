@@ -47,25 +47,50 @@ function getExt(format)
     end
 end
 
+"""
+getChannels(run::Vector{Sample})
+
+Get a vector of column headers of the MS data files
+"""
 function getChannels(run::Vector{Sample})
     return getChannels(run[1])
 end
+"""
+getChannels(samp::Sample)
+"""
 function getChannels(samp::Sample)
     return names(getSignals(samp))
 end
 export getChannels
 
+"""
+getSnames(run::Vector{Sample})
+
+Get a vector of sample names
+"""
 function getSnames(run::Vector{Sample})
     return getAttr(run,:sname)
 end
 export getSnames
 
+"""
+getGroups(run::Vector{Sample})
+
+Get the vector of group names (standards, samples, glasses).
+"""
 function getGroups(run::Vector{Sample})
     return getAttr(run,:group)
 end
 export getGroups
 
-function getIndicesInGroup(run::Vector{Sample},group::AbstractString)
+"""
+getIndicesInGroup(run::Vector{Sample},
+                  group::AbstractString)
+
+Get the indices of the samples belonging to 'group'
+"""
+function getIndicesInGroup(run::Vector{Sample},
+                           group::AbstractString)
     return findall(getGroups(myrun) .== group)
 end
 export getIndicesInGroup
@@ -81,71 +106,154 @@ function getAttr(run::Vector{Sample},
     return out
 end
 
+"""
+setGroup!(run::Vector{Sample},
+          selection::Vector{Int},
+          refmat::AbstractString)
+
+Change the group allocations for a selection of samples in a run
+"""
 function setGroup!(run::Vector{Sample},
                    selection::Vector{Int},
-                   refmat::AbstractString)
+                   group::AbstractString)
     for i in selection
-        run[i].group = refmat
+        run[i].group = group
     end
 end
+"""
+setGroup!(run::Vector{Sample},
+          prefix::AbstractString,
+          group::AbstractString)
+
+"""
 function setGroup!(run::Vector{Sample},
                    prefix::AbstractString,
-                   refmat::AbstractString)
+                   group::AbstractString)
     snames = getSnames(run)
     selection = findall(contains(prefix),snames)
-    setGroup!(run,selection,refmat)
+    setGroup!(run,selection,group)
 end
+"""
+setGroup!(run::Vector{Sample},
+          standards::AbstractDict)
+"""
 function setGroup!(run::Vector{Sample},
                    standards::AbstractDict)
-    for (refmat,prefix) in standards
-        setGroup!(run,prefix,refmat)
+    for (group,prefix) in standards
+        setGroup!(run,prefix,group)
     end
 end
-function setGroup!(run::Vector{Sample},refmat::AbstractString)
+"""
+setGroup!(run::Vector{Sample},
+          group::AbstractString)
+
+Assign all the samples to the same group
+"""
+function setGroup!(run::Vector{Sample},
+                   group::AbstractString)
     for sample in run
-        sample.group = refmat
+        sample.group = group
     end
 end
 export setGroup!
 
-function setBwin!(run::Vector{Sample},bwin::AbstractVector;seconds::Bool=false)
+"""
+setBwin!(run::Vector{Sample},
+         bwin::Vector{Tuple};
+         seconds::Bool=false)
+
+Set the blank windows of the entire run.
+"""
+function setBwin!(run::Vector{Sample},
+                  bwin::Vector{Tuple};
+                  seconds::Bool=false)
     for i in eachindex(run)
         setBwin!(run[i],bwin;seconds=seconds)
     end
 end
-function setBwin!(samp::Sample,bwin::AbstractVector;seconds::Bool=false)
+"""
+setBwin!(samp::Sample,
+         bwin::Vector{Tuple};
+         seconds::Bool=false)
+"""
+function setBwin!(samp::Sample,
+                  bwin::Vector{Tuple};
+                  seconds::Bool=false)
     samp.bwin = seconds ? time2window(samp,bwin) : bwin
 end
+"""
+setBwin!(run::Vector{Sample})
+
+Automatically set the blank windows for an entire run.
+"""
 function setBwin!(run::Vector{Sample})
     for i in eachindex(run)
         setBwin!(run[i])
     end
 end
+"""
+setBwin!(samp::Sample)
+
+Automatically set the blank window for a single sample.
+"""
 function setBwin!(samp::Sample)
     bwin = autoWindow(samp,blank=true)
     setBwin!(samp,bwin)
 end
 export setBwin!
 
-function setSwin!(run::Vector{Sample},swin::AbstractVector;seconds::Bool=false)
+"""
+setSwin!(run::Vector{Sample},
+         swin::Vector{Tuple};
+         seconds::Bool=false)
+
+Set the signal windows of an entire run
+"""
+function setSwin!(run::Vector{Sample},
+                  swin::Vector{Tuple};
+                  seconds::Bool=false)
     for i in eachindex(run)
         setSwin!(run[i],swin;seconds=seconds)
     end
 end
-function setSwin!(samp::Sample,swin::AbstractVector;seconds::Bool=false)
+"""
+setSwin!(samp::Sample,
+         swin::Vector{Tuple};
+         seconds::Bool=false)
+"""
+function setSwin!(samp::Sample,
+                  swin::Vector{Tuple};
+                  seconds::Bool=false)
     samp.swin = seconds ? time2window(samp,swin) : swin
 end
+"""
+setSwin!(run::Vector{Sample})
+
+Automatically set the signal windows for an entire run.
+"""
 function setSwin!(run::Vector{Sample})
     for samp in run
         setSwin!(samp)
     end
 end
+"""
+setSwin!(samp::Sample)
+
+Automatically set the signal window for a single sample.
+"""
 function setSwin!(samp::Sample)
     swin = autoWindow(samp,blank=false)
     setSwin!(samp,swin)
 end
 export setSwin!
 
+"""
+shift_windows!(run::Vector{Sample},
+               shift::Number=0.0)
+
+Shift the blank and signal windows to the left or the right
+by a specified number of integrations.
+"""
 function shift_windows!(run::Vector{Sample},
                         shift::Number=0.0)
     for samp in run
@@ -170,6 +278,11 @@ function shift_windows!(run::Vector{Sample},
 end
 export shift_windows!
 
+"""
+geti0(signals::AbstractDataFrame)
+
+Get the index of 'time zero', i.e. the onset of laser ablation.
+"""
 function geti0(signals::AbstractDataFrame)
     total = sum.(eachrow(signals))
     q = Statistics.quantile(total,[0.05,0.95])
@@ -180,22 +293,46 @@ function geti0(signals::AbstractDataFrame)
 end
 export geti0
 
+"""
+sett0!(run::Vector{Sample})
+
+Automatically set time zero, i.e. the onset of laser ablation.
+"""
 function sett0!(run::Vector{Sample})
     for samp in run
         sett0!(samp)
     end
 end
-function sett0!(run::Vector{Sample},t0::Number)
+"""
+sett0!(run::Vector{Sample},
+       t0::Number)
+
+Manually set time zero for an entire run.
+"""
+function sett0!(run::Vector{Sample},
+                t0::Number)
     for samp in run
         sett0!(samp,t0)
     end
 end
+"""
+sett0!(samp::Sample)
+
+Automatically set time zero for a single sample.
+"""
 function sett0!(samp::Sample)
     dat = getSignals(samp)
     i0 = geti0(dat)
     sett0!(samp,samp.dat[i0,1])
 end
-function sett0!(samp::Sample,t0::Number)
+"""
+sett0!(samp::Sample,
+       t0::Number)
+
+Manually set time zero for a single sample
+"""
+function sett0!(samp::Sample,
+                t0::Number)
     samp.t0 = t0
 end
 export sett0!

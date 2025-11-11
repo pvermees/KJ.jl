@@ -155,7 +155,9 @@ function plot(samp::Sample;
     x, y, xlab, ylab, offset = prep_plot(samp,channels;
                                          num=num,den=den,ylim=ylim,
                                          transformation=transformation)
-
+    if ylim == :auto
+        ylim = get_ylim(y,samp.swin)
+    end
     p = Plots.plot(xlimits=xlim,ylimits=ylim,legend=legend)
     channels = names(y)
     cols = Plots.palette(cpalette,length(channels))
@@ -176,12 +178,8 @@ function plot(samp::Sample;
         end
         Plots.title!(title;titlefontsize=titlefontsize)
     end
-    if ylim == :auto
-        dy_win = collect(Plots.ylims(p))
-    else
-        buffer = (ylim[2]-ylim[1])*padding/2
-        dy_win = (ylim[1] + buffer, ylim[2] - buffer)
-    end
+    buffer = (ylim[2]-ylim[1])*padding/2
+    dy_win = (ylim[1] + buffer, ylim[2] - buffer)
     # plot t0:
     Plots.plot!(p,[samp.t0,samp.t0],collect(dy_win[[1,2]]);
                 linecolor="grey",linestyle=:dot,label="")
@@ -203,6 +201,15 @@ function plot(samp::Sample;
     end
 end
 export plot
+
+function get_ylim(dat::AbstractDataFrame,
+                  window::AbstractVector;
+                  padding::Number=0.1)
+    selection, x, y = windows2selection(window)
+    miny, maxy = extrema(Matrix(dat[selection,:]))
+    buffer = (maxy-miny)*padding
+    return (miny-buffer,maxy+buffer)
+end
 
 function prep_plot(samp::Sample,
                    channels::AbstractVector;
