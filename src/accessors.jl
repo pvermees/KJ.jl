@@ -375,6 +375,14 @@ function get_glass_anchor(method::AbstractString,
     return (y=y)
 end
 
+"""
+getAnchors(method::AbstractString,
+           standards::AbstractVector,
+           glass::AbstractVector)
+
+Returns a Dict with named tuple containing
+x0, y0, y1, x or y for the standards and glasses
+"""
 function getAnchors(method::AbstractString,
                     standards::AbstractVector,
                     glass::AbstractVector)
@@ -382,6 +390,11 @@ function getAnchors(method::AbstractString,
     Sanchors = getStandardAnchors(method,standards)
     return merge(Ganchors,Sanchors)
 end
+"""
+getAnchors(method::AbstractString,
+           standards::AbstractDict,
+           glass::AbstractDict)
+"""
 function getAnchors(method::AbstractString,
                     standards::AbstractDict,
                     glass::AbstractDict)
@@ -389,8 +402,15 @@ function getAnchors(method::AbstractString,
 end
 export getAnchors
 
+"""
+getStandardAnchors(method::AbstractString,
+                   refmats::AbstractVector)
+
+Returns a Dict with named tuple containing
+x0, y0, y1, x or y for the age standards
+"""
 function getStandardAnchors(method::AbstractString,
-                           refmats::AbstractVector)
+                            refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
         t = get(_KJ["refmat"][method],refmat).type
@@ -402,23 +422,37 @@ function getStandardAnchors(method::AbstractString,
     end
     return out
 end
+"""
+getStandardAnchors(method::AbstractString,
+                   refmats::AbstractDict)
+"""
 function getStandardAnchors(method::AbstractString,
-                           refmats::AbstractDict)
+                            refmats::AbstractDict)
     return getStandardAnchors(method,collect(keys(refmats)))
 end
 export getStandardAnchors
 
+"""
+getGlassAnchors(method::AbstractString,
+                refmats::AbstractVector)
+
+Returns a Dict with named tuple containing
+x0, y0, y1, x or y for the reference glasses
+"""
 function getGlassAnchors(method::AbstractString,
-                         refmats::AbstractVector,
-                         glass::Bool=false)
+                         refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
         out[refmat] = get_glass_anchor(method,refmat)
     end
     return out
 end
+"""
+getGlassAnchors(method::AbstractString,
+                refmats::AbstractDict)
+"""
 function getGlassAnchors(method::AbstractString,
-                                refmats::AbstractDict)
+                         refmats::AbstractDict)
     return getGlassAnchors(method,collect(keys(refmats)))
 end
 export getGlassAnchors
@@ -427,23 +461,72 @@ function getSignals(dat::AbstractDataFrame)
     tail = count(x -> x in ["outlier","t","T","x","y"], names(dat))
     return dat[:,2:end-tail]
 end
+"""
+getSignals(samp::Sample)
+
+Returns a dataframe with signals (no time, coordinates or outliers)
+"""
 function getSignals(samp::Sample)
     return getSignals(samp.dat)
 end
-function getSignals(samp::Sample,channels::AbstractDict)
+"""
+getSignals(samp::Sample,
+           channels::AbstractDict)
+"""
+function getSignals(samp::Sample,
+                    channels::AbstractDict)
     return samp.dat[:,collect(values(channels))]
 end
 export getSignals
 
+"""
+getPDd(method::AbstractString)
+
+Get the names of the parent, daughter and sister channel
+"""
 function getPDd(method::AbstractString)
     PDd = get(_KJ["methods"],method)
     return PDd.P, PDd.D, PDd.d
 end
 export getPDd
 
-function getInternal(mineral::AbstractString,channel::AbstractString)
+"""
+getInternal(mineral::AbstractString,
+            channel::AbstractString)
+
+Get a tuple with the channel and its reference concentration
+"""
+function getInternal(mineral::AbstractString,
+                     channel::AbstractString)
     element = channel2element(channel,collect(keys(_KJ["nuclides"])))
     concentration = get(_KJ["stoichiometry"],mineral)[element[1]] * 1e5
     return (channel,concentration)
 end
 export getInternal
+
+function get_drift(Pm::AbstractVector,
+                   t::AbstractVector,
+                   pars::NamedTuple)
+    return get_drift(Pm,t,pars.drift;
+                     PAcutoff=pars.PAcutoff,
+                     adrift=pars.adrift)
+end
+function get_drift(Pm::AbstractVector,
+                   t::AbstractVector,
+                   drift::AbstractVector;
+                   PAcutoff=nothing,adrift=drift)
+    if isnothing(PAcutoff)
+        ft = polyFac(drift,t)
+    else
+        analog = Pm .> PAcutoff
+        if all(analog)
+            ft = polyFac(adrift,t)
+        elseif all(.!analog)
+            ft = polyFac(drift,t)
+        else
+            ft = polyFac(drift,t)
+            ft[analog] = polyFac(adrift,t)[analog]
+        end
+    end
+    return ft
+end
