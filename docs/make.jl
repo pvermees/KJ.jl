@@ -4,7 +4,11 @@ using KJ
 makedocs(
     sitename = "KJ",
     format = Documenter.HTML(),
-    modules = [KJ]
+    modules = [KJ],
+    pages    = [
+        "Home" => "index.md",
+        "API"  => "api.md"
+    ],
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.

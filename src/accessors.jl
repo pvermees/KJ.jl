@@ -1,17 +1,11 @@
-"""
-getKJctrl
+""" 
+getKJctrl()
 
 Access the control parameters of a TUI session
 
 # Returns
 
 A dictionary with control parameters
-
-# Examples
-
-See [`KJ`](@ref).
-
-See also [`setKJctrl!`](@ref).
 """
 function getKJctrl()
     return _KJ["ctrl"]
@@ -19,7 +13,7 @@ end
 export getKJctrl
 
 """
-setKJctrl
+setKJctrl!(ctrl::AbstractDict)
 
 Set the control parameters of a TUI session
 
@@ -31,8 +25,6 @@ ctrl["transformation"] = "log"
 setKJctrl!(ctrl)
 TUI()
 ```
-
-See also [`getKJctrl`](@ref).
 """
 function setKJctrl!(ctrl::AbstractDict)
     _KJ["ctrl"] = ctrl
@@ -120,6 +112,7 @@ function setGroup!(run::Vector{Sample},
         run[i].group = group
     end
 end
+
 """
 setGroup!(run::Vector{Sample},
           prefix::AbstractString,
@@ -133,6 +126,7 @@ function setGroup!(run::Vector{Sample},
     selection = findall(contains(prefix),snames)
     setGroup!(run,selection,group)
 end
+
 """
 setGroup!(run::Vector{Sample},
           standards::AbstractDict)
@@ -143,6 +137,7 @@ function setGroup!(run::Vector{Sample},
         setGroup!(run,prefix,group)
     end
 end
+
 """
 setGroup!(run::Vector{Sample},
           group::AbstractString)
@@ -159,28 +154,31 @@ export setGroup!
 
 """
 setBwin!(run::Vector{Sample},
-         bwin::Vector{Tuple};
+         bwin::AbstractVector;
          seconds::Bool=false)
 
 Set the blank windows of the entire run.
+bwin is a vector of tuples
 """
 function setBwin!(run::Vector{Sample},
-                  bwin::Vector{Tuple};
+                  bwin::AbstractVector;
                   seconds::Bool=false)
     for i in eachindex(run)
         setBwin!(run[i],bwin;seconds=seconds)
     end
 end
+
 """
 setBwin!(samp::Sample,
-         bwin::Vector{Tuple};
+         bwin::AbstractVector;
          seconds::Bool=false)
 """
 function setBwin!(samp::Sample,
-                  bwin::Vector{Tuple};
+                  bwin::AbstractVector;
                   seconds::Bool=false)
     samp.bwin = seconds ? time2window(samp,bwin) : bwin
 end
+
 """
 setBwin!(run::Vector{Sample})
 
@@ -191,6 +189,7 @@ function setBwin!(run::Vector{Sample})
         setBwin!(run[i])
     end
 end
+
 """
 setBwin!(samp::Sample)
 
@@ -204,28 +203,31 @@ export setBwin!
 
 """
 setSwin!(run::Vector{Sample},
-         swin::Vector{Tuple};
+         swin::AbstractVector;
          seconds::Bool=false)
 
-Set the signal windows of an entire run
+Set the signal windows of an entire run.
+swin is a vector of tuples
 """
 function setSwin!(run::Vector{Sample},
-                  swin::Vector{Tuple};
+                  swin::AbstractVector;
                   seconds::Bool=false)
     for i in eachindex(run)
         setSwin!(run[i],swin;seconds=seconds)
     end
 end
+
 """
 setSwin!(samp::Sample,
-         swin::Vector{Tuple};
+         swin::AbstractVector;
          seconds::Bool=false)
 """
 function setSwin!(samp::Sample,
-                  swin::Vector{Tuple};
+                  swin::AbstractVector;
                   seconds::Bool=false)
     samp.swin = seconds ? time2window(samp,swin) : swin
 end
+
 """
 setSwin!(run::Vector{Sample})
 
@@ -236,6 +238,7 @@ function setSwin!(run::Vector{Sample})
         setSwin!(samp)
     end
 end
+
 """
 setSwin!(samp::Sample)
 
@@ -303,6 +306,7 @@ function sett0!(run::Vector{Sample})
         sett0!(samp)
     end
 end
+
 """
 sett0!(run::Vector{Sample},
        t0::Number)
@@ -315,6 +319,7 @@ function sett0!(run::Vector{Sample},
         sett0!(samp,t0)
     end
 end
+
 """
 sett0!(samp::Sample)
 
@@ -325,6 +330,7 @@ function sett0!(samp::Sample)
     i0 = geti0(dat)
     sett0!(samp,samp.dat[i0,1])
 end
+
 """
 sett0!(samp::Sample,
        t0::Number)
@@ -354,19 +360,23 @@ function get_isochron_anchor(method::AbstractString,
     y0 = get(_KJ["refmat"][method],refmat).y0[1]
     return (x0=x0,y0=y0,y1=y1)
 end
+
 function is_isochron_anchor(anchor::NamedTuple)
     return all(in(keys(anchor)), [:x0,:y0,:y1])
 end
+
 function get_point_anchor(method::AbstractString,
                           refmat::AbstractString)
     x = get(_KJ["refmat"][method],refmat).tx[1]
     y = get(_KJ["refmat"][method],refmat).y0[1]
     return (x=x,y=y)
 end
+
 function is_point_anchor(anchor::NamedTuple)
     k = keys(anchor)
     return all(in(keys(anchor)), [:x,:y])
 end
+
 function get_glass_anchor(method::AbstractString,
                           refmat::AbstractString)
     P, D, d = getPDd(method)
@@ -390,6 +400,7 @@ function getAnchors(method::AbstractString,
     Sanchors = getStandardAnchors(method,standards)
     return merge(Ganchors,Sanchors)
 end
+
 """
 getAnchors(method::AbstractString,
            standards::AbstractDict,
@@ -422,6 +433,7 @@ function getStandardAnchors(method::AbstractString,
     end
     return out
 end
+
 """
 getStandardAnchors(method::AbstractString,
                    refmats::AbstractDict)
@@ -447,6 +459,7 @@ function getGlassAnchors(method::AbstractString,
     end
     return out
 end
+
 """
 getGlassAnchors(method::AbstractString,
                 refmats::AbstractDict)
@@ -461,6 +474,7 @@ function getSignals(dat::AbstractDataFrame)
     tail = count(x -> x in ["outlier","t","T","x","y"], names(dat))
     return dat[:,2:end-tail]
 end
+
 """
 getSignals(samp::Sample)
 
@@ -469,6 +483,7 @@ Returns a dataframe with signals (no time, coordinates or outliers)
 function getSignals(samp::Sample)
     return getSignals(samp.dat)
 end
+
 """
 getSignals(samp::Sample,
            channels::AbstractDict)
@@ -511,6 +526,7 @@ function get_drift(Pm::AbstractVector,
                      PAcutoff=pars.PAcutoff,
                      adrift=pars.adrift)
 end
+
 function get_drift(Pm::AbstractVector,
                    t::AbstractVector,
                    drift::AbstractVector;

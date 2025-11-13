@@ -1,3 +1,8 @@
+"""
+KJ.jl
+
+A data reduction package for LA-ICP-MS
+"""
 module KJ
 
 using Dates, DataFrames, Printf, Infiltrator, LinearAlgebra, ForwardDiff
