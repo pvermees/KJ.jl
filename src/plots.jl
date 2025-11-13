@@ -236,9 +236,23 @@ function prep_plot(samp::Sample,
     ty, offset = transformeer(y,transformation)
     return x, ty, xlab, ylab, offset
 end
-export prep_plot
 
-# minerals
+"""
+plotFitted!(p,
+            samp::Sample,
+            blank::AbstractDataFrame,
+            pars::NamedTuple,
+            channels::AbstractDict,
+            anchors::AbstractDict;
+            num::Union{Nothing,AbstractString}=nothing,
+            den::Union{Nothing,AbstractString}=nothing,
+            transformation::Union{Nothing,AbstractString}=nothing,
+            offset::Union{Nothing,Number}=nothing,
+            linecolor="black",
+            linestyle=:solid)
+
+Add model fit to an existing KJ data plot.
+"""
 function plotFitted!(p,
                      samp::Sample,
                      blank::AbstractDataFrame,
@@ -258,7 +272,22 @@ function plotFitted!(p,
                 offset=offset,linecolor=linecolor,
                 linestyle=linestyle)
 end
-# concentrations
+"""
+plotFitted!(p,
+            samp::Sample,
+            blank::AbstractDataFrame,
+            pars::AbstractVector,
+            elements::AbstractDataFrame,
+            internal::AbstractString;
+            num::Union{Nothing,AbstractString}=nothing,
+            den::Union{Nothing,AbstractString}=nothing,
+            transformation::Union{Nothing,AbstractString}=nothing,
+            offset::Union{Nothing,Number}=nothing,
+            linecolor="black",
+            linestyle=:solid)
+
+For concentration data
+"""
 function plotFitted!(p,
                      samp::Sample,
                      blank::AbstractDataFrame,
@@ -298,7 +327,19 @@ function plotFitted!(p,
 end
 export plotFitted!
 
-# minerals
+"""
+plotFittedBlank!(p,
+                 samp::Sample,
+                 blank::AbstractDataFrame,
+                 channels::AbstractVector;
+                 num::Union{Nothing,AbstractString}=nothing,
+                 den::Union{Nothing,AbstractString}=nothing,
+                 transformation::Union{Nothing,AbstractString}=nothing,
+                 offset::Union{Nothing,Number}=0.0,
+                 linecolor="black",
+                 linestyle::Symbol=:solid)
+For geochronology
+"""
 function plotFittedBlank!(p,
                           samp::Sample,
                           blank::AbstractDataFrame,
@@ -315,7 +356,19 @@ function plotFittedBlank!(p,
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
-# concentrations
+"""
+plotFittedBlank!(p,
+                 samp::Sample,
+                 blank::AbstractDataFrame;
+                 num::Union{Nothing,AbstractString}=nothing,
+                 den::Union{Nothing,AbstractString}=nothing,
+                 transformation::Union{Nothing,AbstractString}=nothing,
+                 offset::Union{Nothing,Number}=0.0,
+                 linecolor::AbstractString="black",
+                 linestyle::Symbol=:solid)
+
+For concentrations.
+"""
 function plotFittedBlank!(p,
                           samp::Sample,
                           blank::AbstractDataFrame;

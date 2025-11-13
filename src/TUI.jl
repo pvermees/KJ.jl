@@ -118,10 +118,20 @@ function dispatch!(ctrl::AbstractDict;
     end
 end
 
+"""
+KJtree!(tree::AbstractDict)
+
+Replace the internal structure of TUI tree, including all the KJ settings.
+"""
 function KJtree!(tree::AbstractDict)
     _KJ["tree"] = tree
 end
 export KJtree!
+"""
+KJtree()
+
+Returns the internal structure of TUI tree, including all the KJ settings.
+"""
 function KJtree()
     return _KJ["tree"]
 end

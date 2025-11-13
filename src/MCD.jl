@@ -152,4 +152,3 @@ function fast_mcd(X::AbstractMatrix{T}; h::Int=0, num_starts::Int=500, max_c_ste
         support_indices = best_indices
     )
 end
-export fast_mcd

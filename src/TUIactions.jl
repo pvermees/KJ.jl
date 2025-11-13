@@ -35,11 +35,6 @@ function TUIinit()
     )
 end
 
-function TUI(key::AbstractString)
-    return _KJ["ctrl"][key]
-end
-export TUI
-
 function TUIwelcome()
     version = string(pkgversion(@__MODULE__))
     title = " KJ "*version*" \n"
@@ -860,7 +855,6 @@ function TUInternochron(ctrl::AbstractDict)
     display(p)
     return nothing
 end
-export TUInternochron
 
 function internochron2csv(ctrl::AbstractDict,
                           fname::AbstractString)
@@ -901,7 +895,6 @@ function TUItimeresolved2csv(ctrl::AbstractDict,
     end
     return "x"
 end
-export TUItimeresolved2csv
 
 function TUImapper(ctrl::AbstractDict)
     TUImap(ctrl)
@@ -920,7 +913,6 @@ function TUImap(ctrl::AbstractDict)
     display(p)
     return nothing
 end
-export TUImap
 
 function TUIchooseMapColumn!(ctrl::AbstractDict,
                              response::AbstractString)

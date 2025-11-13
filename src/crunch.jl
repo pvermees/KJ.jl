@@ -507,7 +507,7 @@ function predict(samp::Sample,
         sig = getSignals(dat)
         Xm = sig[:,Not(internal)]
         Sm = sig[:,internal]
-        concs p= elements2concs(elements,samp.group)
+        concs = elements2concs(elements,samp.group)
         R = collect((concs[:,Not(internal)]./concs[:,internal])[1,:])
         bt = polyVal(blank,dat.t)
         bXt = bt[:,Not(internal)]

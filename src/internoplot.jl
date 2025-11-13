@@ -1,3 +1,18 @@
+"""
+internoplot(samp::Sample,
+            channels::AbstractDict,
+            blank::AbstractDataFrame,
+            pars::NamedTuple;
+            method::Union{AbstractString,Nothing}=nothing,
+            legend::Bool = false,
+            nsigma::Integer = 2,
+            i::Union{Integer,Nothing}=nothing,
+            show_title::Bool=true,
+            titlefontsize::Integer=10,
+            plot_options...)
+
+Plot an internal isochron
+"""
 function internoplot(samp::Sample,
                      channels::AbstractDict,
                      blank::AbstractDataFrame,
@@ -47,6 +62,21 @@ function internoplot(samp::Sample,
     end
     return p
 end
+"""
+internoplot(x0::AbstractFloat,
+            y0::AbstractFloat,
+            E::Matrix,
+            Phat::AbstractVector,
+            Dhat::AbstractVector,
+            dhat::AbstractVector;
+            xlim::AbstractVector = [0,1.05*maximum([Phat./Dhat;x0+sqrt(E[1,1])])],
+            ylim::AbstractVector = [0,1.05*maximum([dhat./Dhat;y0+sqrt(E[2,2])])],
+            legend::Bool = false,
+            nsigma::Integer = 2,
+            xlab::AbstractString = "P/D",
+            ylab::AbstractString = "d/D",
+            plot_options...)
+"""
 function internoplot(x0::AbstractFloat,
                      y0::AbstractFloat,
                      E::Matrix,

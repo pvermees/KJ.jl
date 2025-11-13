@@ -1,4 +1,17 @@
-# two-step isotope fractionation
+"""
+fractionation(run::Vector{Sample},
+              method::AbstractString,
+              blank::AbstractDataFrame,
+              channels::AbstractDict,
+              standards::AbstractDict,
+              glass::AbstractDict;
+              ndrift::Integer=1,
+              ndown::Integer=0,
+              PAcutoff=nothing,
+              verbose::Bool=false)
+
+Two-step isotope fractionation correction
+"""
 function fractionation(run::Vector{Sample},
                        method::AbstractString,
                        blank::AbstractDataFrame,
@@ -16,7 +29,19 @@ function fractionation(run::Vector{Sample},
                          PAcutoff=PAcutoff,
                          verbose=verbose)
 end
-# one-step isotope fractionation using mineral standards
+"""
+fractionation(run::Vector{Sample},
+              method::AbstractString,
+              blank::AbstractDataFrame,
+              channels::AbstractDict,
+              standards::AbstractDict,
+              mf::Union{Real,Nothing};
+              ndrift::Integer=1,
+              ndown::Integer=0,
+              PAcutoff=nothing,
+              verbose::Bool=false)
+One-step isotope fractionation correction using mineral standards
+"""
 function fractionation(run::Vector{Sample},
                        method::AbstractString,
                        blank::AbstractDataFrame,
@@ -44,7 +69,15 @@ function fractionation(run::Vector{Sample},
                  PAcutoff=PAcutoff,verbose=verbose)
 
 end
-# isotopic mass fractionation using glass
+"""
+fractionation(run::Vector{Sample},
+              method::AbstractString,
+              blank::AbstractDataFrame,
+              channels::AbstractDict,
+              glass::AbstractDict;
+              verbose::Bool=false)
+Mass fractionation correction using glass
+"""
 function fractionation(run::Vector{Sample},
                        method::AbstractString,
                        blank::AbstractDataFrame,
@@ -55,7 +88,13 @@ function fractionation(run::Vector{Sample},
     dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
     return SSfit([0.0],bD,bd,dats,covs,channels,anchors;verbose=verbose)
 end
-# for concentration measurements:
+"""
+fractionation(run::Vector{Sample},
+              blank::AbstractDataFrame,
+              internal::Tuple,
+              glass::AbstractDict)
+For concentration measurements
+"""
 function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        internal::Tuple,
@@ -63,6 +102,13 @@ function fractionation(run::Vector{Sample},
     elements = channels2elements(run)
     return fractionation(run,blank,elements,internal,glass)
 end
+"""
+fractionation(run::Vector{Sample},
+              blank::AbstractDataFrame,
+              elements::AbstractDataFrame,
+              internal::Tuple,
+              glass::AbstractDict)
+"""
 function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        elements::AbstractDataFrame,

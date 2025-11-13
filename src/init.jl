@@ -12,7 +12,6 @@ function init_KJ!()
     _KJ["ctrl"] = nothing
     _KJ["extensions"] = nothing
 end
-export init_KJ!
 
 function init_methods(csv::AbstractString=joinpath(@__DIR__,"../settings/methods.csv"))
     df = CSV.read(csv, DataFrame)
@@ -26,7 +25,6 @@ function init_methods(csv::AbstractString=joinpath(@__DIR__,"../settings/methods
     end
     return out
 end
-export init_methods
 
 function init_lambdas(csv::AbstractString=joinpath(@__DIR__,"../settings/lambda.csv"))
     tab = CSV.read(csv, DataFrame)
@@ -36,7 +34,6 @@ function init_lambdas(csv::AbstractString=joinpath(@__DIR__,"../settings/lambda.
     end
     return out
 end
-export init_lambdas
 
 function init_iratios(csv::AbstractString=joinpath(@__DIR__,"../settings/iratio.csv"))
     tab = CSV.read(csv, DataFrame)
@@ -53,7 +50,6 @@ function init_iratios(csv::AbstractString=joinpath(@__DIR__,"../settings/iratio.
     end
     return out
 end
-export init_iratios
 
 function init_nuclides(csv::AbstractString=joinpath(@__DIR__,"../settings/nuclides.csv"))
     tab = CSV.read(csv, DataFrame)
@@ -65,7 +61,6 @@ function init_nuclides(csv::AbstractString=joinpath(@__DIR__,"../settings/nuclid
     end
     return out
 end
-export init_nuclides
 
 function init_stoichiometry(csv::AbstractString=joinpath(@__DIR__,"../settings/stoichiometry.csv"))
     tab = CSV.read(csv, DataFrame)
@@ -81,12 +76,10 @@ function init_stoichiometry(csv::AbstractString=joinpath(@__DIR__,"../settings/s
     end
     return out
 end
-export init_stoichiometry
 
 function init_stoichiometry!(csv::AbstractString=joinpath(@__DIR__,"../settings/stoichiometry.csv"))
     _KJ["stoichiometry"] = init_stoichiometry(csv)
 end
-export init_stoichiometry!
 
 function init_glass(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv"))
     tab = CSV.read(csv, DataFrame)
@@ -96,12 +89,10 @@ function init_glass(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv
     end
     return out
 end
-export init_glass
 
 function init_glass!(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv"))
     _KJ["glass"] = init_glass(csv)
 end
-export init_glass!
 
 function init_referenceMaterials(csv::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"))
     tab = CSV.read(csv, DataFrame)
@@ -118,9 +109,7 @@ function init_referenceMaterials(csv::AbstractString=joinpath(@__DIR__,"../setti
     end
     return out
 end
-export init_referenceMaterials
 
 function init_referenceMaterials!(csv::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"))
     _KJ["refmat"] = init_referenceMaterials(csv)
 end
-export init_referenceMaterials!
