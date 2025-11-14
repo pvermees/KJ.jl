@@ -1,7 +1,10 @@
-push!(LOAD_PATH, "../src")
-
 using Documenter, KJ
 
 makedocs(
-    sitename="KJ.jl"
+    ;
+    modules = [KJ],
+    sitename="KJ.jl",
+    pages = [
+        "Home" => "index.md",
+    ],
 )
