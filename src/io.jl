@@ -1,3 +1,10 @@
+"""
+load(dname::AbstractString;
+     format::AbstractString="Agilent",
+     head2name::Bool=true)
+
+Load MS data files
+"""
 function load(dname::AbstractString;
               format::AbstractString="Agilent",
               head2name::Bool=true)
@@ -32,6 +39,13 @@ function load(dname::AbstractString;
     end
     return sortedsamples
 end
+"""
+load(dfile::AbstractString,
+     tfile::AbstractString;
+     format::AbstractString="Agilent")
+
+Load and parse an ICP-MS file using time stamps
+"""
 function load(dfile::AbstractString,
               tfile::AbstractString;
               format::AbstractString="Agilent")
@@ -60,7 +74,6 @@ function readFile(fname::AbstractString;
     dat, sname, datetime = readDat(fname,format,head2name)
     return io_df2sample(dat,sname,datetime)
 end
-export readFile
 
 function readDat(fname::AbstractString,
                  format::AbstractString="Agilent",
@@ -89,7 +102,6 @@ function readDat(fname::AbstractString,
     select!(dat, [k for (k,v) in pairs(eachcol(dat)) if !all(ismissing, v)])
     return dat, sname, datetime
 end
-export readDat
 
 function readAgilent(fname::AbstractString,
                      head2name::Bool=true)

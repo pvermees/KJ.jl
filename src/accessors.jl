@@ -1,43 +1,23 @@
-"""
-getKJctrl
+export getKJctrl
+""" 
+getKJctrl()
 
 Access the control parameters of a TUI session
-
-# Returns
-
-A dictionary with control parameters
-
-# Examples
-
-See [`KJ`](@ref).
-
-See also [`setKJctrl!`](@ref).
 """
 function getKJctrl()
     return _KJ["ctrl"]
 end
-export getKJctrl
 
+export setKJctrl!
 """
-setKJctrl
+setKJctrl!(ctrl::AbstractDict)
 
 Set the control parameters of a TUI session
-
-# Examples
-```julia
-TUI(logbook="logs/test.log")
-ctrl = getKJctrl()
-ctrl["transformation"] = "log"
-setKJctrl!(ctrl)
-TUI()
 ```
-
-See also [`getKJctrl`](@ref).
 """
 function setKJctrl!(ctrl::AbstractDict)
     _KJ["ctrl"] = ctrl
 end
-export setKJctrl!
 
 function getExt(format)
     if format in ["Agilent","ThermoFisher"]
@@ -47,25 +27,50 @@ function getExt(format)
     end
 end
 
+"""
+getChannels(run::Vector{Sample})
+
+Get a vector of column headers of the MS data files
+"""
 function getChannels(run::Vector{Sample})
     return getChannels(run[1])
 end
+"""
+getChannels(samp::Sample)
+"""
 function getChannels(samp::Sample)
     return names(getSignals(samp))
 end
 export getChannels
 
+"""
+getSnames(run::Vector{Sample})
+
+Get a vector of sample names
+"""
 function getSnames(run::Vector{Sample})
     return getAttr(run,:sname)
 end
 export getSnames
 
+"""
+getGroups(run::Vector{Sample})
+
+Get the vector of group names (standards, samples, glasses).
+"""
 function getGroups(run::Vector{Sample})
     return getAttr(run,:group)
 end
 export getGroups
 
-function getIndicesInGroup(run::Vector{Sample},group::AbstractString)
+"""
+getIndicesInGroup(run::Vector{Sample},
+                  group::AbstractString)
+
+Get the indices of the samples belonging to 'group'
+"""
+function getIndicesInGroup(run::Vector{Sample},
+                           group::AbstractString)
     return findall(getGroups(myrun) .== group)
 end
 export getIndicesInGroup
@@ -81,71 +86,165 @@ function getAttr(run::Vector{Sample},
     return out
 end
 
+"""
+setGroup!(run::Vector{Sample},
+          selection::Vector{Int},
+          refmat::AbstractString)
+
+Change the group allocations for a selection of samples in a run
+"""
 function setGroup!(run::Vector{Sample},
                    selection::Vector{Int},
-                   refmat::AbstractString)
+                   group::AbstractString)
     for i in selection
-        run[i].group = refmat
+        run[i].group = group
     end
 end
+
+"""
+setGroup!(run::Vector{Sample},
+          prefix::AbstractString,
+          group::AbstractString)
+
+"""
 function setGroup!(run::Vector{Sample},
                    prefix::AbstractString,
-                   refmat::AbstractString)
+                   group::AbstractString)
     snames = getSnames(run)
     selection = findall(contains(prefix),snames)
-    setGroup!(run,selection,refmat)
+    setGroup!(run,selection,group)
 end
+
+"""
+setGroup!(run::Vector{Sample},
+          standards::AbstractDict)
+"""
 function setGroup!(run::Vector{Sample},
                    standards::AbstractDict)
-    for (refmat,prefix) in standards
-        setGroup!(run,prefix,refmat)
+    for (group,prefix) in standards
+        setGroup!(run,prefix,group)
     end
 end
-function setGroup!(run::Vector{Sample},refmat::AbstractString)
+
+"""
+setGroup!(run::Vector{Sample},
+          group::AbstractString)
+
+Assign all the samples to the same group
+"""
+function setGroup!(run::Vector{Sample},
+                   group::AbstractString)
     for sample in run
-        sample.group = refmat
+        sample.group = group
     end
 end
 export setGroup!
 
-function setBwin!(run::Vector{Sample},bwin::AbstractVector;seconds::Bool=false)
+"""
+setBwin!(run::Vector{Sample},
+         bwin::AbstractVector;
+         seconds::Bool=false)
+
+Set the blank windows of the entire run.
+bwin is a vector of tuples
+"""
+function setBwin!(run::Vector{Sample},
+                  bwin::AbstractVector;
+                  seconds::Bool=false)
     for i in eachindex(run)
         setBwin!(run[i],bwin;seconds=seconds)
     end
 end
-function setBwin!(samp::Sample,bwin::AbstractVector;seconds::Bool=false)
+
+"""
+setBwin!(samp::Sample,
+         bwin::AbstractVector;
+         seconds::Bool=false)
+"""
+function setBwin!(samp::Sample,
+                  bwin::AbstractVector;
+                  seconds::Bool=false)
     samp.bwin = seconds ? time2window(samp,bwin) : bwin
 end
+
+"""
+setBwin!(run::Vector{Sample})
+
+Automatically set the blank windows for an entire run.
+"""
 function setBwin!(run::Vector{Sample})
     for i in eachindex(run)
         setBwin!(run[i])
     end
 end
+
+"""
+setBwin!(samp::Sample)
+
+Automatically set the blank window for a single sample.
+"""
 function setBwin!(samp::Sample)
     bwin = autoWindow(samp,blank=true)
     setBwin!(samp,bwin)
 end
 export setBwin!
 
-function setSwin!(run::Vector{Sample},swin::AbstractVector;seconds::Bool=false)
+"""
+setSwin!(run::Vector{Sample},
+         swin::AbstractVector;
+         seconds::Bool=false)
+
+Set the signal windows of an entire run.
+swin is a vector of tuples
+"""
+function setSwin!(run::Vector{Sample},
+                  swin::AbstractVector;
+                  seconds::Bool=false)
     for i in eachindex(run)
         setSwin!(run[i],swin;seconds=seconds)
     end
 end
-function setSwin!(samp::Sample,swin::AbstractVector;seconds::Bool=false)
+
+"""
+setSwin!(samp::Sample,
+         swin::AbstractVector;
+         seconds::Bool=false)
+"""
+function setSwin!(samp::Sample,
+                  swin::AbstractVector;
+                  seconds::Bool=false)
     samp.swin = seconds ? time2window(samp,swin) : swin
 end
+
+"""
+setSwin!(run::Vector{Sample})
+
+Automatically set the signal windows for an entire run.
+"""
 function setSwin!(run::Vector{Sample})
     for samp in run
         setSwin!(samp)
     end
 end
+
+"""
+setSwin!(samp::Sample)
+
+Automatically set the signal window for a single sample.
+"""
 function setSwin!(samp::Sample)
     swin = autoWindow(samp,blank=false)
     setSwin!(samp,swin)
 end
 export setSwin!
 
+"""
+shift_windows!(run::Vector{Sample},
+               shift::Number=0.0)
+
+Shift the blank and signal windows to the left or the right
+by a specified number of integrations.
+"""
 function shift_windows!(run::Vector{Sample},
                         shift::Number=0.0)
     for samp in run
@@ -170,6 +269,11 @@ function shift_windows!(run::Vector{Sample},
 end
 export shift_windows!
 
+"""
+geti0(signals::AbstractDataFrame)
+
+Get the index of 'time zero', i.e. the onset of laser ablation.
+"""
 function geti0(signals::AbstractDataFrame)
     total = sum.(eachrow(signals))
     q = Statistics.quantile(total,[0.05,0.95])
@@ -180,22 +284,49 @@ function geti0(signals::AbstractDataFrame)
 end
 export geti0
 
+"""
+sett0!(run::Vector{Sample})
+
+Automatically set time zero, i.e. the onset of laser ablation.
+"""
 function sett0!(run::Vector{Sample})
     for samp in run
         sett0!(samp)
     end
 end
-function sett0!(run::Vector{Sample},t0::Number)
+
+"""
+sett0!(run::Vector{Sample},
+       t0::Number)
+
+Manually set time zero for an entire run.
+"""
+function sett0!(run::Vector{Sample},
+                t0::Number)
     for samp in run
         sett0!(samp,t0)
     end
 end
+
+"""
+sett0!(samp::Sample)
+
+Automatically set time zero for a single sample.
+"""
 function sett0!(samp::Sample)
     dat = getSignals(samp)
     i0 = geti0(dat)
     sett0!(samp,samp.dat[i0,1])
 end
-function sett0!(samp::Sample,t0::Number)
+
+"""
+sett0!(samp::Sample,
+       t0::Number)
+
+Manually set time zero for a single sample
+"""
+function sett0!(samp::Sample,
+                t0::Number)
     samp.t0 = t0
 end
 export sett0!
@@ -217,19 +348,23 @@ function get_isochron_anchor(method::AbstractString,
     y0 = get(_KJ["refmat"][method],refmat).y0[1]
     return (x0=x0,y0=y0,y1=y1)
 end
+
 function is_isochron_anchor(anchor::NamedTuple)
     return all(in(keys(anchor)), [:x0,:y0,:y1])
 end
+
 function get_point_anchor(method::AbstractString,
                           refmat::AbstractString)
     x = get(_KJ["refmat"][method],refmat).tx[1]
     y = get(_KJ["refmat"][method],refmat).y0[1]
     return (x=x,y=y)
 end
+
 function is_point_anchor(anchor::NamedTuple)
     k = keys(anchor)
     return all(in(keys(anchor)), [:x,:y])
 end
+
 function get_glass_anchor(method::AbstractString,
                           refmat::AbstractString)
     P, D, d = getPDd(method)
@@ -238,6 +373,14 @@ function get_glass_anchor(method::AbstractString,
     return (y=y)
 end
 
+"""
+getAnchors(method::AbstractString,
+           standards::AbstractVector,
+           glass::AbstractVector)
+
+Returns a Dict with named tuple containing
+x0, y0, y1, x or y for the standards and glasses
+"""
 function getAnchors(method::AbstractString,
                     standards::AbstractVector,
                     glass::AbstractVector)
@@ -245,6 +388,12 @@ function getAnchors(method::AbstractString,
     Sanchors = getStandardAnchors(method,standards)
     return merge(Ganchors,Sanchors)
 end
+
+"""
+getAnchors(method::AbstractString,
+           standards::AbstractDict,
+           glass::AbstractDict)
+"""
 function getAnchors(method::AbstractString,
                     standards::AbstractDict,
                     glass::AbstractDict)
@@ -252,8 +401,15 @@ function getAnchors(method::AbstractString,
 end
 export getAnchors
 
+"""
+getStandardAnchors(method::AbstractString,
+                   refmats::AbstractVector)
+
+Returns a Dict with named tuple containing
+x0, y0, y1, x or y for the age standards
+"""
 function getStandardAnchors(method::AbstractString,
-                           refmats::AbstractVector)
+                            refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
         t = get(_KJ["refmat"][method],refmat).type
@@ -265,23 +421,39 @@ function getStandardAnchors(method::AbstractString,
     end
     return out
 end
+
+"""
+getStandardAnchors(method::AbstractString,
+                   refmats::AbstractDict)
+"""
 function getStandardAnchors(method::AbstractString,
-                           refmats::AbstractDict)
+                            refmats::AbstractDict)
     return getStandardAnchors(method,collect(keys(refmats)))
 end
 export getStandardAnchors
 
+"""
+getGlassAnchors(method::AbstractString,
+                refmats::AbstractVector)
+
+Returns a Dict with named tuple containing
+x0, y0, y1, x or y for the reference glasses
+"""
 function getGlassAnchors(method::AbstractString,
-                         refmats::AbstractVector,
-                         glass::Bool=false)
+                         refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
         out[refmat] = get_glass_anchor(method,refmat)
     end
     return out
 end
+
+"""
+getGlassAnchors(method::AbstractString,
+                refmats::AbstractDict)
+"""
 function getGlassAnchors(method::AbstractString,
-                                refmats::AbstractDict)
+                         refmats::AbstractDict)
     return getGlassAnchors(method,collect(keys(refmats)))
 end
 export getGlassAnchors
@@ -290,23 +462,75 @@ function getSignals(dat::AbstractDataFrame)
     tail = count(x -> x in ["outlier","t","T","x","y"], names(dat))
     return dat[:,2:end-tail]
 end
+
+"""
+getSignals(samp::Sample)
+
+Returns a dataframe with signals (no time, coordinates or outliers)
+"""
 function getSignals(samp::Sample)
     return getSignals(samp.dat)
 end
-function getSignals(samp::Sample,channels::AbstractDict)
+
+"""
+getSignals(samp::Sample,
+           channels::AbstractDict)
+"""
+function getSignals(samp::Sample,
+                    channels::AbstractDict)
     return samp.dat[:,collect(values(channels))]
 end
 export getSignals
 
+"""
+getPDd(method::AbstractString)
+
+Get the names of the parent, daughter and sister channel
+"""
 function getPDd(method::AbstractString)
     PDd = get(_KJ["methods"],method)
     return PDd.P, PDd.D, PDd.d
 end
 export getPDd
 
-function getInternal(mineral::AbstractString,channel::AbstractString)
+"""
+getInternal(mineral::AbstractString,
+            channel::AbstractString)
+
+Get a tuple with the channel and its reference concentration
+"""
+function getInternal(mineral::AbstractString,
+                     channel::AbstractString)
     element = channel2element(channel,collect(keys(_KJ["nuclides"])))
     concentration = get(_KJ["stoichiometry"],mineral)[element[1]] * 1e5
     return (channel,concentration)
 end
 export getInternal
+
+function get_drift(Pm::AbstractVector,
+                   t::AbstractVector,
+                   pars::NamedTuple)
+    return get_drift(Pm,t,pars.drift;
+                     PAcutoff=pars.PAcutoff,
+                     adrift=pars.adrift)
+end
+
+function get_drift(Pm::AbstractVector,
+                   t::AbstractVector,
+                   drift::AbstractVector;
+                   PAcutoff=nothing,adrift=drift)
+    if isnothing(PAcutoff)
+        ft = polyFac(drift,t)
+    else
+        analog = Pm .> PAcutoff
+        if all(analog)
+            ft = polyFac(adrift,t)
+        elseif all(.!analog)
+            ft = polyFac(drift,t)
+        else
+            ft = polyFac(drift,t)
+            ft[analog] = polyFac(adrift,t)[analog]
+        end
+    end
+    return ft
+end

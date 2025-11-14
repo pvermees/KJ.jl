@@ -1,3 +1,8 @@
+"""
+KJ
+
+A Julia package to process LA-ICP-MS data
+"""
 module KJ
 
 using Dates, DataFrames, Printf, Infiltrator, LinearAlgebra, ForwardDiff

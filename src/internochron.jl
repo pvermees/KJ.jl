@@ -1,3 +1,12 @@
+"""
+internochron(run::Vector{Sample},
+             channels::AbstractDict,
+             blank::AbstractDataFrame,
+             pars::NamedTuple;
+             method::Union{AbstractString,Nothing}=nothing)
+
+Internal isochron regression
+"""
 function internochron(run::Vector{Sample},
                       channels::AbstractDict,
                       blank::AbstractDataFrame,
@@ -19,6 +28,12 @@ function internochron(run::Vector{Sample},
         return x0y02t(out,method) 
     end
 end
+"""
+internochron(samp::Sample,
+             channels::AbstractDict,
+             blank::AbstractDataFrame,
+             pars::NamedTuple)
+"""
 function internochron(samp::Sample,
                       channels::AbstractDict,
                       blank::AbstractDataFrame,
@@ -29,6 +44,14 @@ function internochron(samp::Sample,
     vd = var_timeseries(dhat)
     return internochron(Phat,Dhat,dhat,vP,vD,vd)
 end
+"""
+internochron(Phat::AbstractVector,
+             Dhat::AbstractVector,
+             dhat::AbstractVector,
+             vP::AbstractVector,
+             vD::AbstractVector,
+             vd::AbstractVector)
+"""
 function internochron(Phat::AbstractVector,
                       Dhat::AbstractVector,
                       dhat::AbstractVector,

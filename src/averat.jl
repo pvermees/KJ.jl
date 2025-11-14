@@ -1,15 +1,13 @@
 """
-averat
+averat(run::Vector{Sample},
+       channels::AbstractDict,
+       blank::AbstractDataFrame,
+       pars::NamedTuple;
+       method=nothing,
+       physics::Bool=true,
+       numerical::Bool=true)
 
-Average the 'atomic' isotopic ratios for a sample
-
-# Returns
-
-- a dataframe of P/D and d/D-ratios with their standard errors and error correlations
-
-# Arguments
-
-See [`process!`](@ref).
+Average processes atomic ratios
 """
 function averat(run::Vector{Sample},
                 channels::AbstractDict,
@@ -37,6 +35,14 @@ function averat(run::Vector{Sample},
     end
     return out
 end
+"""
+averat(samp::Sample,
+       channels::AbstractDict,
+       blank::AbstractDataFrame,
+       pars::NamedTuple;
+       physics::Bool=true,
+       numerical::Bool=true)
+"""
 function averat(samp::Sample,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
@@ -46,6 +52,13 @@ function averat(samp::Sample,
     Phat, Dhat, dhat = atomic(samp,channels,blank,pars)
     return averat(Phat,Dhat,dhat;physics=physics)
 end
+"""
+averat(Phat::AbstractVector,
+       Dhat::AbstractVector,
+       dhat::AbstractVector;
+       physics::Bool=true,
+       numerical::Bool=true)
+"""
 function averat(Phat::AbstractVector,
                 Dhat::AbstractVector,
                 dhat::AbstractVector;
