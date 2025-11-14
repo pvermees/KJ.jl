@@ -1,35 +1,23 @@
+export getKJctrl
 """ 
 getKJctrl()
 
 Access the control parameters of a TUI session
-
-# Returns
-
-A dictionary with control parameters
 """
 function getKJctrl()
     return _KJ["ctrl"]
 end
-export getKJctrl
 
+export setKJctrl!
 """
 setKJctrl!(ctrl::AbstractDict)
 
 Set the control parameters of a TUI session
-
-# Examples
-```julia
-TUI(logbook="logs/test.log")
-ctrl = getKJctrl()
-ctrl["transformation"] = "log"
-setKJctrl!(ctrl)
-TUI()
 ```
 """
 function setKJctrl!(ctrl::AbstractDict)
     _KJ["ctrl"] = ctrl
 end
-export setKJctrl!
 
 function getExt(format)
     if format in ["Agilent","ThermoFisher"]

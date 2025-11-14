@@ -1,7 +1,7 @@
 """
-KJ.jl
+KJ
 
-A data reduction package for LA-ICP-MS
+A Julia package to process LA-ICP-MS data
 """
 module KJ
 
