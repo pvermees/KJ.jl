@@ -2,6 +2,6 @@
 
 Documentation for KJ.jl
 
-```@docs
-getKJctrl()
+```@autodocs
+Modules = [KJ]
 ```
