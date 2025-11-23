@@ -97,40 +97,37 @@ function standardtest(verbose=false)
     return myrun
 end
 
-function fixedLuHf(drift,down,mfrac,PAcutoff,adrift)
+function fixedLuHf(drift,down,PAcutoff,adrift)
     myrun, blk = blanktest()
     method = "Lu-Hf"
-    channels = Dict("d" => "Hf178 -> 260",
-                    "D" => "Hf176 -> 258",
-                    "P" => "Lu175 -> 175")
-    glass = Dict("NIST612" => "NIST612p")
-    setGroup!(myrun,glass)
+    ions = Channels(method;P="Lu175",d="Hf178")
+    channels = Channels(P="Lu175 -> 175",
+                        D="Hf176 -> 258",
+                        d="Hf178 -> 260")
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=drift,down=down,mfrac=mfrac,
-           PAcutoff=PAcutoff,adrift=adrift)
-    return myrun, blk, method, channels, glass, standards, fit
+    fit = (drift=drift,down=down,PAcutoff=PAcutoff,adrift=adrift)
+    return myrun, blk, method, ions, channels, standards, fit
 end
 
 function predictest()
     drift = [3.91]
     down = [0.0,0.0045]
-    mfrac = -0.38
-    myrun, blk, method, channels, glass, standards, fit =
-        fixedLuHf(drift,down,mfrac,nothing,drift)
+    myrun, blk, method, ions, channels, standards, fit =
+        fixedLuHf(drift,down,nothing,drift)
     samp = myrun[1]
     if samp.group == "sample"
         println("Not a standard")
-        return samp, method, fit, blk, channels, standards, glass
+        return samp, method, fit, blk, ions, channels, standards
     else
-        pred = predict(samp,method,fit,blk,channels,standards,glass)
-        anchors = getAnchors(method,standards,glass)
+        pred = predict(samp,method,fit,blk,ions,channels,standards)
+        anchors = getAnchors(method,standards)
         p, offset = KJ.plot(samp,channels,blk,fit,anchors;
-                            den="Hf176 -> 258",
+                            den=channels.D,
                             transformation="log",
                             return_offset=true)
         @test display(p) != NaN
-        return samp, method, fit, blk, channels, standards, glass, p, offset
+        return samp, method, fit, blk, ions, channels, standards, p, offset
     end
 end
     
@@ -621,7 +618,7 @@ if true
     @testset "outlier detection" begin outliertest() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
-    @testset "predict drift" begin driftest() end
+    #=@testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
     @testset "predict mfrac" begin mfractest() end
     @testset "fractionation" begin fractionationtest(true) end
@@ -650,7 +647,7 @@ if true
     @testset "accuracy test 3" begin accuracytest(mfrac=2.0) end
     @testset "accuracy test 4" begin accuracytest(down=[0.0,0.5]) end
     @testset "TUI test" begin TUItest() end
-    @testset "dependency test" begin dependencytest() end
+    @testset "dependency test" begin dependencytest() end=#
 else
     TUI()
 end

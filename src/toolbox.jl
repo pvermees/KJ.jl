@@ -186,21 +186,19 @@ function autoWindow(samp::Sample;
 end
 
 """
-pool(run::Vector{Sample};
+poolBlanks(run::Vector{Sample};
      blank::Bool=false,
-     signal::Bool=false,
      group::Union{Nothing,AbstractString}=nothing,
      include_covmats::Bool=false,
      add_xy::Bool=false)
 
-Returns a vector of blanks and/or signals plus
+Returns a vector of blanks or signals plus
 (if include_covmats is true), a vector of their
 covariance matrices. Does not include any values
 marked as outliers.
 """
 function pool(run::Vector{Sample};
               blank::Bool=false,
-              signal::Bool=false,
               group::Union{Nothing,AbstractString}=nothing,
               include_covmats::Bool=false,
               add_xy::Bool=false)
@@ -208,10 +206,9 @@ function pool(run::Vector{Sample};
     ns = length(selection)
     dats = Vector{DataFrame}(undef,ns)
     for i in eachindex(selection)
-        dat = windowData(run[selection[i]];
-                         blank=blank,
-                         signal=signal,
-                         add_xy=add_xy)
+        dat = ifelse(blank,
+                     bwinData(run[selection[i]];add_xy=add_xy),
+                     swinData(run[selection[i]];add_xy=add_xy))
         good = .!dat.outlier
         dats[i] = dat[good,:]
     end
@@ -543,4 +540,15 @@ function dataframe_sum(df::AbstractDataFrame)
         end
     end
     return total
+end
+
+function iratio(nuclide1::Union{Missing,AbstractString},
+                nuclide2::Union{Missing,AbstractString})
+    if ismissing(nuclide1) || ismissing(nuclide2)
+        return 1.0
+    end
+    df = _KJ["iratio"]
+    row1 = findfirst(==(nuclide1),df.isotope)
+    row2 = findfirst(==(nuclide2),df.isotope)
+    return df[row1,"abundance"]/df[row2,"abundance"]
 end

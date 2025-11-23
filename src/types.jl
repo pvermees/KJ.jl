@@ -25,17 +25,18 @@ mutable struct OrderedDict
     dict::Dict
 end
 
-mutable struct Channels
+"""
+PDdS(P::String,
+     D::String,
+     d::String,
+     S::Union{Missing,String})
+
+P = Parent, D = Daughter, d = sister, S = Stranger
+"""
+mutable struct PDdS
     P::String
     D::String
     d::String
-    S::String
+    S::Union{Missing,String}
 end
-
-function Channels(;
-                  P::AbstractString="",
-                  D::AbstractString="",
-                  d::AbstractString="",
-                  S::AbstractString="")
-    return Channels(P,D,d,S)
-end
+export PDdS

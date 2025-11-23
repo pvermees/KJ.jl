@@ -310,13 +310,13 @@ end
 function plotFitted!(p,
                      samp::Sample,
                      pred::AbstractDataFrame;
-                     blank::Bool=false,signal::Bool=true,
+                     blank::Bool=false,
                      num::Union{Nothing,AbstractString}=nothing,
                      den::Union{Nothing,AbstractString}=nothing,
                      transformation::Union{Nothing,AbstractString}=nothing,
                      offset::Union{Nothing,Number}=nothing,
                      linecolor="black",linestyle=:solid)
-    dat = windowData(samp,blank=blank,signal=signal)
+    dat = ifelse(blank,bwinData(samp),swinData(samp))
     good = .!dat.outlier
     x = dat[good,1]
     y = formRatios(pred[good,:],num,den)
@@ -352,8 +352,7 @@ function plotFittedBlank!(p,
                           linestyle::Symbol=:solid)
     pred = predict(samp,blank[:,channels])
     plotFitted!(p,samp,pred;
-                blank=true,signal=false,
-                num=num,den=den,transformation=transformation,
+                blank=true,num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
 """
@@ -380,8 +379,7 @@ function plotFittedBlank!(p,
                           linestyle::Symbol=:solid)
     pred = predict(samp,blank)
     plotFitted!(p,samp,pred;
-                blank=true,signal=false,
-                num=num,den=den,transformation=transformation,
+                blank=true,num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)
 end
 export plotFittedBlank!

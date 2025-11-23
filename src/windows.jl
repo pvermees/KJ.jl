@@ -128,36 +128,39 @@ end
 export shift_windows!
 
 """
-windowData(samp::Sample;
-           blank::Bool=false,
-           signal::Bool=false,
-           add_xy::Bool=false)
+bwinData(samp::Sample;
+         add_xy::Bool=false)
 
-Return the blank and/or signal data from samp.
+Return the blank data from samp.
 """
-function windowData(samp::Sample;
-                    blank::Bool=false,
-                    signal::Bool=false,
-                    add_xy::Bool=false)
-    if blank
-        windows = samp.bwin
-    elseif signal
-        windows = samp.swin
-    else
-        windows = [(1,size(samp.dat,1))]
-    end
+function bwinData(samp::Sample;
+                  add_xy::Bool=false)
+    windows = samp.bwin
     selection, x, y = windows2selection(windows;add_xy=add_xy)
     selected_dat =  samp.dat[selection,:]
-    if signal
-        selected_dat.T = (selected_dat[:,1] .- samp.t0)./60 # in minutes
-        if !(isnothing(x) || isnothing(y))
-            selected_dat.x = x
-            selected_dat.y = y
-        end
+    return selected_dat
+end
+export bwinData
+
+"""
+swinData(samp::Sample;
+         add_xy::Bool=false)
+
+Return the signal data from samp.
+"""
+function swinData(samp::Sample;
+                  add_xy::Bool=false)
+    windows = samp.swin
+    selection, x, y = windows2selection(windows;add_xy=add_xy)
+    selected_dat =  samp.dat[selection,:]
+    selected_dat.T = (selected_dat[:,1] .- samp.t0)./60 # in minutes
+    if !(isnothing(x) || isnothing(y))
+        selected_dat.x = x
+        selected_dat.y = y
     end
     return selected_dat
 end
-export windowData
+export swinData
 
 function windows2selection(windows::AbstractVector;
                            add_xy::Bool=false)
