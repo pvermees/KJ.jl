@@ -24,3 +24,18 @@ mutable struct OrderedDict
     names::Vector{String}
     dict::Dict
 end
+
+mutable struct Channels
+    P::String
+    D::String
+    d::String
+    S::String
+end
+
+function Channels(;
+                  P::AbstractString="",
+                  D::AbstractString="",
+                  d::AbstractString="",
+                  S::AbstractString="")
+    return Channels(P,D,d,S)
+end
