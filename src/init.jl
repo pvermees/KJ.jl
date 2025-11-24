@@ -17,10 +17,8 @@ function init_methods(csv::AbstractString=joinpath(@__DIR__,"../settings/methods
     df = CSV.read(csv, DataFrame)
     out = OrderedDict()
     for row in eachrow(df)
-        key = row[1]
-        value = (P=String(row[2]),
-                 D=String(row[3]),
-                 d=String(row[4]))
+        key = row.method
+        value = (P=row.P,D=row.D,d=row.d,S=row.S)
         add2od!(out,key,value)
     end
     return out

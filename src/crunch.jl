@@ -1,76 +1,238 @@
 """
-getP(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-     vP::Real,vD::Real,vd::Real,
-     sPD::Real,sPd::Real,sDd::Real,
-     x0::Real,y0::Real,y1::Real,
-     ft::AbstractVector,FT::AbstractVector,mf::Real,
-     bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
+getP(x0::Real,
+     y0::Real,
+     y1::Real=0.0;
+     pmb::AbstractVector,
+     Domb::AbstractVector,
+     bomb::AbstractVector,
+     pomb::Union{AbstractVector,Real}=0.0,
+     somb::Union{AbstractVector,Real}=0.0,
+     vp::Real,
+     vD::Real,
+     vb::Real,
+     spDo::Real,
+     spbo::Real,
+     sDobo::Real,
+     ft::AbstractVector,
+     FT::AbstractVector,
+     bd::Real=1.0,
+     Pp::Real=1.0,
+     Ss::Real=1.0)
 
 Estimate the true parent intensity from the measurements for isochron-based standards
 """
-function getP(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-              vP::Real,vD::Real,vd::Real,
-              sPD::Real,sPd::Real,sDd::Real,
-              x0::Real,y0::Real,y1::Real,
-              ft::AbstractVector,FT::AbstractVector,mf::Real,
-              bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. ((((bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*x0*y0+((dm-bdt)*mf^2*vP+(bPt-Pm)*mf^2*sPd)*x0)*y1+(((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*x0^2+((Dm-bDt)*mf*vP+(bPt-Pm)*mf*sPD)*x0)*y0^2+(((Dm*FT-FT*bDt)*ft*mf*sPd+(FT*dm-FT*bdt)*ft*mf*sPD+(2*FT*bPt-2*FT*Pm)*ft*mf*sDd)*x0^2+((bdt-dm)*mf^2*vP+(Pm-bPt)*mf^2*sPd)*x0)*y0+((FT*Pm-FT*bPt)*ft*mf^2*vd+(FT*bdt-FT*dm)*ft*mf^2*sPd)*x0^2)/(mf^2*vP*y1^2+((2*FT*ft*mf*sPD*x0-2*mf^2*vP)*y0-2*FT*ft*mf^2*sPd*x0)*y1+(FT^2*ft^2*vD*x0^2-2*FT*ft*mf*sPD*x0+mf^2*vP)*y0^2+(2*FT*ft*mf^2*sPd*x0-2*FT^2*ft^2*mf*sDd*x0^2)*y0+FT^2*ft^2*mf^2*vd*x0^2)
+function getP(x0::Real,
+              y0::Real,
+              y1::Real=0.0;
+              pm::AbstractVector,
+              Dom::AbstractVector,
+              bom::AbstractVector,
+              pomb::Union{AbstractVector,Real}=0.0,
+              somb::Union{AbstractVector,Real}=0.0,
+              vp::Real,
+              vD::Real,
+              vb::Real,
+              spDo::Real,
+              spbo::Real,
+              sDobo::Real,
+              ft::AbstractVector,
+              FT::AbstractVector,
+              bd::Real=1.0,
+              Pp::Real=1.0,
+              Ss::Real=1.0)
+    return @. ((((Ss*bd^2*somb+Pp*bd^2*pomb-Domb*bd^2)*vp+bd^2*pmb*spDo)*x0*y0+(bd*bomb*vp-bd*pmb*spbo)*x0)*y1+((FT*bd^2*ft*pmb*vDo+(FT*Ss*bd^2*ft*somb+FT*Pp*bd^2*ft*pomb-Domb*FT*bd^2*ft)*spDo)*x0^2+((-(Ss*bd^2*somb)-Pp*bd^2*pomb+Domb*bd^2)*vp-bd^2*pmb*spDo)*x0)*y0^2+(((-(FT*Ss*bd*ft*somb)-FT*Pp*bd*ft*pomb+Domb*FT*bd*ft)*spbo+FT*bd*bomb*ft*spDo-2*FT*bd*ft*pmb*sDobo)*x0^2+(bd*pmb*spbo-bd*bomb*vp)*x0)*y0+(FT*ft*pmb*vbo-FT*bomb*ft*spbo)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spDo*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spbo*x0)*y1+(FT^2*bd^2*ft^2*vDo*x0^2-2*FT*bd^2*ft*spDo*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spbo*x0-2*FT^2*bd*ft^2*sDobo*x0^2)*y0+FT^2*ft^2*vbo*x0^2)
 end
 export getP
+
 """
-getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-     vP::Real,vD::Real,vd::Real,
-     sPD::Real,sPd::Real,sDd::Real,
-     x0::Real,y0::Real,y1::Real,
-     ft::AbstractVector,FT::AbstractVector,mf::Real,
-     bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
+getD(x0::Real,
+     y0::Real,
+     y1::Real;
+     pmb::AbstractVector,
+     Domb::AbstractVector,
+     bomb::AbstractVector,
+     pomb::Union{AbstractVector,Number}=0.0,
+     somb::Union{AbstractVector,Number}=0.0,
+     vp::Real,
+     vD::Real,
+     vb::Real,
+     spDo::Real,
+     spbo::Real,
+     sDobo::Real,
+     ft::AbstractVector,
+     FT::AbstractVector,
+     bd::Number=1.0,
+     Pp::Number=1.0,
+     Ss::Number=1.0)
 
 Estimate the true daughter intensity from the measurements for isochron-based standards
 """
-function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-              vP::Real,vD::Real,vd::Real,
-              sPD::Real,sPd::Real,sDd::Real,
-              x0::Real,y0::Real,y1::Real,
-              ft::AbstractVector,FT::AbstractVector,mf::Real,
-              bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. -((((bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*y1^2+((((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*x0+(2*Dm-2*bDt)*mf*vP+(2*bPt-2*Pm)*mf*sPD)*y0+((2*Dm*FT-2*FT*bDt)*ft*mf*sPd+(FT*bdt-FT*dm)*ft*mf*sPD+(FT*bPt-FT*Pm)*ft*mf*sDd)*x0)*y1+(((FT*bPt-FT*Pm)*ft*vD+(Dm*FT-FT*bDt)*ft*sPD)*x0+(bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*y0^2+(((FT^2*bdt-FT^2*dm)*ft^2*vD+(Dm*FT^2-FT^2*bDt)*ft^2*sDd)*x0^2+((2*FT*bDt-2*Dm*FT)*ft*mf*sPd+(FT*dm-FT*bdt)*ft*mf*sPD+(FT*Pm-FT*bPt)*ft*mf*sDd)*x0)*y0+((FT^2*bDt-Dm*FT^2)*ft^2*mf*vd+(FT^2*dm-FT^2*bdt)*ft^2*mf*sDd)*x0^2)/(mf^2*vP*y1^2+((2*FT*ft*mf*sPD*x0-2*mf^2*vP)*y0-2*FT*ft*mf^2*sPd*x0)*y1+(FT^2*ft^2*vD*x0^2-2*FT*ft*mf*sPD*x0+mf^2*vP)*y0^2+(2*FT*ft*mf^2*sPd*x0-2*FT^2*ft^2*mf*sDd*x0^2)*y0+FT^2*ft^2*mf^2*vd*x0^2))
+function getD(x0::Real,
+              y0::Real,
+              y1::Real;
+              pmb::AbstractVector,
+              Domb::AbstractVector,
+              bomb::AbstractVector,
+              pomb::Union{AbstractVector,Number}=0.0,
+              somb::Union{AbstractVector,Number}=0.0,
+              vp::Real,
+              vD::Real,
+              vb::Real,
+              spDo::Real,
+              spbo::Real,
+              sDobo::Real,
+              ft::AbstractVector,
+              FT::AbstractVector,
+              bd::Number=1.0,
+              Pp::Number=1.0,
+              Ss::Number=1.0)
+    return @. -((((Ss*bd^2*somb+Pp*bd^2*pomb-Domb*bd^2)*vp+bd^2*pmb*spDo)*y1^2+(((FT*bd^2*ft*pmb*vDo+(FT*Ss*bd^2*ft*somb+FT*Pp*bd^2*ft*pomb-Domb*FT*bd^2*ft)*spDo)*x0+(-(2*Ss*bd^2*somb)-2*Pp*bd^2*pomb+2*Domb*bd^2)*vp-2*bd^2*pmb*spDo)*y0+((-(2*FT*Ss*bd*ft*somb)-2*FT*Pp*bd*ft*pomb+2*Domb*FT*bd*ft)*spbo-FT*bd*bomb*ft*spDo-FT*bd*ft*pmb*sDobo)*x0)*y1+(((-(FT*Ss*bd^2*ft*somb)-FT*Pp*bd^2*ft*pomb+Domb*FT*bd^2*ft)*spDo-FT*bd^2*ft*pmb*vDo)*x0+(Ss*bd^2*somb+Pp*bd^2*pomb-Domb*bd^2)*vp+bd^2*pmb*spDo)*y0^2+((-(FT^2*bd*bomb*ft^2*vDo)-FT^2*Ss*bd*ft^2*sDobo*somb+(Domb*FT^2*bd*ft^2-FT^2*Pp*bd*ft^2*pomb)*sDobo)*x0^2+((2*FT*Ss*bd*ft*somb+2*FT*Pp*bd*ft*pomb-2*Domb*FT*bd*ft)*spbo+FT*bd*bomb*ft*spDo+FT*bd*ft*pmb*sDobo)*x0)*y0+((FT^2*Ss*ft^2*somb+FT^2*Pp*ft^2*pomb-Domb*FT^2*ft^2)*vbo+FT^2*bomb*ft^2*sDobo)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spDo*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spbo*x0)*y1+(FT^2*bd^2*ft^2*vDo*x0^2-2*FT*bd^2*ft*spDo*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spbo*x0-2*FT^2*bd*ft^2*sDobo*x0^2)*y0+FT^2*ft^2*vbo*x0^2))
 end
+
 """
-getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-     vP::Real,vD::Real,vd::Real,
-     sPD::Real,sPd::Real,sDd::Real,
-     x::Real,y::Real,
-     ft::AbstractVector,FT::AbstractVector,mf::Real,
-     bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
+getD(x::Real,
+     y::Real;
+     pmb::AbstractVector,
+     Domb::AbstractVector,
+     bomb::AbstractVector,
+     pomb::Union{AbstractVector,Number}=0.0,
+     somb::Union{AbstractVector,Number}=0.0,
+     vp::Real,
+     vD::Real,
+     vb::Real,
+     spDo::Real,
+     spbo::Real,
+     sDobo::Real,
+     ft::AbstractVector,
+     FT::AbstractVector,
+     bd::Number=1.0,
+     Pp::Number=1.0,
+     Ss::Number=1.0)
 
 Estimate the true daughter intensity from the measurements for homogeneous standards
 """
-function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-              vP::Real,vD::Real,vd::Real,
-              sPD::Real,sPd::Real,sDd::Real,
-              x::Real,y::Real,
-              ft::AbstractVector,FT::AbstractVector,mf::Real,
-              bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. ((((dm-bdt)*vD+(bDt-Dm)*sDd)*vP+(bPt-Pm)*sPd*vD+(Dm-bDt)*sPD*sPd+(bdt-dm)*sPD^2+(Pm-bPt)*sDd*sPD)*y+(((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*vd+(FT*bdt-FT*dm)*ft*sPd*vD+(Dm*FT-FT*bDt)*ft*sDd*sPd+(FT*dm-FT*bdt)*ft*sDd*sPD+(FT*bPt-FT*Pm)*ft*sDd^2)*x+((Dm-bDt)*mf*vP+(bPt-Pm)*mf*sPD)*vd+(bdt-dm)*mf*sDd*vP+(bDt-Dm)*mf*sPd^2+((dm-bdt)*mf*sPD+(Pm-bPt)*mf*sDd)*sPd)/((vD*vP-sPD^2)*y^2+((2*FT*ft*sDd*sPD-2*FT*ft*sPd*vD)*x-2*mf*sDd*vP+2*mf*sPD*sPd)*y+(FT^2*ft^2*vD*vd-FT^2*ft^2*sDd^2)*x^2+(2*FT*ft*mf*sDd*sPd-2*FT*ft*mf*sPD*vd)*x+mf^2*vP*vd-mf^2*sPd^2)
+function getD(x::Real,
+              y::Real;
+              pmb::AbstractVector,
+              Domb::AbstractVector,
+              bomb::AbstractVector,
+              pomb::Union{AbstractVector,Number}=0.0,
+              somb::Union{AbstractVector,Number}=0.0,
+              vp::Real,
+              vD::Real,
+              vb::Real,
+              spDo::Real,
+              spbo::Real,
+              sDobo::Real,
+              ft::AbstractVector,
+              FT::AbstractVector,
+              bd::Number=1.0,
+              Pp::Number=1.0,
+              Ss::Number=1.0)
+    return @. (((bd*bomb*vDo+Ss*bd*sDobo*somb+(Pp*bd*pomb-Domb*bd)*sDobo)*vp-bd*pmb*spbo*vDo+(-(Ss*bd*somb)-Pp*bd*pomb+Domb*bd)*spDo*spbo-bd*bomb*spDo^2+bd*pmb*sDobo*spDo)*y+((FT*ft*pmb*vDo+(FT*Ss*ft*somb+FT*Pp*ft*pomb-Domb*FT*ft)*spDo)*vbo-FT*bomb*ft*spbo*vDo+((Domb*FT*ft-FT*Pp*ft*pomb)*sDobo-FT*Ss*ft*sDobo*somb)*spbo+FT*bomb*ft*sDobo*spDo-FT*ft*pmb*sDobo^2)*x+((-(Ss*somb)-Pp*pomb+Domb)*vbo-bomb*sDobo)*vp-pmb*spDo*vbo+(Ss*somb+Pp*pomb-Domb)*spbo^2+(bomb*spDo+pmb*sDobo)*spbo)/((bd^2*vDo*vp-bd^2*spDo^2)*y^2+((2*FT*bd*ft*sDobo*spDo-2*FT*bd*ft*spbo*vDo)*x-2*bd*sDobo*vp+2*bd*spDo*spbo)*y+(FT^2*ft^2*vDo*vbo-FT^2*ft^2*sDobo^2)*x^2+(2*FT*ft*sDobo*spbo-2*FT*ft*spDo*vbo)*x+vbo*vp-spbo^2)
 end
-"""
-getD(Dm::AbstractVector,dm::AbstractVector,
-     vD::Real,vd::Real,sDd::Real,
-     y::Real,
-     mf::Real,
-     bDt::AbstractVector,bdt::AbstractVector)
 
-Estimate the true daughter intensity from the measurements for reference glass
 """
-function getD(Dm::AbstractVector,dm::AbstractVector,
-              vD::Real,vd::Real,sDd::Real,
-              y::Real,
-              mf::Real,
-              bDt::AbstractVector,bdt::AbstractVector)
-    return (((dm-bdt)*vD+(bDt-Dm)*sDd)*y+(Dm-bDt)*mf*vd+(bdt-dm)*mf*sDd)/(vD*y^2-2*mf*sDd*y+mf^2*vd)
+SS(x0::Real,
+   y0::Real,
+   y1::Real;
+   pmb::AbstractVector,
+   Domb::AbstractVector,
+   bomb::AbstractVector,
+   pomb::Union{AbstractVector,Number}=0.0,
+   somb::Union{AbstractVector,Number}=0.0,
+   vp::Real,
+   vD::Real,
+   vb::Real,
+   spDo::Real,
+   spbo::Real,
+   sDobo::Real,
+   ft::AbstractVector,
+   FT::AbstractVector,
+   bd::Number=1.0,
+   Pp::Number=1.0,
+   Ss::Number=1.0)
 
+Sum of squares for isochron-based standards
+"""
+function SS(x0::Real,
+            y0::Real,
+            y1::Real;
+            pmb::AbstractVector,
+            Domb::AbstractVector,
+            bomb::AbstractVector,
+            pomb::Union{AbstractVector,Number}=0.0,
+            somb::Union{AbstractVector,Number}=0.0,
+            vp::Real,
+            vD::Real,
+            vb::Real,
+            spDo::Real,
+            spbo::Real,
+            sDobo::Real,
+            ft::AbstractVector,
+            FT::AbstractVector,
+            bd::Number=1.0,
+            Pp::Number=1.0,
+            Ss::Number=1.0)
+    P = getP(x0,y0,y1;
+             pmb=pmb,Domb=Domb,bomb=bomb,pomb=pomb,somb=somb,
+             vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
+             ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
+    D = getD(x0,y0,y1;
+             pmb=pmb,Domb=Domb,bomb=bomb,pomb=pomb,somb=somb,
+             vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
+             ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
+    maha = @. (bomb-bd*((Po*(y1-y0))/x0+Do*y0))*(((vDo*vp-spDo^2)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(spDo*spbo-sDobo*vp))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((pmb-FT*Po*ft)*(sDobo*spDo-spbo*vDo))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))+(-(Ss*somb)-Pp*pomb+Domb-Do)*(((spDo*spbo-sDobo*vp)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(vbo*vp-spbo^2))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((pmb-FT*Po*ft)*(sDobo*spbo-spDo*vbo))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))+(pmb-FT*Po*ft)*(((sDobo*spDo-spbo*vDo)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((pmb-FT*Po*ft)*(vDo*vbo-sDobo^2))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(sDobo*spbo-spDo*vbo))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))
+    return sum(@. maha )
 end
-export getD
+
+"""
+SS(x::Real,
+   y::Real;
+   pmb::AbstractVector,
+   Domb::AbstractVector,
+   bomb::AbstractVector,
+   pomb::Union{AbstractVector,Number}=0.0,
+   somb::Union{AbstractVector,Number}=0.0,
+   vp::Real,
+   vD::Real,
+   vb::Real,
+   spDo::Real,
+   spbo::Real,
+   sDobo::Real,
+   ft::AbstractVector,
+   FT::AbstractVector,
+   bd::Number=1.0,
+   Pp::Number=1.0,
+   Ss::Number=1.0)
+
+Sum of squares for homogeneous standards
+"""
+function SS(x::Real,
+            y::Real;
+            pmb::AbstractVector,
+            Domb::AbstractVector,
+            bomb::AbstractVector,
+            pomb::Union{AbstractVector,Number}=0.0,
+            somb::Union{AbstractVector,Number}=0.0,
+            vp::Real,
+            vD::Real,
+            vb::Real,
+            spDo::Real,
+            spbo::Real,
+            sDobo::Real,
+            ft::AbstractVector,
+            FT::AbstractVector,
+            bd::Number=1.0,
+            Pp::Number=1.0,
+            Ss::Number=1.0)
+    D = getD(x,y;
+             pmb=pmb,Domb=Domb,bomb=bomb,pomb=pomb,somb=somb,
+             vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
+             ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
+    maha = @. (bomb-Do*bd*y)*(((vDo*vp-spDo^2)*(bomb-Do*bd*y))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((sDobo*spDo-spbo*vDo)*(pmb-Do*FT*ft*x))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(spDo*spbo-sDobo*vp))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))+(-(Ss*somb)-Pp*pomb+Domb-Do)*(((spDo*spbo-sDobo*vp)*(bomb-Do*bd*y))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((sDobo*spbo-spDo*vbo)*(pmb-Do*FT*ft*x))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(vbo*vp-spbo^2))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))+(pmb-Do*FT*ft*x)*(((sDobo*spDo-spbo*vDo)*(bomb-Do*bd*y))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((vDo*vbo-sDobo^2)*(pmb-Do*FT*ft*x))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(sDobo*spbo-spDo*vbo))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))
+    return sum(@. maha )
+end
 
 """
 SS(par::NamedTuple,
@@ -100,6 +262,7 @@ function SS(par::NamedTuple,
               ndrift=ndrift,ndown=ndown,PAcutoff=par.PAcutoff,
               verbose=verbose)
 end
+
 """
 SS(par::AbstractVector,
    bP::AbstractVector,
@@ -159,115 +322,17 @@ function SS(par::AbstractVector,
     end
     return out
 end
-"""
-SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-   vP::Real,vD::Real,vd::Real,
-   sPD::Real,sPd::Real,sDd::Real,
-   x0::Real,y0::Real,y1::Real,
-   ft::AbstractVector,FT::AbstractVector,mf::Real,
-   bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-
-Sum of squares for isochron-based standards
-"""
-function SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-            vP::Real,vD::Real,vd::Real,
-            sPD::Real,sPd::Real,sDd::Real,
-            x0::Real,y0::Real,y1::Real,
-            ft::AbstractVector,FT::AbstractVector,mf::Real,
-            bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    P = getP(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    maha = @. (-((P*(y1-y0))/x0)-D*y0+dm-bdt)*(((vD*vP-sPD^2)*(-((P*(y1-y0))/x0)-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sPD*sPd-sDd*vP))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(sDd*sPD-sPd*vD))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(D*mf)-bDt+Dm)*(((sPD*sPd-sDd*vP)*(-((P*(y1-y0))/x0)-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(vP*vd-sPd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(FT*P*ft)-bPt+Pm)*(((sDd*sPD-sPd*vD)*(-((P*(y1-y0))/x0)-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(vD*vd-sDd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))
-    return sum(@. maha )
-end
-"""
-SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-   vP::Real,vD::Real,vd::Real,
-   sPD::Real,sPd::Real,sDd::Real,
-   x::Real,y::Real,
-   ft::AbstractVector,FT::AbstractVector,mf::Real,
-   bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-
-Sum of squares for homogeneous standards
-"""
-function SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-            vP::Real,vD::Real,vd::Real,
-            sPD::Real,sPd::Real,sDd::Real,
-            x::Real,y::Real,
-            ft::AbstractVector,FT::AbstractVector,mf::Real,
-            bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x,y,ft,FT,mf,bPt,bDt,bdt)
-    maha = @. (-(D*y)+dm-bdt)*(((vD*vP-sPD^2)*(-(D*y)+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((sDd*sPD-sPd*vD)*(-(D*FT*ft*x)-bPt+Pm))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sPD*sPd-sDd*vP))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(D*mf)-bDt+Dm)*(((sPD*sPd-sDd*vP)*(-(D*y)+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((sDd*sPd-sPD*vd)*(-(D*FT*ft*x)-bPt+Pm))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(vP*vd-sPd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(D*FT*ft*x)-bPt+Pm)*(((sDd*sPD-sPd*vD)*(-(D*y)+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((vD*vd-sDd^2)*(-(D*FT*ft*x)-bPt+Pm))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))
-    return sum(@. maha )
-end
-"""
-SS(par::AbstractVector,
-   bD::AbstractVector,bd::AbstractVector,
-   dats::AbstractDict,covs::AbstractDict,
-   channels::AbstractDict,
-   anchors::AbstractDict;
-   verbose::Bool=false)
-
-Sum of squares for glass
-"""
-function SS(par::AbstractVector,
-            bD::AbstractVector,bd::AbstractVector,
-            dats::AbstractDict,covs::AbstractDict,
-            channels::AbstractDict,
-            anchors::AbstractDict;
-            verbose::Bool=false)
-    mf = exp(par[1])
-    out = 0.0
-    for (refmat,dat) in dats
-        y = anchors[refmat]
-        covmat = covs[refmat]
-        for spot in eachindex(dat)
-            Dm,dm,vD,vd,sDd,bDt,bdt =
-                SSprep(bD,bd,dat[spot],covmat[spot],channels)
-            out += SS(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
-        end
-    end
-    if verbose
-        println(par,out)
-    end
-    return out
-end
-"""
-SS(Dm::AbstractVector,
-   dm::AbstractVector,
-   vD::Real,
-   vd::Real,
-   sDd::Real,
-   y::Real,
-   mf::Real,
-   bDt::AbstractVector,bdt::AbstractVector)
-
-Sum of squares for glass
-"""
-function SS(Dm::AbstractVector,
-            dm::AbstractVector,
-            vD::Real,
-            vd::Real,
-            sDd::Real,
-            y::Real,
-            mf::Real,
-            bDt::AbstractVector,bdt::AbstractVector)
-    D = getD(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
-    maha = @. (-(D*y)+dm-bdt)*((vD*(-(D*y)+dm-bdt))/(vD*vd-sDd^2)-((-(D*mf)-bDt+Dm)*sDd)/(vD*vd-sDd^2))+(-(D*mf)-bDt+Dm)*(((-(D*mf)-bDt+Dm)*vd)/(vD*vd-sDd^2)-(sDd*(-(D*y)+dm-bdt))/(vD*vd-sDd^2))
-    return sum(@. maha )
-end
 export SS
 
 # isochron or point
-function SSprep(bP::AbstractVector,
-                bD::AbstractVector,
-                bd::AbstractVector,
-                dat::AbstractDataFrame,
-                covmat::Matrix,
+function SSprep(dat::AbstractDataFrame,
+                covmat::Matrix;
+                bP::AbstractVector=[0.0],
+                bD::AbstractVector=[0.0],
+                bd::AbstractVector=[0.0],
                 channels::AbstractDict,
-                mfrac::Number,
                 drift::AbstractVector,
-                down::AbstractVector;
+                down::AbstractVector,
                 PAcutoff::Union{Real,Nothing}=nothing,
                 adrift::AbstractVector=drift)
     t = dat.t
@@ -313,179 +378,217 @@ function SSprep(bD::AbstractVector,bd::AbstractVector,
 end
 
 """
-predict(samp::Sample,
-        method::AbstractString,
-        pars::NamedTuple,
+predict(samp::Sample;
+        fit::NamedTuple,
         blank::AbstractDataFrame,
-        channels::AbstractDict,
-        standards::AbstractDict,
-        glass::AbstractDict;
-        debug::Bool=false)
-
-Predict fitted signals for isochrons or points
-"""
-function predict(samp::Sample,
-                 method::AbstractString,
-                 pars::NamedTuple,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 standards::AbstractDict,
-                 glass::AbstractDict;
-                 debug::Bool=false)
-    anchors = getAnchors(method,standards,glass)
-    return predict(samp,pars,blank,channels,anchors;debug=debug)
-end
-"""
-predict(samp::Sample,
-        pars::NamedTuple,
-        blank::AbstractDataFrame,
-        channels::AbstractDict,
-        anchors::AbstractDict;
+        anchors::AbstractDict,
+        ions::PDdS,
+        channels::PDdS=ions,
         debug::Bool=false)
 """
-function predict(samp::Sample,
-                 pars::NamedTuple,
+function predict(samp::Sample;
+                 fit::NamedTuple,
                  blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 anchors::AbstractDict;
+                 anchors::AbstractDict,
+                 ions::PDdS,
+                 channels::PDdS=ions,
                  debug::Bool=false)
-    if samp.group == "sample"
-        KJerror("notStandard")
-    else
-        dat = windowData(samp;signal=true)
-        sig = getSignals(dat)
+    if samp.group in collect(keys(anchors))
+        dat = swindData(samp)
+        getSignals(dat)
         covmat = df2cov(sig)
         anchor = anchors[samp.group]
-        return predict(dat,covmat,pars,blank,channels,anchor;debug=debug)
+        return predict(dat,covmat;
+                       fit=fit,blank=blank,
+                       ions=ions,channels=channels,
+                       anchor=anchor,debug=debug)
+    else
+        KJerror("notStandard")
     end
 end
+
 """
 predict(dat::AbstractDataFrame,
-        covmat::Matrix,
-        pars::NamedTuple,
+        covmat::Matrix;
+        method::AbstractString,
+        fit::NamedTuple,
         blank::AbstractDataFrame,
-        channels::AbstractDict,
-        anchor::NamedTuple;
+        anchor::NamedTuple,
+        ions::PDdS=PDdS(method),
+        channels::PDdS=ions,
         debug::Bool=false)
 """
 function predict(dat::AbstractDataFrame,
-                 covmat::Matrix,
-                 pars::NamedTuple,
+                 covmat::Matrix;
+                 method::AbstractString,
+                 fit::NamedTuple,
                  blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 anchor::NamedTuple;
+                 anchor::NamedTuple,
+                 ions::PDdS=PDdS(method),
+                 channels::PDdS=ions,
                  debug::Bool=false)
-    bP = blank[:,channels["P"]]
-    bD = blank[:,channels["D"]]
-    bd = blank[:,channels["d"]]
-    Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,ft,FT,mf,bPt,bDt,bdt =
-        SSprep(bP,bD,bd,dat,covmat,channels,
-               pars.mfrac,pars.drift,pars.down;
-               PAcutoff=pars.PAcutoff,adrift=pars.adrift)
+    t = dat.t
+    T = dat.T
+    iP = columnindex(dat,channels.P)
+    iD = columnindex(dat,channels.D)
+    id = columnindex(dat,channels.d)
+    Pm = sig[:,iP]
+    Dm = sig[:,iD]
+    dm = sig[:,id]
+    vP = covmat[iP,iP]
+    vD = covmat[iD,iD]
+    vd = covmat[id,id]
+    sPD = covmat[iP,iD]
+    sPd = covmat[iP,id]
+    sDd = covmat[iD,id]
+    ft = get_drift(Pm,t,drift;
+                   PAcutoff=PAcutoff,adrift=adrift)
+    FT = polyFac(down,T)
+    bd = iratio(ions.d,PDdS(method).d)
+    Ss = iratio(ions.S,PDdS(method).S)
+    bPt = polyVal(blank[:,channels.P],t)
+    bDt = polyVal(blank[:,channels.D],t)
+    bdt = polyVal(blank[:,channels.d],t)
     if is_isochron_anchor(anchor)
-        return predict(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,
-                       anchor.x0,anchor.y0,anchor.y1,
-                       ft,FT,mf,bPt,bDt,bdt)
+        return predict(anchor.x0,
+                       anchor.y0,
+                       anchor.y1;
+                       pm=Pm,Dom=Dm,bom=dm,
+                       vp=vP,vD=vD,vd=vd,
+                       spDo=sPD,spbo=sPd,sDobo=sDd,
+                       ft=ft,FT=FT,bd=bd,Ss=Ss,
+                       bpt=bPt,bDt=bDt,bbt=bdt)
     elseif is_point_anchor(anchor)
-        return predict(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,
-                       anchor.x,anchor.y,
-                       ft,FT,mf,bPt,bDt,bdt)        
+        return predict(anchor.x,
+                       anchor.y;
+                       pm=Pm,Dom=Dm,bom=dm,
+                       vp=vP,vD=vD,vd=vd,
+                       spDo=sPD,spbo=sPd,sDobo=sDd,
+                       ft=ft,FT=FT,bd=bd,Ss=Ss,
+                       bpt=bPt,bDt=bDt,bbt=bdt)
     else
         error("Invalid anchor")
     end
 end
+
 """
-predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-        vP::Real,vD::Real,vd::Real,
-        sPD::Real,sPd::Real,sDd::Real,
-        x0::Real,y0::Real,y1::Real,
-        ft::AbstractVector,FT::AbstractVector,mf::Real,
-        bPt::AbstractVector,bDt::AbstractVector,
-        bdt::AbstractVector)
+predict(x0::Real,
+        y0::Real,
+        y1::Real=0.0;
+        pm::AbstractVector,
+        Dom::AbstractVector,
+        bom::AbstractVector,
+        pomb::Union{AbstractVector,Real}=0.0,
+        somb::Union{AbstractVector,Real}=0.0,
+        vp::Real,
+        vD::Real,
+        vb::Real,
+        spDo::Real,
+        spbo::Real,
+        sDobo::Real,
+        ft::AbstractVector,
+        FT::AbstractVector,
+        bd::Real=1.0,
+        Pp::Real=1.0,
+        Ss::Real=1.0,
+        bpt::AbstractVector,
+        bDot::AbstractVector,
+        bbot::AbstractVector)
 
 For isochron-based standards
 """
-function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-                 vP::Real,vD::Real,vd::Real,
-                 sPD::Real,sPd::Real,sDd::Real,
-                 x0::Real,y0::Real,y1::Real,
-                 ft::AbstractVector,FT::AbstractVector,mf::Real,
-                 bPt::AbstractVector,bDt::AbstractVector,
-                 bdt::AbstractVector)
-    P = getP(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    Pf = @. P*ft*FT + bPt
-    Df = @. D*mf + bDt
-    df = @. D*y0 + P*(y1-y0)/x0 + bdt
-    return DataFrame(P=Pf,D=Df,d=df)
+function predict(x0::Real,
+                 y0::Real,
+                 y1::Real=0.0;
+                 pm::AbstractVector,
+                 Dom::AbstractVector,
+                 bom::AbstractVector,
+                 pomb::Union{AbstractVector,Real}=0.0,
+                 somb::Union{AbstractVector,Real}=0.0,
+                 vp::Real,
+                 vD::Real,
+                 vb::Real,
+                 spDo::Real,
+                 spbo::Real,
+                 sDobo::Real,
+                 ft::AbstractVector,
+                 FT::AbstractVector,
+                 bd::Real=1.0,
+                 Pp::Real=1.0,
+                 Ss::Real=1.0,
+                 bpt::AbstractVector,
+                 bDot::AbstractVector,
+                 bbot::AbstractVector)
+    Po = getP(x0,y0,y1;
+              pm=pm,Dom=Dom,bom=bom,pomb=pomb,somb=somb,
+              vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
+              ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
+    Do = getD(x0,y0,y1;
+              pm=pm,Dom=Dom,bom=bom,pomb=pomb,somb=somb,
+              vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
+              ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
+    Pf = @. Po*ft*FT + bpt
+    Dof = @. Do + pomb*Pp + somb*Ss + bDot
+    bof = @. (Do*y0 + Po*(y1-y0)/x0)*bd + bbot
+    return DataFrame(P=Pf,D=Dof,d=bof)
 end
+
 """
-predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-        vP::Real,vD::Real,vd::Real,
-        sPD::Real,sPd::Real,sDd::Real,
-        x::Real,y::Real,
-        ft::AbstractVector,FT::AbstractVector,mf::Real,
-        bPt::AbstractVector,bDt::AbstractVector,
-        bdt::AbstractVector)
+predict(x::Real,
+        y::Real;
+        pm::AbstractVector,
+        Dom::AbstractVector,
+        bom::AbstractVector,
+        pomb::Union{AbstractVector,Real}=0.0,
+        somb::Union{AbstractVector,Real}=0.0,
+        vp::Real,
+        vD::Real,
+        vb::Real,
+        spDo::Real,
+        spbo::Real,
+        sDobo::Real,
+        ft::AbstractVector,
+        FT::AbstractVector,
+        bd::Real=1.0,
+        Pp::Real=1.0,
+        Ss::Real=1.0,
+        bPt::AbstractVector,
+        bDot::AbstractVector,
+        bbot::AbstractVector)
 
 For homogeneous standards
 """
-function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-                 vP::Real,vD::Real,vd::Real,
-                 sPD::Real,sPd::Real,sDd::Real,
-                 x::Real,y::Real,
-                 ft::AbstractVector,FT::AbstractVector,mf::Real,
-                 bPt::AbstractVector,bDt::AbstractVector,
-                 bdt::AbstractVector)
-    D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x,y,ft,FT,mf,bPt,bDt,bdt)
-    Pf = @. D*x*ft*FT + bPt
-    Df = @. D*mf + bDt
-    df = @. D*y + bdt
-    return DataFrame(P=Pf,D=Df,d=df)
-end
-"""
-predict(dat::AbstractDataFrame,
-        covmat::Matrix,
-        pars::NamedTuple,
-        blank::AbstractDataFrame,
-        channels::AbstractDict,
-        y::Real;
-        debug::Bool=false)
-
-For glass
-"""
-function predict(dat::AbstractDataFrame,
-                 covmat::Matrix,
-                 pars::NamedTuple,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
+function predict(x::Real,
                  y::Real;
-                 debug::Bool=false)
-    mf = exp(pars.mfrac)
-    bD = blank[:,channels["D"]]
-    bd = blank[:,channels["d"]]
-    Dm,dm,vD,vd,sDd,bDt,bdt = SSprep(bD,bd,dat,covmat,channels)
-    return predict(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
+                 pm::AbstractVector,
+                 Dom::AbstractVector,
+                 bom::AbstractVector,
+                 pomb::Union{AbstractVector,Real}=0.0,
+                 somb::Union{AbstractVector,Real}=0.0,
+                 vp::Real,
+                 vD::Real,
+                 vb::Real,
+                 spDo::Real,
+                 spbo::Real,
+                 sDobo::Real,
+                 ft::AbstractVector,
+                 FT::AbstractVector,
+                 bd::Real=1.0,
+                 Pp::Real=1.0,
+                 Ss::Real=1.0,
+                 bPt::AbstractVector,
+                 bDot::AbstractVector,
+                 bbot::AbstractVector)
+    Do = getD(x,y;
+              pm=pm,Dom=Dom,bom=bom,pomb=pomb,somb=somb,
+              vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
+              ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
+    Pf = @. Do*x*ft*FT + bPt
+    Dof = @. Do + pomb*Pp + somb*Ss + bDot
+    bof = @. Do*y*bd + bdot
+    return DataFrame(P=Pf,D=Dof,d=bof)
 end
-"""
-predict(Dm::AbstractVector,dm::AbstractVector,
-        vD::Real,vd::Real,sDd::Real,
-        y::Real,
-        mf::Real,
-        bDt::AbstractVector,
-        bdt::AbstractVector)
-"""
-function predict(Dm::AbstractVector,dm::AbstractVector,
-                 vD::Real,vd::Real,sDd::Real,
-                 y::Real,
-                 mf::Real,
-                 bDt::AbstractVector,
-                 bdt::AbstractVector)
-    D = getD(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
-    Df = @. D*mf + bDt
-    df = @. D*y + bdt
-    return DataFrame(D=Df,d=df)
-end
+
 """
 predict(samp::Sample,
         ef::AbstractVector,
@@ -520,6 +623,7 @@ function predict(samp::Sample,
         KJerror("notStandard")
     end
 end
+
 """
 predict(samp::Sample,
         blank::AbstractDataFrame;
@@ -530,7 +634,7 @@ For blanks
 function predict(samp::Sample,
                  blank::AbstractDataFrame;
                  debug::Bool=false)
-    dat = windowData(samp;blank=true)
+    dat = bwinData(samp)
     return polyVal(blank,dat.t)
 end
 export predict

@@ -186,21 +186,19 @@ function autoWindow(samp::Sample;
 end
 
 """
-pool(run::Vector{Sample};
+poolBlanks(run::Vector{Sample};
      blank::Bool=false,
-     signal::Bool=false,
      group::Union{Nothing,AbstractString}=nothing,
      include_covmats::Bool=false,
      add_xy::Bool=false)
 
-Returns a vector of blanks and/or signals plus
+Returns a vector of blanks or signals plus
 (if include_covmats is true), a vector of their
 covariance matrices. Does not include any values
 marked as outliers.
 """
 function pool(run::Vector{Sample};
               blank::Bool=false,
-              signal::Bool=false,
               group::Union{Nothing,AbstractString}=nothing,
               include_covmats::Bool=false,
               add_xy::Bool=false)
@@ -208,10 +206,9 @@ function pool(run::Vector{Sample};
     ns = length(selection)
     dats = Vector{DataFrame}(undef,ns)
     for i in eachindex(selection)
-        dat = windowData(run[selection[i]];
-                         blank=blank,
-                         signal=signal,
-                         add_xy=add_xy)
+        dat = ifelse(blank,
+                     bwinData(run[selection[i]];add_xy=add_xy),
+                     swinData(run[selection[i]];add_xy=add_xy))
         good = .!dat.outlier
         dats[i] = dat[good,:]
     end
@@ -268,91 +265,6 @@ function var_timeseries(cps::AbstractVector)
     return fill(var,length(cps))
 end
 export var_timeseries
-
-"""
-windowData(samp::Sample;
-           blank::Bool=false,
-           signal::Bool=false,
-           add_xy::Bool=false)
-
-Return the blank and/or signal data from samp.
-"""
-function windowData(samp::Sample;
-                    blank::Bool=false,
-                    signal::Bool=false,
-                    add_xy::Bool=false)
-    if blank
-        windows = samp.bwin
-    elseif signal
-        windows = samp.swin
-    else
-        windows = [(1,size(samp.dat,1))]
-    end
-    selection, x, y = windows2selection(windows;add_xy=add_xy)
-    selected_dat =  samp.dat[selection,:]
-    if signal
-        selected_dat.T = (selected_dat[:,1] .- samp.t0)./60 # in minutes
-        if !(isnothing(x) || isnothing(y))
-            selected_dat.x = x
-            selected_dat.y = y
-        end
-    end
-    return selected_dat
-end
-export windowData
-
-function windows2selection(windows::AbstractVector;
-                           add_xy::Bool=false)
-    selection = Integer[]
-    add_xy = add_xy && length(windows[1])>2
-    if add_xy
-        x = Float64[]
-        y = Float64[]
-    else
-        x = y = nothing
-    end
-    for w in windows
-        append!(selection, w[1]:w[2])
-        if add_xy
-            nsweeps = w[2]-w[1]+1
-            append!(x,range(w[3],w[4];length=nsweeps))
-            append!(y,range(w[5],w[6];length=nsweeps))
-        end
-    end
-    return selection, x, y
-end
-
-function string2windows(samp::Sample,text::AbstractString,single::Bool)
-    if single
-        parts = split(text,',')
-        stime = [parse(Float64,parts[1])]
-        ftime = [parse(Float64,parts[2])]
-        nw = 1
-    else
-        parts = split(text,['(',')',','])
-        stime = parse.(Float64,parts[2:4:end])
-        ftime = parse.(Float64,parts[3:4:end])
-        nw = Int(round(size(parts,1)/4))
-    end
-    windows = Vector{Tuple}(undef,nw)
-    t = samp.dat[:,1]
-    nt = size(t,1)
-    maxt = t[end]
-    for i in 1:nw
-        if stime[i]>t[end]
-            stime[i] = t[end-1]
-            print("Warning: start point out of bounds and truncated to ")
-            print(string(stime[i]) * " seconds.")
-        end
-        if ftime[i]>t[end]
-            ftime[i] = t[end]
-            print("Warning: end point out of bounds and truncated to ")
-            print(string(maxt) * " seconds.")
-        end
-        windows[i] = time2window(samp,stime[i],ftime[i])
-    end
-    return windows
-end
 
 """
 t2i(samp::Sample,t::Number)
@@ -628,4 +540,15 @@ function dataframe_sum(df::AbstractDataFrame)
         end
     end
     return total
+end
+
+function iratio(nuclide1::Union{Missing,AbstractString},
+                nuclide2::Union{Missing,AbstractString})
+    if ismissing(nuclide1) || ismissing(nuclide2)
+        return 1.0
+    end
+    df = _KJ["iratio"]
+    row1 = findfirst(==(nuclide1),df.isotope)
+    row2 = findfirst(==(nuclide2),df.isotope)
+    return df[row1,"abundance"]/df[row2,"abundance"]
 end

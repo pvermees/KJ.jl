@@ -24,3 +24,19 @@ mutable struct OrderedDict
     names::Vector{String}
     dict::Dict
 end
+
+"""
+PDdS(P::String,
+     D::String,
+     d::String,
+     S::Union{Missing,String})
+
+P = Parent, D = Daughter, d = sister, S = Stranger
+"""
+mutable struct PDdS
+    P::String
+    D::String
+    d::String
+    S::Union{Missing,String}
+end
+export PDdS
