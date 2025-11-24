@@ -1,6 +1,6 @@
 """
-getStandardAnchors(method::AbstractString,
-                   refmats::AbstractVector)
+getAnchors(method::AbstractString,
+           refmats::AbstractVector)
 
 Returns a Dict with named tuples containing
 x0, y0, y1, x or y for the age standards
@@ -9,16 +9,30 @@ function getAnchors(method::AbstractString,
                     refmats::AbstractVector)
     out = Dict()
     for refmat in refmats
-        t = get(_KJ["refmat"][method],refmat).type
-        if t == "isochron"
-            out[refmat] = get_isochron_anchor(method,refmat)
-        else
-            out[refmat] = get_point_anchor(method,refmat)
-        end
+        out[refmat] = getAnchor(method,refmat)
     end
     return out
 end
 export getAnchors
+
+"""
+getAnchor(method::AbstractString,
+          refmats::AbstractVector)
+
+Returns a named tuple containing
+x0, y0, y1, x or y for the age standards
+"""
+function getAnchor(method::AbstractString,
+                   refmat::AbstractString)
+    t = get(_KJ["refmat"][method],refmat).type
+    if t == "isochron"
+        out = get_isochron_anchor(method,refmat)
+    else
+        out = get_point_anchor(method,refmat)
+    end
+    return out
+end
+export getAnchor
 
 function get_isochron_anchor(method::AbstractString,
                              refmat::AbstractString)

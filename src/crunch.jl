@@ -1,7 +1,7 @@
 """
 getP(x0::Real,
      y0::Real,
-     y1::Real=0.0;
+     y1::Real;
      pmb::AbstractVector,
      Domb::AbstractVector,
      bomb::AbstractVector,
@@ -23,7 +23,7 @@ Estimate the true parent intensity from the measurements for isochron-based stan
 """
 function getP(x0::Real,
               y0::Real,
-              y1::Real=0.0;
+              y1::Real;
               pm::AbstractVector,
               Dom::AbstractVector,
               bom::AbstractVector,
@@ -252,7 +252,7 @@ function SS(par::NamedTuple,
             blank::AbstractDataFrame,
             channels::AbstractDict;
             verbose::Bool=false)
-    anchors = getStandardAnchors(method,standards)
+    anchors = getAnchors(method,standards)
     dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
     parvec = [par.drift; par.down]
     ndrift = length(par.drift)
@@ -378,30 +378,22 @@ function SSprep(bD::AbstractVector,bd::AbstractVector,
 end
 
 """
-predict(samp::Sample;
-        fit::NamedTuple,
-        blank::AbstractDataFrame,
-        anchors::AbstractDict,
-        ions::PDdS,
-        channels::PDdS=ions,
-        debug::Bool=false)
+predict(samp::Sample,
+        chronometer::Chronometer,
+        fit::Fit,
+        anchors::AbstractDict)
 """
-function predict(samp::Sample;
-                 fit::NamedTuple,
-                 blank::AbstractDataFrame,
-                 anchors::AbstractDict,
-                 ions::PDdS,
-                 channels::PDdS=ions,
-                 debug::Bool=false)
+function predict(samp::Sample,
+                 chronometer::Chronometer,
+                 fit::Fit,
+                 anchors::AbstractDict;
+                 kw...)
     if samp.group in collect(keys(anchors))
-        dat = swindData(samp)
-        getSignals(dat)
+        dat = swinData(samp)
+        sig = getSignals(dat)
         covmat = df2cov(sig)
-        anchor = anchors[samp.group]
-        return predict(dat,covmat;
-                       fit=fit,blank=blank,
-                       ions=ions,channels=channels,
-                       anchor=anchor,debug=debug)
+        anchor = getAnchor(chronometer.method,samp.group)
+        return predict(dat,covmat,chronometer,fit,anchor;kw...)
     else
         KJerror("notStandard")
     end
@@ -409,29 +401,24 @@ end
 
 """
 predict(dat::AbstractDataFrame,
-        covmat::Matrix;
-        method::AbstractString,
-        fit::NamedTuple,
-        blank::AbstractDataFrame,
-        anchor::NamedTuple,
-        ions::PDdS=PDdS(method),
-        channels::PDdS=ions,
-        debug::Bool=false)
+        covmat::Matrix,
+        chronometer::Chronometer,
+        fit::Fit,
+        anchor::NamedTuple)
 """
 function predict(dat::AbstractDataFrame,
-                 covmat::Matrix;
-                 method::AbstractString,
-                 fit::NamedTuple,
-                 blank::AbstractDataFrame,
-                 anchor::NamedTuple,
-                 ions::PDdS=PDdS(method),
-                 channels::PDdS=ions,
-                 debug::Bool=false)
+                 covmat::Matrix,
+                 chronometer::Chronometer,
+                 fit::Fit,
+                 anchor::NamedTuple;
+                 kw...)
     t = dat.t
     T = dat.T
-    iP = columnindex(dat,channels.P)
-    iD = columnindex(dat,channels.D)
-    id = columnindex(dat,channels.d)
+    ch = getChannels(chronometer)
+    sig = getSignals(dat)
+    iP = columnindex(sig,ch.P)
+    iD = columnindex(sig,ch.D)
+    id = columnindex(sig,ch.d)
     Pm = sig[:,iP]
     Dm = sig[:,iD]
     dm = sig[:,id]
@@ -441,14 +428,16 @@ function predict(dat::AbstractDataFrame,
     sPD = covmat[iP,iD]
     sPd = covmat[iP,id]
     sDd = covmat[iD,id]
-    ft = get_drift(Pm,t,drift;
-                   PAcutoff=PAcutoff,adrift=adrift)
-    FT = polyFac(down,T)
-    bd = iratio(ions.d,PDdS(method).d)
-    Ss = iratio(ions.S,PDdS(method).S)
-    bPt = polyVal(blank[:,channels.P],t)
-    bDt = polyVal(blank[:,channels.D],t)
-    bdt = polyVal(blank[:,channels.d],t)
+    ft = get_drift(Pm,t,fit;PAcutoff=chronometer.PAcutoff)
+    FT = polyFac(fit.down,T)
+    ions = getIons(chronometer)
+    proxies = getProxies(chronometer)
+    bd = iratio(ions.d,proxies.d)
+    Ss = iratio(ions.S,proxies.S)
+    blank = fit.blank
+    bPt = polyVal(blank[:,ch.P],t)
+    bDt = polyVal(blank[:,ch.D],t)
+    bdt = polyVal(blank[:,ch.d],t)
     if is_isochron_anchor(anchor)
         return predict(anchor.x0,
                        anchor.y0,

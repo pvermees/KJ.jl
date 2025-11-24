@@ -26,18 +26,38 @@ mutable struct OrderedDict
 end
 
 """
-Method(name::String,
-       ions::NamedTuple,
-       proxies::Union{Nothing,NamedTuple},
-       channels::Union{Nothing,NamedTuple})
+Chronometer(method::String
+            channels::DataFrame
+            nblanks::Int
+            ndrift::Int
+            ndown::Int
+            PAcutoff::Union{Nothing,Real})
 
 ions, proxies, channels and interferences are
 NamedTuples with keys P, D d and S
 """
-mutable struct Method
-    name::String
-    ions::NamedTuple,
-    proxies::Union{Nothing,NamedTuple}
-    channels::Union{Nothing,NamedTuple}
+mutable struct Chronometer
+    method::String
+    channels::DataFrame
+    nblank::Int
+    ndrift::Int
+    ndown::Int
+    PAcutoff::Union{Nothing,Real}
 end
-export Method
+export Chronometer
+
+"""
+Fit(blank::DataFrame
+    drift::Vector{Real}
+    down::Vector{Real}
+    adrift::Vector{Real})
+
+KJ standard fit parameters
+"""
+mutable struct Fit
+    blank::DataFrame
+    drift::Vector{Real}
+    down::Vector{Real}
+    adrift::Vector{Real}
+end
+export Fit

@@ -53,7 +53,7 @@ function fractionation(run::Vector{Sample},
                        PAcutoff=nothing,
                        verbose::Bool=false)
 
-    anchors = getStandardAnchors(method,standards)
+    anchors = getAnchors(method,standards)
     
     dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
 

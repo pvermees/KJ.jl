@@ -253,27 +253,19 @@ export getInternal
 
 function get_drift(Pm::AbstractVector,
                    t::AbstractVector,
-                   pars::NamedTuple)
-    return get_drift(Pm,t,pars.drift;
-                     PAcutoff=pars.PAcutoff,
-                     adrift=pars.adrift)
-end
-
-function get_drift(Pm::AbstractVector,
-                   t::AbstractVector,
-                   drift::AbstractVector;
-                   PAcutoff=nothing,adrift=drift)
+                   fit::Fit;
+                   PAcutoff=nothing)
     if isnothing(PAcutoff)
-        ft = polyFac(drift,t)
+        ft = polyFac(fit.drift,t)
     else
-        analog = Pm .> PAcutoff
+        analog = Pm .> fit.PAcutoff
         if all(analog)
-            ft = polyFac(adrift,t)
+            ft = polyFac(fit.adrift,t)
         elseif all(.!analog)
-            ft = polyFac(drift,t)
+            ft = polyFac(fit.drift,t)
         else
-            ft = polyFac(drift,t)
-            ft[analog] = polyFac(adrift,t)[analog]
+            ft = polyFac(fit.drift,t)
+            ft[analog] = polyFac(fit.adrift,t)[analog]
         end
     end
     return ft

@@ -89,7 +89,7 @@ function standardtest(verbose=false)
     myrun, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    anchors = getStandardAnchors("Lu-Hf",standards)
+    anchors = getAnchors("Lu-Hf",collect(keys(standards)))
     if verbose
         println(anchors)
         summarise(myrun;verbose=true,n=5)
@@ -97,37 +97,42 @@ function standardtest(verbose=false)
     return myrun
 end
 
-function fixedLuHf(drift,down,PAcutoff,adrift)
+function fixedLuHf(drift,down;
+                   PAcutoff=nothing,
+                   adrift=drift)
     myrun, blk = blanktest()
-    method = "Lu-Hf"
-    ions = Channels(method;P="Lu175",d="Hf178")
-    channels = Channels(P="Lu175 -> 175",
-                        D="Hf176 -> 258",
-                        d="Hf178 -> 260")
+    chronometer = Chronometer("Lu-Hf")
+    setProxies!(chronometer;
+                P="Lu175",
+                d="Hf178")
+    setChannels!(chronometer;
+                 P="Lu175 -> 175",
+                 D="Hf176 -> 258",
+                 d="Hf178 -> 260")
+    chronometer.PAcutoff = PAcutoff
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    fit = (drift=drift,down=down,PAcutoff=PAcutoff,adrift=adrift)
-    return myrun, blk, method, ions, channels, standards, fit
+    fit = Fit(blk,drift,down,adrift)
+    return myrun, chronometer, standards, fit
 end
 
 function predictest()
     drift = [3.91]
     down = [0.0,0.0045]
-    myrun, blk, method, ions, channels, standards, fit =
-        fixedLuHf(drift,down,nothing,drift)
+    myrun, chronometer, standards, fit = fixedLuHf(drift,down)
     samp = myrun[1]
     if samp.group == "sample"
         println("Not a standard")
-        return samp, method, fit, blk, ions, channels, standards
+        return samp, chronometer, fit, standards
     else
-        pred = predict(samp,method,fit,blk,ions,channels,standards)
+        pred = predict(samp,chronometer,fit,standards)
         anchors = getAnchors(method,standards)
-        p, offset = KJ.plot(samp,channels,blk,fit,anchors;
-                            den=channels.D,
+        p, offset = KJ.plot(samp,chronometer,fit,anchors;
+                            den=getChannels(method).D,
                             transformation="log",
                             return_offset=true)
         @test display(p) != NaN
-        return samp, method, fit, blk, ions, channels, standards, p, offset
+        return samp, chronometer, fit, standards, p, offset
     end
 end
     
