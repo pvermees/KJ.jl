@@ -26,17 +26,18 @@ mutable struct OrderedDict
 end
 
 """
-PDdS(P::String,
-     D::String,
-     d::String,
-     S::Union{Missing,String})
+Method(name::String,
+       ions::NamedTuple,
+       proxies::Union{Nothing,NamedTuple},
+       channels::Union{Nothing,NamedTuple})
 
-P = Parent, D = Daughter, d = sister, S = Stranger
+ions, proxies, channels and interferences are
+NamedTuples with keys P, D d and S
 """
-mutable struct PDdS
-    P::String
-    D::String
-    d::String
-    S::Union{Missing,String}
+mutable struct Method
+    name::String
+    ions::NamedTuple,
+    proxies::Union{Nothing,NamedTuple}
+    channels::Union{Nothing,NamedTuple}
 end
-export PDdS
+export Method
