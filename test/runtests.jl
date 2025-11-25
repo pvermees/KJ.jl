@@ -88,7 +88,10 @@ end
 function standardtest(verbose=false)
     myrun, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
-    setGroup!(myrun,standards)
+    method = KJmethod("Lu-Hf")
+    setStandards!(myrun,
+                  method;
+                  standards=standards)
     if verbose
         summarise(myrun;verbose=true,n=5)
     end
@@ -107,10 +110,9 @@ function fixedLuHf(drift,down;
                  P="Lu175 -> 175",
                  D="Hf176 -> 258",
                  d="Hf178 -> 260")
-    standards = Dict("BP_gt" => "BP")
-    setStandards!(method,standards)
-    setGroup!(myrun,method)
-    fit = KJfit(blk,drift,down,PAcutoff,adrift)
+    setStandards!(myrun,method;
+                  standards=Dict("BP_gt" => "BP"))
+    fit = KJfit(blk,drift,down,adrift)
     return myrun, method, fit
 end
 
@@ -134,26 +136,26 @@ function predictest()
 end
     
 function partest(parname,paroffsetfact)
-    samp,method,fit,blk,channels,standards,glass,p,offset = predictest()
-    drift = fit.drift[1]
-    down = fit.down[2]
-    mfrac = fit.mfrac[1]
+    samp, method, fit, p, offset = predictest()
+    drift = 0.0
+    down = 0.0
     for paroffset in paroffsetfact .* [-1,1]
         if parname=="drift"
             drift = fit.drift[1] + paroffset
+            down = fit.down[2]
         elseif parname=="down"
+            drift = fit.drift[1]
             down = fit.down[2] + paroffset
-        elseif parname=="mfrac"
-            mfrac = fit.mfrac[1] + paroffset
         end
-        adjusted_fit = (drift=[drift],
-                        down=[0.0,down],
-                        mfrac=mfrac,
-                        PAcutoff=nothing,
-                        adrift=[drift])
-        anchors = getStandardAnchors(method,standards)
-        plotFitted!(p,samp,blk,adjusted_fit,channels,anchors;
-                    transformation="log",offset=offset,linecolor="red")
+        adjusted_fit = KJfit(fit.blank,      # blank
+                             [drift,0.0],    # drift
+                             [0.0,down],     # down
+                             [drift,0.0])    # adrift
+        plotFitted!(p,samp,method,adjusted_fit;
+                    den=getChannels(method).D,
+                    transformation="log",
+                    offset=offset,
+                    linecolor="red")
     end
     @test display(p) != NaN
 end
@@ -163,46 +165,27 @@ function driftest()
 end
 
 function downtest()
-    partest("down",4.0)
-end
-
-function mfractest()
-    partest("mfrac",0.2)
+    partest("down",1.0)
 end
 
 function fractionationtest(all=true)
-    myrun, blk = blanktest()
-    method = "Lu-Hf"
-    channels = Dict("d" => "Hf178 -> 260",
-                    "D" => "Hf176 -> 258",
-                    "P" => "Lu175 -> 175")
-    glass = Dict("NIST612" => "NIST612p")
-    setGroup!(myrun,glass)
-    standards = Dict("BP_gt" => "BP")
-    setGroup!(myrun,standards)
-    if all
-        println("two separate steps: ")
-        mf = fractionation(myrun,method,blk,channels,glass)
-        fit = fractionation(myrun,method,blk,channels,standards,mf;
-                            ndrift=1,ndown=1)
-        println(fit)
-        print("no glass: ")
-        fit = fractionation(myrun,method,blk,channels,standards,nothing;
-                            ndrift=1,ndown=1)
-        println(fit)
-        println("two joint steps: ")
-    end
-    fit = fractionation(myrun,"Lu-Hf",blk,channels,standards,glass;
-                        ndrift=1,ndown=1)
-    if (all)
-        println(fit)
-        return myrun, blk, fit, channels, standards, glass
-    else
-        Ganchors = getGlassAnchors(method,glass)
-        Sanchors = getStandardAnchors(method,standards)
-        anchors = merge(Sanchors,Ganchors)
-        return myrun, blk, fit, channels, standards, glass, anchors
-    end
+    myrun = loadtest()
+    method = KJmethod("Lu-Hf")
+    setProxies!(method,
+                P = "Lu175",
+                D = "Hf176",
+                d = "Hf178")
+    setChannels!(method,
+                 P = "Lu175 -> 175",
+                 D = "Hf176 -> 258",
+                 d = "Hf178 -> 260")
+    setStandards!(myrun,method;
+                  standards = Dict("BP_gt" => "BP"))
+    fit = KJfit(method)
+    fitBlanks!(fit,method,myrun)
+    fractionation!(fit,method,myrun;verbose=false)
+    println("drift: ",fit.drift,", down: ",fit.down)
+    return myrun, method, fit
 end
 
 function RbSrTest(show=true)
@@ -612,19 +595,18 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "moving median test" begin mmediantest() end
     @testset "outlier detection" begin outliertest() end
-    @testset "assign standards" begin standardtest(true) end=#
+    @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
-    #=@testset "predict drift" begin driftest() end
+    @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
-    @testset "predict mfrac" begin mfractest() end
     @testset "fractionation" begin fractionationtest(true) end
-    @testset "Rb-Sr" begin RbSrTest() end
+    #=@testset "Rb-Sr" begin RbSrTest() end
     @testset "K-Ca" begin KCaTest() end
     @testset "hist" begin histest() end
     @testset "process run" begin processtest() end

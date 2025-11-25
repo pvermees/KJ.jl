@@ -11,25 +11,13 @@ function KJmethod(name::String)
                          d=fill(String(m.d),3))
     return KJmethod(name,
                     channels,
-                    Dict(), # interferences
-                    2,      #nblank
-                    2,      #ndrift
-                    1,      #ndown
-                    Dict(), # standards
-                    Dict()) # anchors
+                    Dict(),  # interferences
+                    2,       # nblank
+                    2,       # ndrift
+                    1,       # ndown
+                    nothing, # PAcutoff
+                    Dict())  # anchors
 end
-
-"""
-setStandards!(method::KJmethod,
-              standards::Dict)
-"""
-function setStandards!(method::KJmethod,
-                       standards::Dict)
-    refmats = collect(keys(standards))
-    method.standards = standards
-    method.anchors = getAnchors(method.name,refmats)
-end
-export setStandards!
 
 function channelAccessor(channels::AbstractDataFrame,
                          rowname::AbstractString)

@@ -31,7 +31,7 @@ KJmethod(name::String
          nblanks::Int
          ndrift::Int
          ndown::Int
-         standards::Dict
+         PAcutoff::Union{Nothing,Float64}
          anchors::Dict)
 
 KJ method type
@@ -43,44 +43,42 @@ mutable struct KJmethod
     nblank::Int
     ndrift::Int
     ndown::Int
-    standards::Dict
+    PAcutoff::Union{Nothing,Float64}
     anchors::Dict
 end
 export KJmethod
 
 """
 KJfit(blank::DataFrame
-      drift::Vector{Real}
-      down::Vector{Real}
-      PAcutoff::Union{Nothing,Real}
-      adrift::Vector{Real})
+      drift::Vector{Float64}
+      down::Vector{Float64}
+      adrift::Vector{Float64})
 
 KJ fit type
 """
 mutable struct KJfit
     blank::DataFrame
-    drift::Vector{Real}
-    down::Vector{Real}
-    PAcutoff::Union{Nothing,Real}
-    adrift::Vector{Real}
+    drift::Vector{Float64}
+    down::Vector{Float64}
+    adrift::Vector{Float64}
 end
 export KJfit
 
 mutable struct Cruncher
     anchor::NamedTuple
-    pm::Vector{Real}
-    Dom::Vector{Real}
-    bom::Vector{Real}
-    bpt::Vector{Real}
-    bDot::Vector{Real}
-    bbot::Vector{Real}
-    vp::Real
-    vD::Real
-    vb::Real
-    spD::Real
-    spb::Real
-    sDb::Real
-    ft::Vector{Real}
-    FT::Vector{Real}
-    bd::Real
+    pm::Vector{Float64}
+    Dom::Vector{Float64}
+    bom::Vector{Float64}
+    bpt::Vector{Float64}
+    bDot::Vector{Float64}
+    bbot::Vector{Float64}
+    vp::Float64
+    vD::Float64
+    vb::Float64
+    spD::Float64
+    spb::Float64
+    sDb::Float64
+    bd::Float64
+    t::Vector{Float64}
+    T::Vector{Float64}
 end

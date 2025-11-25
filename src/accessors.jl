@@ -87,12 +87,27 @@ function getAttr(run::Vector{Sample},
 end
 
 """
-setGroup!(run::Vector{Sample},
-          selection::Vector{Int},
-          refmat::AbstractString)
+setStandards!(run::Vector{Sample},
+              method::KJmethod;
+              standards::Dict=Dict())
 
-Change the group allocations for a selection of samples in a run
+Puts samples in groups and updates anchors in method
+Resets run and methods if standards argument is omitted.
 """
+function setStandards!(run::Vector{Sample},
+                       method::KJmethod;
+                       standards::AbstractDict=Dict())
+    if length(standards)>0
+        setGroup!(run,standards)
+        refmats = collect(keys(standards))
+        method.anchors = getAnchors(method.name,refmats)
+    else
+        setGroup!(run,"sample")
+        method.anchors = Dict()
+    end
+end
+export setStandards!
+
 function setGroup!(run::Vector{Sample},
                    selection::Vector{Int},
                    group::AbstractString)
@@ -100,13 +115,6 @@ function setGroup!(run::Vector{Sample},
         run[i].group = group
     end
 end
-
-"""
-setGroup!(run::Vector{Sample},
-          prefix::AbstractString,
-          group::AbstractString)
-
-"""
 function setGroup!(run::Vector{Sample},
                    prefix::AbstractString,
                    group::AbstractString)
@@ -114,40 +122,22 @@ function setGroup!(run::Vector{Sample},
     selection = findall(contains(prefix),snames)
     setGroup!(run,selection,group)
 end
-
-"""
-setGroup!(run::Vector{Sample},
-          method::KJmethod)
-"""
 function setGroup!(run::Vector{Sample},
                    method::KJmethod)
     setGroup!(run,method.standards)
 end
-
-"""
-setGroup!(run::Vector{Sample},
-          standards::AbstractDict)
-"""
 function setGroup!(run::Vector{Sample},
                    standards::AbstractDict)
     for (group,prefix) in standards
         setGroup!(run,prefix,group)
     end
 end
-
-"""
-setGroup!(run::Vector{Sample},
-          group::AbstractString)
-
-Assign all the samples to the same group
-"""
 function setGroup!(run::Vector{Sample},
                    group::AbstractString)
     for sample in run
         sample.group = group
     end
 end
-export setGroup!
 
 """
 geti0(signals::AbstractDataFrame)
@@ -261,19 +251,21 @@ end
 export getInternal
 
 function get_drift(Pm::AbstractVector,
-                   t::AbstractVector,
-                   fit::KJfit)
-    if isnothing(fit.PAcutoff)
-        ft = polyFac(fit.drift,t)
+                   t::AbstractVector;
+                   drift::AbstractVector=[0.0],
+                   adrift::AbstractVector=drift,
+                   PAcutoff::Union{Nothing,Real}=nothing)
+    if isnothing(PAcutoff)
+        ft = polyFac(drift,t)
     else
-        analog = Pm .> fit.PAcutoff
+        analog = Pm .> PAcutoff
         if all(analog)
-            ft = polyFac(fit.adrift,t)
+            ft = polyFac(adrift,t)
         elseif all(.!analog)
-            ft = polyFac(fit.drift,t)
+            ft = polyFac(drift,t)
         else
-            ft = polyFac(fit.drift,t)
-            ft[analog] = polyFac(fit.adrift,t)[analog]
+            ft = polyFac(drift,t)
+            ft[analog] = polyFac(adrift,t)[analog]
         end
     end
     return ft

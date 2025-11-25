@@ -1,114 +1,59 @@
-"""
-fractionation(run::Vector{Sample},
-              method::AbstractString,
-              blank::AbstractDataFrame,
-              channels::AbstractDict,
-              standards::AbstractDict,
-              glass::AbstractDict;
-              ndrift::Integer=1,
-              ndown::Integer=0,
-              PAcutoff=nothing,
-              verbose::Bool=false)
+function fractionation!(fit::KJfit,
+                        method::KJmethod,
+                        run::Vector{Sample};
+                        verbose::Bool=false)
 
-Two-step isotope fractionation correction
-"""
-function fractionation(run::Vector{Sample},
-                       method::AbstractString,
-                       blank::AbstractDataFrame,
-                       channels::AbstractDict,
-                       standards::AbstractDict,
-                       glass::AbstractDict;
-                       ndrift::Integer=1,
-                       ndown::Integer=0,
-                       PAcutoff=nothing,
-                       verbose::Bool=false)
-    mf = fractionation(run,method,blank,channels,glass;
-                       verbose=verbose)
-    return fractionation(run,method,blank,channels,standards,mf;
-                         ndrift=ndrift,ndown=ndown,
-                         PAcutoff=PAcutoff,
-                         verbose=verbose)
-end
-"""
-fractionation(run::Vector{Sample},
-              method::AbstractString,
-              blank::AbstractDataFrame,
-              channels::AbstractDict,
-              standards::AbstractDict,
-              mf::Union{Real,Nothing};
-              ndrift::Integer=1,
-              ndown::Integer=0,
-              PAcutoff=nothing,
-              verbose::Bool=false)
-One-step isotope fractionation correction using mineral standards
-"""
-function fractionation(run::Vector{Sample},
-                       method::AbstractString,
-                       blank::AbstractDataFrame,
-                       channels::AbstractDict,
-                       standards::AbstractDict,
-                       mf::Union{Real,Nothing};
-                       ndrift::Integer=1,
-                       ndown::Integer=0,
-                       PAcutoff=nothing,
-                       verbose::Bool=false)
+    # extract the grouped data for the SS function from the run
+    cruncher_groups = Dict()
+    for refmat in keys(method.anchors)
+        selection = group2selection(run,refmat)
+        ns = length(selection)
+        crunchers = Vector{Cruncher}(undef,ns)
+        for i in eachindex(selection)
+            crunchers[i] = Cruncher(run[selection[i]],method,fit)
+        end
+        cruncher_groups[refmat] = crunchers
+    end
 
-    anchors = getAnchors(method,standards)
-    
-    dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
+    # initialise the parameters
+    init = fill(0.0,method.ndrift)
+    if (method.ndown>0) init = vcat(init,fill(0.0,method.ndown)) end
+    if !isnothing(method.PAcutoff) init = vcat(init,fill(0.0,method.ndrift)) end
 
-    if ndrift<1 KJerror("ndriftzero") end
-    
-    init = fill(0.0,ndrift)
-    if (ndown>0) init = vcat(init,fill(0.0,ndown)) end
-    if isnothing(mf) init = vcat(init,0.0) end
-    if !isnothing(PAcutoff) init = vcat(init,fill(0.0,ndrift)) end
-    
-    return SSfit(init,bP,bD,bd,dats,covs,channels,anchors,mf;
-                 ndrift=ndrift,ndown=ndown,
-                 PAcutoff=PAcutoff,verbose=verbose)
+    # define the objective function
+    objective = (par) -> SS(par,method,cruncher_groups;verbose=verbose)
+
+    # fit the model
+    out = Optim.optimize(objective,init)
+    if verbose
+        println("Drift and downhole fractionation correction:\n")
+        println(out)
+    else
+        if out.stopped_by.time_limit
+            @warn "Reached the maximum number of iterations before achieving " *
+                "convergence. Reduce the order of the polynomials or fix the " *
+                "mass fractionation and try again."
+        end
+        if hasproperty(out.stopped_by,:ls_failed) && out.stopped_by.ls_failed
+            @warn "Least squares algorithm did not converge."
+        end
+    end
+
+    # update the fit
+    par = Optim.minimizer(out)
+    fit.drift, fit.down, fit.adrift = parse_par(par,method)
 
 end
-"""
-fractionation(run::Vector{Sample},
-              method::AbstractString,
-              blank::AbstractDataFrame,
-              channels::AbstractDict,
-              glass::AbstractDict;
-              verbose::Bool=false)
-Mass fractionation correction using glass
-"""
-function fractionation(run::Vector{Sample},
-                       method::AbstractString,
-                       blank::AbstractDataFrame,
-                       channels::AbstractDict,
-                       glass::AbstractDict;
-                       verbose::Bool=false)
-    anchors = getGlassAnchors(method,glass)
-    dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
-    return SSfit([0.0],bD,bd,dats,covs,channels,anchors;verbose=verbose)
+export fractionation!
+
+function parse_par(par::AbstractVector,
+                   method::KJmethod)
+    drift = par[1:method.ndrift]
+    down = vcat(0.0,par[method.ndrift+1:method.ndrift+method.ndown])
+    adrift = isnothing(method.PAcutoff) ? drift : par[end-method.ndrift+1:end]
+    return drift, down, adrift
 end
-"""
-fractionation(run::Vector{Sample},
-              blank::AbstractDataFrame,
-              internal::Tuple,
-              glass::AbstractDict)
-For concentration measurements
-"""
-function fractionation(run::Vector{Sample},
-                       blank::AbstractDataFrame,
-                       internal::Tuple,
-                       glass::AbstractDict)
-    elements = channels2elements(run)
-    return fractionation(run,blank,elements,internal,glass)
-end
-"""
-fractionation(run::Vector{Sample},
-              blank::AbstractDataFrame,
-              elements::AbstractDataFrame,
-              internal::Tuple,
-              glass::AbstractDict)
-"""
+
 function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
                        elements::AbstractDataFrame,
@@ -138,90 +83,3 @@ function fractionation(run::Vector{Sample},
     return num./den
 end
 export fractionation
-
-function SSfitprep(run::Vector{Sample},
-                   blank::AbstractDataFrame,
-                   anchors::AbstractDict,
-                   channels::AbstractDict)
-    dats = Dict()
-    covs = Dict()
-    for (refmat,anchor) in anchors
-        dats[refmat], covs[refmat] =
-            pool(run;signal=true,group=refmat,
-                 include_covmats=true)
-    end
-    bD = blank[:,channels["D"]]
-    bd = blank[:,channels["d"]]
-    bP = blank[:,channels["P"]]
-    return dats, covs, bP, bD, bd
-end
-
-# minerals
-function SSfit(init::AbstractVector,
-               bP::AbstractVector,
-               bD::AbstractVector,
-               bd::AbstractVector,
-               dats::AbstractDict,
-               covs::AbstractDict,
-               channels::AbstractDict,
-               anchors::AbstractDict,
-               mf::Union{Real,Nothing};
-               ndrift::Integer=1,
-               ndown::Integer=0,
-               PAcutoff=nothing,
-               verbose::Bool=false)
-
-    objective = (par) -> SS(par,bP,bD,bd,dats,covs,channels,anchors,mf;
-                            ndrift=ndrift,ndown=ndown,PAcutoff=PAcutoff,
-                            verbose=verbose)
-
-    fit = Optim.optimize(objective,init)
-    pars = Optim.minimizer(fit)
-    if verbose
-        println("Drift and downhole fractionation correction:\n")
-        println(fit)
-    else
-        if fit.stopped_by.time_limit
-            @warn "Reached the maximum number of iterations before achieving " *
-                "convergence. Reduce the order of the polynomials or fix the " *
-                "mass fractionation and try again."
-        end
-        if hasproperty(fit.stopped_by,:ls_failed) && fit.stopped_by.ls_failed
-            @warn "Least squares algorithm did not converge."
-        end
-    end
-    drift = pars[1:ndrift]
-    down = vcat(0.0,pars[ndrift+1:ndrift+ndown])
-    mfrac = isnothing(mf) ? pars[ndrift+ndown+1] : log(mf)
-    adrift = isnothing(PAcutoff) ? drift : pars[end-ndrift+1:end]
-    
-    return (drift=drift,down=down,mfrac=mfrac,
-            PAcutoff=PAcutoff,adrift=adrift)
-
-end
-# glass
-function SSfit(init::AbstractVector,
-               bD::AbstractVector,
-               bd::AbstractVector,
-               dats::AbstractDict,
-               vars::AbstractDict,
-               channels::AbstractDict,
-               anchors::AbstractDict;
-               verbose::Bool=false)
-
-    objective = (par) -> SS(par,bD,bd,dats,vars,channels,anchors;
-                            verbose=verbose)
-    
-    fit = Optim.optimize(objective,init)
-    pars = Optim.minimizer(fit)
-
-    if verbose
-        println("Mass fractionation correction:\n")
-        println(fit)
-    end
-    
-    mfrac = Optim.minimizer(fit)[1]
-        
-    return exp(mfrac)
-    
-end

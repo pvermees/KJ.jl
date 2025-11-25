@@ -185,46 +185,6 @@ function autoWindow(samp::Sample;
     return autoWindow(samp.dat[:,1],samp.t0;blank=blank)
 end
 
-"""
-poolBlanks(run::Vector{Sample};
-     blank::Bool=false,
-     group::Union{Nothing,AbstractString}=nothing,
-     include_covmats::Bool=false,
-     add_xy::Bool=false)
-
-Returns a vector of blanks or signals plus
-(if include_covmats is true), a vector of their
-covariance matrices. Does not include any values
-marked as outliers.
-"""
-function pool(run::Vector{Sample};
-              blank::Bool=false,
-              group::Union{Nothing,AbstractString}=nothing,
-              include_covmats::Bool=false,
-              add_xy::Bool=false)
-    selection = group2selection(run,group)
-    ns = length(selection)
-    dats = Vector{DataFrame}(undef,ns)
-    for i in eachindex(selection)
-        dat = ifelse(blank,
-                     bwinData(run[selection[i]];add_xy=add_xy),
-                     swinData(run[selection[i]];add_xy=add_xy))
-        good = .!dat.outlier
-        dats[i] = dat[good,:]
-    end
-    if include_covmats
-        covs = Vector{Matrix}(undef,ns)
-        for i in eachindex(selection)
-            sig = getSignals(dats[i])
-            covs[i] = df2cov(sig)
-        end
-        return dats, covs
-    else
-        return dats
-    end
-end
-export pool
-
 function group2selection(run::Vector{Sample},
                          group::Union{Nothing,AbstractString}=nothing)
     if isnothing(group)
