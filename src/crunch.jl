@@ -340,8 +340,7 @@ end
 """
 predict(samp::Sample,
         method::KJmethod,
-        fit::KJfit,
-        anchors::AbstractDict)
+        fit::KJfit)
 """
 function predict(samp::Sample,
                  method::KJmethod,

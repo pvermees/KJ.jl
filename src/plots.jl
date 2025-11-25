@@ -1,9 +1,7 @@
 """
 plot(samp::Sample,
-     channels::AbstractDict,
-     blank::AbstractDataFrame,
-     pars::NamedTuple,
-     anchors::AbstractDict;
+     method::KJmethod,
+     fit::KJfit;
      num=nothing,den=nothing,
      transformation=nothing,
      ms=2,ma=0.5,
@@ -20,10 +18,8 @@ plot(samp::Sample,
 Plot isotopic ratios and fit of a reference material.
 """
 function plot(samp::Sample,
-              channels::AbstractDict,
-              blank::AbstractDataFrame,
-              pars::NamedTuple,
-              anchors::AbstractDict;
+              method::KJmethod,
+              fit::KJfit;
               num=nothing,den=nothing,
               transformation=nothing,
               ms=2,ma=0.5,
@@ -37,7 +33,7 @@ function plot(samp::Sample,
               titlefontsize=10,
               return_offset::Bool=false)
 
-    channelvec = collect(values(channels))
+    channelvec = collect(values(getChannels(method)))
     
     p, offset = plot(samp;
                      channels=channelvec,
@@ -51,13 +47,13 @@ function plot(samp::Sample,
     
     if samp.group != "sample"
 
-        plotFitted!(p,samp,blank,pars,channels,anchors;
+        plotFitted!(p,samp,method,fit;
                     num=num,den=den,transformation=transformation,
                     offset=offset,linecolor=linecol,linestyle=linestyle)
         
     end
 
-    plotFittedBlank!(p,samp,blank,channelvec;
+    plotFittedBlank!(p,samp,method,fit;
                      num=num,den=den,
                      transformation=transformation,offset=offset,
                      linecolor=linecol,linestyle=linestyle)
@@ -68,6 +64,7 @@ function plot(samp::Sample,
         return p
     end
 end
+
 """
 plot(samp::Sample,
      blank::AbstractDataFrame,
@@ -240,10 +237,8 @@ end
 """
 plotFitted!(p,
             samp::Sample,
-            blank::AbstractDataFrame,
-            pars::NamedTuple,
-            channels::AbstractDict,
-            anchors::AbstractDict;
+            method::KJmethod,
+            fit::KJfit;
             num::Union{Nothing,AbstractString}=nothing,
             den::Union{Nothing,AbstractString}=nothing,
             transformation::Union{Nothing,AbstractString}=nothing,
@@ -255,18 +250,17 @@ Add model fit to an existing KJ data plot.
 """
 function plotFitted!(p,
                      samp::Sample,
-                     blank::AbstractDataFrame,
-                     pars::NamedTuple,
-                     channels::AbstractDict,
-                     anchors::AbstractDict;
+                     method::KJmethod,
+                     fit::KJfit;
                      num::Union{Nothing,AbstractString}=nothing,
                      den::Union{Nothing,AbstractString}=nothing,
                      transformation::Union{Nothing,AbstractString}=nothing,
                      offset::Union{Nothing,Number}=nothing,
                      linecolor="black",
                      linestyle=:solid)
-    pred = predict(samp,pars,blank,channels,anchors)
-    rename!(pred,[channels[i] for i in names(pred)])
+    pred = predict(samp,method,fit)
+    ch = getChannels(method)
+    rename!(pred,[ch[Symbol(i)] for i in names(pred)])
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,
@@ -342,15 +336,16 @@ For geochronology
 """
 function plotFittedBlank!(p,
                           samp::Sample,
-                          blank::AbstractDataFrame,
-                          channels::AbstractVector;
+                          method::KJmethod,
+                          fit::KJfit;
                           num::Union{Nothing,AbstractString}=nothing,
                           den::Union{Nothing,AbstractString}=nothing,
                           transformation::Union{Nothing,AbstractString}=nothing,
                           offset::Union{Nothing,Number}=0.0,
                           linecolor="black",
                           linestyle::Symbol=:solid)
-    pred = predict(samp,blank[:,channels])
+    channels = collect(values(getChannels(method)))
+    pred = predict(samp,fit.blank[:,channels])
     plotFitted!(p,samp,pred;
                 blank=true,num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)

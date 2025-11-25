@@ -115,8 +115,8 @@ function fixedLuHf(drift,down;
 end
 
 function predictest()
-    drift = [3.91]
-    down = [0.0,0.0045]
+    drift = [5.0,0.0]
+    down = [0.0,0.0]
     myrun, method, fit = fixedLuHf(drift,down)
     samp = myrun[1]
     if samp.group == "sample"
@@ -124,12 +124,12 @@ function predictest()
         return samp, method, fit
     else
         pred = predict(samp,method,fit)
-        p, offset = KJ.plot(samp,method,fit,anchors;
+        p, offset = KJ.plot(samp,method,fit;
                             den=getChannels(method).D,
                             transformation="log",
                             return_offset=true)
         @test display(p) != NaN
-        return samp, method, fit, standards, p, offset
+        return samp, method, fit, p, offset
     end
 end
     
