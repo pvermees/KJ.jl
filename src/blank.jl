@@ -18,13 +18,3 @@ function fitBlanks(run::Vector{Sample};
     return bpar
 end
 export fitBlanks
-
-function getBlankCorrectedSignals(samp::Sample,
-                                  bpar::AbstractDataFrame)
-    sig = windowData(samp;
-                     signal=true,
-                     add_xy=add_xy)
-    good = .!sig.outlier
-    sig[i] = dat[good,:]
-    return sig
-end

@@ -1,6 +1,6 @@
-using Test, KJ, Dates, DataFrames
+using Test, KJ, Dates, DataFrames, Infiltrator
 import Plots, Distributions, CSV, Statistics,
-    Infiltrator, Random, LinearAlgebra, Aqua
+    Random, LinearAlgebra, Aqua
 include("helper.jl")
 
 function loadtest(verbose=false)

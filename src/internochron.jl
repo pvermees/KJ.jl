@@ -200,7 +200,6 @@ end
 function UPb_helper()
     L5 = _KJ["lambda"]["U235-Pb207"][1]
     L8 = _KJ["lambda"]["U238-Pb206"][1]
-    fUPb = _KJ["iratio"]["U-Pb"]
-    U58 = fUPb.U235/fUPb.U238
+    U58 = _KJ["iratio"]["U"].U235/_KJ["iratio"]["U"].U238
     return L5, L8, U58
 end

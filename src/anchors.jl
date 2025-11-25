@@ -24,7 +24,7 @@ function get_isochron_anchor(method::AbstractString,
     if method=="U-Pb"
         L8 = _KJ["lambda"]["U238-Pb206"][1]
         L5 = _KJ["lambda"]["U235-Pb207"][1]
-        U58 = _KJ["iratio"]["U-Pb"].U235/_KJ["iratio"]["U-Pb"].U238
+        U58 = _KJ["iratio"]["U"].U235/_KJ["iratio"]["U"].U238
         x0 = 1/(exp(L8*t)-1)
         y1 = U58*(exp(L5*t)-1)/(exp(L8*t)-1)
     else

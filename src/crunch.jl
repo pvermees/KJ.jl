@@ -3,44 +3,36 @@ getP(x0::Real,
      y0::Real,
      y1::Real;
      pmb::AbstractVector,
-     Domb::AbstractVector,
+     Dombi::AbstractVector,
      bomb::AbstractVector,
-     pomb::Union{AbstractVector,Real}=0.0,
-     somb::Union{AbstractVector,Real}=0.0,
      vp::Real,
      vD::Real,
      vb::Real,
-     spDo::Real,
-     spbo::Real,
-     sDobo::Real,
+     spD::Real,
+     spb::Real,
+     sDb::Real,
      ft::AbstractVector,
      FT::AbstractVector,
-     bd::Real=1.0,
-     Pp::Real=1.0,
-     Ss::Real=1.0)
+     bd::Real=1.0)
 
 Estimate the true parent intensity from the measurements for isochron-based standards
 """
 function getP(x0::Real,
               y0::Real,
               y1::Real;
-              pm::AbstractVector,
-              Dom::AbstractVector,
-              bom::AbstractVector,
-              pomb::Union{AbstractVector,Real}=0.0,
-              somb::Union{AbstractVector,Real}=0.0,
+              pmb::AbstractVector,
+              Dombi::AbstractVector,
+              bomb::AbstractVector,
               vp::Real,
               vD::Real,
               vb::Real,
-              spDo::Real,
-              spbo::Real,
-              sDobo::Real,
+              spD::Real,
+              spb::Real,
+              sDb::Real,
               ft::AbstractVector,
               FT::AbstractVector,
-              bd::Real=1.0,
-              Pp::Real=1.0,
-              Ss::Real=1.0)
-    return @. ((((Ss*bd^2*somb+Pp*bd^2*pomb-Domb*bd^2)*vp+bd^2*pmb*spDo)*x0*y0+(bd*bomb*vp-bd*pmb*spbo)*x0)*y1+((FT*bd^2*ft*pmb*vDo+(FT*Ss*bd^2*ft*somb+FT*Pp*bd^2*ft*pomb-Domb*FT*bd^2*ft)*spDo)*x0^2+((-(Ss*bd^2*somb)-Pp*bd^2*pomb+Domb*bd^2)*vp-bd^2*pmb*spDo)*x0)*y0^2+(((-(FT*Ss*bd*ft*somb)-FT*Pp*bd*ft*pomb+Domb*FT*bd*ft)*spbo+FT*bd*bomb*ft*spDo-2*FT*bd*ft*pmb*sDobo)*x0^2+(bd*pmb*spbo-bd*bomb*vp)*x0)*y0+(FT*ft*pmb*vbo-FT*bomb*ft*spbo)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spDo*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spbo*x0)*y1+(FT^2*bd^2*ft^2*vDo*x0^2-2*FT*bd^2*ft*spDo*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spbo*x0-2*FT^2*bd*ft^2*sDobo*x0^2)*y0+FT^2*ft^2*vbo*x0^2)
+              bd::Real=1.0)
+    return @. -((((Dombi*bd^2*vp-bd^2*pmb*spD)*x0*y0+(bd*pmb*spb-bd*bomb*vp)*x0)*y1+((Dombi*FT*bd^2*ft*spD-FT*bd^2*ft*pmb*vD)*x0^2+(bd^2*pmb*spD-Dombi*bd^2*vp)*x0)*y0^2+((-(Dombi*FT*bd*ft*spb)-FT*bd*bomb*ft*spD+2*FT*bd*ft*pmb*sDb)*x0^2+(bd*bomb*vp-bd*pmb*spb)*x0)*y0+(FT*bomb*ft*spb-FT*ft*pmb*vb)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spD*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spb*x0)*y1+(FT^2*bd^2*ft^2*vD*x0^2-2*FT*bd^2*ft*spD*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spb*x0-2*FT^2*bd*ft^2*sDb*x0^2)*y0+FT^2*ft^2*vb*x0^2))
 end
 export getP
 
@@ -49,21 +41,17 @@ getD(x0::Real,
      y0::Real,
      y1::Real;
      pmb::AbstractVector,
-     Domb::AbstractVector,
+     Dombi::AbstractVector,
      bomb::AbstractVector,
-     pomb::Union{AbstractVector,Number}=0.0,
-     somb::Union{AbstractVector,Number}=0.0,
      vp::Real,
      vD::Real,
      vb::Real,
-     spDo::Real,
-     spbo::Real,
-     sDobo::Real,
+     spD::Real,
+     spb::Real,
+     sDb::Real,
      ft::AbstractVector,
      FT::AbstractVector,
-     bd::Number=1.0,
-     Pp::Number=1.0,
-     Ss::Number=1.0)
+     bd::Number=1.0)
 
 Estimate the true daughter intensity from the measurements for isochron-based standards
 """
@@ -71,65 +59,53 @@ function getD(x0::Real,
               y0::Real,
               y1::Real;
               pmb::AbstractVector,
-              Domb::AbstractVector,
+              Dombi::AbstractVector,
               bomb::AbstractVector,
-              pomb::Union{AbstractVector,Number}=0.0,
-              somb::Union{AbstractVector,Number}=0.0,
               vp::Real,
               vD::Real,
               vb::Real,
-              spDo::Real,
-              spbo::Real,
-              sDobo::Real,
+              spD::Real,
+              spb::Real,
+              sDb::Real,
               ft::AbstractVector,
               FT::AbstractVector,
-              bd::Number=1.0,
-              Pp::Number=1.0,
-              Ss::Number=1.0)
-    return @. -((((Ss*bd^2*somb+Pp*bd^2*pomb-Domb*bd^2)*vp+bd^2*pmb*spDo)*y1^2+(((FT*bd^2*ft*pmb*vDo+(FT*Ss*bd^2*ft*somb+FT*Pp*bd^2*ft*pomb-Domb*FT*bd^2*ft)*spDo)*x0+(-(2*Ss*bd^2*somb)-2*Pp*bd^2*pomb+2*Domb*bd^2)*vp-2*bd^2*pmb*spDo)*y0+((-(2*FT*Ss*bd*ft*somb)-2*FT*Pp*bd*ft*pomb+2*Domb*FT*bd*ft)*spbo-FT*bd*bomb*ft*spDo-FT*bd*ft*pmb*sDobo)*x0)*y1+(((-(FT*Ss*bd^2*ft*somb)-FT*Pp*bd^2*ft*pomb+Domb*FT*bd^2*ft)*spDo-FT*bd^2*ft*pmb*vDo)*x0+(Ss*bd^2*somb+Pp*bd^2*pomb-Domb*bd^2)*vp+bd^2*pmb*spDo)*y0^2+((-(FT^2*bd*bomb*ft^2*vDo)-FT^2*Ss*bd*ft^2*sDobo*somb+(Domb*FT^2*bd*ft^2-FT^2*Pp*bd*ft^2*pomb)*sDobo)*x0^2+((2*FT*Ss*bd*ft*somb+2*FT*Pp*bd*ft*pomb-2*Domb*FT*bd*ft)*spbo+FT*bd*bomb*ft*spDo+FT*bd*ft*pmb*sDobo)*x0)*y0+((FT^2*Ss*ft^2*somb+FT^2*Pp*ft^2*pomb-Domb*FT^2*ft^2)*vbo+FT^2*bomb*ft^2*sDobo)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spDo*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spbo*x0)*y1+(FT^2*bd^2*ft^2*vDo*x0^2-2*FT*bd^2*ft*spDo*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spbo*x0-2*FT^2*bd*ft^2*sDobo*x0^2)*y0+FT^2*ft^2*vbo*x0^2))
+              bd::Number=1.0)
+    return @. ((Dombi*bd^2*vp-bd^2*pmb*spD)*y1^2+(((Dombi*FT*bd^2*ft*spD-FT*bd^2*ft*pmb*vD)*x0-2*Dombi*bd^2*vp+2*bd^2*pmb*spD)*y0+(-(2*Dombi*FT*bd*ft*spb)+FT*bd*bomb*ft*spD+FT*bd*ft*pmb*sDb)*x0)*y1+((FT*bd^2*ft*pmb*vD-Dombi*FT*bd^2*ft*spD)*x0+Dombi*bd^2*vp-bd^2*pmb*spD)*y0^2+((FT^2*bd*bomb*ft^2*vD-Dombi*FT^2*bd*ft^2*sDb)*x0^2+(2*Dombi*FT*bd*ft*spb-FT*bd*bomb*ft*spD-FT*bd*ft*pmb*sDb)*x0)*y0+(Dombi*FT^2*ft^2*vb-FT^2*bomb*ft^2*sDb)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spD*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spb*x0)*y1+(FT^2*bd^2*ft^2*vD*x0^2-2*FT*bd^2*ft*spD*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spb*x0-2*FT^2*bd*ft^2*sDb*x0^2)*y0+FT^2*ft^2*vb*x0^2)
 end
 
 """
 getD(x::Real,
      y::Real;
      pmb::AbstractVector,
-     Domb::AbstractVector,
+     Dombi::AbstractVector,
      bomb::AbstractVector,
-     pomb::Union{AbstractVector,Number}=0.0,
-     somb::Union{AbstractVector,Number}=0.0,
      vp::Real,
      vD::Real,
      vb::Real,
-     spDo::Real,
-     spbo::Real,
-     sDobo::Real,
+     spD::Real,
+     spb::Real,
+     sDb::Real,
      ft::AbstractVector,
      FT::AbstractVector,
-     bd::Number=1.0,
-     Pp::Number=1.0,
-     Ss::Number=1.0)
+     bd::Number=1.0)
 
 Estimate the true daughter intensity from the measurements for homogeneous standards
 """
 function getD(x::Real,
               y::Real;
               pmb::AbstractVector,
-              Domb::AbstractVector,
+              Dombi::AbstractVector,
               bomb::AbstractVector,
-              pomb::Union{AbstractVector,Number}=0.0,
-              somb::Union{AbstractVector,Number}=0.0,
               vp::Real,
               vD::Real,
               vb::Real,
-              spDo::Real,
-              spbo::Real,
-              sDobo::Real,
+              spD::Real,
+              spb::Real,
+              sDb::Real,
               ft::AbstractVector,
               FT::AbstractVector,
-              bd::Number=1.0,
-              Pp::Number=1.0,
-              Ss::Number=1.0)
-    return @. (((bd*bomb*vDo+Ss*bd*sDobo*somb+(Pp*bd*pomb-Domb*bd)*sDobo)*vp-bd*pmb*spbo*vDo+(-(Ss*bd*somb)-Pp*bd*pomb+Domb*bd)*spDo*spbo-bd*bomb*spDo^2+bd*pmb*sDobo*spDo)*y+((FT*ft*pmb*vDo+(FT*Ss*ft*somb+FT*Pp*ft*pomb-Domb*FT*ft)*spDo)*vbo-FT*bomb*ft*spbo*vDo+((Domb*FT*ft-FT*Pp*ft*pomb)*sDobo-FT*Ss*ft*sDobo*somb)*spbo+FT*bomb*ft*sDobo*spDo-FT*ft*pmb*sDobo^2)*x+((-(Ss*somb)-Pp*pomb+Domb)*vbo-bomb*sDobo)*vp-pmb*spDo*vbo+(Ss*somb+Pp*pomb-Domb)*spbo^2+(bomb*spDo+pmb*sDobo)*spbo)/((bd^2*vDo*vp-bd^2*spDo^2)*y^2+((2*FT*bd*ft*sDobo*spDo-2*FT*bd*ft*spbo*vDo)*x-2*bd*sDobo*vp+2*bd*spDo*spbo)*y+(FT^2*ft^2*vDo*vbo-FT^2*ft^2*sDobo^2)*x^2+(2*FT*ft*sDobo*spbo-2*FT*ft*spDo*vbo)*x+vbo*vp-spbo^2)
+              bd::Number=1.0)
+    return @. (((bd*bomb*vD-Dombi*bd*sDb)*vp-bd*pmb*spb*vD+Dombi*bd*spD*spb-bd*bomb*spD^2+bd*pmb*sDb*spD)*y+((FT*ft*pmb*vD-Dombi*FT*ft*spD)*vb-FT*bomb*ft*spb*vD+Dombi*FT*ft*sDb*spb+FT*bomb*ft*sDb*spD-FT*ft*pmb*sDb^2)*x+(Dombi*vb-bomb*sDb)*vp-pmb*spD*vb-Dombi*spb^2+(bomb*spD+pmb*sDb)*spb)/((bd^2*vD*vp-bd^2*spD^2)*y^2+((2*FT*bd*ft*sDb*spD-2*FT*bd*ft*spb*vD)*x-2*bd*sDb*vp+2*bd*spD*spb)*y+(FT^2*ft^2*vD*vb-FT^2*ft^2*sDb^2)*x^2+(2*FT*ft*sDb*spb-2*FT*ft*spD*vb)*x+vb*vp-spb^2)
 end
 
 """
@@ -137,21 +113,17 @@ SS(x0::Real,
    y0::Real,
    y1::Real;
    pmb::AbstractVector,
-   Domb::AbstractVector,
+   Dombi::AbstractVector,
    bomb::AbstractVector,
-   pomb::Union{AbstractVector,Number}=0.0,
-   somb::Union{AbstractVector,Number}=0.0,
    vp::Real,
    vD::Real,
    vb::Real,
-   spDo::Real,
-   spbo::Real,
-   sDobo::Real,
+   spD::Real,
+   spb::Real,
+   sDb::Real,
    ft::AbstractVector,
    FT::AbstractVector,
-   bd::Number=1.0,
-   Pp::Number=1.0,
-   Ss::Number=1.0)
+   bd::Number=1.0)
 
 Sum of squares for isochron-based standards
 """
@@ -159,30 +131,26 @@ function SS(x0::Real,
             y0::Real,
             y1::Real;
             pmb::AbstractVector,
-            Domb::AbstractVector,
+            Dombi::AbstractVector,
             bomb::AbstractVector,
-            pomb::Union{AbstractVector,Number}=0.0,
-            somb::Union{AbstractVector,Number}=0.0,
             vp::Real,
             vD::Real,
             vb::Real,
-            spDo::Real,
-            spbo::Real,
-            sDobo::Real,
+            spD::Real,
+            spb::Real,
+            sDb::Real,
             ft::AbstractVector,
             FT::AbstractVector,
-            bd::Number=1.0,
-            Pp::Number=1.0,
-            Ss::Number=1.0)
+            bd::Number=1.0)
     P = getP(x0,y0,y1;
-             pmb=pmb,Domb=Domb,bomb=bomb,pomb=pomb,somb=somb,
-             vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
-             ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
+             pmb=pmb,Dombi=Dombi,bomb=bomb,
+             vp=vp,vD=vD,vb=vb,spD=spD,spb=spb,sDb=sDb,
+             ft=ft,FT=FT,bd=bd)
     D = getD(x0,y0,y1;
-             pmb=pmb,Domb=Domb,bomb=bomb,pomb=pomb,somb=somb,
-             vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
-             ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
-    maha = @. (bomb-bd*((Po*(y1-y0))/x0+Do*y0))*(((vDo*vp-spDo^2)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(spDo*spbo-sDobo*vp))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((pmb-FT*Po*ft)*(sDobo*spDo-spbo*vDo))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))+(-(Ss*somb)-Pp*pomb+Domb-Do)*(((spDo*spbo-sDobo*vp)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(vbo*vp-spbo^2))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((pmb-FT*Po*ft)*(sDobo*spbo-spDo*vbo))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))+(pmb-FT*Po*ft)*(((sDobo*spDo-spbo*vDo)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((pmb-FT*Po*ft)*(vDo*vbo-sDobo^2))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(sDobo*spbo-spDo*vbo))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))
+             pmb=pmb,Dombi=Dombi,bomb=bomb,
+             vp=vp,vD=vD,vb=vb,spD=spD,spb=spb,sDb=sDb,
+             ft=ft,FT=FT,bd=bd)
+    maha = @. (bomb-bd*((Po*(y1-y0))/x0+Do*y0))*(((vD*vp-spD^2)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(sDb*spD-spb*vD))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(Dombi-Do)*(((spD*spb-sDb*vp)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(pmb-FT*Po*ft)*(((sDb*spD-spb*vD)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(vD*vb-sDb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
     return sum(@. maha )
 end
 
@@ -190,47 +158,39 @@ end
 SS(x::Real,
    y::Real;
    pmb::AbstractVector,
-   Domb::AbstractVector,
+   Dombi::AbstractVector,
    bomb::AbstractVector,
-   pomb::Union{AbstractVector,Number}=0.0,
-   somb::Union{AbstractVector,Number}=0.0,
    vp::Real,
    vD::Real,
    vb::Real,
-   spDo::Real,
-   spbo::Real,
-   sDobo::Real,
+   spD::Real,
+   spb::Real,
+   sDb::Real,
    ft::AbstractVector,
    FT::AbstractVector,
-   bd::Number=1.0,
-   Pp::Number=1.0,
-   Ss::Number=1.0)
+   bd::Number=1.0)
 
 Sum of squares for homogeneous standards
 """
 function SS(x::Real,
             y::Real;
             pmb::AbstractVector,
-            Domb::AbstractVector,
+            Dombi::AbstractVector,
             bomb::AbstractVector,
-            pomb::Union{AbstractVector,Number}=0.0,
-            somb::Union{AbstractVector,Number}=0.0,
             vp::Real,
             vD::Real,
             vb::Real,
-            spDo::Real,
-            spbo::Real,
-            sDobo::Real,
+            spD::Real,
+            spb::Real,
+            sDb::Real,
             ft::AbstractVector,
             FT::AbstractVector,
-            bd::Number=1.0,
-            Pp::Number=1.0,
-            Ss::Number=1.0)
+            bd::Number=1.0)
     D = getD(x,y;
-             pmb=pmb,Domb=Domb,bomb=bomb,pomb=pomb,somb=somb,
-             vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
-             ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
-    maha = @. (bomb-Do*bd*y)*(((vDo*vp-spDo^2)*(bomb-Do*bd*y))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((sDobo*spDo-spbo*vDo)*(pmb-Do*FT*ft*x))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(spDo*spbo-sDobo*vp))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))+(-(Ss*somb)-Pp*pomb+Domb-Do)*(((spDo*spbo-sDobo*vp)*(bomb-Do*bd*y))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((sDobo*spbo-spDo*vbo)*(pmb-Do*FT*ft*x))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(vbo*vp-spbo^2))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))+(pmb-Do*FT*ft*x)*(((sDobo*spDo-spbo*vDo)*(bomb-Do*bd*y))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((vDo*vbo-sDobo^2)*(pmb-Do*FT*ft*x))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo))+((-(Ss*somb)-Pp*pomb+Domb-Do)*(sDobo*spbo-spDo*vbo))/((vDo*vbo-sDobo^2)*vp+spDo*(sDobo*spbo-spDo*vbo)+spbo*(sDobo*spDo-spbo*vDo)))
+             pmb=pmb,Dombi=Dombi,bomb=bomb,
+             vp=vp,vD=vD,vb=vb,spD=spD,spb=spb,sDb=sDb,
+             ft=ft,FT=FT,bd=bd)
+    maha = @. (bomb-Do*bd*y)*(((vD*vp-spD^2)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spD-spb*vD)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(Dombi-Do)*(((spD*spb-sDb*vp)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spb-spD*vb)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(pmb-Do*FT*ft*x)*(((sDb*spD-spb*vD)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((vD*vb-sDb^2)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
     return sum(@. maha )
 end
 
@@ -388,190 +348,145 @@ function predict(samp::Sample,
                  fit::KJfit;
                  kw...)
     if samp.group in collect(keys(method.anchors))
-        dat = swinData(samp)
-        sig = getSignals(dat)
-        covmat = df2cov(sig)
-        return predict(dat,covmat,method,fit;kw...)
+        c = Cruncher(samp,method,fit)
+        return predict(c)
     else
         KJerror("notStandard")
     end
 end
 
-"""
-predict(dat::AbstractDataFrame,
-        covmat::Matrix,
-        method::KJmethod,
-        fit::KJfit)
-"""
-function predict(dat::AbstractDataFrame,
-                 covmat::Matrix,
-                 method::KJmethod,
-                 fit::KJfit;
-                 kw...)
-    t = dat.t
-    T = dat.T
-    ch = getChannels(method)
-    sig = getSignals(dat)
-    iP = columnindex(sig,ch.P)
-    iD = columnindex(sig,ch.D)
-    id = columnindex(sig,ch.d)
-    Pm = sig[:,iP]
-    Dm = sig[:,iD]
-    dm = sig[:,id]
-    vP = covmat[iP,iP]
-    vD = covmat[iD,iD]
-    vd = covmat[id,id]
-    sPD = covmat[iP,iD]
-    sPd = covmat[iP,id]
-    sDd = covmat[iD,id]
-    ft = get_drift(Pm,t,fit)
-    FT = polyFac(fit.down,T)
-    ions = getIons(method)
-    proxies = getProxies(method)
-    bd = iratio(ions.d,proxies.d)
-    Ss = iratio(ions.S,proxies.S)
-    blank = fit.blank
-    bPt = polyVal(blank[:,ch.P],t)
-    bDt = polyVal(blank[:,ch.D],t)
-    bdt = polyVal(blank[:,ch.d],t)
-    if is_isochron_anchor(anchor)
-        return predict(anchor.x0,
-                       anchor.y0,
-                       anchor.y1;
-                       pm=Pm,Dom=Dm,bom=dm,
-                       vp=vP,vD=vD,vd=vd,
-                       spDo=sPD,spbo=sPd,sDobo=sDd,
-                       ft=ft,FT=FT,bd=bd,Ss=Ss,
-                       bpt=bPt,bDt=bDt,bbt=bdt)
+function predict(c::Cruncher)
+    if is_isochron_anchor(c.anchor)
+        return predict(c.anchor.x0,
+                       c.anchor.y0,
+                       c.anchor.y1;
+                       pm=c.pm,
+                       Dom=c.Dom,
+                       bom=c.bom,
+                       bpt=c.bpt,
+                       bDot=c.bDot,
+                       bbot=c.bbot,
+                       vp=c.vp,
+                       vD=c.vD,
+                       vb=c.vb,
+                       spD=c.spD,
+                       spb=c.spb,
+                       sDb=c.sDb,
+                       ft=c.ft,
+                       FT=c.FT,
+                       bd=c.bd)
     elseif is_point_anchor(anchor)
-        return predict(anchor.x,
-                       anchor.y;
-                       pm=Pm,Dom=Dm,bom=dm,
-                       vp=vP,vD=vD,vd=vd,
-                       spDo=sPD,spbo=sPd,sDobo=sDd,
-                       ft=ft,FT=FT,bd=bd,Ss=Ss,
-                       bpt=bPt,bDt=bDt,bbt=bdt)
+        return predict(c.anchor.x,
+                       c.anchor.y;
+                       pm=c.pm,
+                       Dom=c.Dom,
+                       bom=c.bom,
+                       bpt=c.bpt,
+                       bDot=c.bDot,
+                       bbot=c.bbot,
+                       vp=c.vp,
+                       vD=c.vD,
+                       vb=c.vb,
+                       spD=c.spD,
+                       spb=c.spb,
+                       sDb=c.sDb,
+                       ft=c.ft,
+                       FT=c.FT,
+                       bd=c.bd)
     else
         error("Invalid anchor")
     end
 end
 
-"""
-predict(x0::Real,
-        y0::Real,
-        y1::Real=0.0;
-        pm::AbstractVector,
-        Dom::AbstractVector,
-        bom::AbstractVector,
-        pomb::Union{AbstractVector,Real}=0.0,
-        somb::Union{AbstractVector,Real}=0.0,
-        vp::Real,
-        vD::Real,
-        vb::Real,
-        spDo::Real,
-        spbo::Real,
-        sDobo::Real,
-        ft::AbstractVector,
-        FT::AbstractVector,
-        bd::Real=1.0,
-        Pp::Real=1.0,
-        Ss::Real=1.0,
-        bpt::AbstractVector,
-        bDot::AbstractVector,
-        bbot::AbstractVector)
-
-For isochron-based standards
-"""
 function predict(x0::Real,
                  y0::Real,
                  y1::Real=0.0;
-                 pm::AbstractVector,
-                 Dom::AbstractVector,
-                 bom::AbstractVector,
-                 pomb::Union{AbstractVector,Real}=0.0,
-                 somb::Union{AbstractVector,Real}=0.0,
+                 pm::Vector{Real},
+                 Dom::Vector{Real},
+                 bom::Vector{Real},
+                 bpt::Vector{Real},
+                 bDot::Vector{Real},
+                 bbot::Vector{Real},
                  vp::Real,
                  vD::Real,
                  vb::Real,
-                 spDo::Real,
-                 spbo::Real,
-                 sDobo::Real,
-                 ft::AbstractVector,
-                 FT::AbstractVector,
-                 bd::Real=1.0,
-                 Pp::Real=1.0,
-                 Ss::Real=1.0,
-                 bpt::AbstractVector,
-                 bDot::AbstractVector,
-                 bbot::AbstractVector)
-    Po = getP(x0,y0,y1;
-              pm=pm,Dom=Dom,bom=bom,pomb=pomb,somb=somb,
-              vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
-              ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
-    Do = getD(x0,y0,y1;
-              pm=pm,Dom=Dom,bom=bom,pomb=pomb,somb=somb,
-              vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
-              ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
-    Pf = @. Po*ft*FT + bpt
-    Dof = @. Do + pomb*Pp + somb*Ss + bDot
+                 spD::Real,
+                 spb::Real,
+                 sDb::Real,
+                 ft::Vector{Real},
+                 FT::Vector{Real},
+                 bd::Real)
+    Po = getP(x0,
+              y0,
+              y1;
+              pmb=pm-bpt,
+              Dombi=Dom-bDot,
+              bomb=bom-bbot,
+              vp=vp,
+              vD=vD,
+              vb=vb,
+              spD=spD,
+              spb=spb,
+              sDb=sDb,
+              ft=ft,
+              FT=FT,
+              bd=bd)
+    Do = getD(x0,
+              y0,
+              y1;
+              pmb=pm-bpt,
+              Dombi=Dom-bDot,
+              bomb=bom-bbot,
+              vp=vp,
+              vD=vD,
+              vb=vb,
+              spD=spD,
+              spb=spb,
+              sDb=sDb,
+              ft=ft,
+              FT=FT,
+              bd=bd)
+    pf = @. Po*ft*FT + bpt
+    Dof = @. Do + bDot
     bof = @. (Do*y0 + Po*(y1-y0)/x0)*bd + bbot
-    return DataFrame(P=Pf,D=Dof,d=bof)
+    return DataFrame(P=pf,D=Dof,d=bof)
 end
 
-"""
-predict(x::Real,
-        y::Real;
-        pm::AbstractVector,
-        Dom::AbstractVector,
-        bom::AbstractVector,
-        pomb::Union{AbstractVector,Real}=0.0,
-        somb::Union{AbstractVector,Real}=0.0,
-        vp::Real,
-        vD::Real,
-        vb::Real,
-        spDo::Real,
-        spbo::Real,
-        sDobo::Real,
-        ft::AbstractVector,
-        FT::AbstractVector,
-        bd::Real=1.0,
-        Pp::Real=1.0,
-        Ss::Real=1.0,
-        bPt::AbstractVector,
-        bDot::AbstractVector,
-        bbot::AbstractVector)
-
-For homogeneous standards
-"""
 function predict(x::Real,
                  y::Real;
-                 pm::AbstractVector,
-                 Dom::AbstractVector,
-                 bom::AbstractVector,
-                 pomb::Union{AbstractVector,Real}=0.0,
-                 somb::Union{AbstractVector,Real}=0.0,
+                 pm::Vector{Real},
+                 Dom::Vector{Real},
+                 bom::Vector{Real},
+                 bpt::Vector{Real},
+                 bDot::Vector{Real},
+                 bbot::Vector{Real},
                  vp::Real,
                  vD::Real,
                  vb::Real,
-                 spDo::Real,
-                 spbo::Real,
-                 sDobo::Real,
-                 ft::AbstractVector,
-                 FT::AbstractVector,
-                 bd::Real=1.0,
-                 Pp::Real=1.0,
-                 Ss::Real=1.0,
-                 bPt::AbstractVector,
-                 bDot::AbstractVector,
-                 bbot::AbstractVector)
-    Do = getD(x,y;
-              pm=pm,Dom=Dom,bom=bom,pomb=pomb,somb=somb,
-              vp=vp,vD=vD,vb=vb,spDo=spDo,spbo=spbo,sDobo=sDobo,
-              ft=ft,FT=FT,bd=bd,Pp=Pp,Ss=Ss)
-    Pf = @. Do*x*ft*FT + bPt
-    Dof = @. Do + pomb*Pp + somb*Ss + bDot
-    bof = @. Do*y*bd + bdot
-    return DataFrame(P=Pf,D=Dof,d=bof)
+                 spD::Real,
+                 spb::Real,
+                 sDb::Real,
+                 ft::Vector{Real},
+                 FT::Vector{Real},
+                 bd::Real)
+    Do = getD(x,
+              y;
+              pmb=pm-bpt,
+              Dombi=Dom-bDot,
+              bomb=bom-bbot,
+              vp=vp,
+              vD=vD,
+              vb=vb,
+              spD=spD,
+              spb=spb,
+              sDb=sDb,
+              ft=ft,
+              FT=FT,
+              bd=bd)
+    pf = @. Do*x*ft*FT + bpt
+    Dof = @. Do + bDot
+    bof = @. Do*y*bd + bbot
+    return DataFrame(P=pf,D=Dof,d=bof)
 end
 
 """
@@ -623,3 +538,44 @@ function predict(samp::Sample,
     return polyVal(blank,dat.t)
 end
 export predict
+
+function Cruncher(samp::Sample,
+                  method::KJmethod,
+                  fit::KJfit)
+    dat = swinData(samp)
+    sig = getSignals(dat)
+    covmat = df2cov(sig)
+    anchors = method.anchors[samp.group]
+    
+    ch = getChannels(method)
+    pm = dat[:,ch.P]
+    Dom = dat[:,ch.D]
+    bom = dat[:,ch.d]
+
+    blank = fit.blank
+    t = dat.t
+    bpt = polyVal(blank[:,ch.P],t)
+    bDot = polyVal(blank[:,ch.D],t)
+    bbot = polyVal(blank[:,ch.d],t)
+
+    sig = getSignals(dat)
+    iP = columnindex(sig,ch.P)
+    iD = columnindex(sig,ch.D)
+    id = columnindex(sig,ch.d)
+    vP = covmat[iP,iP]
+    vD = covmat[iD,iD]
+    vd = covmat[id,id]
+    sPD = covmat[iP,iD]
+    sPd = covmat[iP,id]
+    sDd = covmat[iD,id]
+
+    T = dat.T
+    ft = get_drift(pm,t,fit)
+    FT = polyFac(fit.down,T)
+    
+    ions = getIons(method)
+    proxies = getProxies(method)
+    bd = iratio(ions.d,proxies.d)
+
+    return Cruncher(anchors,pm,Dom,bom,bpt,bDot,bbot,vP,vD,vd,sPD,sPd,sDd,ft,FT,bd)
+end

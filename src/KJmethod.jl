@@ -8,10 +8,10 @@ function KJmethod(name::String)
     channels = DataFrame(par=["ion","proxy","channel"],
                          P=fill(String(m.P),3),
                          D=fill(String(m.D),3),
-                         d=fill(String(m.d),3),
-                         S=fill(String(m.S),3))
+                         d=fill(String(m.d),3))
     return KJmethod(name,
                     channels,
+                    Dict(), # interferences
                     2,      #nblank
                     2,      #ndrift
                     1,      #ndown
@@ -34,7 +34,7 @@ export setStandards!
 function channelAccessor(channels::AbstractDataFrame,
                          rowname::AbstractString)
     ch = channels[findfirst(==(rowname),channels.par),2:end]
-    return (P=ch.P,D=ch.D,d=ch.d,S=ch.S)
+    return (P=ch.P,D=ch.D,d=ch.d)
 end
 
 function getIons(method::KJmethod)
@@ -54,35 +54,32 @@ export getChannels
 
 function channelAccessor!(channels::AbstractDataFrame,
                           rowname::AbstractString;
-                          P,D,d,S)
+                          P,D,d)
     row = findfirst(==(rowname),channels.par)
-    channels[row,2:end] = [P,D,d,S]
+    channels[row,2:end] = [P,D,d]
 end
 
 function setIons!(method::KJmethod;
                   P=getIons(method).P,
                   D=getIons(method).D,
-                  d=getIons(method).d,
-                  S=getIons(method).S)
-    channelAccessor!(method.channels,"ion";P,D,d,S)
+                  d=getIons(method).d)
+    channelAccessor!(method.channels,"ion";P,D,d)
 end
 export setIons!
 
 function setProxies!(method::KJmethod;
                      P=getIons(method).P,
                      D=getIons(method).D,
-                     d=getIons(method).d,
-                     S=getIons(method).S)
-    channelAccessor!(method.channels,"proxy";P,D,d,S)
+                     d=getIons(method).d)
+    channelAccessor!(method.channels,"proxy";P,D,d)
 end
 export setProxies!
 
 function setChannels!(method::KJmethod;
                       P=getProxies(method).P,
                       D=getProxies(method).D,
-                      d=getProxies(method).d,
-                      S=getProxies(method).S)
-    channelAccessor!(method.channels,"channel";P,D,d,S)
+                      d=getProxies(method).d)
+    channelAccessor!(method.channels,"channel";P,D,d)
 end
 export setChannels!
 

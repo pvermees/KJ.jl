@@ -39,6 +39,7 @@ KJ method type
 mutable struct KJmethod
     name::String
     channels::DataFrame
+    interferences::Dict
     nblank::Int
     ndrift::Int
     ndown::Int
@@ -64,3 +65,22 @@ mutable struct KJfit
     adrift::Vector{Real}
 end
 export KJfit
+
+mutable struct Cruncher
+    anchor::NamedTuple
+    pm::Vector{Real}
+    Dom::Vector{Real}
+    bom::Vector{Real}
+    bpt::Vector{Real}
+    bDot::Vector{Real}
+    bbot::Vector{Real}
+    vp::Real
+    vD::Real
+    vb::Real
+    spD::Real
+    spb::Real
+    sDb::Real
+    ft::Vector{Real}
+    FT::Vector{Real}
+    bd::Real
+end

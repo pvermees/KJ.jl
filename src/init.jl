@@ -18,7 +18,7 @@ function init_methods(csv::AbstractString=joinpath(@__DIR__,"../settings/methods
     out = OrderedDict()
     for row in eachrow(df)
         key = row.method
-        value = (P=row.P,D=row.D,d=row.d,S=row.S)
+        value = (P=row.P,D=row.D,d=row.d)
         add2od!(out,key,value)
     end
     return out
@@ -39,12 +39,12 @@ function init_iratios(csv::AbstractString=joinpath(@__DIR__,"../settings/iratio.
     for row in eachrow(tab)
         isotope = row.isotope
         abundance = row.abundance
-        method = row.method
+        element = row.element
         entry = NamedTuple{(Symbol(isotope),)}((abundance))
-        if !(method in keys(out))
-            out[method] = entry
+        if !(element in keys(out))
+            out[element] = entry
         end
-        out[method] = merge(out[method],entry)
+        out[element] = merge(out[element],entry)
     end
     return out
 end
