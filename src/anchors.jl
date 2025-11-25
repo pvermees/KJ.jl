@@ -1,10 +1,3 @@
-"""
-getAnchors(method::AbstractString,
-           refmats::AbstractVector)
-
-Returns a Dict with named tuples containing
-x0, y0, y1, x or y for the age standards
-"""
 function getAnchors(method::AbstractString,
                     refmats::AbstractVector)
     out = Dict()
@@ -13,15 +6,7 @@ function getAnchors(method::AbstractString,
     end
     return out
 end
-export getAnchors
 
-"""
-getAnchor(method::AbstractString,
-          refmats::AbstractVector)
-
-Returns a named tuple containing
-x0, y0, y1, x or y for the age standards
-"""
 function getAnchor(method::AbstractString,
                    refmat::AbstractString)
     t = get(_KJ["refmat"][method],refmat).type
@@ -32,7 +17,6 @@ function getAnchor(method::AbstractString,
     end
     return out
 end
-export getAnchor
 
 function get_isochron_anchor(method::AbstractString,
                              refmat::AbstractString)
@@ -68,13 +52,6 @@ function is_point_anchor(anchor::NamedTuple)
     return all(in(keys(anchor)), [:x,:y])
 end
 
-"""
-getGlassAnchors(method::AbstractString,
-                refmats::AbstractVector)
-
-Returns a Dict with named tuple containing
-x0, y0, y1, x or y for the reference glasses
-"""
 function getGlassAnchors(method::AbstractString,
                          refmats::AbstractVector)
     out = Dict()

@@ -379,21 +379,19 @@ end
 
 """
 predict(samp::Sample,
-        chronometer::Chronometer,
-        fit::Fit,
+        method::KJmethod,
+        fit::KJfit,
         anchors::AbstractDict)
 """
 function predict(samp::Sample,
-                 chronometer::Chronometer,
-                 fit::Fit,
-                 anchors::AbstractDict;
+                 method::KJmethod,
+                 fit::KJfit;
                  kw...)
-    if samp.group in collect(keys(anchors))
+    if samp.group in collect(keys(method.anchors))
         dat = swinData(samp)
         sig = getSignals(dat)
         covmat = df2cov(sig)
-        anchor = getAnchor(chronometer.method,samp.group)
-        return predict(dat,covmat,chronometer,fit,anchor;kw...)
+        return predict(dat,covmat,method,fit;kw...)
     else
         KJerror("notStandard")
     end
@@ -402,19 +400,17 @@ end
 """
 predict(dat::AbstractDataFrame,
         covmat::Matrix,
-        chronometer::Chronometer,
-        fit::Fit,
-        anchor::NamedTuple)
+        method::KJmethod,
+        fit::KJfit)
 """
 function predict(dat::AbstractDataFrame,
                  covmat::Matrix,
-                 chronometer::Chronometer,
-                 fit::Fit,
-                 anchor::NamedTuple;
+                 method::KJmethod,
+                 fit::KJfit;
                  kw...)
     t = dat.t
     T = dat.T
-    ch = getChannels(chronometer)
+    ch = getChannels(method)
     sig = getSignals(dat)
     iP = columnindex(sig,ch.P)
     iD = columnindex(sig,ch.D)
@@ -428,10 +424,10 @@ function predict(dat::AbstractDataFrame,
     sPD = covmat[iP,iD]
     sPd = covmat[iP,id]
     sDd = covmat[iD,id]
-    ft = get_drift(Pm,t,fit;PAcutoff=chronometer.PAcutoff)
+    ft = get_drift(Pm,t,fit)
     FT = polyFac(fit.down,T)
-    ions = getIons(chronometer)
-    proxies = getProxies(chronometer)
+    ions = getIons(method)
+    proxies = getProxies(method)
     bd = iratio(ions.d,proxies.d)
     Ss = iratio(ions.S,proxies.S)
     blank = fit.blank

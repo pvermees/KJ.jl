@@ -547,8 +547,8 @@ function iratio(nuclide1::Union{Missing,AbstractString},
     if ismissing(nuclide1) || ismissing(nuclide2)
         return 1.0
     end
-    df = _KJ["iratio"]
-    row1 = findfirst(==(nuclide1),df.isotope)
-    row2 = findfirst(==(nuclide2),df.isotope)
-    return df[row1,"abundance"]/df[row2,"abundance"]
+    abundances = merge(values(_KJ["iratio"])...)
+    key1 = Symbol(nuclide1)
+    key2 = Symbol(nuclide2)
+    return abundances[key1]/abundances[key2]
 end

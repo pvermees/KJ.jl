@@ -117,6 +117,15 @@ end
 
 """
 setGroup!(run::Vector{Sample},
+          method::KJmethod)
+"""
+function setGroup!(run::Vector{Sample},
+                   method::KJmethod)
+    setGroup!(run,method.standards)
+end
+
+"""
+setGroup!(run::Vector{Sample},
           standards::AbstractDict)
 """
 function setGroup!(run::Vector{Sample},
@@ -253,9 +262,8 @@ export getInternal
 
 function get_drift(Pm::AbstractVector,
                    t::AbstractVector,
-                   fit::Fit;
-                   PAcutoff=nothing)
-    if isnothing(PAcutoff)
+                   fit::KJfit)
+    if isnothing(fit.PAcutoff)
         ft = polyFac(fit.drift,t)
     else
         analog = Pm .> fit.PAcutoff

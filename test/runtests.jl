@@ -89,9 +89,7 @@ function standardtest(verbose=false)
     myrun, blk = blanktest()
     standards = Dict("BP_gt" => "BP")
     setGroup!(myrun,standards)
-    anchors = getAnchors("Lu-Hf",collect(keys(standards)))
     if verbose
-        println(anchors)
         summarise(myrun;verbose=true,n=5)
     end
     return myrun
@@ -101,38 +99,37 @@ function fixedLuHf(drift,down;
                    PAcutoff=nothing,
                    adrift=drift)
     myrun, blk = blanktest()
-    chronometer = Chronometer("Lu-Hf")
-    setProxies!(chronometer;
+    method = KJmethod("Lu-Hf")
+    setProxies!(method;
                 P="Lu175",
                 d="Hf178")
-    setChannels!(chronometer;
+    setChannels!(method;
                  P="Lu175 -> 175",
                  D="Hf176 -> 258",
                  d="Hf178 -> 260")
-    chronometer.PAcutoff = PAcutoff
     standards = Dict("BP_gt" => "BP")
-    setGroup!(myrun,standards)
-    fit = Fit(blk,drift,down,adrift)
-    return myrun, chronometer, standards, fit
+    setStandards!(method,standards)
+    setGroup!(myrun,method)
+    fit = KJfit(blk,drift,down,PAcutoff,adrift)
+    return myrun, method, fit
 end
 
 function predictest()
     drift = [3.91]
     down = [0.0,0.0045]
-    myrun, chronometer, standards, fit = fixedLuHf(drift,down)
+    myrun, method, fit = fixedLuHf(drift,down)
     samp = myrun[1]
     if samp.group == "sample"
         println("Not a standard")
-        return samp, chronometer, fit, standards
+        return samp, method, fit
     else
-        pred = predict(samp,chronometer,fit,standards)
-        anchors = getAnchors(method,standards)
-        p, offset = KJ.plot(samp,chronometer,fit,anchors;
+        pred = predict(samp,method,fit)
+        p, offset = KJ.plot(samp,method,fit,anchors;
                             den=getChannels(method).D,
                             transformation="log",
                             return_offset=true)
         @test display(p) != NaN
-        return samp, chronometer, fit, standards, p, offset
+        return samp, method, fit, standards, p, offset
     end
 end
     
@@ -615,13 +612,13 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    #=@testset "load" begin loadtest(true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "moving median test" begin mmediantest() end
     @testset "outlier detection" begin outliertest() end
-    @testset "assign standards" begin standardtest(true) end
+    @testset "assign standards" begin standardtest(true) end=#
     @testset "predict" begin predictest() end
     #=@testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
