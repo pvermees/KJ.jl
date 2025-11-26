@@ -6,22 +6,31 @@ function fractionation!(fit::KJfit,
     # extract the grouped data for the SS function from the run
     cruncher_groups = Dict()
     for refmat in keys(method.anchors)
+        anchor = getAnchor(method.name,refmat)
+        
         selection = group2selection(run,refmat)
         ns = length(selection)
         crunchers = Vector{Cruncher}(undef,ns)
         for i in eachindex(selection)
             crunchers[i] = Cruncher(run[selection[i]],method,fit)
         end
-        cruncher_groups[refmat] = crunchers
+        
+        cruncher_groups[refmat] = (anchor=anchor,
+                                   crunchers=crunchers)
     end
 
     # initialise the parameters
     init = fill(0.0,method.ndrift)
-    if (method.ndown>0) init = vcat(init,fill(0.0,method.ndown)) end
-    if !isnothing(method.PAcutoff) init = vcat(init,fill(0.0,method.ndrift)) end
+    if (method.ndown>0)
+        init = vcat(init,fill(0.0,method.ndown))
+    end
+    if !isnothing(method.PAcutoff)
+        init = vcat(init,fill(0.0,method.ndrift))
+    end
 
     # define the objective function
-    objective = (par) -> SS(par,method,cruncher_groups;verbose=verbose)
+    objective = (par) -> SS(par,method,cruncher_groups;
+                            verbose=verbose)
 
     # fit the model
     out = Optim.optimize(objective,init)
@@ -30,11 +39,13 @@ function fractionation!(fit::KJfit,
         println(out)
     else
         if out.stopped_by.time_limit
-            @warn "Reached the maximum number of iterations before achieving " *
-                "convergence. Reduce the order of the polynomials or fix the " *
-                "mass fractionation and try again."
+            @warn "Reached the maximum number of iterations " *
+                "before achieving convergence. " *
+                "Reduce the order of the polynomials or fix " *
+                "the mass fractionation and try again."
         end
-        if hasproperty(out.stopped_by,:ls_failed) && out.stopped_by.ls_failed
+        if hasproperty(out.stopped_by,:ls_failed) &&
+            out.stopped_by.ls_failed
             @warn "Least squares algorithm did not converge."
         end
     end

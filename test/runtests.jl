@@ -117,8 +117,8 @@ function fixedLuHf(drift,down;
 end
 
 function predictest()
-    drift = [5.0,0.0]
-    down = [0.0,0.0]
+    drift = [4.8,0.3]
+    down = [0.0,0.4]
     myrun, method, fit = fixedLuHf(drift,down)
     samp = myrun[1]
     if samp.group == "sample"

@@ -33,23 +33,14 @@ function get_isochron_anchor(method::AbstractString,
         y1 = 0.0
     end
     y0 = get(_KJ["refmat"][method],refmat).y0[1]
-    return (x0=x0,y0=y0,y1=y1)
-end
-
-function is_isochron_anchor(anchor::NamedTuple)
-    return all(in(keys(anchor)), [:x0,:y0,:y1])
+    return IsochronAnchor(x0,y0,y1)
 end
 
 function get_point_anchor(method::AbstractString,
                           refmat::AbstractString)
     x = get(_KJ["refmat"][method],refmat).tx[1]
     y = get(_KJ["refmat"][method],refmat).y0[1]
-    return (x=x,y=y)
-end
-
-function is_point_anchor(anchor::NamedTuple)
-    k = keys(anchor)
-    return all(in(keys(anchor)), [:x,:y])
+    return PointAnchor(x,y)
 end
 
 function getGlassAnchors(method::AbstractString,

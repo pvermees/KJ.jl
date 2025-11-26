@@ -48,6 +48,19 @@ mutable struct KJmethod
 end
 export KJmethod
 
+abstract type AbstractAnchor end
+
+mutable struct IsochronAnchor <: AbstractAnchor
+    x0::Float64
+    y0::Float64
+    y1::Float64
+end
+
+mutable struct PointAnchor <: AbstractAnchor
+    x::Float64
+    y::Float64
+end
+
 """
 KJfit(blank::DataFrame
       drift::Vector{Float64}
@@ -65,10 +78,9 @@ end
 export KJfit
 
 mutable struct Cruncher
-    anchor::NamedTuple
-    pm::Vector{Float64}
-    Dom::Vector{Float64}
-    bom::Vector{Float64}
+    pmb::Vector{Float64}
+    Dombi::Vector{Float64}
+    bomb::Vector{Float64}
     bpt::Vector{Float64}
     bDot::Vector{Float64}
     bbot::Vector{Float64}
