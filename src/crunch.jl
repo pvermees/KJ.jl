@@ -2,8 +2,8 @@ function getP(a::IsochronAnchor,
               c::Cruncher,
               ft::AbstractVector,
               FT::AbstractVector)
-    x0, y0, y1 = NamedTuple(a)
-    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = NamedTuple(c)
+    x0, y0, y1 = unpack(a)
+    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = unpack(c)
     return @. -((((Dombi*bd^2*vp-bd^2*pmb*spD)*x0*y0+(bd*pmb*spb-bd*bomb*vp)*x0)*y1+((Dombi*FT*bd^2*ft*spD-FT*bd^2*ft*pmb*vD)*x0^2+(bd^2*pmb*spD-Dombi*bd^2*vp)*x0)*y0^2+((-(Dombi*FT*bd*ft*spb)-FT*bd*bomb*ft*spD+2*FT*bd*ft*pmb*sDb)*x0^2+(bd*bomb*vp-bd*pmb*spb)*x0)*y0+(FT*bomb*ft*spb-FT*ft*pmb*vb)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spD*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spb*x0)*y1+(FT^2*bd^2*ft^2*vD*x0^2-2*FT*bd^2*ft*spD*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spb*x0-2*FT^2*bd*ft^2*sDb*x0^2)*y0+FT^2*ft^2*vb*x0^2))
 end
 export getP
@@ -12,8 +12,8 @@ function getD(a::IsochronAnchor,
               c::Cruncher,
               ft::AbstractVector,
               FT::AbstractVector)
-    x0, y0, y1 = NamedTuple(a)
-    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = NamedTuple(c)
+    x0, y0, y1 = unpack(a)
+    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = unpack(c)
     return @. ((Dombi*bd^2*vp-bd^2*pmb*spD)*y1^2+(((Dombi*FT*bd^2*ft*spD-FT*bd^2*ft*pmb*vD)*x0-2*Dombi*bd^2*vp+2*bd^2*pmb*spD)*y0+(-(2*Dombi*FT*bd*ft*spb)+FT*bd*bomb*ft*spD+FT*bd*ft*pmb*sDb)*x0)*y1+((FT*bd^2*ft*pmb*vD-Dombi*FT*bd^2*ft*spD)*x0+Dombi*bd^2*vp-bd^2*pmb*spD)*y0^2+((FT^2*bd*bomb*ft^2*vD-Dombi*FT^2*bd*ft^2*sDb)*x0^2+(2*Dombi*FT*bd*ft*spb-FT*bd*bomb*ft*spD-FT*bd*ft*pmb*sDb)*x0)*y0+(Dombi*FT^2*ft^2*vb-FT^2*bomb*ft^2*sDb)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spD*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spb*x0)*y1+(FT^2*bd^2*ft^2*vD*x0^2-2*FT*bd^2*ft*spD*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spb*x0-2*FT^2*bd*ft^2*sDb*x0^2)*y0+FT^2*ft^2*vb*x0^2)
 end
 
@@ -21,8 +21,8 @@ function getD(a::PointAnchor,
               c::Cruncher,
               ft::AbstractVector,
               FT::AbstractVector)
-    x, y = NamedTuple(a)
-    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = NamedTuple(c)
+    x, y = unpack(a)
+    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = unpack(c)
     return @. (((bd*bomb*vD-Dombi*bd*sDb)*vp-bd*pmb*spb*vD+Dombi*bd*spD*spb-bd*bomb*spD^2+bd*pmb*sDb*spD)*y+((FT*ft*pmb*vD-Dombi*FT*ft*spD)*vb-FT*bomb*ft*spb*vD+Dombi*FT*ft*sDb*spb+FT*bomb*ft*sDb*spD-FT*ft*pmb*sDb^2)*x+(Dombi*vb-bomb*sDb)*vp-pmb*spD*vb-Dombi*spb^2+(bomb*spD+pmb*sDb)*spb)/((bd^2*vD*vp-bd^2*spD^2)*y^2+((2*FT*bd*ft*sDb*spD-2*FT*bd*ft*spb*vD)*x-2*bd*sDb*vp+2*bd*spD*spb)*y+(FT^2*ft^2*vD*vb-FT^2*ft^2*sDb^2)*x^2+(2*FT*ft*sDb*spb-2*FT*ft*spD*vb)*x+vb*vp-spb^2)
 end
 
@@ -30,10 +30,10 @@ function SS(a::IsochronAnchor,
             c::Cruncher,
             ft::AbstractVector,
             FT::AbstractVector)
-    Po = getP(a,cruncher,ft,FT)
-    Do = getD(a,cruncher,ft,FT)
-    x0, y0, y1 = NamedTuple(a)
-    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = NamedTuple(c)
+    Po = getP(a,c,ft,FT)
+    Do = getD(a,c,ft,FT)
+    x0, y0, y1 = unpack(a)
+    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = unpack(c)
     maha = @. (bomb-bd*((Po*(y1-y0))/x0+Do*y0))*(((vD*vp-spD^2)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(sDb*spD-spb*vD))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(Dombi-Do)*(((spD*spb-sDb*vp)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(pmb-FT*Po*ft)*(((sDb*spD-spb*vD)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(vD*vb-sDb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
     return sum(@. maha )
 end
@@ -42,9 +42,9 @@ function SS(a::PointAnchor,
             c::Cruncher,
             ft::AbstractVector,
             FT::AbstractVector)
-    Do = getD(a,cruncher,ft,FT)
-    x, y = NamedTuple(a)
-    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = NamedTuple(c)
+    Do = getD(a,c,ft,FT)
+    x, y = unpack(a)
+    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = unpack(c)
     maha = @. (bomb-Do*bd*y)*(((vD*vp-spD^2)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spD-spb*vD)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(Dombi-Do)*(((spD*spb-sDb*vp)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spb-spD*vb)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(pmb-Do*FT*ft*x)*(((sDb*spD-spb*vD)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((vD*vb-sDb^2)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
     
     return sum(@. maha )
@@ -123,7 +123,7 @@ function predict(a::IsochronAnchor,
     Po = getP(a,c,ft,FT)
     Do = getD(a,c,ft,FT)
     x0, y0, y1 = a.x0, a.y0, a.y1
-    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = NamedTuple(c)
+    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = unpack(c)
     pf = @. Po*ft*FT + bpt
     Dof = @. Do + bDot
     bof = @. (Do*y0 + Po*(y1-y0)/x0)*bd + bbot
@@ -136,7 +136,7 @@ function predict(a::PointAnchor,
                  FT::AbstractVector)
     Do = getD(a,c,ft,FT)
     x, y = a.x, a.y
-    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = NamedTuple(c)
+    pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = unpack(c)
     pf = @. Do*x*ft*FT + bpt
     Dof = @. Do + bDot
     bof = @. Do*y*bd + bbot
@@ -232,4 +232,8 @@ function Cruncher(samp::Sample,
 
     return Cruncher(pmb,Domb,bomb,bpt,bDot,bbot,vP,vD,vd,sPD,sPd,sDd,bd,t,T)
     
+end
+
+function unpack(c::Cruncher)
+    return (c.pmb,c.Dombi,c.bomb,c.bpt,c.bDot,c.bbot,c.vp,c.vD,c.vb,c.spD,c.spb,c.sDb,c.bd,c.t,c.T)
 end

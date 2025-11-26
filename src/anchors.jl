@@ -59,3 +59,11 @@ function get_glass_anchor(method::AbstractString,
     y = get(_KJ["glass"],refmat)[ratio]
     return (y=y)
 end
+
+function unpack(a::IsochronAnchor)
+    return (a.x0,a.y0,a.y1)
+end
+
+function unpack(a::PointAnchor)
+    return (a.x,a.y)
+end
