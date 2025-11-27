@@ -36,15 +36,14 @@ function windowtest()
     @test display(p) != NaN
 end
 
-function blanktest(;doplot=false,ylim=:auto,transformation=nothing)
-    myrun = loadtest()
+function blanktest(myrun=loadtest();
+                   doplot=false,ylim=:auto,transformation=nothing)
     blk = fitBlanks(myrun;nblank=2)
     if doplot
         p = KJ.plot(myrun[1],ylim=ylim,transformation=transformation)
         plotFittedBlank!(p,myrun[1],blk,transformation=transformation)
         @test display(p) != NaN
     end
-    return myrun, blk
 end
 
 function mmediantest()
@@ -99,20 +98,27 @@ function standardtest(verbose=false)
     return myrun
 end
 
-function fixedLuHf(drift,down;
+function getmethod(name="Lu-Hf")
+    if name=="Lu-Hf"
+        p = (P="Lu175",D="Hf176",d="Hf178")
+        c = (P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260")
+    elseif name=="Rb-Sr"
+        p = (P="Rb85",D="Sr87",d="Sr88")
+        c = (P="Rb85 -> 85",D="Sr87 -> 103",d="Sr88 -> 104")
+    elseif name=="K-Ca"
+        p = (P="K39",D="Ca40",d="Ca44")
+        c = (P="K39 -> 39",D="Ca40 -> 59",d="Ca44 -> 63")
+    end
+    return KJmethod(name;proxies=p,channels=c)
+end
+
+function fixedtest(drift,down;
+                   myrun=loadtest(),
+                   method=getmethod("RbSr"),
+                   standards=Dict("BP_gt" => "BP"),
                    PAcutoff=nothing,
                    adrift=drift)
-    myrun, blk = blanktest()
-    method = KJmethod("Lu-Hf")
-    setProxies!(method;
-                P="Lu175",
-                d="Hf178")
-    setChannels!(method;
-                 P="Lu175 -> 175",
-                 D="Hf176 -> 258",
-                 d="Hf178 -> 260")
-    setStandards!(myrun,method;
-                  standards=Dict("BP_gt" => "BP"))
+    setStandards!(myrun,method;standards=standards)
     fit = KJfit(blk,drift,down,adrift)
     return myrun, method, fit
 end
@@ -120,7 +126,7 @@ end
 function predictest()
     drift = [4.8,0.3]
     down = [0.0,0.4]
-    myrun, method, fit = fixedLuHf(drift,down)
+    myrun, method, fit = fixedtest(drift,down)
     samp = myrun[1]
     if samp.group == "sample"
         println("Not a standard")
@@ -170,19 +176,16 @@ function downtest()
 end
 
 function processtest(;
-                     chronometer="Lu-Hf",
                      dname="data/MWE",
+                     method=getmethod("Lu-Hf"),
                      proxies=(P="Lu175",D="Hf176",d="Hf178"),
                      channels=(P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"),
                      standards = Dict("BP_gt" => "BP"),
                      show=true,
                      transformation="log",
-                     snum=2,
+                     snum=1,
                      verbose=false)
     myrun = load(dname,format="Agilent")
-    method = KJmethod(chronometer;
-                      proxies=proxies,
-                      channels=channels)
     fit = process!(myrun,method,standards;
                    reject_outliers=false,
                    verbose=verbose)
@@ -198,22 +201,21 @@ function processtest(;
 end
 
 function RbSrTest(show=true)
-    return processtest(;chronometer="Rb-Sr",
-                       dname="data/Rb-Sr",
-                       proxies=(P = "Rb85",D = "Sr87",d = "Sr88"),
-                       channels=(P = "Rb85 -> 85",D = "Sr87 -> 103",d = "Sr88 -> 104"),
+    return processtest(;dname="data/Rb-Sr",
+                       method=getmethod("Rb-Sr")
                        standards=Dict("MDC_bt" => "MDC -"),
-                       snum=2,
-                       verbose=true)
+                       snum=4,
+                       show=show,
+                       transformation=nothing,
+                       verbose=false)
 end
 
 function KCaTest(show=true)
-    return processtest(;chronometer="K-Ca",
-                       dname="data/K-Ca",
-                       proxies=(P = "K39",D = "Ca40",d = "Ca44"),
-                       channels=(P = "K39 -> 39", D = "Ca40 -> 59",d = "Ca44 -> 63"),
+    return processtest(;dname="data/K-Ca",
+                       method=getmethod("K-Ca"),
                        standards=Dict("EntireCreek_bt" => "EntCrk"),
-                       snum=1)
+                       snum=3,
+                       show=show)
 end
 
 function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
@@ -555,7 +557,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(;verbose=true) end
+    @testset "load" begin loadtest(;verbose=true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -564,10 +566,10 @@ if true
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
     @testset "predict drift" begin driftest() end
-    @testset "predict down" begin downtest() end=#
-    @testset "process run" begin processtest(;verbose=true) end
-    #=@testset "Rb-Sr" begin RbSrTest() end
-    @testset "K-Ca" begin KCaTest() end
+    @testset "predict down" begin downtest() end
+    @testset "process run" begin processtest() end
+    @testset "Rb-Sr" begin RbSrTest() end
+    #=@testset "K-Ca" begin KCaTest() end
     @testset "hist" begin histest() end
     @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end

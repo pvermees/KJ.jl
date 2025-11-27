@@ -4,8 +4,8 @@ function KJmethod(name::String;
                   channels::NamedTuple{(:P,:D,:d)}=proxies,
                   interferences::AbstractDict=Dict(),
                   nblank::Int=2,
-                  ndown::Int=2,
-                  ndrift::Int=1,
+                  ndrift::Int=2,
+                  ndown::Int=1,
                   PAcutoff::Bool=false,
                   anchors::AbstractDict=Dict())
 

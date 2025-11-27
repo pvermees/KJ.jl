@@ -7,16 +7,13 @@ function fractionation!(fit::KJfit,
     cruncher_groups = Dict()
     for refmat in keys(method.anchors)
         anchor = getAnchor(method.name,refmat)
-        
         selection = group2selection(run,refmat)
         ns = length(selection)
         crunchers = Vector{Cruncher}(undef,ns)
         for i in eachindex(selection)
             crunchers[i] = Cruncher(run[selection[i]],method,fit)
         end
-        
-        cruncher_groups[refmat] = (anchor=anchor,
-                                   crunchers=crunchers)
+        cruncher_groups[refmat] = (anchor=anchor,crunchers=crunchers)
     end
 
     # initialise the parameters

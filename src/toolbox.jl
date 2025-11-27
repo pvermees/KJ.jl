@@ -512,3 +512,14 @@ function iratio(nuclide1::Union{Missing,AbstractString},
     key2 = Symbol(nuclide2)
     return abundances[key1]/abundances[key2]
 end
+
+function unpack(a::IsochronAnchor)
+    return (a.x0,a.y0,a.y1)
+end
+
+function unpack(a::PointAnchor)
+    return (a.x,a.y)
+end
+function unpack(c::Cruncher)
+    return (c.pmb,c.Dombi,c.bomb,c.bpt,c.bDot,c.bbot,c.vp,c.vD,c.vb,c.spD,c.spb,c.sDb,c.bd,c.t,c.T)
+end

@@ -233,7 +233,3 @@ function Cruncher(samp::Sample,
     return Cruncher(pmb,Domb,bomb,bpt,bDot,bbot,vP,vD,vd,sPD,sPd,sDd,bd,t,T)
     
 end
-
-function unpack(c::Cruncher)
-    return (c.pmb,c.Dombi,c.bomb,c.bpt,c.bDot,c.bbot,c.vp,c.vD,c.vb,c.spD,c.spb,c.sDb,c.bd,c.t,c.T)
-end
