@@ -1,49 +1,19 @@
-"""
-process!(run::Vector{Sample},
-         method::AbstractString,
-         channels::AbstractDict,
-         standards::AbstractDict,
-         glass::AbstractDict;
-         nblank::Integer=2,
-         ndrift::Integer=1,
-         ndown::Integer=1,
-         PAcutoff=nothing,
-         reject_outliers::Bool=true,
-         verbose::Bool=false)
-
-Two-step processing of KJ data for ratios
-"""
 function process!(run::Vector{Sample},
-                  method::AbstractString,
-                  channels::AbstractDict,
-                  standards::AbstractDict,
-                  glass::AbstractDict;
-                  nblank::Integer=2,
-                  ndrift::Integer=1,
-                  ndown::Integer=1,
-                  PAcutoff=nothing,
+                  method::KJmethod,
+                  standards::AbstractDict;
                   reject_outliers::Bool=true,
                   verbose::Bool=false)
-    setGroup!(run,glass)
-    setGroup!(run,standards)
     if reject_outliers
-        detect_outliers!(run;channels=collect(values(channels)))
+        ch = collect(values(getChannels(method)))
+        detect_outliers!(run;channels=ch)
     end
-    blank = fitBlanks(run;nblank=nblank)
-    fit = fractionation(run,method,blank,channels,standards,glass;
-                        ndrift=ndrift,ndown=ndown,
-                        PAcutoff=PAcutoff,verbose=verbose)
-    return blank, fit
+    fit = KJfit(method)
+    setStandards!(run,method;standards=standards)
+    fitBlanks!(fit,method,run)
+    fractionation!(fit,method,run;verbose=verbose)
+    return fit
 end
-"""
-process!(run::Vector{Sample},
-         internal::Tuple,
-         glass::AbstractDict;
-         nblank::Integer=2,
-         reject_outliers::Bool=true)
 
-KJ processing of concentration data
-"""
 function process!(run::Vector{Sample},
                   internal::Tuple,
                   glass::AbstractDict;

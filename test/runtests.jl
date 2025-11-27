@@ -3,8 +3,9 @@ import Plots, Distributions, CSV, Statistics,
     Random, LinearAlgebra, Aqua
 include("helper.jl")
 
-function loadtest(verbose=false)
-    myrun = load("data/MWE";format="Agilent")
+function loadtest(;dname="data/MWE",
+                  verbose=false)
+    myrun = load(dname;format="Agilent")
     if verbose summarise(myrun;verbose=true) end
     return myrun
 end
@@ -168,68 +169,39 @@ function downtest()
     partest("down",1.0)
 end
 
-function fractionationtest(all=true)
-    myrun = loadtest()
-    method = KJmethod("Lu-Hf")
-    setProxies!(method,
-                P = "Lu175",
-                D = "Hf176",
-                d = "Hf178")
-    setChannels!(method,
-                 P = "Lu175 -> 175",
-                 D = "Hf176 -> 258",
-                 d = "Hf178 -> 260")
-    setStandards!(myrun,method;
-                  standards = Dict("BP_gt" => "BP"))
-    fit = KJfit(method)
-    fitBlanks!(fit,method,myrun)
-    fractionation!(fit,method,myrun;verbose=false)
-    println("drift: ",fit.drift,", down: ",fit.down)
+function processtest(;
+                     chronometer="Lu-Hf",
+                     dname="data/MWE",
+                     proxies=(P="Lu175",D="Hf176",d="Hf178"),
+                     channels=(P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"),
+                     standards = Dict("BP_gt" => "BP"),
+                     show=true)
+    myrun = load(dname,format="Agilent")
+    method = KJmethod(chronometer;
+                      proxies=proxies,
+                      channels=channels)
+    fit = process!(myrun,method,standards)
+    if show
+        p = KJ.plot(myrun[2],method,fit;transformation="log",den=channels.D)
+        @test display(p) != NaN
+    end
     return myrun, method, fit
 end
 
 function RbSrTest(show=true)
-    myrun = load("data/Rb-Sr",format="Agilent")
-    method = "Rb-Sr"
-    channels = Dict("d"=>"Sr88 -> 104",
-                    "D"=>"Sr87 -> 103",
-                    "P"=>"Rb85 -> 85")
-    standards = Dict("MDC_bt" => "MDC -")
-    setGroup!(myrun,standards)
-    blank = fitBlanks(myrun;nblank=2)
-    fit = fractionation(myrun,method,blank,channels,standards,0.11935;
-                        ndown=0,ndrift=1,verbose=false)
-    anchors = getStandardAnchors(method,standards)
-    if show
-        p = KJ.plot(myrun[2],channels,blank,fit,anchors;
-                    transformation="log",den="Sr87 -> 103")
-        @test display(p) != NaN
-    end
-    export2IsoplotR(myrun,method,channels,blank,fit;
-                    prefix="Entire",fname="output/Entire.json")
-    return myrun, blank, fit, channels, standards, anchors
+    return processtest(;chronometer="Rb-Sr",
+                       dname="data/Rb-Sr",
+                       proxies=(P = "Rb85",D = "Sr87",d = "Sr88"),
+                       channels=(P = "Rb85 -> 85",D = "Sr87 -> 103",d = "Sr88 -> 104"),
+                       standards=Dict("MDC_bt" => "MDC -"))
 end
 
 function KCaTest(show=true)
-    myrun = load("data/K-Ca",format="Agilent")
-    method = "K-Ca"
-    channels = Dict("d"=>"Ca44 -> 63",
-                    "D"=>"Ca40 -> 59",
-                    "P"=>"K39 -> 39")
-    standards = Dict("EntireCreek_bt" => "EntCrk")
-    setGroup!(myrun,standards)
-    blank = fitBlanks(myrun;nblank=2)
-    fit = fractionation(myrun,method,blank,channels,standards,nothing;
-                        ndown=0,ndrift=1,verbose=false)
-    anchors = getStandardAnchors(method,standards)
-    if show
-        p = KJ.plot(myrun[3],channels,blank,fit,anchors,
-                    transformation="log",den=nothing)
-        @test display(p) != NaN
-    end
-    export2IsoplotR(myrun,method,channels,blank,fit;
-                    prefix="EntCrk",fname="output/Entire_KCa.json")
-    return myrun, blank, fit, channels, standards, anchors
+    return processtest(;chronometer="K-Ca",
+                       dname="data/K-Ca",
+                       proxies=(P = "K39",D = "Ca40",d = "Ca44"),
+                       channels=(P = "K39 -> 39", D = "Ca40 -> 59",d = "Ca44 -> 63"),
+                       standards=Dict("EntireCreek_bt" => "EntCrk"))
 end
 
 function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
@@ -258,14 +230,10 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
 end
 
 function histest(;LuHf=false,show=true)
-    if LuHf
-        myrun,blk,fit,channels,standards,glass,anchors =
-            fractionationtest(false)
-        standard = "BP_gt"
-    else
-        myrun,blk,fit,channels,standards,anchors = RbSrTest(false)
-        standard = "MDC_bt"
-    end
+    myrun, method, fit = ifelse(LuHf,
+                                processtest(),
+                                RbSrTest())
+    
     print(fit)
     dats, covs = pool(myrun;signal=true,group=standard,include_covmats=true)
     anchor = anchors[standard]
@@ -287,26 +255,6 @@ function histest(;LuHf=false,show=true)
         CSV.write("output/pooled_" * standard * ".csv",df)
     end
     return anchors, fit, Pm, Dm, dm
-end
-
-function processtest(show=true)
-    myrun = load("data/MWE",format="Agilent")
-    method = "Lu-Hf";
-    channels = Dict("d"=>"Hf178 -> 260",
-                    "D"=>"Hf176 -> 258",
-                    "P"=>"Lu175 -> 175")
-    standards = Dict("Hogsbo_gt" => "hogsbo")
-    glass = Dict("NIST612" => "NIST612p")
-    blk, fit = process!(myrun,method,channels,standards,glass;
-                        nblank=2,ndrift=1,ndown=1,verbose=false)
-    if show
-        anchors = getAnchors(method,standards,glass)
-        p = KJ.plot(myrun[2],channels,blk,fit,anchors;
-                    transformation="log",
-                    den="Hf176 -> 258")
-        @test display(p) != NaN
-    end
-    return myrun, method, channels, blk, fit
 end
 
 function PAtest(verbose=false)
@@ -595,7 +543,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(true) end
+    @testset "load" begin loadtest(;verbose=true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -605,11 +553,10 @@ if true
     @testset "predict" begin predictest() end
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
-    @testset "fractionation" begin fractionationtest(true) end
-    #=@testset "Rb-Sr" begin RbSrTest() end
-    @testset "K-Ca" begin KCaTest() end
-    @testset "hist" begin histest() end
     @testset "process run" begin processtest() end
+    @testset "Rb-Sr" begin RbSrTest() end
+    #=@testset "K-Ca" begin KCaTest() end
+    @testset "hist" begin histest() end
     @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end

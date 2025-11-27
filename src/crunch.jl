@@ -122,7 +122,7 @@ function predict(a::IsochronAnchor,
                  FT::AbstractVector)
     Po = getP(a,c,ft,FT)
     Do = getD(a,c,ft,FT)
-    x0, y0, y1 = a.x0, a.y0, a.y1
+    x0, y0, y1 = unpack(a)
     pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = unpack(c)
     pf = @. Po*ft*FT + bpt
     Dof = @. Do + bDot
@@ -135,7 +135,7 @@ function predict(a::PointAnchor,
                  ft::AbstractVector,
                  FT::AbstractVector)
     Do = getD(a,c,ft,FT)
-    x, y = a.x, a.y
+    x, y = unpack(a)
     pmb, Dombi, bomb, bpt, bDot, bbot, vp, vD, vb, spD, spb, sDb, bd, t, T = unpack(c)
     pf = @. Do*x*ft*FT + bpt
     Dof = @. Do + bDot

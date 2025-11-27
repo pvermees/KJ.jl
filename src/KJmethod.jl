@@ -1,22 +1,25 @@
-"""
-KJmethod(name::String)
+function KJmethod(name::String;
+                  ions::NamedTuple{(:P,:D,:d)}=default_ions(name),
+                  proxies::NamedTuple{(:P,:D,:d)}=ions,
+                  channels::NamedTuple{(:P,:D,:d)}=proxies,
+                  interferences::AbstractDict=Dict(),
+                  nblank::Int=2,
+                  ndown::Int=2,
+                  ndrift::Int=1,
+                  PAcutoff::Bool=false,
+                  anchors::AbstractDict=Dict())
 
-Initialises a geochronometer
-"""
-function KJmethod(name::String)
+    chdf = DataFrame(par=["ion","proxy","channel"],
+                     P=[ions.P,proxies.P,channels.P],
+                     D=[ions.D,proxies.D,channels.D],
+                     d=[ions.d,proxies.d,channels.d])
+    
+    return KJmethod(name,chdf,interferences,nblank,ndrift,ndown,PAcutoff,anchors)
+end
+
+function default_ions(name)
     m = get(_KJ["methods"],name)
-    channels = DataFrame(par=["ion","proxy","channel"],
-                         P=fill(String(m.P),3),
-                         D=fill(String(m.D),3),
-                         d=fill(String(m.d),3))
-    return KJmethod(name,
-                    channels,
-                    Dict(),  # interferences
-                    2,       # nblank
-                    2,       # ndrift
-                    1,       # ndown
-                    nothing, # PAcutoff
-                    Dict())  # anchors
+    return (P=String(m.P),D=String(m.D),d=String(m.d))
 end
 
 function channelAccessor(channels::AbstractDataFrame,
