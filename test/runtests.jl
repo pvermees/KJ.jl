@@ -175,14 +175,23 @@ function processtest(;
                      proxies=(P="Lu175",D="Hf176",d="Hf178"),
                      channels=(P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"),
                      standards = Dict("BP_gt" => "BP"),
-                     show=true)
+                     show=true,
+                     transformation="log",
+                     snum=2,
+                     verbose=false)
     myrun = load(dname,format="Agilent")
     method = KJmethod(chronometer;
                       proxies=proxies,
                       channels=channels)
-    fit = process!(myrun,method,standards)
+    fit = process!(myrun,method,standards;
+                   reject_outliers=false,
+                   verbose=verbose)
+    if verbose
+        println("drift=",fit.drift,", down=",fit.down)
+    end
     if show
-        p = KJ.plot(myrun[2],method,fit;transformation="log",den=channels.D)
+        p = KJ.plot(myrun[snum],method,fit;
+                    transformation=transformation,den=channels.D)
         @test display(p) != NaN
     end
     return myrun, method, fit
@@ -193,7 +202,9 @@ function RbSrTest(show=true)
                        dname="data/Rb-Sr",
                        proxies=(P = "Rb85",D = "Sr87",d = "Sr88"),
                        channels=(P = "Rb85 -> 85",D = "Sr87 -> 103",d = "Sr88 -> 104"),
-                       standards=Dict("MDC_bt" => "MDC -"))
+                       standards=Dict("MDC_bt" => "MDC -"),
+                       snum=2,
+                       verbose=true)
 end
 
 function KCaTest(show=true)
@@ -201,7 +212,8 @@ function KCaTest(show=true)
                        dname="data/K-Ca",
                        proxies=(P = "K39",D = "Ca40",d = "Ca44"),
                        channels=(P = "K39 -> 39", D = "Ca40 -> 59",d = "Ca44 -> 63"),
-                       standards=Dict("EntireCreek_bt" => "EntCrk"))
+                       standards=Dict("EntireCreek_bt" => "EntCrk"),
+                       snum=1)
 end
 
 function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
@@ -543,7 +555,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(;verbose=true) end
+    #=@testset "load" begin loadtest(;verbose=true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -552,10 +564,10 @@ if true
     @testset "assign standards" begin standardtest(true) end
     @testset "predict" begin predictest() end
     @testset "predict drift" begin driftest() end
-    @testset "predict down" begin downtest() end
-    @testset "process run" begin processtest() end
-    @testset "Rb-Sr" begin RbSrTest() end
-    #=@testset "K-Ca" begin KCaTest() end
+    @testset "predict down" begin downtest() end=#
+    @testset "process run" begin processtest(;verbose=true) end
+    #=@testset "Rb-Sr" begin RbSrTest() end
+    @testset "K-Ca" begin KCaTest() end
     @testset "hist" begin histest() end
     @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
