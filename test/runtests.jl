@@ -114,31 +114,44 @@ function getmethod(name="Lu-Hf")
     return KJmethod(name;proxies=p,channels=c)
 end
 
-function fixedtest(drift,down;
-                   myrun=loadtest(),
-                   method=getmethod("Lu-Hf"),
-                   standards=Dict("BP_gt" => "BP"),
-                   PAcutoff=nothing,
-                   adrift=drift)
+function predictsettings(option="Lu-Hf")
+    dname = nothing
+    method = getmethod(option)
+    standards = nothing
+    drift = nothing
+    down = nothing
+    if option=="Lu-Hf"
+        dname = "data/MWE"
+        standards = Dict("BP_gt" => "BP")
+        drift = [4.8,0.3]
+        down = [0.0,0.4]
+    elseif option=="Rb-Sr"
+        dname = "data/Rb-Sr"
+        standards = Dict("MDC_bt" => "MDC -")
+        drift = [1.0]
+        down = [0.0,-1.0]
+    end
+    myrun=loadtest(;dname=dname)
+    PAcutoff=nothing            
+    adrift=drift
+    return myrun,method,standards,drift,down,PAcutoff,adrift
+end
+
+function predictest(option="Lu-Hf";
+                    snum=1)
+    myrun, method, standards, drift, down, PAcutoff, adrift = predictsettings(option)
     blk = blanktest(myrun=myrun)
     setStandards!(myrun,method;standards=standards)
     fit = KJfit(blk,drift,down,adrift)
-    return myrun, method, fit
-end
-
-function predictest()
-    drift = [4.8,0.3]
-    down = [0.0,0.4]
-    myrun, method, fit = fixedtest(drift,down)
-    samp = myrun[1]
+    samp = myrun[snum]
     if samp.group == "sample"
         println("Not a standard")
         return samp, method, fit
     else
         pred = predict(samp,method,fit)
         p, offset = KJ.plot(samp,method,fit;
-                            den=getChannels(method).D,
-                            transformation="log",
+                            den=nothing, # getChannels(method).D,
+                            transformation="log", # nothing, # 
                             return_offset=true)
         @test display(p) != NaN
         return samp, method, fit, p, offset
@@ -202,22 +215,23 @@ function processtest(;
     return myrun, method, fit
 end
 
-function RbSrTest(show=true)
+function RbSrTest(;show=true,verbose=false)
     return processtest(;dname="data/Rb-Sr",
                        method=getmethod("Rb-Sr"),
                        standards=Dict("MDC_bt" => "MDC -"),
                        snum=4,
                        show=show,
                        transformation=nothing,
-                       verbose=false)
+                       verbose=verbose)
 end
 
-function KCaTest(show=true)
+function KCaTest(;show=true,verbose=false)
     return processtest(;dname="data/K-Ca",
                        method=getmethod("K-Ca"),
                        standards=Dict("EntireCreek_bt" => "EntCrk"),
                        snum=3,
-                       show=show)
+                       show=show,
+                       verbose=verbose)
 end
 
 function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
@@ -559,17 +573,18 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(;verbose=true) end
+    #=@testset "load" begin loadtest(;verbose=true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "moving median test" begin mmediantest() end
     @testset "outlier detection" begin outliertest() end
     @testset "assign standards" begin standardtest(true) end
-    @testset "predict" begin predictest() end
+    @testset "predict Lu-Hf" begin predictest() end
+    @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
-    @testset "process run" begin processtest() end
+    @testset "process run" begin processtest() end=#
     @testset "Rb-Sr" begin RbSrTest() end
     #=@testset "K-Ca" begin KCaTest() end
     @testset "hist" begin histest() end

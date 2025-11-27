@@ -225,7 +225,7 @@ function Cruncher(samp::Sample,
     
     ions = getIons(method)
     proxies = getProxies(method)
-    bd = iratio(ions.d,proxies.d)
+    bd = iratio(proxies.d,ions.d)
 
     t = dat.t
     T = dat.T
