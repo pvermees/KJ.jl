@@ -114,31 +114,44 @@ function getmethod(name="Lu-Hf")
     return KJmethod(name;proxies=p,channels=c)
 end
 
-function fixedtest(drift,down;
-                   myrun=loadtest(),
-                   method=getmethod("Lu-Hf"),
-                   standards=Dict("BP_gt" => "BP"),
-                   PAcutoff=nothing,
-                   adrift=drift)
-    blk = blanktest(myrun=myrun)
+function predictsettings(option="Lu-Hf")
+    dname = nothing
+    method = getmethod(option)
+    standards = nothing
+    drift = nothing
+    down = nothing
+    if option=="Lu-Hf"
+        dname = "data/MWE"
+        standards = Dict("BP_gt" => "BP")
+        drift = [4.22,0.0]
+        down = [0.0,0.15]
+    elseif option=="Rb-Sr"
+        dname = "data/Rb-Sr"
+        standards = Dict("MDC_bt" => "MDC -")
+        drift = [1.0,0.0]
+        down = [0.0,0.14]
+    end
+    myrun=loadtest(;dname=dname)
     setStandards!(myrun,method;standards=standards)
-    fit = KJfit(blk,drift,down,adrift)
-    return myrun, method, fit
+    PAcutoff=nothing            
+    adrift=drift
+    return myrun,method,drift,down,PAcutoff,adrift
 end
 
-function predictest()
-    drift = [4.8,0.3]
-    down = [0.0,0.4]
-    myrun, method, fit = fixedtest(drift,down)
-    samp = myrun[1]
+function predictest(option="Lu-Hf";
+                    snum=1,
+                    transformation="log")
+    myrun, method, drift, down, PAcutoff, adrift = predictsettings(option)
+    blk = blanktest(myrun=myrun)
+    fit = KJfit(blk,drift,down,adrift)
+    samp = myrun[snum]
     if samp.group == "sample"
         println("Not a standard")
         return samp, method, fit
     else
-        pred = predict(samp,method,fit)
         p, offset = KJ.plot(samp,method,fit;
                             den=getChannels(method).D,
-                            transformation="log",
+                            transformation=transformation,
                             return_offset=true)
         @test display(p) != NaN
         return samp, method, fit, p, offset
@@ -171,21 +184,29 @@ function partest(parname,paroffsetfact)
 end
 
 function driftest()
-    partest("drift",1.0)
+    partest("drift",0.5)
 end
 
 function downtest()
     partest("down",1.0)
 end
 
-function processtest(;
-                     dname="data/MWE",
-                     method=getmethod("Lu-Hf"),
-                     standards = Dict("BP_gt" => "BP"),
+function processsettings(option="Lu-Hf")
+    method = getmethod(option)
+    if option == "Lu-Hf"
+        return ("data/MWE", method, Dict("BP_gt" => "BP"), 1)
+    elseif option == "Rb-Sr"
+        return ("data/Rb-Sr", method, Dict("MDC_bt" => "MDC -"), 4)
+    elseif option == "K-Ca"
+        return ("data/K-Ca", method, Dict("EntireCreek_bt" => "EntCrk"), 3)
+    end
+end
+
+function processtest(option="Lu-Hf";
                      show=true,
-                     transformation="log",
-                     snum=1,
-                     verbose=false)
+                     verbose=false,
+                     transformation="log")
+    dname, method, standards, snum = processsettings(option)
     myrun = load(dname,format="Agilent")
     fit = process!(myrun,method,standards;
                    reject_outliers=false,
@@ -200,24 +221,6 @@ function processtest(;
         @test display(p) != NaN
     end
     return myrun, method, fit
-end
-
-function RbSrTest(show=true)
-    return processtest(;dname="data/Rb-Sr",
-                       method=getmethod("Rb-Sr"),
-                       standards=Dict("MDC_bt" => "MDC -"),
-                       snum=4,
-                       show=show,
-                       transformation=nothing,
-                       verbose=false)
-end
-
-function KCaTest(show=true)
-    return processtest(;dname="data/K-Ca",
-                       method=getmethod("K-Ca"),
-                       standards=Dict("EntireCreek_bt" => "EntCrk"),
-                       snum=3,
-                       show=show)
 end
 
 function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
@@ -245,12 +248,11 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
     @test display(p) != NaN    
 end
 
-function histest(;LuHf=false,show=true)
-    myrun, method, fit = ifelse(LuHf,
-                                processtest(),
-                                RbSrTest())
-    
-    print(fit)
+function histest(option="Lu-Hf";show=true)
+    myrun = nothing
+    method = nothing
+    fit = nothing
+    myrun, method, fit = processtest(option)
     dats, covs = pool(myrun;signal=true,group=standard,include_covmats=true)
     anchor = anchors[standard]
     pooled = DataFrame()
@@ -566,13 +568,14 @@ if true
     @testset "moving median test" begin mmediantest() end
     @testset "outlier detection" begin outliertest() end
     @testset "assign standards" begin standardtest(true) end
-    @testset "predict" begin predictest() end
+    @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
+    @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
-    @testset "process run" begin processtest() end
-    @testset "Rb-Sr" begin RbSrTest() end
-    #=@testset "K-Ca" begin KCaTest() end
-    @testset "hist" begin histest() end
+    @testset "Lu-Hf" begin processtest("Lu-Hf") end
+    @testset "Rb-Sr" begin processtest("Rb-Sr") end
+    @testset "K-Ca" begin processtest("K-Ca") end
+    #=@testset "hist" begin histest() end
     @testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end

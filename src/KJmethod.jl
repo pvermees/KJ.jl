@@ -6,7 +6,7 @@ function KJmethod(name::String;
                   nblank::Int=2,
                   ndrift::Int=2,
                   ndown::Int=1,
-                  PAcutoff::Bool=false,
+                  PAcutoff::Union{Nothing,Float64}=nothing,
                   anchors::AbstractDict=Dict())
 
     chdf = DataFrame(par=["ion","proxy","channel"],
