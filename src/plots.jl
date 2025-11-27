@@ -218,8 +218,8 @@ function prep_plot(samp::Sample,
     xlab = names(samp.dat)[1]
     x = samp.dat[:,xlab]
     meas = samp.dat[:,channels]
-    ratsig = isnothing(den) ? "signal" : "ratio"
-    y = (ratsig == "signal") ? meas : formRatios(meas,num,den)    
+    ratsig = isnothing(num) & isnothing(den) ? "signal" : "ratio"
+    y = (ratsig == "signal") ? meas : formRatios(meas,num,den)
     arg = nothing
     min_val = minimum(Matrix(y))
     if isnothing(transformation)

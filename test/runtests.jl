@@ -36,14 +36,14 @@ function windowtest()
     @test display(p) != NaN
 end
 
-function blanktest(myrun=loadtest();
-                   doplot=false,ylim=:auto,transformation=nothing)
+function blanktest(;myrun=loadtest(),doplot=false,ylim=:auto,transformation=nothing)
     blk = fitBlanks(myrun;nblank=2)
     if doplot
         p = KJ.plot(myrun[1],ylim=ylim,transformation=transformation)
         plotFittedBlank!(p,myrun[1],blk,transformation=transformation)
         @test display(p) != NaN
     end
+    return blk
 end
 
 function mmediantest()
@@ -86,7 +86,7 @@ function outliertest()
 end
 
 function standardtest(verbose=false)
-    myrun, blk = blanktest()
+    myrun = loadtest()
     standards = Dict("BP_gt" => "BP")
     method = KJmethod("Lu-Hf")
     setStandards!(myrun,
@@ -99,6 +99,8 @@ function standardtest(verbose=false)
 end
 
 function getmethod(name="Lu-Hf")
+    p = nothing
+    c = nothing
     if name=="Lu-Hf"
         p = (P="Lu175",D="Hf176",d="Hf178")
         c = (P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260")
@@ -114,10 +116,11 @@ end
 
 function fixedtest(drift,down;
                    myrun=loadtest(),
-                   method=getmethod("RbSr"),
+                   method=getmethod("Lu-Hf"),
                    standards=Dict("BP_gt" => "BP"),
                    PAcutoff=nothing,
                    adrift=drift)
+    blk = blanktest(myrun=myrun)
     setStandards!(myrun,method;standards=standards)
     fit = KJfit(blk,drift,down,adrift)
     return myrun, method, fit
@@ -178,8 +181,6 @@ end
 function processtest(;
                      dname="data/MWE",
                      method=getmethod("Lu-Hf"),
-                     proxies=(P="Lu175",D="Hf176",d="Hf178"),
-                     channels=(P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"),
                      standards = Dict("BP_gt" => "BP"),
                      show=true,
                      transformation="log",
@@ -194,7 +195,8 @@ function processtest(;
     end
     if show
         p = KJ.plot(myrun[snum],method,fit;
-                    transformation=transformation,den=channels.D)
+                    transformation=transformation,
+                    den=getChannels(method).D)
         @test display(p) != NaN
     end
     return myrun, method, fit
@@ -202,7 +204,7 @@ end
 
 function RbSrTest(show=true)
     return processtest(;dname="data/Rb-Sr",
-                       method=getmethod("Rb-Sr")
+                       method=getmethod("Rb-Sr"),
                        standards=Dict("MDC_bt" => "MDC -"),
                        snum=4,
                        show=show,
