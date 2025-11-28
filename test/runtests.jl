@@ -239,7 +239,7 @@ function processsettings(option="Lu-Hf")
         snum = 4
     elseif option == "K-Ca"
         standards = Dict("MDC_bt" => "MDC_")
-        snum = 1
+        snum = 1 # 1, 2, 5, 6
     elseif option == "U-Pb"
         head2name = false
         standards = Dict("Plesovice_zr" => "STDCZ",
@@ -327,21 +327,21 @@ end
 
 function averatest(option="Lu-Hf",verbose=false)
     myrun, method, fit = processtest(option;show=false)
-    ratios = averat(myrun,fit,method)
+    ratios = averat(myrun,fit,method;physics=true)
     if verbose println(ratios) end
-    return ratios
+    return ratios, method
 end
 
 function exporttest()
     prefixes = Dict("Lu-Hf" => "hogsbo",
                     "Rb-Sr" => "EntireCreek",
-                    "K-Ca" => "EntCrk",
+                    "K-Ca" => "MDC",
                     "U-Pb" => "GJ1")
     for option in ["Lu-Hf","Rb-Sr","K-Ca","U-Pb"]
-        ratios = averatest(option)
+        ratios, method = averatest(option)
         selection = prefix2subset(ratios,prefixes[option])
         CSV.write(joinpath("output",option * ".csv"),selection)
-        export2IsoplotR(selection,option,fname = joinpath("output",option * ".json"))
+        export2IsoplotR(selection,method,fname = joinpath("output",option * ".json"))
     end
 end
 
@@ -351,17 +351,14 @@ function iCaptest(verbose=true)
 end
 
 function carbonatetest(verbose=false)
-    method = "U-Pb"
     myrun = load("data/carbonate",format="Agilent")
+    method = getmethod("U-Pb")
     standards = Dict("WC1_cc"=>"WC1")
-    glass = Dict("NIST612"=>"NIST612")
-    channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blk, fit = process!(myrun,method,channels,standards,glass;
-                        nblank=2,ndrift=1,ndown=1,verbose=verbose)
-    export2IsoplotR(myrun,method,channels,blk,fit;
-                    prefix="Duff",fname="output/Duff.json")
-    anchors = getAnchors(method,standards,glass)
-    p = KJ.plot(myrun[4],channels,blk,fit,anchors;
+    fit = process!(myrun,method,standards)
+    export2IsoplotR(myrun,method,fit;
+                    prefix="Duff",
+                    fname="output/Duff.json")
+    p = KJ.plot(myrun[4],method,fit;
                 transformation="log")
     @test display(p) != NaN
 end
@@ -378,6 +375,7 @@ end
 
 function mineraltest()
     internal = getInternal("zircon","Si29")
+    @test internal[2] == 1.476e6
 end
 
 function concentrationtest()
@@ -604,17 +602,17 @@ if true
     @testset "predict down" begin downtest() end
     @testset "Lu-Hf" begin processtest("Lu-Hf") end
     @testset "Rb-Sr" begin processtest("Rb-Sr") end
-    @testset "K-Ca" begin processtest("K-Ca";verbose=true) end
+    @testset "K-Ca" begin processtest("K-Ca") end
     @testset "U-Pb" begin processtest("U-Pb") end
     @testset "hist" begin histest() end
     @testset "PA test" begin PAtest() end
     @testset "averat test" begin averatest("K-Ca") end
     @testset "export" begin exporttest() end
-    #=@testset "iCap" begin iCaptest() end
+    @testset "iCap" begin iCaptest() end
     @testset "carbonate" begin carbonatetest() end
     @testset "timestamp" begin timestamptest() end
     @testset "stoichiometry" begin mineraltest() end
-    @testset "concentration" begin concentrationtest() end
+    #=@testset "concentration" begin concentrationtest() end
     @testset "Lu-Hf internochron" begin internochrontest() end
     @testset "UPb internochron" begin internochronUPbtest() end
     @testset "concentration map" begin maptest() end

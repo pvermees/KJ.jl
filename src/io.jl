@@ -214,29 +214,33 @@ export2IsoplotR(selection,"Lu-Hf",fname="BP.json")
 ```
 """
 function export2IsoplotR(run::Vector{Sample},
-                         method::AbstractString,
-                         channels::AbstractDict,
-                         blank::AbstractDataFrame,
-                         pars::NamedTuple;
-                         PAcutoff::Union{AbstractFloat,Nothing}=nothing,
+                         method::KJmethod,
+                         fit::KJfit;
                          prefix=nothing,
                          fname::AbstractString="KJ.json",
                          physics::Bool=true,
                          numerical::Bool=true)
-    ratios = averat(run,channels,blank,pars;
-                    physics=physics,numerical=numerical)
+    ratios = averat(run,
+                    fit,
+                    method;
+                    physics=physics,
+                    numerical=numerical)
     if isnothing(prefix)
-        export2IsoplotR(ratios,method;fname=fname)
+        export2IsoplotR(ratios,
+                        method;
+                        fname=fname)
     else
-        export2IsoplotR(prefix2subset(ratios,prefix),method;fname=fname)
+        export2IsoplotR(prefix2subset(ratios,prefix),
+                        method;
+                        fname=fname)
     end
 end
 function export2IsoplotR(ratios::AbstractDataFrame,
-                         method::AbstractString;
+                         method::KJmethod;
                          fname::AbstractString="KJ.json")
     json = jsonTemplate()
 
-    P, D, d = getPDd(method)
+    P, D, d = values(getIons(method))
 
     snames = ratios[:,1]
     PD = replace(ratios[:,2], NaN => "\"NA\"")
@@ -254,18 +258,20 @@ function export2IsoplotR(ratios::AbstractDataFrame,
     "\"(C)\":[],\"(omit)\":[],"*
     "\"(comment)\":[\""*join(snames,"\",\"")*"\"]"
 
-    json = replace(json,"\""*method*"\":{}" =>
-                   "\""*method*"\":{"*datastring*"}}")
+    chronometer = method.name
+    
+    json = replace(json,"\""*chronometer*"\":{}" =>
+                   "\""*chronometer*"\":{"*datastring*"}}")
 
     
-    if method in ["Lu-Hf","Rb-Sr","K-Ca"]
+    if chronometer in ["Lu-Hf","Rb-Sr","K-Ca"]
                         
         old = "\"geochronometer\":\"U-Pb\",\"plotdevice\":\"concordia\""
-        new = "\"geochronometer\":\""*method*"\",\"plotdevice\":\"isochron\""
+        new = "\"geochronometer\":\""*chronometer*"\",\"plotdevice\":\"isochron\""
         json = replace(json, old => new)
         
-        old = "\""*method*"\":{\"format\":1,\"i2i\":true,\"projerr\":false,\"inverse\":false}"
-        new = "\""*method*"\":{\"format\":2,\"i2i\":true,\"projerr\":false,\"inverse\":true}"
+        old = "\""*chronometer*"\":{\"format\":1,\"i2i\":true,\"projerr\":false,\"inverse\":false}"
+        new = "\""*chronometer*"\":{\"format\":2,\"i2i\":true,\"projerr\":false,\"inverse\":true}"
         json = replace(json, old => new)
         
     end
