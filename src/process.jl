@@ -3,12 +3,12 @@ function process!(run::Vector{Sample},
                   standards::AbstractDict;
                   reject_outliers::Bool=true,
                   verbose::Bool=false)
+    setStandards!(run,method;standards=standards)
     if reject_outliers
         ch = collect(values(getChannels(method)))
         detect_outliers!(run;channels=ch)
     end
     fit = KJfit(method)
-    setStandards!(run,method;standards=standards)
     fitBlanks!(fit,method,run)
     fractionation!(fit,method,run;verbose=verbose)
     return fit

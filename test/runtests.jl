@@ -26,17 +26,25 @@ function plottest(option="all")
     end
 end
 
-function windowtest()
-    myrun = loadtest()
+function windowtest(show=true)
+    myrun = load("data/Lu-Hf";format="Agilent")
+    setBwin!(myrun)
+    setSwin!(myrun)
     i = 2
     setSwin!(myrun[i],[(70,90),(100,140)])
     setBwin!(myrun[i],[(0,22)];seconds=true)
     setSwin!(myrun[i],[(37,65)];seconds=true)
-    p = KJ.plot(myrun[i];channels=["Hf176 -> 258","Hf178 -> 260"])
-    @test display(p) != NaN
+    if show
+        p = KJ.plot(myrun[i];channels=["Hf176 -> 258","Hf178 -> 260"])
+        @test display(p) != NaN
+    end
+    return myrun
 end
 
-function blanktest(;myrun=loadtest(),doplot=false,ylim=:auto,transformation=nothing)
+function blanktest(;myrun=loadtest(),
+                   doplot=false,
+                   ylim=:auto,
+                   transformation=nothing)
     blk = fitBlanks(myrun;nblank=2)
     if doplot
         p = KJ.plot(myrun[1],ylim=ylim,transformation=transformation)
@@ -56,7 +64,7 @@ function mmediantest()
     println(m)
 end
 
-function outliertest()
+function outliertest_synthetic()
     n = 100
     Random.seed!(0)
     random_values = rand(Distributions.Normal(0,1), n)
@@ -82,7 +90,22 @@ function outliertest()
                        marker_z=col,
                        legend=false)
     p = Plots.plot(p1,p2;layout=(1,2))
-    display(p)
+    @test display(p) != NaN
+end
+
+function outliertest_sample(show=true)
+    myrun = load("data/K-Ca";format="Agilent")
+    setBwin!(myrun)
+    setSwin!(myrun)
+    channels = ["K39 -> 39","Ca40 -> 59","Ca44 -> 63"]
+    detect_outliers!(myrun;include_samples=true,channels=channels)
+    if show
+        p = KJ.plot(myrun[1];
+                    channels=channels,
+                    transformation="log",
+                    den="Ca40 -> 59")
+        @test display(p) != NaN
+    end
 end
 
 function standardtest(verbose=false)
@@ -102,6 +125,8 @@ function getmethod(name="Lu-Hf")
     if name == "U-Pb"
         return KJmethod(name)
     end
+    ndrift = 2
+    ndown = 1
     p = nothing
     c = nothing
     if name=="Lu-Hf"
@@ -113,8 +138,10 @@ function getmethod(name="Lu-Hf")
     elseif name=="K-Ca"
         p = (P="K39",D="Ca40",d="Ca44")
         c = (P="K39 -> 39",D="Ca40 -> 59",d="Ca44 -> 63")
+        ndrift = 1
+        ndown = 0
     end
-    return KJmethod(name;proxies=p,channels=c)
+    return KJmethod(name;ndrift=ndrift,ndown=ndown,proxies=p,channels=c)
 end
 
 function predictsettings(option="Lu-Hf")
@@ -133,6 +160,11 @@ function predictsettings(option="Lu-Hf")
         standards = Dict("MDC_bt" => "MDC -")
         drift = [1.0,0.0]
         down = [0.0,0.14]
+    elseif option=="K-Ca"
+        dname = "data/K-Ca"
+        standards = Dict("MDC_bt" => "MDC_")
+        drift = [100.0]
+        down = [0.0]
     end
     myrun=loadtest(;dname=dname)
     setStandards!(myrun,method;standards=standards)
@@ -145,7 +177,7 @@ function predictest(option="Lu-Hf";
                     snum=1,
                     transformation="log")
     myrun, method, drift, down, PAcutoff, adrift = predictsettings(option)
-    blk = blanktest(myrun=myrun)
+    blk = blanktest(;myrun=myrun)
     fit = KJfit(blk,drift,down,adrift)
     samp = myrun[snum]
     if samp.group == "sample"
@@ -206,8 +238,8 @@ function processsettings(option="Lu-Hf")
         standards = Dict("MDC_bt" => "MDC -")
         snum = 4
     elseif option == "K-Ca"
-        standards = Dict("EntireCreek_bt" => "EntCrk")
-        snum = 3
+        standards = Dict("MDC_bt" => "MDC_")
+        snum = 1
     elseif option == "U-Pb"
         head2name = false
         standards = Dict("Plesovice_zr" => "STDCZ",
@@ -223,9 +255,7 @@ function processtest(option="Lu-Hf";
                      transformation="log")
     dname, head2name, method, standards, snum = processsettings(option)
     myrun = load(dname;format="Agilent",head2name=head2name)
-    fit = process!(myrun,method,standards;
-                   reject_outliers=false,
-                   verbose=verbose)
+    fit = process!(myrun,method,standards;verbose=verbose)
     if verbose
         println("drift=",fit.drift,", down=",fit.down)
     end
@@ -305,7 +335,7 @@ end
 function exporttest()
     prefixes = Dict("Lu-Hf" => "hogsbo",
                     "Rb-Sr" => "EntireCreek",
-                    "K-Ca" => "MDC",
+                    "K-Ca" => "EntCrk",
                     "U-Pb" => "GJ1")
     for option in ["Lu-Hf","Rb-Sr","K-Ca","U-Pb"]
         ratios = averatest(option)
@@ -564,19 +594,21 @@ if true
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
     @testset "moving median test" begin mmediantest() end
-    @testset "outlier detection" begin outliertest() end
+    @testset "outlier detection" begin outliertest_synthetic() end
+    @testset "outlier detection" begin outliertest_sample() end
     @testset "assign standards" begin standardtest(true) end
     @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
     @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
+    @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
     @testset "predict drift" begin driftest() end
     @testset "predict down" begin downtest() end
     @testset "Lu-Hf" begin processtest("Lu-Hf") end
     @testset "Rb-Sr" begin processtest("Rb-Sr") end
-    @testset "K-Ca" begin processtest("K-Ca") end
+    @testset "K-Ca" begin processtest("K-Ca";verbose=true) end
     @testset "U-Pb" begin processtest("U-Pb") end
     @testset "hist" begin histest() end
     @testset "PA test" begin PAtest() end
-    @testset "averat test" begin averatest() end
+    @testset "averat test" begin averatest("K-Ca") end
     @testset "export" begin exporttest() end
     #=@testset "iCap" begin iCaptest() end
     @testset "carbonate" begin carbonatetest() end

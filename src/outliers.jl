@@ -47,10 +47,10 @@ function detect_outliers!(run::Vector{Sample};
                           include_samples::Bool=false)
     for samp in run
         samp.dat.outlier = falses(size(samp.dat,1))
-        if include_samples || samp.group != "sample"
-            blk = windowData(samp;blank=true)
+        if samp.group !== "sample" || include_samples
+            blk = bwinData(samp)
             win2outliers!(samp,blk[:,channels],:bwin)
-            sig = windowData(samp;signal=true)
+            sig = swinData(samp)
             win2outliers!(samp,sig[:,channels],:swin)
         end
     end
