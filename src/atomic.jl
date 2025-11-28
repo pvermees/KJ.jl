@@ -8,16 +8,14 @@ function atomic(samp::Sample,
     c = Cruncher(samp,method,fit)
     ft, FT = ft_FT(c,method,fit)
     Phat = @. c.pmb/(ft*FT)
-    Dhat = @. c.Dombi/mf
-    dhat = @. c.bomb
-    if add_xy
-        if all([cname in names(dat) for cname in ["x";"y"]])
-            return (Phat, Dhat, dhat, dat.x, dat.y)
-        else
-            return (Phat, Dhat, dhat, nothing, nothing)
-        end
-    else
-        return (Phat, Dhat, dhat)
+    Dhat = @. c.Dombi
+    dhat = @. c.bomb/c.bd
+    x = nothing
+    y = nothing
+    if add_xy && all([cname in names(dat) for cname in ["x";"y"]])
+        x=dat.x
+        y=dat.y
     end
+    return (P=Phat, D=Dhat, d=dhat, x=x, y=y)
 end
 export atomic

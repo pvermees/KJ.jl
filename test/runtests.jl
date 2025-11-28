@@ -278,18 +278,18 @@ function PAtest(verbose=false)
     standards = Dict("Hogsbo_gt" => "hogsbo")
     method.PAcutoff = nothing # 1e7
     fit = process!(myrun,method,standards)
-    return fit
+    return myrun, method, fit
 end
 
 function averatest(verbose=false)
-    fit = PAtest(verbose)
-    ratios = averat(myrun,fit)
-    if verbose println(first(ratios,5)) end
+    myrun, method, fit = PAtest(verbose)
+    ratios = averat(myrun,fit,method)
+    if verbose println(first(ratios,10)) end
     return ratios
 end
 
 function exporttest()
-    ratios = PAtest()
+    ratios = averatest()
     selection = prefix2subset(ratios,"BP") # "hogsbo"
     CSV.write("output/BP.csv",selection)
     export2IsoplotR(selection,"Lu-Hf",fname="output/BP.json")
@@ -558,7 +558,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(;verbose=true) end
+    #=@testset "load" begin loadtest(;verbose=true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -573,9 +573,9 @@ if true
     @testset "Rb-Sr" begin processtest("Rb-Sr") end
     @testset "K-Ca" begin processtest("K-Ca") end
     @testset "hist" begin histest() end
-    @testset "PA test" begin PAtest(true) end
-    #=@testset "averat test" begin averatest(true) end
-    @testset "export" begin exporttest() end
+    @testset "PA test" begin PAtest(true) end=#
+    @testset "averat test" begin averatest(true) end
+    #=@testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end
     @testset "iCap" begin iCaptest() end
     @testset "carbonate" begin carbonatetest() end

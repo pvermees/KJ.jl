@@ -1,39 +1,23 @@
 function averat(run::Vector{Sample},
-                fit::KJfit;
-                method::Union{Nothing,KJmethod}=nothing,
+                fit::KJfit,
+                method::KJmethod;
                 physics::Bool=true,
                 numerical::Bool=true)
-    ns = length(run)
-    if isnothing(method)
-        xlab = "x"
-        ylab = "y"
-    else
-        P, D, d = getChannels(method)
-        xlab = P * "/" * D
-        ylab = d * "/" * D
-    end
+    P, D, d = getChannels(method)
+    xlab = P * "/" * D
+    ylab = d * "/" * D
     column_names = ["name", xlab, "s[" * xlab * "]", ylab, "s[" * ylab * "]", "rho"]
+    ns = length(run)
     out = DataFrame(hcat(fill("",ns),zeros(ns,5)),column_names)
     for i in 1:ns
         samp = run[i]
         out[i,:name] = samp.sname
-        out[i,2:end] = averat(samp,fit;
-                              method=method,
+        a = atomic(samp,method,fit)
+        out[i,2:end] = averat(a.P,a.D,a.d;
                               physics=physics,
                               numerical=numerical)
     end
     return out
-end
-function averat(samp::Sample,
-                channels::AbstractDict,
-                blank::AbstractDataFrame,
-                pars::NamedTuple;
-                physics::Bool=true,
-                numerical::Bool=true)
-    Phat, Dhat, dhat = atomic(samp,channels,blank,pars)
-    return averat(Phat,Dhat,dhat;
-                  physics=physics,
-                  numerical=numerical)
 end
 function averat(Phat::AbstractVector,
                 Dhat::AbstractVector,
