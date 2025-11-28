@@ -249,24 +249,3 @@ function getInternal(mineral::AbstractString,
     return (channel,concentration)
 end
 export getInternal
-
-function get_drift(Pm::AbstractVector,
-                   t::AbstractVector;
-                   drift::AbstractVector=[0.0],
-                   adrift::AbstractVector=drift,
-                   PAcutoff::Union{Nothing,Real}=nothing)
-    if isnothing(PAcutoff)
-        ft = polyFac(drift,t)
-    else
-        analog = Pm .> PAcutoff
-        if all(analog)
-            ft = polyFac(adrift,t)
-        elseif all(.!analog)
-            ft = polyFac(drift,t)
-        else
-            ft = polyFac(drift,t)
-            ft[analog] = polyFac(adrift,t)[analog]
-        end
-    end
-    return ft
-end

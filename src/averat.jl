@@ -1,19 +1,6 @@
-"""
-averat(run::Vector{Sample},
-       channels::AbstractDict,
-       blank::AbstractDataFrame,
-       pars::NamedTuple;
-       method=nothing,
-       physics::Bool=true,
-       numerical::Bool=true)
-
-Average processes atomic ratios
-"""
 function averat(run::Vector{Sample},
-                channels::AbstractDict,
-                blank::AbstractDataFrame,
-                pars::NamedTuple;
-                method=nothing,
+                fit::KJfit;
+                method::Union{Nothing,KJmethod}=nothing,
                 physics::Bool=true,
                 numerical::Bool=true)
     ns = length(run)
@@ -21,7 +8,7 @@ function averat(run::Vector{Sample},
         xlab = "x"
         ylab = "y"
     else
-        P, D, d = getPDd(method)
+        P, D, d = getChannels(method)
         xlab = P * "/" * D
         ylab = d * "/" * D
     end
@@ -30,19 +17,13 @@ function averat(run::Vector{Sample},
     for i in 1:ns
         samp = run[i]
         out[i,:name] = samp.sname
-        out[i,2:end] = averat(samp,channels,blank,pars;
-                              physics=physics)
+        out[i,2:end] = averat(samp,fit;
+                              method=method,
+                              physics=physics,
+                              numerical=numerical)
     end
     return out
 end
-"""
-averat(samp::Sample,
-       channels::AbstractDict,
-       blank::AbstractDataFrame,
-       pars::NamedTuple;
-       physics::Bool=true,
-       numerical::Bool=true)
-"""
 function averat(samp::Sample,
                 channels::AbstractDict,
                 blank::AbstractDataFrame,
@@ -50,15 +31,10 @@ function averat(samp::Sample,
                 physics::Bool=true,
                 numerical::Bool=true)
     Phat, Dhat, dhat = atomic(samp,channels,blank,pars)
-    return averat(Phat,Dhat,dhat;physics=physics)
+    return averat(Phat,Dhat,dhat;
+                  physics=physics,
+                  numerical=numerical)
 end
-"""
-averat(Phat::AbstractVector,
-       Dhat::AbstractVector,
-       dhat::AbstractVector;
-       physics::Bool=true,
-       numerical::Bool=true)
-"""
 function averat(Phat::AbstractVector,
                 Dhat::AbstractVector,
                 dhat::AbstractVector;

@@ -56,17 +56,12 @@ function SS(par::AbstractVector,
             cruncher_groups::AbstractDict;
             verbose::Bool=false)
 
-    drift, down, adrift = parse_par(par,method)
-    
+    fit = par2fit(par,method)
     out = 0.0
     for (refmat,crunchers) in cruncher_groups
         a = crunchers.anchor
         for c in crunchers.crunchers
-            ft = get_drift(c.pmb,c.t;
-                           drift = drift,
-                           adrift = adrift,
-                           PAcutoff = method.PAcutoff)
-            FT = polyFac(down,c.T)
+            ft, FT = ft_FT(c,method,fit)
             out += SS(a,c,ft,FT)
         end
     end
@@ -87,33 +82,13 @@ function predict(samp::Sample,
                  fit::KJfit;
                  kw...)
     if samp.group in collect(keys(method.anchors))
-        return predict(fit.drift,
-                       fit.down,
-                       getAnchor(method.name,samp.group),
-                       Cruncher(samp,method,fit);
-                       PAcutoff=method.PAcutoff,
-                       adrift=fit.adrift)
+        a = getAnchor(method.name,samp.group)
+        c = Cruncher(samp,method,fit)
+        ft, FT = ft_FT(c,method,fit)
+        return predict(a,c,ft,FT)
     else
         KJerror("notStandard")
     end
-end
-
-function predict(drift::AbstractVector,
-                 down::AbstractVector,
-                 a::AbstractAnchor,
-                 c::Cruncher;
-                 PAcutoff::Union{Nothing,Real}=nothing,
-                 adrift::AbstractVector=drift)
-    
-    ft = get_drift(c.pmb,
-                   c.t;
-                   drift=drift,
-                   adrift=adrift,
-                   PAcutoff=PAcutoff)
-    FT = polyFac(down,
-                 c.T)
-
-    return predict(a,c,ft,FT)
 end
 
 function predict(a::IsochronAnchor,
@@ -192,6 +167,18 @@ function predict(samp::Sample,
     return polyVal(blank,dat.t)
 end
 export predict
+
+function ft_FT(c::Cruncher,
+               m::KJmethod,
+               f::KJfit)
+    ft = polyFac(f.drift,c.t)
+    if !isnothing(m.PAcutoff)
+        analog = c.pmb .> m.PAcutoff
+        ft[analog] = polyFac(f.adrift,c.t)[analog]
+    end
+    FT = polyFac(f.down,c.T)
+    return ft, FT
+end
 
 function Cruncher(samp::Sample,
                   method::KJmethod,

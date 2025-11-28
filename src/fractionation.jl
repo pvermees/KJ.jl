@@ -49,17 +49,23 @@ function fractionation!(fit::KJfit,
 
     # update the fit
     par = Optim.minimizer(out)
-    fit.drift, fit.down, fit.adrift = parse_par(par,method)
+    par2fit!(fit,par,method)
 
 end
 export fractionation!
 
-function parse_par(par::AbstractVector,
-                   method::KJmethod)
-    drift = par[1:method.ndrift]
-    down = vcat(0.0,par[method.ndrift+1:method.ndrift+method.ndown])
-    adrift = isnothing(method.PAcutoff) ? drift : par[end-method.ndrift+1:end]
-    return drift, down, adrift
+function par2fit!(fit::KJfit,
+                  par::AbstractVector,
+                  method::KJmethod)
+    fit.drift = par[1:method.ndrift]
+    fit.down = vcat(0.0,par[method.ndrift+1:method.ndrift+method.ndown])
+    fit.adrift = isnothing(method.PAcutoff) ? fit.drift : par[end-method.ndrift+1:end]
+end
+function par2fit(par::AbstractVector,
+                 method::KJmethod)
+    fit = KJfit(method)
+    par2fit!(fit,par,method)
+    return fit
 end
 
 function fractionation(run::Vector{Sample},

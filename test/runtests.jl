@@ -3,7 +3,7 @@ import Plots, Distributions, CSV, Statistics,
     Random, LinearAlgebra, Aqua
 include("helper.jl")
 
-function loadtest(;dname="data/MWE",
+function loadtest(;dname="data/Lu-Hf",
                   verbose=false)
     myrun = load(dname;format="Agilent")
     if verbose summarise(myrun;verbose=true) end
@@ -121,7 +121,7 @@ function predictsettings(option="Lu-Hf")
     drift = nothing
     down = nothing
     if option=="Lu-Hf"
-        dname = "data/MWE"
+        dname = "data/Lu-Hf"
         standards = Dict("BP_gt" => "BP")
         drift = [4.22,0.0]
         down = [0.0,0.15]
@@ -194,7 +194,7 @@ end
 function processsettings(option="Lu-Hf")
     method = getmethod(option)
     if option == "Lu-Hf"
-        return ("data/MWE", method, Dict("BP_gt" => "BP"), 1)
+        return ("data/Lu-Hf", method, Dict("BP_gt" => "BP"), 1)
     elseif option == "Rb-Sr"
         return ("data/Rb-Sr", method, Dict("MDC_bt" => "MDC -"), 4)
     elseif option == "K-Ca"
@@ -274,16 +274,16 @@ end
 
 function PAtest(verbose=false)
     myrun = load("data/Lu-Hf",format="Agilent")
-    method = "Lu-Hf"
-    channels = Dict("d"=>"Hf178 -> 260",
-                    "D"=>"Hf176 -> 258",
-                    "P"=>"Lu175 -> 175")
+    method = getmethod("Lu-Hf")
     standards = Dict("Hogsbo_gt" => "hogsbo")
-    glass = Dict("NIST612" => "NIST612p")
-    cutoff = 1e7
-    blk, fit = process!(myrun,method,channels,standards,glass;
-                        PAcutoff=cutoff,nblank=2,ndrift=1,ndown=1)
-    ratios = averat(myrun,channels,blk,fit)
+    method.PAcutoff = nothing # 1e7
+    fit = process!(myrun,method,standards)
+    return fit
+end
+
+function averatest(verbose=false)
+    fit = PAtest(verbose)
+    ratios = averat(myrun,fit)
     if verbose println(first(ratios,5)) end
     return ratios
 end
@@ -558,7 +558,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(;verbose=true) end
+    @testset "load" begin loadtest(;verbose=true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -571,9 +571,10 @@ if true
     @testset "predict down" begin downtest() end
     @testset "Lu-Hf" begin processtest("Lu-Hf") end
     @testset "Rb-Sr" begin processtest("Rb-Sr") end
-    @testset "K-Ca" begin processtest("K-Ca") end=#
+    @testset "K-Ca" begin processtest("K-Ca") end
     @testset "hist" begin histest() end
-    #=@testset "PA test" begin PAtest(true) end
+    @testset "PA test" begin PAtest(true) end
+    #=@testset "averat test" begin averatest(true) end
     @testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end
     @testset "iCap" begin iCaptest() end
