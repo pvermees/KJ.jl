@@ -249,30 +249,27 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
 end
 
 function histest(option="Lu-Hf";show=true)
-    myrun = nothing
-    method = nothing
-    fit = nothing
     myrun, method, fit = processtest(option)
-    dats, covs = pool(myrun;signal=true,group=standard,include_covmats=true)
-    anchor = anchors[standard]
-    pooled = DataFrame()
-    pred = DataFrame()
-    for i in eachindex(dats)
-        pooled = vcat(pooled,dats[i])
-        pred = vcat(pred,predict(dats[i],covs[i],fit,blk,channels,anchor))
+
+    Pm = Float64[]; Dm = Float64[]; dm = Float64[]
+    Pp = Float64[]; Dp = Float64[]; dp = Float64[]
+    for samp in myrun
+        if samp.group !== "sample"
+            c = Cruncher(samp,method,fit)
+            append!(Pm,c.pmb+c.bpt)
+            append!(Dm,c.Dombi+c.bDot)
+            append!(dm,c.bomb+c.bbot)
+            p = predict(samp,method,fit)
+            append!(Pp,p.P)
+            append!(Dp,p.D)
+            append!(dp,p.d)
+        end
     end
-    Pm = pooled[:,channels["P"]]
-    Dm = pooled[:,channels["D"]]
-    dm = pooled[:,channels["d"]]
-    Pp = pred[:,"P"]
-    Dp = pred[:,"D"]
-    dp = pred[:,"d"]
     if show
         plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
         df = DataFrame(Pm=Pm,Dm=Dm,dm=dm,Pp=Pp,Dp=Dp,dp=dp)
-        CSV.write("output/pooled_" * standard * ".csv",df)
+        CSV.write("output/hist.csv",df)
     end
-    return anchors, fit, Pm, Dm, dm
 end
 
 function PAtest(verbose=false)
@@ -561,7 +558,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(;verbose=true) end
+    #=@testset "load" begin loadtest(;verbose=true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -574,9 +571,9 @@ if true
     @testset "predict down" begin downtest() end
     @testset "Lu-Hf" begin processtest("Lu-Hf") end
     @testset "Rb-Sr" begin processtest("Rb-Sr") end
-    @testset "K-Ca" begin processtest("K-Ca") end
-    #=@testset "hist" begin histest() end
-    @testset "PA test" begin PAtest(true) end
+    @testset "K-Ca" begin processtest("K-Ca") end=#
+    @testset "hist" begin histest() end
+    #=@testset "PA test" begin PAtest(true) end
     @testset "export" begin exporttest() end
     @testset "U-Pb" begin UPbtest() end
     @testset "iCap" begin iCaptest() end

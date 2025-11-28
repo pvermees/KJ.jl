@@ -94,3 +94,4 @@ mutable struct Cruncher
     t::Vector{Float64}
     T::Vector{Float64}
 end
+export Cruncher
