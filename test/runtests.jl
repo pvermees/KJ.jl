@@ -99,6 +99,9 @@ function standardtest(verbose=false)
 end
 
 function getmethod(name="Lu-Hf")
+    if name == "U-Pb"
+        return KJmethod(name)
+    end
     p = nothing
     c = nothing
     if name=="Lu-Hf"
@@ -192,22 +195,34 @@ function downtest()
 end
 
 function processsettings(option="Lu-Hf")
+    dname = joinpath("data",option)
+    head2name = true
     method = getmethod(option)
+    standards = nothing
+    snum = 1
     if option == "Lu-Hf"
-        return ("data/Lu-Hf", method, Dict("BP_gt" => "BP"), 1)
+        standards =  Dict("BP_gt" => "BP")
     elseif option == "Rb-Sr"
-        return ("data/Rb-Sr", method, Dict("MDC_bt" => "MDC -"), 4)
+        standards = Dict("MDC_bt" => "MDC -")
+        snum = 4
     elseif option == "K-Ca"
-        return ("data/K-Ca", method, Dict("EntireCreek_bt" => "EntCrk"), 3)
+        standards = Dict("EntireCreek_bt" => "EntCrk")
+        snum = 3
+    elseif option == "U-Pb"
+        head2name = false
+        standards = Dict("Plesovice_zr" => "STDCZ",
+                         "91500_zr" => "91500")
+        snum = 3
     end
+    return (dname, head2name, method, standards, snum)
 end
 
 function processtest(option="Lu-Hf";
                      show=true,
                      verbose=false,
                      transformation="log")
-    dname, method, standards, snum = processsettings(option)
-    myrun = load(dname,format="Agilent")
+    dname, head2name, method, standards, snum = processsettings(option)
+    myrun = load(dname;format="Agilent",head2name=head2name)
     fit = process!(myrun,method,standards;
                    reject_outliers=false,
                    verbose=verbose)
@@ -272,46 +287,32 @@ function histest(option="Lu-Hf";show=true)
     end
 end
 
-function PAtest(verbose=false)
-    myrun = load("data/Lu-Hf",format="Agilent")
-    method = getmethod("Lu-Hf")
-    standards = Dict("Hogsbo_gt" => "hogsbo")
-    method.PAcutoff = nothing # 1e7
+function PAtest()
+    dname, head2name, method, standards, snum = processsettings("Lu-Hf")
+    myrun = load(dname)
+    method.PAcutoff = 1e7
     fit = process!(myrun,method,standards)
     return myrun, method, fit
 end
 
-function averatest(verbose=false)
-    myrun, method, fit = PAtest(verbose)
+function averatest(option="Lu-Hf",verbose=false)
+    myrun, method, fit = processtest(option;show=false)
     ratios = averat(myrun,fit,method)
-    if verbose println(first(ratios,10)) end
+    if verbose println(ratios) end
     return ratios
 end
 
 function exporttest()
-    ratios = averatest()
-    selection = prefix2subset(ratios,"BP") # "hogsbo"
-    CSV.write("output/BP.csv",selection)
-    export2IsoplotR(selection,"Lu-Hf",fname="output/BP.json")
-end
-
-function UPbtest()
-    myrun = load("data/U-Pb",format="Agilent",head2name=false)
-    method = "U-Pb"
-    standards = Dict("Plesovice_zr" => "STDCZ",
-                     "91500_zr" => "91500")
-    glass = Dict("NIST610" => "610",
-                 "NIST612" => "612")
-    channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blank, fit = process!(myrun,"U-Pb",channels,standards,glass;
-                          nblank=2,ndrift=1,ndown=1)
-    export2IsoplotR(myrun,method,channels,blank,fit;
-                    fname="output/UPb.json")
-    anchors = getAnchors(method,standards,glass)
-    p = KJ.plot(myrun[37],channels,blank,fit,anchors;
-                transformation="log",
-                den="Pb206")
-    @test display(p) != NaN
+    prefixes = Dict("Lu-Hf" => "hogsbo",
+                    "Rb-Sr" => "EntireCreek",
+                    "K-Ca" => "MDC",
+                    "U-Pb" => "GJ1")
+    for option in ["Lu-Hf","Rb-Sr","K-Ca","U-Pb"]
+        ratios = averatest(option)
+        selection = prefix2subset(ratios,prefixes[option])
+        CSV.write(joinpath("output",option * ".csv"),selection)
+        export2IsoplotR(selection,option,fname = joinpath("output",option * ".json"))
+    end
 end
 
 function iCaptest(verbose=true)
@@ -558,7 +559,7 @@ end
 Plots.closeall()
 
 if true
-    #=@testset "load" begin loadtest(;verbose=true) end
+    @testset "load" begin loadtest(;verbose=true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -572,12 +573,12 @@ if true
     @testset "Lu-Hf" begin processtest("Lu-Hf") end
     @testset "Rb-Sr" begin processtest("Rb-Sr") end
     @testset "K-Ca" begin processtest("K-Ca") end
+    @testset "U-Pb" begin processtest("U-Pb") end
     @testset "hist" begin histest() end
-    @testset "PA test" begin PAtest(true) end=#
-    @testset "averat test" begin averatest(true) end
-    #=@testset "export" begin exporttest() end
-    @testset "U-Pb" begin UPbtest() end
-    @testset "iCap" begin iCaptest() end
+    @testset "PA test" begin PAtest() end
+    @testset "averat test" begin averatest() end
+    @testset "export" begin exporttest() end
+    #=@testset "iCap" begin iCaptest() end
     @testset "carbonate" begin carbonatetest() end
     @testset "timestamp" begin timestamptest() end
     @testset "stoichiometry" begin mineraltest() end
