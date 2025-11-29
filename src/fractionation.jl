@@ -1,5 +1,5 @@
-function fractionation!(fit::KJfit,
-                        method::KJmethod,
+function fractionation!(fit::Gfit,
+                        method::Gmethod,
                         run::Vector{Sample};
                         verbose::Bool=false)
 
@@ -49,33 +49,16 @@ function fractionation!(fit::KJfit,
 
     # update the fit
     par = Optim.minimizer(out)
-    par2fit!(fit,par,method)
+    par2Gfit!(fit,par,method)
 
 end
-export fractionation!
-
-function par2fit!(fit::KJfit,
-                  par::AbstractVector,
-                  method::KJmethod)
-    fit.drift = par[1:method.ndrift]
-    fit.down = vcat(0.0,par[method.ndrift+1:method.ndrift+method.ndown])
-    fit.adrift = isnothing(method.PAcutoff) ? fit.drift : par[end-method.ndrift+1:end]
-end
-function par2fit(par::AbstractVector,
-                 method::KJmethod)
-    fit = KJfit(method)
-    par2fit!(fit,par,method)
-    return fit
-end
-
-function fractionation(run::Vector{Sample},
-                       blank::AbstractDataFrame,
-                       internal::Tuple,
-                       glass::AbstractDict;
-                       elements::AbstractDataFrame=channels2elements(run))
-    ne = size(elements,2)
+function fractionation!(fit::Cfit,
+                        method::Cmethod,
+                        run::Vector{Sample};
+                        verbose::Bool=false)
+    ne = ncol(method.elements)
     num = den = fill(0.0,ne-1)
-    for (SRM,name)  in glass
+    for SRM in method.refmats
         dats = pool(run;signal=true,group=SRM)
         concs = elements2concs(elements,SRM)
         for dat in dats
@@ -96,4 +79,18 @@ function fractionation(run::Vector{Sample},
     end
     return num./den
 end
-export fractionation
+export fractionation!
+
+function par2Gfit!(fit::Gfit,
+                  par::AbstractVector,
+                  method::KJmethod)
+    fit.drift = par[1:method.ndrift]
+    fit.down = vcat(0.0,par[method.ndrift+1:method.ndrift+method.ndown])
+    fit.adrift = isnothing(method.PAcutoff) ? fit.drift : par[end-method.ndrift+1:end]
+end
+function par2fit(par::AbstractVector,
+                 method::KJmethod)
+    fit = KJfit(method)
+    par2Gfit!(fit,par,method)
+    return fit
+end

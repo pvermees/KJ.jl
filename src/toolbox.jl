@@ -419,25 +419,19 @@ function vec2string(v::AbstractVector)
     return "[\"" * join(v .* "\",\"")[1:end-3] * "\"]"
 end
 
-"""
-channels2elements(samp::Sample)
-
-Export the names of the elements corresponding to the channels in a
-sample or run.
-"""
-function channels2elements(samp::Sample)
-    channels = getChannels(samp)
+function channels2elements(channels::Vector{String})
     out = DataFrame()
     elements = collect(keys(_KJ["nuclides"]))
     for channel in channels
         out[!,channel] = channel2element(channel,elements)
     end
-    return out    
+    return out
 end
-"""
-channels2elements(run::AbstractVector)
-"""
-function channels2elements(run::AbstractVector)
+function channels2elements(samp::Sample)
+    channels = getChannels(samp)
+    channels2elements(channels)
+end
+function channels2elements(run::Vector{Sample})
     return channels2elements(run[1])
 end
 export channels2elements
@@ -451,12 +445,12 @@ function channel2element(channel::AbstractString,
             hasisotope = findall(occursin.(isotopes,channel))
             if !isempty(hasisotope)
                 return [element]
-                break
             end
         end
     else # e.g. "Pb"
         return elements[matches]
     end
+    @infiltrate
     return nothing
 end
 function channel2element(channel::AbstractString)
@@ -472,7 +466,7 @@ function elements2concs(elements::AbstractDataFrame,
     refconc = get(_KJ["glass"],SRM)
     out = copy(elements)
     for col in names(elements)
-        element = elements[1,col]
+        element = only(elements[1,col])
         out[!,col] = DataFrame(refconc)[:,element]
     end
     return out

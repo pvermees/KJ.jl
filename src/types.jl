@@ -25,18 +25,10 @@ mutable struct OrderedDict
     dict::Dict
 end
 
-"""
-KJmethod(name::String
-         channels::DataFrame
-         nblanks::Int
-         ndrift::Int
-         ndown::Int
-         PAcutoff::Union{Nothing,Float64}
-         anchors::Dict)
+abstract type KJmethod end
+export KJmethod
 
-KJ method type
-"""
-mutable struct KJmethod
+mutable struct Gmethod <: KJmethod
     name::String
     channels::DataFrame
     interferences::Dict
@@ -46,9 +38,19 @@ mutable struct KJmethod
     PAcutoff::Union{Nothing,Float64}
     anchors::Dict
 end
-export KJmethod
+export Gmethod
+
+mutable struct Cmethod <: KJmethod
+    elements::DataFrame
+    refmats::Vector{String}
+    concentrations::DataFrame
+    internal::Tuple
+    nblank::Int
+end
+export Cmethod
 
 abstract type AbstractAnchor end
+export AbstractAnchor
 
 mutable struct IsochronAnchor <: AbstractAnchor
     x0::Float64
@@ -61,21 +63,22 @@ mutable struct PointAnchor <: AbstractAnchor
     y::Float64
 end
 
-"""
-KJfit(blank::DataFrame
-      drift::Vector{Float64}
-      down::Vector{Float64}
-      adrift::Vector{Float64})
+abstract type KJfit end
+export KJfit
 
-KJ fit type
-"""
-mutable struct KJfit
+mutable struct Gfit <: KJfit
     blank::DataFrame
     drift::Vector{Float64}
     down::Vector{Float64}
     adrift::Vector{Float64}
 end
-export KJfit
+export Gfit
+
+mutable struct Cfit <: KJfit
+    blank::DataFrame
+    par::DataFrame
+end
+export Cfit
 
 mutable struct Cruncher
     pmb::Vector{Float64}

@@ -7,7 +7,6 @@ Access the control parameters of a TUI session
 function getKJctrl()
     return _KJ["ctrl"]
 end
-
 export setKJctrl!
 """
 setKJctrl!(ctrl::AbstractDict)
@@ -86,24 +85,30 @@ function getAttr(run::Vector{Sample},
     return out
 end
 
-"""
-setStandards!(run::Vector{Sample},
-              method::KJmethod;
-              standards::Dict=Dict())
-
-Puts samples in groups and updates anchors in method
-Resets run and methods if standards argument is omitted.
-"""
 function setStandards!(run::Vector{Sample},
-                       method::KJmethod;
+                       method::Gmethod;
                        standards::AbstractDict=Dict())
-    if length(standards)>0
-        setGroup!(run,standards)
-        refmats = collect(keys(standards))
-        method.anchors = getAnchors(method.name,refmats)
-    else
-        setGroup!(run,"sample")
-        method.anchors = Dict()
+    setGroup!(run,standards)
+    refmats = collect(keys(standards))
+    method.anchors = getAnchors(method.name,refmats)
+end
+function setStandards!(run::Vector{Sample},
+                       method::Cmethod;
+                       standards::AbstractDict=Dict())
+    setGroup!(run,standards)
+    channels = getChannels(run)
+    if nrow(method.elements) == 0
+        elements = channels2elements(channels)
+        method.elements = DataFrame([elements], channels)
+    end
+    refmats = collect(keys(standards))
+    if sort(refmats) != sort(method.refmats)
+        method.refmats = refmats
+        method.concentrations = DataFrame()
+        for refmat in refmats
+            conc = elements2concs(method.elements,refmat)
+            append!(method.concentrations,conc)
+        end
     end
 end
 export setStandards!
@@ -128,8 +133,12 @@ function setGroup!(run::Vector{Sample},
 end
 function setGroup!(run::Vector{Sample},
                    standards::AbstractDict)
-    for (group,prefix) in standards
-        setGroup!(run,prefix,group)
+    if length(standards)>0
+        for (group,prefix) in standards
+            setGroup!(run,prefix,group)
+        end
+    else
+        setGroup!(run,"sample")
     end
 end
 function setGroup!(run::Vector{Sample},

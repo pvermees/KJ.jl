@@ -1,11 +1,3 @@
-"""
-concentrations(samp::Sample,
-               blank::AbstractDataFrame,
-               pars::AbstractVector,
-               internal::Tuple)
-
-Estimates the concentrations (in ppm)
-"""
 function concentrations(samp::Sample,
                         blank::AbstractDataFrame,
                         pars::AbstractVector,
@@ -13,13 +5,7 @@ function concentrations(samp::Sample,
     elements = channels2elements(samp)
     return concentrations(samp,elements,blank,pars,internal)
 end
-"""
-concentrations(samp::Sample,
-               elements::AbstractDataFrame,
-               blank::AbstractDataFrame,
-               pars::AbstractVector,
-               internal::Tuple)
-"""
+
 function concentrations(samp::Sample,
                         elements::AbstractDataFrame,
                         blank::AbstractDataFrame,

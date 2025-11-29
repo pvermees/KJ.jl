@@ -1,20 +1,28 @@
-function KJmethod(name::String;
-                  ions::NamedTuple{(:P,:D,:d)}=default_ions(name),
-                  proxies::NamedTuple{(:P,:D,:d)}=ions,
-                  channels::NamedTuple{(:P,:D,:d)}=proxies,
-                  interferences::AbstractDict=Dict(),
-                  nblank::Int=2,
-                  ndrift::Int=2,
-                  ndown::Int=1,
-                  PAcutoff::Union{Nothing,Float64}=nothing,
-                  anchors::AbstractDict=Dict())
+function Gmethod(name::String;
+                 ions::NamedTuple{(:P,:D,:d)}=default_ions(name),
+                 proxies::NamedTuple{(:P,:D,:d)}=ions,
+                 channels::NamedTuple{(:P,:D,:d)}=proxies,
+                 interferences::AbstractDict=Dict(),
+                 nblank::Int=2,
+                 ndrift::Int=2,
+                 ndown::Int=1,
+                 PAcutoff::Union{Nothing,Float64}=nothing,
+                 anchors::AbstractDict=Dict())
 
     chdf = DataFrame(par=["ion","proxy","channel"],
                      P=[ions.P,proxies.P,channels.P],
                      D=[ions.D,proxies.D,channels.D],
                      d=[ions.d,proxies.d,channels.d])
     
-    return KJmethod(name,chdf,interferences,nblank,ndrift,ndown,PAcutoff,anchors)
+    return Gmethod(name,chdf,interferences,nblank,ndrift,ndown,PAcutoff,anchors)
+end
+
+function Cmethod(;elements::AbstractDataFrame=DataFrame(),
+                  refmats::AbstractVector=String[],
+                  internal::Tuple=(nothing,nothing),
+                  concentrations::AbstractDataFrame=DataFrame(),
+                  nblank::Int=2)
+    return Cmethod(elements,refmats,concentrations,internal,nblank)
 end
 
 function default_ions(name)
@@ -38,10 +46,12 @@ function getProxies(method::KJmethod)
 end
 export getProxies
 
-function getChannels(method::KJmethod)
+function getChannels(method::Gmethod)
     return channelAccessor(method.channels,"channel")
 end
-export getChannels
+function getChannels(method::Cmethod)
+    return names(method.elements)
+end
 
 function channelAccessor!(channels::AbstractDataFrame,
                           rowname::AbstractString;
