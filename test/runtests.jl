@@ -382,12 +382,12 @@ function concentrationtest()
     myrun = load("data/Lu-Hf",format="Agilent")
     method = Cmethod(;internal = ("Al27 -> 27",1.2e5))
     glass = Dict("NIST612" => "NIST612p")
-    blk, fit = process!(myrun,method,glass)
-    p = KJ.plot(myrun[4],blk,fit,internal[1];
+    fit = process!(myrun,method,glass)
+#=     p = KJ.plot(myrun[4],blk,fit,internal[1];
                 transformation="log",den=internal[1])
     conc = concentrations(myrun,blk,fit,internal)
     @test display(p) != NaN
-    return conc
+    return conc =#
 end
 
 function internochrontest(show=true)

@@ -36,12 +36,12 @@ function channelAccessor(channels::AbstractDataFrame,
     return (P=ch.P,D=ch.D,d=ch.d)
 end
 
-function getIons(method::KJmethod)
+function getIons(method::Gmethod)
     return channelAccessor(method.channels,"ion")
 end
 export getIons
 
-function getProxies(method::KJmethod)
+function getProxies(method::Gmethod)
     return channelAccessor(method.channels,"proxy")
 end
 export getProxies
@@ -60,7 +60,7 @@ function channelAccessor!(channels::AbstractDataFrame,
     channels[row,2:end] = [P,D,d]
 end
 
-function setIons!(method::KJmethod;
+function setIons!(method::Gmethod;
                   P=getIons(method).P,
                   D=getIons(method).D,
                   d=getIons(method).d)
@@ -68,7 +68,7 @@ function setIons!(method::KJmethod;
 end
 export setIons!
 
-function setProxies!(method::KJmethod;
+function setProxies!(method::Gmethod;
                      P=getIons(method).P,
                      D=getIons(method).D,
                      d=getIons(method).d)
@@ -76,7 +76,7 @@ function setProxies!(method::KJmethod;
 end
 export setProxies!
 
-function setChannels!(method::KJmethod;
+function setChannels!(method::Gmethod;
                       P=getProxies(method).P,
                       D=getProxies(method).D,
                       d=getProxies(method).d)
@@ -84,9 +84,15 @@ function setChannels!(method::KJmethod;
 end
 export setChannels!
 
-function setAnchors!(method::KJmethod)
+function setAnchors!(method::Gmethod)
     method = method.method
     refmats = collect(keys(method.standards))
     anchors = getAnchors(method,refmats)
     method.anchors = anchors
+end
+
+function getConcentrations(method::Cmethod,
+                           refmat::AbstractString)
+    row = findfirst(.==(refmat),method.refmats)
+    return method.concentrations[row,:]
 end

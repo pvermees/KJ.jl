@@ -405,11 +405,11 @@ end
 function dict2string(dict::AbstractDict)
     k = collect(keys(dict))
     v = collect(values(dict))
-    q = isa(v[1],AbstractString) ? '"' : ""
-    out = "Dict(" * '"' * k[1] * '"' * " => " * q * string(v[1]) * q
-    for i in 2:length(k)
+    out = "Dict("
+    for i in eachindex(k)
         q = isa(v[i],AbstractString) ? '"' : ""
-        out *= "," * '"' * k[i] * '"' * " => " * q * string(v[i]) * q
+        if i>1 out *= ',' end
+        out *= '"' * k[i] * '"' * " => " * q * string(v[i]) * q
     end
     out *= ")"
     return out
@@ -450,7 +450,6 @@ function channel2element(channel::AbstractString,
     else # e.g. "Pb"
         return elements[matches]
     end
-    @infiltrate
     return nothing
 end
 function channel2element(channel::AbstractString)

@@ -70,7 +70,7 @@ Get the indices of the samples belonging to 'group'
 """
 function getIndicesInGroup(run::Vector{Sample},
                            group::AbstractString)
-    return findall(getGroups(myrun) .== group)
+    return findall(getGroups(run) .== group)
 end
 export getIndicesInGroup
 

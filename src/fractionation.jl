@@ -55,29 +55,31 @@ end
 function fractionation!(fit::Cfit,
                         method::Cmethod,
                         run::Vector{Sample};
-                        verbose::Bool=false)
+                        kwargs...)
     ne = ncol(method.elements)
     num = den = fill(0.0,ne-1)
+    internal = method.internal[1]
     for SRM in method.refmats
-        dats = pool(run;signal=true,group=SRM)
-        concs = elements2concs(elements,SRM)
+        selection = getIndicesInGroup(run,SRM)
+        dats = [swinData(samp) for samp in run[selection]]
+        concs = method.concentrations
         for dat in dats
-            bt = polyVal(blank,dat.t)
+            bt = polyVal(fit.blank,dat.t)
             sig = getSignals(dat)
-            (nr,nc) = size(sig)
-            Xm = sig[:,Not(internal[1])]
-            Sm = sig[:,internal[1]]
-            bXt = bt[:,Not(internal[1])]
-            bSt = bt[:,internal[1]]
+            Xm = sig[:,Not(internal)]
+            Sm = sig[:,internal]
+            bXt = bt[:,Not(internal)]
+            bSt = bt[:,internal]
             S = Sm.-bSt
-            Cint = concs[:,internal[1]]
-            Coth = concs[:,Not(internal[1])]
+            Cint = concs[:,internal]
+            Coth = concs[:,Not(internal)]
             R = collect((Coth./Cint)[1,:])
             num += sum.(eachcol(R'.*(Xm.-bXt).*S))
             den += sum.(eachcol((R'.*S).^2))
         end
     end
-    return num./den
+    fit.par = fit.blank[1:1,Not(internal)]
+    fit.par[1,:] = num./den
 end
 export fractionation!
 
