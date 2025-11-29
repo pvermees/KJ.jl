@@ -70,9 +70,9 @@ end
 
 function fractionation(run::Vector{Sample},
                        blank::AbstractDataFrame,
-                       elements::AbstractDataFrame,
                        internal::Tuple,
-                       glass::AbstractDict)
+                       glass::AbstractDict;
+                       elements::AbstractDataFrame=channels2elements(run))
     ne = size(elements,2)
     num = den = fill(0.0,ne-1)
     for (SRM,name)  in glass

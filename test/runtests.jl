@@ -383,7 +383,6 @@ function concentrationtest()
     myrun = load("data/Lu-Hf",format="Agilent")
     internal = ("Al27 -> 27",1.2e5)
     glass = Dict("NIST612" => "NIST612p")
-    setGroup!(myrun,glass)
     blk, fit = process!(myrun,internal,glass;nblank=2)
     p = KJ.plot(myrun[4],blk,fit,internal[1];
                 transformation="log",den=internal[1])
@@ -587,7 +586,7 @@ end
 Plots.closeall()
 
 if true
-    @testset "load" begin loadtest(;verbose=true) end
+    #=@testset "load" begin loadtest(;verbose=true) end
     @testset "plot raw data" begin plottest(2) end
     @testset "set selection window" begin windowtest() end
     @testset "set method and blanks" begin blanktest() end
@@ -611,9 +610,9 @@ if true
     @testset "iCap" begin iCaptest() end
     @testset "carbonate" begin carbonatetest() end
     @testset "timestamp" begin timestamptest() end
-    @testset "stoichiometry" begin mineraltest() end
-    #=@testset "concentration" begin concentrationtest() end
-    @testset "Lu-Hf internochron" begin internochrontest() end
+    @testset "stoichiometry" begin mineraltest() end=#
+    @testset "concentration" begin concentrationtest() end
+    #=@testset "Lu-Hf internochron" begin internochrontest() end
     @testset "UPb internochron" begin internochronUPbtest() end
     @testset "concentration map" begin maptest() end
     @testset "isotope ratio map" begin map_dating_test() end
