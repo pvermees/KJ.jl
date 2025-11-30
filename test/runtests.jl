@@ -402,31 +402,26 @@ function internochrontest(show=true)
 end
 
 function internochronUPbtest(show=true)
-    method = "U-Pb"
     myrun = load("data/carbonate",format="Agilent")
+    method = Gmethod("U-Pb")
     standards = Dict("WC1_cc"=>"WC1")
-    glass = Dict("NIST612"=>"NIST612")
-    channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blk, fit = process!(myrun,method,channels,standards,glass,
-                        nblank=2,ndrift=1,ndown=1)
-    isochron = internochron(myrun,channels,blk,fit;method=method)
+    fit = process!(myrun,method,standards)
+    isochron = internochron(myrun,method,fit)
     CSV.write("output/isochronUPb.csv",isochron)
     if show
-        p = internoplot(myrun[1],channels,blk,fit;method=method)
+        p = internoplot(myrun[5],method,fit)
         @test display(p) != NaN
     end
 end
 
 function maptest()
-    method = "concentrations"
     myrun = load("data/timestamp/NHM_cropped.csv",
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
-    internal = getInternal("zircon","Si29")
+    method = Cmethod(;internal=getInternal("zircon","Si29"))
     glass = Dict("NIST612" => "NIST612")
-    setGroup!(myrun,glass)
-    blk, fit = process!(myrun,internal,glass;nblank=2)
-    conc = concentrations(myrun[10],blk,fit,internal)
+    fit = process!(myrun,method,glass)
+    conc = concentrations(myrun[10],method,fit)
     p = plotMap(conc,"ppm[U] from U238";
                 clims=(0,500),
                 colorbar_scale=:identity)
@@ -602,11 +597,11 @@ Plots.closeall()
 @testset "carbonate" begin carbonatetest() end
 @testset "timestamp" begin timestamptest() end
 @testset "stoichiometry" begin mineraltest() end
-@testset "concentration" begin concentrationtest() end =#
+@testset "concentration" begin concentrationtest() end
 @testset "Lu-Hf internochron" begin internochrontest() end
-#=@testset "UPb internochron" begin internochronUPbtest() end
+@testset "UPb internochron" begin internochronUPbtest() end=#
 @testset "concentration map" begin maptest() end
-@testset "isotope ratio map" begin map_dating_test() end
+#=@testset "isotope ratio map" begin map_dating_test() end
 @testset "map fail test" begin map_fail_test() end
 @testset "glass as age standard test" begin glass_only_test() end
 @testset "extension test" begin extensiontest() end
