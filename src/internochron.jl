@@ -1,17 +1,6 @@
-"""
-internochron(run::Vector{Sample},
-             channels::AbstractDict,
-             blank::AbstractDataFrame,
-             pars::NamedTuple;
-             method::Union{AbstractString,Nothing}=nothing)
-
-Internal isochron regression
-"""
 function internochron(run::Vector{Sample},
-                      channels::AbstractDict,
-                      blank::AbstractDataFrame,
-                      pars::NamedTuple;
-                      method::Union{AbstractString,Nothing}=nothing)
+                      method::Gmethod,
+                      fit::Gfit)
     ns = length(run)
     xlab = "x0"
     ylab = "y0"
@@ -20,38 +9,21 @@ function internochron(run::Vector{Sample},
     for i in 1:ns
         samp = run[i]
         out[i,:name] = samp.sname
-        out[i,2:end] = internochron(samp,channels,blank,pars)
+        out[i,2:end] = internochron(samp,method,fit)
     end
-    if isnothing(method)
-        return out
-    else
-        return x0y02t(out,method) 
-    end
+    return x0y02t(out,method)
 end
-"""
-internochron(samp::Sample,
-             channels::AbstractDict,
-             blank::AbstractDataFrame,
-             pars::NamedTuple)
-"""
+
 function internochron(samp::Sample,
-                      channels::AbstractDict,
-                      blank::AbstractDataFrame,
-                      pars::NamedTuple)
-    Phat, Dhat, dhat = atomic(samp,channels,blank,pars)
-    vP = var_timeseries(Phat)
-    vD = var_timeseries(Dhat)
-    vd = var_timeseries(dhat)
-    return internochron(Phat,Dhat,dhat,vP,vD,vd)
+                      method::Gmethod,
+                      fit::Gfit)
+    a = atomic(samp,method,fit)
+    vP = var_timeseries(a.P)
+    vD = var_timeseries(a.D)
+    vd = var_timeseries(a.d)
+    return internochron(a.P,a.D,a.d,vP,vD,vd)
 end
-"""
-internochron(Phat::AbstractVector,
-             Dhat::AbstractVector,
-             dhat::AbstractVector,
-             vP::AbstractVector,
-             vD::AbstractVector,
-             vd::AbstractVector)
-"""
+
 function internochron(Phat::AbstractVector,
                       Dhat::AbstractVector,
                       dhat::AbstractVector,
@@ -138,8 +110,8 @@ function covmat_internochron(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
 end
 
 function x0y02t(x0y0::AbstractDataFrame,
-                method::AbstractString)
-    P, D, d = getPDd(method)
+                method::Gmethod)
+    P, D, d = getChannelsDict(method)
     xlab = "t(" * D * "/" * P * ")" 
     ylab = "(" * d * "/" * D * ")₀"
     column_names = ["name", xlab, "s[" * xlab * "]", ylab, "s[" * ylab * "]", "ρ"]
@@ -148,7 +120,8 @@ function x0y02t(x0y0::AbstractDataFrame,
         sx0y0 = row["rho"]*row["s[x0]"]*row["s[y0]"]
         E = [ [ row["s[x0]"]^2 sx0y0 ]
               [ sx0y0 row["s[y0]"]^2 ] ]
-        out[i,2:end] = x0y02t(row.x0,row.y0,E,method)
+        ty0 = x0y02t(row.x0,row.y0,E,method.name)
+        out[i,2:end] = values(ty0)
     end
     return out
 end
@@ -181,7 +154,7 @@ function x0y02t(x0::AbstractFloat,
     st = sqrt(covmat[1,1])
     sy0 = sqrt(covmat[2,2])
     rho = covmat[1,2]/(st*sy0)
-    return t, st, y0, sy0, rho
+    return (t=t, st=st, y0=y0, sy0=sy0, rho=rho)
 end
 
 function york2ludwig_misfit(par::AbstractVector,

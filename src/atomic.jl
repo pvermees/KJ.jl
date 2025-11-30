@@ -3,8 +3,6 @@ function atomic(samp::Sample,
                 fit::KJfit;
                 add_xy::Bool=false)
     dat = swinData(samp;add_xy=add_xy)
-    sig = getSignals(dat)
-    covmat = df2cov(sig)
     c = Cruncher(samp,method,fit)
     ft, FT = ft_FT(c,method,fit)
     Phat = @. c.pmb/(ft*FT)
@@ -12,7 +10,7 @@ function atomic(samp::Sample,
     dhat = @. c.bomb/c.bd
     x = nothing
     y = nothing
-    if add_xy && all([cname in names(dat) for cname in ["x";"y"]])
+    if add_xy && all(["x";"y"] in names(dat))
         x=dat.x
         y=dat.y
     end

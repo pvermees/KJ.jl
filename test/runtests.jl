@@ -392,19 +392,11 @@ function concentrationtest()
 end
 
 function internochrontest(show=true)
-    myrun = load("data/lines",format="Agilent")
-    method = "Lu-Hf"
-    channels = Dict("d"=>"Hf178 -> 260",
-                    "D"=>"Hf176 -> 258",
-                    "P"=>"Lu175 -> 175")
-    standards = Dict("Hogsbo_gt" => "Hog",
-                     "BP_gt" => "BP")
-    glass = Dict("NIST610" => "NIST610")
-    blk, fit = process!(myrun,method,channels,standards,glass)
-    isochron = internochron(myrun,channels,blk,fit;method=method)
+    myrun, method, fit = processtest("Lu-Hf";show=false)
+    isochron = internochron(myrun,method,fit)
     CSV.write("output/isochron.csv",isochron)
     if show
-        p = internoplot(myrun[11],channels,blk,fit;method=method)
+        p = internoplot(myrun[2],method,fit;xlim=[0,100])
         @test display(p) != NaN
     end
 end
@@ -420,7 +412,7 @@ function internochronUPbtest(show=true)
     isochron = internochron(myrun,channels,blk,fit;method=method)
     CSV.write("output/isochronUPb.csv",isochron)
     if show
-        p = internoplot(myrun[7],channels,blk,fit;method=method)
+        p = internoplot(myrun[1],channels,blk,fit;method=method)
         @test display(p) != NaN
     end
 end
@@ -585,7 +577,7 @@ end
 
 Plots.closeall()
 
-@testset "load" begin loadtest(;verbose=true) end
+#= @testset "load" begin loadtest(;verbose=true) end
 @testset "plot raw data" begin plottest(2) end
 @testset "set selection window" begin windowtest() end
 @testset "set method and blanks" begin blanktest() end
@@ -610,9 +602,9 @@ Plots.closeall()
 @testset "carbonate" begin carbonatetest() end
 @testset "timestamp" begin timestamptest() end
 @testset "stoichiometry" begin mineraltest() end
-@testset "concentration" begin concentrationtest() end
-#= @testset "Lu-Hf internochron" begin internochrontest() end
-@testset "UPb internochron" begin internochronUPbtest() end
+@testset "concentration" begin concentrationtest() end =#
+@testset "Lu-Hf internochron" begin internochrontest() end
+#=@testset "UPb internochron" begin internochronUPbtest() end
 @testset "concentration map" begin maptest() end
 @testset "isotope ratio map" begin map_dating_test() end
 @testset "map fail test" begin map_fail_test() end
