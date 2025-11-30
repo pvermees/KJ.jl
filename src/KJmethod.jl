@@ -94,5 +94,5 @@ end
 function getConcentrations(method::Cmethod,
                            refmat::AbstractString)
     row = findfirst(.==(refmat),method.refmats)
-    return method.concentrations[row,:]
+    return method.concentrations[row:row,:]
 end

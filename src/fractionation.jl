@@ -52,34 +52,33 @@ function fractionation!(fit::Gfit,
     par2Gfit!(fit,par,method)
 
 end
+"""
+     Cs  sum(S_i X_i)
+[f = -- --------------]
+     C    sum(S_i^2)
+
+with C, Cs = reference concentrations of the elements and internal standard
+     X_i, S_i = blank-corrected measurement for elements and internal standard
+"""
 function fractionation!(fit::Cfit,
                         method::Cmethod,
                         run::Vector{Sample};
                         kwargs...)
-    ne = ncol(method.elements)
-    num = den = fill(0.0,ne-1)
+    num = fit.blank[1:1,:] .* 0.0
+    den = copy(num)
     internal = method.internal[1]
     for SRM in method.refmats
         selection = getIndicesInGroup(run,SRM)
         dats = [swinData(samp) for samp in run[selection]]
-        concs = method.concentrations
         for dat in dats
             bt = polyVal(fit.blank,dat.t)
-            sig = getSignals(dat)
-            Xm = sig[:,Not(internal)]
-            Sm = sig[:,internal]
-            bXt = bt[:,Not(internal)]
-            bSt = bt[:,internal]
-            S = Sm.-bSt
-            Cint = concs[:,internal]
-            Coth = concs[:,Not(internal)]
-            R = collect((Coth./Cint)[1,:])
-            num += sum.(eachcol(R'.*(Xm.-bXt).*S))
-            den += sum.(eachcol((R'.*S).^2))
+            X = getSignals(dat) .- bt
+            C = getConcentrations(method,SRM)
+            num[1,:] = Vector(num[1,:]) + sum.(eachcol(C[1,internal].*X.*X[:,internal]))
+            den[1,:] = Vector(den[1,:]) + sum.(eachcol(C.*(X[:,internal].^2)))
         end
     end
-    fit.par = fit.blank[1:1,Not(internal)]
-    fit.par[1,:] = num./den
+    fit.par = num./den
 end
 export fractionation!
 
