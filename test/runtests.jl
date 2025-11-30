@@ -430,19 +430,15 @@ function maptest()
 end
 
 function map_dating_test()
-    method = "U-Pb"
     myrun = load("data/timestamp/NHM_cropped.csv",
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
+    method = Gmethod("U-Pb")
     standards = Dict("91500_zr"=>"91500")
-    glass = Dict("NIST612" => "NIST612")
-    channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blk, fit = process!(myrun,method,channels,standards,glass,
-                        nblank=2,ndrift=1,ndown=0)
-    snum = 10
-    P,D,d,x,y = atomic(myrun[snum],channels,blk,fit;add_xy=true)
-    df = DataFrame(P=P,D=D,d=d,x=x,y=y)
-    p = plotMap(df,"P";clims=(1e3,1e6))
+    fit = process!(myrun,method,standards)
+    a = atomic(myrun[10],method,fit;add_xy=true)
+    df = DataFrame(a)
+    p = plotMap(df,"D";clims=(0,1e4))
     @test display(p) != NaN
 end
 
@@ -599,10 +595,10 @@ Plots.closeall()
 @testset "stoichiometry" begin mineraltest() end
 @testset "concentration" begin concentrationtest() end
 @testset "Lu-Hf internochron" begin internochrontest() end
-@testset "UPb internochron" begin internochronUPbtest() end=#
-@testset "concentration map" begin maptest() end
-#=@testset "isotope ratio map" begin map_dating_test() end
-@testset "map fail test" begin map_fail_test() end
+@testset "UPb internochron" begin internochronUPbtest() end
+@testset "concentration map" begin maptest() end=#
+@testset "isotope ratio map" begin map_dating_test() end
+#=@testset "map fail test" begin map_fail_test() end
 @testset "glass as age standard test" begin glass_only_test() end
 @testset "extension test" begin extensiontest() end
 @testset "synthetic data" begin SStest() end

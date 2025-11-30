@@ -211,7 +211,7 @@ function plotMap(df::AbstractDataFrame,
                  colorbar_scale::Symbol=:log10,
                  aspect_ratio::Symbol=:equal,
                  color::Symbol=:viridis,
-                 ignore_negative::Bool=true)
+                 ignore_negative::Bool=false)
     has_x = "x" in names(df) && !any(isnothing.(df[:,"x"]))
     has_y = "y" in names(df) && !any(isnothing.(df[:,"y"]))
     if has_x & has_y

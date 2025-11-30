@@ -10,7 +10,7 @@ function atomic(samp::Sample,
     dhat = @. c.bomb/c.bd
     x = nothing
     y = nothing
-    if add_xy && all(["x";"y"] in names(dat))
+    if add_xy && "x" in names(dat) && "y" in names(dat)
         x=dat.x
         y=dat.y
     end
