@@ -26,19 +26,17 @@ function getExt(format)
     end
 end
 
-"""
-getChannels(run::Vector{Sample})
-
-Get a vector of column headers of the MS data files
-"""
 function getChannels(run::Vector{Sample})
     return getChannels(run[1])
 end
-"""
-getChannels(samp::Sample)
-"""
 function getChannels(samp::Sample)
     return names(getSignals(samp))
+end
+function getChannels(method::Gmethod)
+    return collect(values(getChannelsDict(method)))
+end
+function getChannels(method::Cmethod)
+    return names(method.elements)
 end
 export getChannels
 
@@ -98,10 +96,10 @@ function setStandards!(run::Vector{Sample},
     setGroup!(run,standards)
     channels = getChannels(run)
     if nrow(method.elements) == 0
-        elements = channels2elements(channels)
-        method.elements = DataFrame([elements], channels)
+        elements = channel2element.(channels)
+        method.elements = DataFrame(permutedims(elements), channels)
     end
-    refmats = collect(keys(standards))
+    refmats = string.(keys(standards))
     if sort(refmats) != sort(method.refmats)
         method.refmats = refmats
         method.concentrations = DataFrame()
@@ -253,8 +251,8 @@ Get a tuple with the channel and its reference concentration
 """
 function getInternal(mineral::AbstractString,
                      channel::AbstractString)
-    element = channel2element(channel,collect(keys(_KJ["nuclides"])))
-    concentration = get(_KJ["stoichiometry"],mineral)[element[1]] * 1e5
+    element = channel2element(channel)
+    concentration = get(_KJ["stoichiometry"],mineral)[element] * 1e5
     return (channel,concentration)
 end
 export getInternal

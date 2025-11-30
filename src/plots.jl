@@ -1,22 +1,3 @@
-"""
-plot(samp::Sample,
-     method::KJmethod,
-     fit::KJfit;
-     num=nothing,den=nothing,
-     transformation=nothing,
-     ms=2,ma=0.5,
-     xlim=:auto,ylim=:auto,
-     linecol="black",
-     linestyle=:solid,
-     i=nothing,
-     legend=:topleft,
-     cpalette=:viridis,
-     show_title=true,
-     titlefontsize=10,
-     return_offset::Bool=false)
-
-Plot isotopic ratios and fit of a reference material.
-"""
 function plot(samp::Sample,
               method::KJmethod,
               fit::KJfit;
@@ -65,75 +46,6 @@ function plot(samp::Sample,
     end
 end
 
-"""
-plot(samp::Sample,
-     blank::AbstractDataFrame,
-     pars::AbstractVector,
-     internal::AbstractString;
-     elements::AbstractDataFrame=channels2elements(samp),
-     num=nothing,den=nothing,
-     transformation=nothing,
-     ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-     linecol="black",linestyle=:solid,i=nothing,
-     legend=:topleft,cpalette=:viridis,
-     show_title=true,
-     titlefontsize=10)
-
-Plot concentration data and fit of a reference material.
-"""
-function plot(samp::Sample,
-              blank::AbstractDataFrame,
-              pars::AbstractVector,
-              internal::AbstractString;
-              elements::AbstractDataFrame=channels2elements(samp),
-              num=nothing,den=nothing,
-              transformation=nothing,
-              ms=2,ma=0.5,xlim=:auto,ylim=:auto,
-              linecol="black",linestyle=:solid,i=nothing,
-              legend=:topleft,cpalette=:viridis,
-              show_title=true,
-              titlefontsize=10)
-
-    p, offset = plot(samp;
-                     num=num,den=den,transformation=transformation,
-                     ms=ms,ma=ma,xlim=xlim,ylim=ylim,i=i,
-                     legend=legend,cpalette=cpalette,
-                     show_title=show_title,
-                     titlefontsize=titlefontsize,
-                     return_offset=true)
-
-    if samp.group != "sample"
-
-        plotFitted!(p,samp,blank,pars,elements,internal;
-                    num=num,den=den,transformation=transformation,
-                    offset=offset,linecolor=linecol,linestyle=linestyle)
-        
-    end
-    
-    plotFittedBlank!(p,samp,blank;
-                     num=num,den=den,transformation=transformation,
-                     offset=offset,linecolor=linecol,linestyle=linestyle)
-
-    return p
-end
-"""
-plot(samp::Sample;
-     channels::AbstractVector=getChannels(samp),
-     num::Union{Nothing,AbstractString}=nothing,
-     den::Union{Nothing,AbstractString}=nothing,
-     transformation::Union{Nothing,AbstractString}=nothing,
-     ms::Number=2,ma::Number=0.5,
-     xlim=:auto,ylim=:auto,
-     i::Union{Nothing,Integer}=nothing,
-     legend=:topleft,
-     cpalette=:viridis,
-     show_title=true,
-     titlefontsize=10,
-     padding::Number=0.1,
-     return_offset::Bool=false)
-
-Plot LA-ICP-MS data without a fit
-"""
 function plot(samp::Sample;
               channels::AbstractVector=getChannels(samp),
               num::Union{Nothing,AbstractString}=nothing,
@@ -234,20 +146,6 @@ function prep_plot(samp::Sample,
     return x, ty, xlab, ylab, offset
 end
 
-"""
-plotFitted!(p,
-            samp::Sample,
-            method::KJmethod,
-            fit::KJfit;
-            num::Union{Nothing,AbstractString}=nothing,
-            den::Union{Nothing,AbstractString}=nothing,
-            transformation::Union{Nothing,AbstractString}=nothing,
-            offset::Union{Nothing,Number}=nothing,
-            linecolor="black",
-            linestyle=:solid)
-
-Add model fit to an existing KJ data plot.
-"""
 function plotFitted!(p,
                      samp::Sample,
                      method::KJmethod,
@@ -259,47 +157,13 @@ function plotFitted!(p,
                      linecolor="black",
                      linestyle=:solid)
     pred = predict(samp,method,fit)
-    ch = getChannels(method)
-    rename!(pred,[ch[Symbol(i)] for i in names(pred)])
+    rename!(pred,getChannels(method))
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,
                 linestyle=linestyle)
 end
-"""
-plotFitted!(p,
-            samp::Sample,
-            blank::AbstractDataFrame,
-            pars::AbstractVector,
-            elements::AbstractDataFrame,
-            internal::AbstractString;
-            num::Union{Nothing,AbstractString}=nothing,
-            den::Union{Nothing,AbstractString}=nothing,
-            transformation::Union{Nothing,AbstractString}=nothing,
-            offset::Union{Nothing,Number}=nothing,
-            linecolor="black",
-            linestyle=:solid)
 
-For concentration data
-"""
-function plotFitted!(p,
-                     samp::Sample,
-                     blank::AbstractDataFrame,
-                     pars::AbstractVector,
-                     elements::AbstractDataFrame,
-                     internal::AbstractString;
-                     num::Union{Nothing,AbstractString}=nothing,
-                     den::Union{Nothing,AbstractString}=nothing,
-                     transformation::Union{Nothing,AbstractString}=nothing,
-                     offset::Union{Nothing,Number}=nothing,
-                     linecolor="black",
-                     linestyle=:solid)
-    pred = predict(samp,pars,blank,elements,internal)
-    plotFitted!(p,samp,pred;
-                num=num,den=den,
-                transformation=transformation,offset=offset,
-                linecolor=linecolor,linestyle=linestyle)
-end
 # helper
 function plotFitted!(p,
                      samp::Sample,
@@ -321,19 +185,6 @@ function plotFitted!(p,
 end
 export plotFitted!
 
-"""
-plotFittedBlank!(p,
-                 samp::Sample,
-                 blank::AbstractDataFrame,
-                 channels::AbstractVector;
-                 num::Union{Nothing,AbstractString}=nothing,
-                 den::Union{Nothing,AbstractString}=nothing,
-                 transformation::Union{Nothing,AbstractString}=nothing,
-                 offset::Union{Nothing,Number}=0.0,
-                 linecolor="black",
-                 linestyle::Symbol=:solid)
-For geochronology
-"""
 function plotFittedBlank!(p,
                           samp::Sample,
                           method::KJmethod,
@@ -346,33 +197,6 @@ function plotFittedBlank!(p,
                           linestyle::Symbol=:solid)
     channels = collect(values(getChannels(method)))
     pred = predict(samp,fit.blank[:,channels])
-    plotFitted!(p,samp,pred;
-                blank=true,num=num,den=den,transformation=transformation,
-                offset=offset,linecolor=linecolor,linestyle=linestyle)
-end
-"""
-plotFittedBlank!(p,
-                 samp::Sample,
-                 blank::AbstractDataFrame;
-                 num::Union{Nothing,AbstractString}=nothing,
-                 den::Union{Nothing,AbstractString}=nothing,
-                 transformation::Union{Nothing,AbstractString}=nothing,
-                 offset::Union{Nothing,Number}=0.0,
-                 linecolor::AbstractString="black",
-                 linestyle::Symbol=:solid)
-
-For concentrations.
-"""
-function plotFittedBlank!(p,
-                          samp::Sample,
-                          blank::AbstractDataFrame;
-                          num::Union{Nothing,AbstractString}=nothing,
-                          den::Union{Nothing,AbstractString}=nothing,
-                          transformation::Union{Nothing,AbstractString}=nothing,
-                          offset::Union{Nothing,Number}=0.0,
-                          linecolor::AbstractString="black",
-                          linestyle::Symbol=:solid)
-    pred = predict(samp,blank)
     plotFitted!(p,samp,pred;
                 blank=true,num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,linestyle=linestyle)

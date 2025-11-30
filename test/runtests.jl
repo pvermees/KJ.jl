@@ -185,7 +185,7 @@ function predictest(option="Lu-Hf";
         return samp, method, fit
     else
         p, offset = KJ.plot(samp,method,fit;
-                            den=getChannels(method).D,
+                            den=getChannelsDict(method).D,
                             transformation=transformation,
                             return_offset=true)
         @test display(p) != NaN
@@ -210,7 +210,7 @@ function partest(parname,paroffsetfact)
                             [0.0,down],     # down
                             [drift,0.0])    # adrift
         plotFitted!(p,samp,method,adjusted_fit;
-                    den=getChannels(method).D,
+                    den=getChannelsDict(method).D,
                     transformation="log",
                     offset=offset,
                     linecolor="red")
@@ -262,7 +262,7 @@ function processtest(option="Lu-Hf";
     if show
         p = KJ.plot(myrun[snum],method,fit;
                     transformation=transformation,
-                    den=getChannels(method).D)
+                    den=getChannelsDict(method).D)
         @test display(p) != NaN
     end
     return myrun, method, fit
@@ -383,11 +383,12 @@ function concentrationtest()
     method = Cmethod(;internal = ("Al27 -> 27",1.2e5))
     glass = Dict("NIST612" => "NIST612p")
     fit = process!(myrun,method,glass)
-#=     p = KJ.plot(myrun[4],blk,fit,internal[1];
-                transformation="log",den=internal[1])
-    conc = concentrations(myrun,blk,fit,internal)
+    conc = concentrations(myrun,method,fit)
+    p = KJ.plot(myrun[4],method,fit;
+                transformation="log",
+                den=method.internal[1])
     @test display(p) != NaN
-    return conc =#
+    return conc
 end
 
 function internochrontest(show=true)
@@ -584,7 +585,7 @@ end
 
 Plots.closeall()
 
-#= @testset "load" begin loadtest(;verbose=true) end
+@testset "load" begin loadtest(;verbose=true) end
 @testset "plot raw data" begin plottest(2) end
 @testset "set selection window" begin windowtest() end
 @testset "set method and blanks" begin blanktest() end
@@ -608,7 +609,7 @@ Plots.closeall()
 @testset "iCap" begin iCaptest() end
 @testset "carbonate" begin carbonatetest() end
 @testset "timestamp" begin timestamptest() end
-@testset "stoichiometry" begin mineraltest() end =#
+@testset "stoichiometry" begin mineraltest() end
 @testset "concentration" begin concentrationtest() end
 #= @testset "Lu-Hf internochron" begin internochrontest() end
 @testset "UPb internochron" begin internochronUPbtest() end

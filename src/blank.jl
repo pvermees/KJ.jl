@@ -1,9 +1,3 @@
-"""
-fitBlanks(run::Vector{Sample};
-          nblank=2)
-
-Fit a polynomial to the blanks in run.
-"""
 function fitBlanks(run::Vector{Sample};
                    nblank=2)
     blk = reduce(vcat, bwinData(samp) for samp in run)

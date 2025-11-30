@@ -46,12 +46,10 @@ function getProxies(method::Gmethod)
 end
 export getProxies
 
-function getChannels(method::Gmethod)
+function getChannelsDict(method::Gmethod)
     return channelAccessor(method.channels,"channel")
 end
-function getChannels(method::Cmethod)
-    return names(method.elements)
-end
+export getChannelsDict
 
 function channelAccessor!(channels::AbstractDataFrame,
                           rowname::AbstractString;

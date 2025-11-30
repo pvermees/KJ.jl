@@ -52,7 +52,7 @@ function SS(a::PointAnchor,
 end
 
 function SS(par::AbstractVector,
-            method::KJmethod,
+            method::Gmethod,
             cruncher_groups::AbstractDict;
             verbose::Bool=false)
 
@@ -72,20 +72,32 @@ function SS(par::AbstractVector,
 end
 export SS
 
-"""
-predict(samp::Sample,
-        method::KJmethod,
-        fit::KJfit)
-"""
 function predict(samp::Sample,
-                 method::KJmethod,
-                 fit::KJfit;
+                 method::Gmethod,
+                 fit::Gfit;
                  kw...)
     if samp.group in collect(keys(method.anchors))
         a = getAnchor(method.name,samp.group)
         c = Cruncher(samp,method,fit)
         ft, FT = ft_FT(c,method,fit)
         return predict(a,c,ft,FT)
+    else
+        KJerror("notStandard")
+    end
+end
+
+function predict(samp::Sample,
+                 method::Cmethod,
+                 fit::Cfit;
+                 kw...)
+    if samp.group in method.refmats
+        internal = method.internal[1]
+        dat = swinData(samp)
+        bt = polyVal(fit.blank,dat.t)
+        S = getSignals(dat)[:,internal] .- bt[:,internal]
+        C = getConcentrations(method,samp.group)
+        Cs = C[1,internal]
+        return @. S * fit.par * C / Cs + bt
     else
         KJerror("notStandard")
     end
@@ -118,22 +130,12 @@ function predict(a::PointAnchor,
     return DataFrame(P=pf,D=Dof,d=bof)
 end
 
-"""
-predict(samp::Sample,
-        ef::AbstractVector,
-        blank::AbstractDataFrame,
-        elements::AbstractDataFrame,
-        internal::AbstractString;
-        debug::Bool=false)
-
-For concentrations
-"""
 function predict(samp::Sample,
                  ef::AbstractVector,
                  blank::AbstractDataFrame,
                  elements::AbstractDataFrame,
                  internal::AbstractString;
-                 debug::Bool=false)
+                 kwargs...)
     if samp.group in _KJ["glass"].names
         dat = windowData(samp;signal=true)
         sig = getSignals(dat)
@@ -153,24 +155,18 @@ function predict(samp::Sample,
     end
 end
 
-"""
-predict(samp::Sample,
-        blank::AbstractDataFrame;
-        debug::Bool=false)
 
-For blanks
-"""
 function predict(samp::Sample,
                  blank::AbstractDataFrame;
-                 debug::Bool=false)
+                 kwargs...)
     dat = bwinData(samp)
     return polyVal(blank,dat.t)
 end
 export predict
 
 function ft_FT(c::Cruncher,
-               m::KJmethod,
-               f::KJfit)
+               m::Gmethod,
+               f::Gfit)
     ft = polyFac(f.drift,c.t)
     if !isnothing(m.PAcutoff)
         analog = c.pmb .> m.PAcutoff
@@ -181,12 +177,12 @@ function ft_FT(c::Cruncher,
 end
 
 function Cruncher(samp::Sample,
-                  method::KJmethod,
-                  fit::KJfit)
+                  method::Gmethod,
+                  fit::Gfit)
 
     dat = swinData(samp)
     
-    ch = getChannels(method)
+    ch = getChannelsDict(method)
     pm = dat[:,ch.P]
     Dom = dat[:,ch.D]
     bom = dat[:,ch.d]
