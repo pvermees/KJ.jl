@@ -325,6 +325,15 @@ function PAtest()
     return myrun, method, fit
 end
 
+function atomictest(option="Lu-Hf")
+    myrun, method, fit = processtest(option;show=false)
+    a = atomic(myrun[2],method,fit)
+    p1 = Plots.scatter(a.P,a.D,label="",xlabel="P",ylabel="D")
+    p2 = Plots.scatter(a.D,a.d,label="",xlabel="D",ylabel="d")
+    p = Plots.plot(p1,p2,layout=(1,2))
+    @test display(p) != NaN
+end
+
 function averatest(option="Lu-Hf",verbose=false)
     myrun, method, fit = processtest(option;show=false)
     ratios = averat(myrun,fit,method;physics=true)
@@ -586,8 +595,9 @@ Plots.closeall()
 @testset "K-Ca" begin processtest("K-Ca") end
 @testset "U-Pb" begin processtest("U-Pb") end
 @testset "hist" begin histest() end
-@testset "PA test" begin PAtest() end
-@testset "averat test" begin averatest("K-Ca") end
+@testset "PA test" begin PAtest() end=#
+@testset "atomic test" begin atomictest("Rb-Sr") end
+#=@testset "averat test" begin averatest("K-Ca") end
 @testset "export" begin exporttest() end
 @testset "iCap" begin iCaptest() end
 @testset "carbonate" begin carbonatetest() end
@@ -596,9 +606,9 @@ Plots.closeall()
 @testset "concentration" begin concentrationtest() end
 @testset "Lu-Hf internochron" begin internochrontest() end
 @testset "UPb internochron" begin internochronUPbtest() end
-@testset "concentration map" begin maptest() end=#
+@testset "concentration map" begin maptest() end
 @testset "isotope ratio map" begin map_dating_test() end
-#=@testset "map fail test" begin map_fail_test() end
+@testset "map fail test" begin map_fail_test() end
 @testset "glass as age standard test" begin glass_only_test() end
 @testset "extension test" begin extensiontest() end
 @testset "synthetic data" begin SStest() end
