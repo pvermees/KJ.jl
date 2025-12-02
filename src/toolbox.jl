@@ -505,5 +505,5 @@ function unpack(c::Cruncher)
     return (c.pmb,c.Dombi,c.bomb,c.bpt,c.bDot,c.bbot,c.vp,c.vD,c.vb,c.spD,c.spb,c.sDb,c.bd,c.t,c.T)
 end
 function unpack(a::Averager)
-    return (a.Phat,a.Dhat,a.dhat,a.vP,a.vD,a.vd,a.PD,a.Pd,a.Dd)
+    return (a.Phat,a.Dhat,a.dhat,a.vP,a.vD,a.vd,a.sPD,a.sPd,a.sDd)
 end

@@ -344,7 +344,7 @@ end
 function exporttest()
     prefixes = Dict("Lu-Hf" => "hogsbo",
                     "Rb-Sr" => "EntireCreek",
-                    "K-Ca" => "MDC",
+                    "K-Ca" => "EntCrk",
                     "U-Pb" => "GJ1")
     for option in ["Lu-Hf","Rb-Sr","K-Ca","U-Pb"]
         ratios, method = averatest(option)
@@ -597,8 +597,8 @@ Plots.closeall()
 # @testset "hist" begin histest() end
 # @testset "PA test" begin PAtest() end
 # @testset "atomic test" begin atomictest("Rb-Sr") end
-@testset "averat test" begin averatest("K-Ca") end
-# @testset "export" begin exporttest() end
+# @testset "averat test" begin averatest("K-Ca") end
+@testset "export" begin exporttest() end
 # @testset "iCap" begin iCaptest() end
 # @testset "carbonate" begin carbonatetest() end
 # @testset "timestamp" begin timestamptest() end

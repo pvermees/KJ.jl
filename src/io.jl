@@ -214,21 +214,13 @@ export2IsoplotR(selection,"Lu-Hf",fname="BP.json")
 ```
 """
 function export2IsoplotR(run::Vector{Sample},
-                         method::KJmethod,
-                         fit::KJfit;
+                         method::Gmethod,
+                         fit::Gfit;
                          prefix=nothing,
-                         fname::AbstractString="KJ.json",
-                         physics::Bool=true,
-                         numerical::Bool=true)
-    ratios = averat(run,
-                    fit,
-                    method;
-                    physics=physics,
-                    numerical=numerical)
+                         fname::AbstractString="KJ.json")
+    ratios = averat(run,method,fit)
     if isnothing(prefix)
-        export2IsoplotR(ratios,
-                        method;
-                        fname=fname)
+        export2IsoplotR(ratios,method;fname=fname)
     else
         export2IsoplotR(prefix2subset(ratios,prefix),
                         method;
@@ -236,7 +228,7 @@ function export2IsoplotR(run::Vector{Sample},
     end
 end
 function export2IsoplotR(ratios::AbstractDataFrame,
-                         method::KJmethod;
+                         method::Gmethod;
                          fname::AbstractString="KJ.json")
     json = jsonTemplate()
 

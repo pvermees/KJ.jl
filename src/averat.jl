@@ -1,6 +1,6 @@
 function averat(run::Vector{Sample},
-                fit::KJfit,
-                method::KJmethod)
+                method::Gmethod,
+                fit::Gfit)
     P, D, d = getChannels(method)
     xlab = P * "/" * D
     ylab = d * "/" * D
@@ -30,6 +30,7 @@ function LLaverat(x::Real,
                   y::Real,
                   a::Averager)
     D = averatD(x,y,a)
+    Phat,Dhat,dhat,vP,vD,vd,sPD,sPd,sDd = unpack(a)
     SS = @. (D*y-dhat)*(((vD*vP-sPD^2)*(D*y-dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((sDd*sPD-sPd*vD)*(D*x-Phat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((D-Dhat)*(sPD*sPd-sDd*vP))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(D-Dhat)*(((sPD*sPd-sDd*vP)*(D*y-dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((sDd*sPd-sPD*vd)*(D*x-Phat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((D-Dhat)*(vP*vd-sPd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(D*x-Phat)*(((sDd*sPD-sPd*vD)*(D*y-dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((vD*vd-sDd^2)*(D*x-Phat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((D-Dhat)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))
     return sum(@. SS/2)
 end
@@ -37,7 +38,7 @@ end
 function averatD(x::Real,
                  y::Real,
                  a::Averager)
-    Phat,Dhat,dhat,vP,vD,vd,PD,Pd,Dd = unpack(a)
+    Phat,Dhat,dhat,vP,vD,vd,sPD,sPd,sDd = unpack(a)
     return @. (((dhat*vD-Dhat*sDd)*vP-Phat*sPd*vD+Dhat*sPD*sPd-dhat*sPD^2+Phat*sDd*sPD)*y+((Phat*vD-Dhat*sPD)*vd-dhat*sPd*vD+Dhat*sDd*sPd+dhat*sDd*sPD-Phat*sDd^2)*x+(Dhat*vP-Phat*sPD)*vd-dhat*sDd*vP-Dhat*sPd^2+(dhat*sPD+Phat*sDd)*sPd)/((vD*vP-sPD^2)*y^2+((2*sDd*sPD-2*sPd*vD)*x-2*sDd*vP+2*sPD*sPd)*y+(vD*vd-sDd^2)*x^2+(2*sDd*sPd-2*sPD*vd)*x+vP*vd-sPd^2)
 end
 
