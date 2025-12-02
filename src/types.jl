@@ -97,4 +97,15 @@ mutable struct Cruncher
     t::Vector{Float64}
     T::Vector{Float64}
 end
-export Cruncher
+
+mutable struct Averager
+    Phat::Vector{Float64}
+    Dhat::Vector{Float64}
+    dhat::Vector{Float64}
+    vP::Float64
+    vD::Float64
+    vd::Float64
+    sPD::Float64
+    sPd::Float64
+    sDd::Float64
+end

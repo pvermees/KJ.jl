@@ -1,8 +1,6 @@
 function averat(run::Vector{Sample},
                 fit::KJfit,
-                method::KJmethod;
-                physics::Bool=true,
-                numerical::Bool=true)
+                method::KJmethod)
     P, D, d = getChannels(method)
     xlab = P * "/" * D
     ylab = d * "/" * D
@@ -11,96 +9,43 @@ function averat(run::Vector{Sample},
     out = DataFrame(hcat(fill("",ns),zeros(ns,5)),column_names)
     for i in 1:ns
         samp = run[i]
+        averager = Averager(samp,method,fit)
         out[i,:name] = samp.sname
-        a = atomic(samp,method,fit)
-        out[i,2:end] = averat(a.P,a.D,a.d;
-                              physics=physics,
-                              numerical=numerical)
+        out[i,2:end] = averat(averager)
     end
     return out
 end
-function averat(Phat::AbstractVector,
-                Dhat::AbstractVector,
-                dhat::AbstractVector;
-                physics::Bool=true,
-                numerical::Bool=true)
-    init = [sum(Phat)/sum(Dhat),sum(dhat)/sum(Dhat)]
-    if physics
-        vP = var_timeseries(Phat)
-        vD = var_timeseries(Dhat)
-        vd = var_timeseries(dhat)
-        objective = (par) -> SSaverat(par[1],par[2],
-                                      Phat,Dhat,dhat,
-                                      vP,vD,vd)
-        fit = Optim.optimize(objective,init)
-        x, y = Optim.minimizer(fit)
-        if numerical
-            H = ForwardDiff.hessian(objective,[x,y])
-            out = hessian2xyerr(H,[x,y])
-        else # slower
-            E = covmat_averat(x,y,Phat,Dhat,dhat,vP,vD,vd)
-            out = [x sqrt(E[1,1]) y sqrt(E[2,2]) E[1,2]/sqrt(E[1,1]*E[2,2])]
-        end
-    else
-        n = length(Phat)
-        E = n*Statistics.cov([Phat Dhat dhat], dims=1)
-        J = [1/sum(Dhat) -sum(Phat)/sum(Dhat)^2 0;
-             0 -sum(dhat)/sum(Dhat)^2 1/sum(Dhat)]
-        covmat = J * E * transpose(J)
-        sx = sqrt(covmat[1,1])
-        sy = sqrt(covmat[2,2])
-        rho = covmat[1,2]/sqrt(sx*sy)
-        out = [init[1] sx init[2] sy rho]
-    end
+function averat(a::Averager)
+    init = [sum(a.Phat)/sum(a.Dhat),sum(a.dhat)/sum(a.Dhat)]
+    objective = (par) -> LLaverat(par[1],par[2],a)
+    fit = Optim.optimize(objective,init)
+    x, y = Optim.minimizer(fit)
+    H = ForwardDiff.hessian(objective,[x,y])
+    out = hessian2xyerr(H,[x,y])
     return out
 end
 export averat
 
-function SSaverat(x::Real,
+function LLaverat(x::Real,
                   y::Real,
-                  Phat::AbstractVector,
-                  Dhat::AbstractVector,
-                  dhat::AbstractVector,
-                  vP::AbstractVector,
-                  vD::AbstractVector,
-                  vd::AbstractVector)
-    D = averatD(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    return sum(@. (D*y-dhat)^2/vd+(D*x-Phat)^2/vP+(D-Dhat)^2/vD )/2
+                  a::Averager)
+    D = averatD(x,y,a)
+    SS = @. (D*y-dhat)*(((vD*vP-sPD^2)*(D*y-dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((sDd*sPD-sPd*vD)*(D*x-Phat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((D-Dhat)*(sPD*sPd-sDd*vP))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(D-Dhat)*(((sPD*sPd-sDd*vP)*(D*y-dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((sDd*sPd-sPD*vd)*(D*x-Phat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((D-Dhat)*(vP*vd-sPd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(D*x-Phat)*(((sDd*sPD-sPd*vD)*(D*y-dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((vD*vd-sDd^2)*(D*x-Phat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((D-Dhat)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))
+    return sum(@. SS/2)
 end
 
-# block matrix inversion of the Hessian matrix
-function covmat_averat(x::Real,
-                       y::Real,
-                       Phat::AbstractVector,
-                       Dhat::AbstractVector,
-                       dhat::AbstractVector,
-                       vP::AbstractVector,
-                       vD::AbstractVector,
-                       vd::AbstractVector)
-    D = averatD(x,y,Phat,Dhat,dhat,vP,vD,vd)
-    O11 = sum(@. D^2/vP)
-    O12 = O21 = 0.0
-    O22 = sum(@. D^2/vd)
-    O13 = @. (D*x-Phat)/vP+(D*x)/vP
-    O23 = @. (D*y-dhat)/vd+(D*y)/vd
-    O31 = @. ((2*(D*x-Phat))/vP+(2*D*x)/vP)/2
-    O32 = @. ((2*(D*y-dhat))/vd+(2*D*y)/vd)/2
-    O33 = @. ((2*y^2)/vd+(2*x^2)/vP+2/vD)/2
-    H11 = [ [O11 O12]
-            [O21 O22] ]
-    H12 = [ O13' ; O23' ]
-    H21 = [ O31 O32 ]
-    H22 = diagm( O33 )
-    return inv( H11 - H12 * inv(H22) * H21 )
+function averatD(x::Real,
+                 y::Real,
+                 a::Averager)
+    Phat,Dhat,dhat,vP,vD,vd,PD,Pd,Dd = unpack(a)
+    return @. (((dhat*vD-Dhat*sDd)*vP-Phat*sPd*vD+Dhat*sPD*sPd-dhat*sPD^2+Phat*sDd*sPD)*y+((Phat*vD-Dhat*sPD)*vd-dhat*sPd*vD+Dhat*sDd*sPd+dhat*sDd*sPD-Phat*sDd^2)*x+(Dhat*vP-Phat*sPD)*vd-dhat*sDd*vP-Dhat*sPd^2+(dhat*sPD+Phat*sDd)*sPd)/((vD*vP-sPD^2)*y^2+((2*sDd*sPD-2*sPd*vD)*x-2*sDd*vP+2*sPD*sPd)*y+(vD*vd-sDd^2)*x^2+(2*sDd*sPd-2*sPD*vd)*x+vP*vd-sPd^2)
 end
 
-function averatD(x,
-                 y,
-                 Phat::AbstractVector,
-                 Dhat::AbstractVector,
-                 dhat::AbstractVector,
-                 vP::AbstractVector,
-                 vD::AbstractVector,
-                 vd::AbstractVector)
-    return @. (dhat*vD*vP*y+Phat*vD*vd*x+Dhat*vP*vd)/(vD*vP*y^2+vD*vd*x^2+vP*vd)
+function Averager(samp::Sample,
+                  method::Gmethod,
+                  fit::Gfit)
+    a = atomic(samp,method,fit)
+    mat = hcat(a.P,a.D,a.d)
+    E = df2cov(mat)
+    return Averager(a.P,a.D,a.d,E[1,1],E[2,2],E[3,3],E[1,2],E[1,3],E[2,3])
 end
