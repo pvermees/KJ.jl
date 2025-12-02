@@ -336,7 +336,7 @@ end
 
 function averatest(option="Lu-Hf",verbose=false)
     myrun, method, fit = processtest(option;show=false)
-    ratios = averat(myrun,fit,method)
+    ratios = averat(myrun,method,fit)
     if verbose println(ratios) end
     return ratios, method
 end
@@ -452,8 +452,8 @@ function map_dating_test()
 end
 
 function map_fail_test()
-    myrun, method, channels, blk, fit = processtest()
-    P,D,d,x,y = atomic(myrun[2],channels,blk,fit;add_xy=true)
+    myrun, method, fit = processtest()
+    P, D, d, x, y = atomic(myrun[2],method,fit)
     df = DataFrame(P=P,D=D,d=d,x=x,y=y)
     p = plotMap(df,"P")
     @test display(p) != NaN
@@ -464,27 +464,21 @@ end
 
 function glass_only_test()
     myrun = load("data/U-Pb",format="Agilent",head2name=false)
-    method = "U-Pb"
-    glass = standards = Dict("NIST610" => "610",
-                             "NIST612" => "612")
-    channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-    blank, pars = process!(myrun,"U-Pb",channels,standards,glass;
-                           nblank=2,ndrift=1,ndown=1)
-    export2IsoplotR(myrun,method,channels,blank,pars;
+    method = Gmethod("U-Pb")
+    standards = Dict("NIST610" => "610",
+                     "NIST612" => "612")
+    fit = process!(myrun,method,standards)
+    export2IsoplotR(myrun,method,fit;
                     fname="output/UPb_with_glass.json")
-    anchors = getAnchors(method,standards,glass)
-    p = KJ.plot(myrun[37],channels,blank,pars,anchors;
+    p = KJ.plot(myrun[9],method,fit;
                 transformation="log",den="Pb206")
     display(p)
 end
 
 function synthetictest(truefit;kw...)
-    method = "Lu-Hf"
-    channels = Dict("d"=>"Hf178 -> 260",
-                    "D"=>"Hf176 -> 258",
-                    "P"=>"Lu175 -> 175")
+    channels = (P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260")
+    method = Gmethod("Lu-Hf", channels=channels)
     standards = Dict("BP_gt" => "BP")
-    glass = Dict("NIST612" => "NIST612")
     myrun, channels = synthetic(;
                                 truefit=truefit,
                                 lambda=1.867e-5,
@@ -495,19 +489,17 @@ function synthetictest(truefit;kw...)
                                 y0_glass=3.544842,
                                 channels=channels,
                                 kw...)
-    return method, channels, standards, glass, myrun
+    return myrun, method, standards
 end
 
 function SStest()
-    truefit = (drift=[0.0],down=[0.0],mfrac=0.0,
-               PAcutoff=nothing,adrift=[0.0])
+    truefit = (drift=[0.0],down=[0.0],PAcutoff=nothing,adrift=[0.0])
     x0_std = 1.0
     y0_std = 1.0
     D_blank = 1.0
     down = truefit.down
     drift = truefit.drift
-    mfrac = truefit.mfrac
-    method, channels, standards, glass, myrun = synthetictest(truefit)
+    myrun, method, standards = synthetictest(truefit)
     blk, fit = process!(myrun,method,channels,standards,glass;
                         nblank=2,ndrift=length(drift),
                         ndown=length(down),verbose=false)
@@ -577,40 +569,40 @@ end
 
 Plots.closeall()
 
-# @testset "load" begin loadtest(;verbose=true) end
-# @testset "plot raw data" begin plottest(2) end
-# @testset "set selection window" begin windowtest() end
-# @testset "set method and blanks" begin blanktest() end
-# @testset "moving median test" begin mmediantest() end
-# @testset "outlier detection" begin outliertest_synthetic() end
-# @testset "outlier detection" begin outliertest_sample() end
-# @testset "assign standards" begin standardtest(true) end
-# @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
-# @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
-# @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
-# @testset "predict drift" begin driftest() end
-# @testset "predict down" begin downtest() end#
-# @testset "Lu-Hf" begin processtest("Lu-Hf") end
-# @testset "Rb-Sr" begin processtest("Rb-Sr") end
-# @testset "K-Ca" begin processtest("K-Ca") end
-# @testset "U-Pb" begin processtest("U-Pb") end
-# @testset "hist" begin histest() end
-# @testset "PA test" begin PAtest() end
-# @testset "atomic test" begin atomictest("Rb-Sr") end
-# @testset "averat test" begin averatest("K-Ca") end
+@testset "load" begin loadtest(;verbose=true) end
+@testset "plot raw data" begin plottest(2) end
+@testset "set selection window" begin windowtest() end
+@testset "set method and blanks" begin blanktest() end
+@testset "moving median test" begin mmediantest() end
+@testset "outlier detection" begin outliertest_synthetic() end
+@testset "outlier detection" begin outliertest_sample() end
+@testset "assign standards" begin standardtest(true) end
+@testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
+@testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
+@testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
+@testset "predict drift" begin driftest() end
+@testset "predict down" begin downtest() end#
+@testset "Lu-Hf" begin processtest("Lu-Hf") end
+@testset "Rb-Sr" begin processtest("Rb-Sr") end
+@testset "K-Ca" begin processtest("K-Ca") end
+@testset "U-Pb" begin processtest("U-Pb") end
+@testset "hist" begin histest() end
+@testset "PA test" begin PAtest() end
+@testset "atomic test" begin atomictest("Rb-Sr") end
+@testset "averat test" begin averatest("K-Ca") end
 @testset "export" begin exporttest() end
-# @testset "iCap" begin iCaptest() end
-# @testset "carbonate" begin carbonatetest() end
-# @testset "timestamp" begin timestamptest() end
-# @testset "stoichiometry" begin mineraltest() end
-# @testset "concentration" begin concentrationtest() end
-# @testset "Lu-Hf internochron" begin internochrontest() end
-# @testset "UPb internochron" begin internochronUPbtest() end
-# @testset "concentration map" begin maptest() end
-# @testset "isotope ratio map" begin map_dating_test() end
-# @testset "map fail test" begin map_fail_test() end
-# @testset "glass as age standard test" begin glass_only_test() end
-# @testset "extension test" begin extensiontest() end
+@testset "iCap" begin iCaptest() end
+@testset "carbonate" begin carbonatetest() end
+@testset "timestamp" begin timestamptest() end
+@testset "stoichiometry" begin mineraltest() end
+@testset "concentration" begin concentrationtest() end
+@testset "Lu-Hf internochron" begin internochrontest() end
+@testset "UPb internochron" begin internochronUPbtest() end
+@testset "concentration map" begin maptest() end
+@testset "isotope ratio map" begin map_dating_test() end
+@testset "map fail test" begin map_fail_test() end
+@testset "glass as age standard test" begin glass_only_test() end
+@testset "extension test" begin extensiontest() end
 # @testset "synthetic data" begin SStest() end
 # @testset "accuracy test 1" begin accuracytest() end
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
