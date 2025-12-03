@@ -60,10 +60,7 @@ function random_sample(i::Int,
     return Sample(sname,dtime,dat,t0,bwin,swin,group)
 end
 
-function synthetic(;
-                   truefit::NamedTuple=(drift=[0.0],
-                                        down=[0.0],
-                                        mfrac=0.0),
+function synthetic(;truefit::NamedTuple=(drift=[0.0],down=[0.0],mfrac=0.0),
                    lambda::T,
                    t_std::T,
                    y0_std::T,
