@@ -475,7 +475,7 @@ function glass_only_test()
     display(p)
 end
 
-function synthetictest(;drift=[0.0],down=[0.0],kw...)
+function synthetictest(;drift=[0.0],down=[0.0,0.0],kw...)
     method = getmethod("Lu-Hf")
     standards = Dict("BP_gt" => "BP")
     setStandards!(method,standards)
@@ -498,48 +498,48 @@ function SS4test(run::Vector{Sample},
     a = first(values(method.anchors))
     for samp in run
         c = Cruncher(samp,method,fit)
-        ft, FT = ft_FT(c,method,fit)
+        ft = polyFac(fit.drift,c.t)
+        FT = polyFac(fit.down,c.T)
         out += SS(a,c,ft,FT)
     end
     return out
 end
 
 function SStest()
-    myrun, method, truefit = synthetictest(;drift=[0.0],down=[0.0])
+    myrun, method, truefit = synthetictest(;drift=[0.0],down=[0.0,0.0])
     nstep = 20
-    ll = fill(0.0,nstep)
-    fit = deepcopy(truefit)
-    dd = range(start=fit.drift[1]-1.0,stop=fit.drift[1]+1.0,length=nstep)
+    driftss = fill(0.0,nstep)
+    driftfit = deepcopy(truefit)
+    dd = range(start=truefit.drift[1]-1.0,stop=truefit.drift[1]+1.0,length=nstep)
     for i in eachindex(dd)
-        fit.drift[1] = dd[i]
-        ll[i] = SS4test(myrun,method,fit)
+        driftfit.drift[1] = dd[i]
+        driftss[i] = SS4test(myrun,method,driftfit)
     end
-    p = Plots.plot(dd,ss,seriestype=:line,label="drift")
-    dwn = range(start=fit.down[1]-1.0,stop=fit.down[1]+1.0,length=nstep)
-    fit = deepcopy(truefit)
+    p = Plots.plot(dd,driftss,seriestype=:line,label="drift")
+    dwn = range(start=truefit.down[2]-1.0,stop=truefit.down[2]+1.0,length=nstep)
+    downss = fill(0.0,nstep)
+    downfit = deepcopy(truefit)
     for i in eachindex(dwn)
-        fit.down[1] = dwn[i]
-        ll[i] = SS4test(fit,myrun,method,standards,blk,channels)
+        downfit.down[2] = dwn[i]
+        downss[i] = SS4test(myrun,method,downfit)
     end
-    Plots.plot!(p,dwn,ss,seriestype=:line,linecolor=:red,label="down")
+    Plots.plot!(p,dwn,downss,seriestype=:line,linecolor=:red,label="down")
     display(p)
 end
 
-function accuracytest(;drift=[0.0],down=[0.0],show=true,kw...)
-    myrun, method = synthetictest(;drift=drift,down=down,kw...)
-    blk, fit = process!(myrun,method,channels,standards,glass;
-                        nblank=2,ndrift=1,ndown=1,verbose=false)
-    SS_solution = SS(fit,myrun,method,standards,blk,channels)
-    SS_truth = SS(truefit,myrun,method,standards,blk,channels)
+function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
+    myrun, method, truefit = synthetictest(;drift=drift,down=down,kw...)
+    fit = process!(myrun,method)
+    SS_solution = SS4test(myrun,method,fit)
+    SS_truth = SS4test(myrun,method,truefit)
     @test SS_solution < SS_truth
     if show
         den = nothing # "Hf176 -> 258" #
-        anchors = getAnchors(method,standards,glass)
-        p1 = KJ.plot(myrun[1],channels,blk,fit,anchors;
+        p1 = KJ.plot(myrun[1],method,fit;
                      transformation="sqrt",den=den)
-        p2 = KJ.plot(myrun[3],channels,blk,fit,anchors;
+        p2 = KJ.plot(myrun[3],method,fit;
                      transformation="sqrt",den=den)
-        p3 = KJ.plot(myrun[4],channels,blk,fit,anchors;
+        p3 = KJ.plot(myrun[4],method,fit;
                      transformation="sqrt",den=den)
         p = Plots.plot(p1,p2,p3,layout=(1,3))
         @test display(p) != NaN
@@ -604,8 +604,8 @@ Plots.closeall()
 # @testset "map fail test" begin map_fail_test() end
 # @testset "glass as age standard test" begin glass_only_test() end
 # @testset "extension test" begin extensiontest() end
-@testset "synthetic data" begin SStest() end
-# @testset "accuracy test 1" begin accuracytest() end
+# @testset "synthetic data" begin SStest() end
+@testset "accuracy test 1" begin accuracytest() end
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 # @testset "accuracy test 3" begin accuracytest(mfrac=2.0) end
 # @testset "accuracy test 4" begin accuracytest(down=[0.0,0.5]) end

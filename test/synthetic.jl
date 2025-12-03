@@ -1,6 +1,5 @@
-function random_sample(method::Gmethod;
-                       drift::AbstractVector=[0.0],
-                       down::AbstractVector=[0.0],
+function random_sample(method::Gmethod,
+                       fit::Gfit;
                        i::Int,
                        n::Int,
                        nblk::Int,
@@ -24,9 +23,9 @@ function random_sample(method::Gmethod;
     Random.seed!(1)
     t = range((i-1)/n,i/n,length=nblk+nsig)
     T = (spot_time .- t0)./60
-    ft = polyFac(drift,t)
-    FT = polyFac(down,T)
-    bt = polyVal(blank,t)
+    ft = polyFac(fit.drift,t)
+    FT = polyFac(fit.down,T)
+    bt = polyVal(fit.blank,t)
     for col in eachcol(bt)
         col .+= (sqrt(Distributions.median(col)) .* randn(nsig+nblk))
     end
@@ -36,9 +35,10 @@ function random_sample(method::Gmethod;
     isig = nblk.+(1:nsig)
     P = x.*D
     d = y.*D
-    Dm = bt[:,"D"]
-    Pm = bt[:,"P"]
-    dm = bt[:,"d"]
+    ch = getChannels(method;as_tuple=true)
+    Pm = bt[:,ch.P]
+    Dm = bt[:,ch.D]
+    dm = bt[:,ch.d]
     Dm[isig] .+= D
     Pm[isig] .+= P.*ft[isig].*FT[isig]
     dm[isig] .+= d
@@ -60,7 +60,7 @@ end
 
 function synthetic!(method::Gmethod;
                     drift::AbstractVector=[0.0],
-                    down::AbstractVector=[0.0],
+                    down::AbstractVector=[0.0,0.0],
                     lambda::T,
                     t_std::T,
                     t_smp::T,

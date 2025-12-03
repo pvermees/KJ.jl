@@ -82,7 +82,7 @@ end
 """
 polyFac(p::AbstractVector,t::AbstractVector)
 
-Returns the sum od p[i].*t.^(i-1) for all values of p
+Returns the sum of p[i].*t.^(i-1) for all values of p
 """
 function polyFac(p::AbstractVector,
                  t::AbstractVector)
