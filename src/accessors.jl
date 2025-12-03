@@ -32,8 +32,10 @@ end
 function getChannels(samp::Sample)
     return names(getSignals(samp))
 end
-function getChannels(method::Gmethod)
-    return collect(values(getChannelsDict(method)))
+function getChannels(method::Gmethod;
+                     as_tuple::Bool=false)
+    ch = channelAccessor(method.channels,"channel")
+    return ifelse(as_tuple,ch,collect(values(ch)))
 end
 function getChannels(method::Cmethod)
     return names(method.elements)
@@ -87,8 +89,7 @@ function setStandards!(run::Vector{Sample},
                        method::Gmethod;
                        standards::AbstractDict=Dict())
     setGroup!(run,standards)
-    refmats = collect(keys(standards))
-    method.anchors = getAnchors(method.name,refmats)
+    setStandards(method,standards)
 end
 function setStandards!(run::Vector{Sample},
                        method::Cmethod;
@@ -108,6 +109,15 @@ function setStandards!(run::Vector{Sample},
             append!(method.concentrations,conc)
         end
     end
+end
+function setStandards!(method::Gmethod,
+                       standards::AbstractDict)
+    refmats = collect(keys(standards))
+    setStandards!(method,refmats)
+end
+function setStandards!(method::Gmethod,
+                       refmats::AbstractVector)
+    method.anchors = getAnchors(method.name,refmats)
 end
 export setStandards!
 

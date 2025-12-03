@@ -51,7 +51,7 @@ end
 
 function x0y02t(x0y0::AbstractDataFrame,
                 method::Gmethod)
-    P, D, d = getChannelsDict(method)
+    P, D, d = getChannels(method;as_tuple=true)
     xlab = "t(" * D * "/" * P * ")" 
     ylab = "(" * d * "/" * D * ")₀"
     column_names = ["name", xlab, "s[" * xlab * "]", ylab, "s[" * ylab * "]", "ρ"]

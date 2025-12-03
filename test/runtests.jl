@@ -475,55 +475,58 @@ function glass_only_test()
     display(p)
 end
 
-function synthetictest(truefit;kw...)
-    channels = (P="Lu175 -> 175", D="Hf176 -> 258", d="Hf178 -> 260")
-    method = Gmethod("Lu-Hf"; channels = channels)
+function synthetictest(;drift=[0.0],down=[0.0],kw...)
+    method = getmethod("Lu-Hf")
     standards = Dict("BP_gt" => "BP")
-    myrun, channels = synthetic(;
-                                truefit=truefit,
-                                lambda=1.867e-5,
-                                t_std=1745.0,
-                                y0_std=3.55,
-                                t_smp=1029.7,
-                                y0_smp=3.55,
-                                y0_glass=3.544842,
-                                channels=channels,
-                                kw...)
-    return myrun, method, standards
+    setStandards!(method,standards)
+    myrun, fit = synthetic!(method;
+                            drift=drift,
+                            down=down,
+                            lambda=1.867e-5,
+                            t_std=1745.0,
+                            t_smp=1029.7,
+                            y0_smp=3.55,
+                            y0_glass=3.544842,
+                            kw...)
+    return myrun, method, fit
 end
 
-function LL4test(run::Vector{Sample},
+function SS4test(run::Vector{Sample},
                  method::Gmethod,
-                 fit::NamedTuple)
-    
+                 fit::Gfit)
+    out = 0.0
+    a = first(values(method.anchors))
+    for samp in run
+        c = Cruncher(samp,method,fit)
+        ft, FT = ft_FT(c,method,fit)
+        out += SS(a,c,ft,FT)
+    end
+    return out
 end
 
-function LLtest()
-    truefit = (drift=[0.0],down=[0.0],mfrac=0.0)
-    myrun, method, standards = synthetictest(truefit)
-    fit = process!(myrun,method,standards)
+function SStest()
+    myrun, method, truefit = synthetictest(;drift=[0.0],down=[0.0])
     nstep = 20
     ll = fill(0.0,nstep)
     fit = deepcopy(truefit)
     dd = range(start=fit.drift[1]-1.0,stop=fit.drift[1]+1.0,length=nstep)
     for i in eachindex(dd)
         fit.drift[1] = dd[i]
-        ll[i] = LL4test(myrun,method,fit)
+        ll[i] = SS4test(myrun,method,fit)
     end
     p = Plots.plot(dd,ss,seriestype=:line,label="drift")
     dwn = range(start=fit.down[1]-1.0,stop=fit.down[1]+1.0,length=nstep)
     fit = deepcopy(truefit)
     for i in eachindex(dwn)
         fit.down[1] = dwn[i]
-        ll[i] = LL4test(fit,myrun,method,standards,blk,channels)
+        ll[i] = SS4test(fit,myrun,method,standards,blk,channels)
     end
     Plots.plot!(p,dwn,ss,seriestype=:line,linecolor=:red,label="down")
     display(p)
 end
 
-function accuracytest(;drift=[0.0],down=[0.0],mfrac=0.0,show=true,kw...)
-    truefit=(drift=drift,down=down,mfrac=mfrac,PAcutoff=nothing,adrift=drift)
-    method, channels, standards, glass, myrun = synthetictest(truefit,kw...)
+function accuracytest(;drift=[0.0],down=[0.0],show=true,kw...)
+    myrun, method = synthetictest(;drift=drift,down=down,kw...)
     blk, fit = process!(myrun,method,channels,standards,glass;
                         nblank=2,ndrift=1,ndown=1,verbose=false)
     SS_solution = SS(fit,myrun,method,standards,blk,channels)

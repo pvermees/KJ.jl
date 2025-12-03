@@ -182,7 +182,7 @@ function Cruncher(samp::Sample,
 
     dat = swinData(samp)
     
-    ch = getChannelsDict(method)
+    ch = getChannels(method;as_tuple=true)
     pm = dat[:,ch.P]
     Dom = dat[:,ch.D]
     bom = dat[:,ch.d]
@@ -216,3 +216,4 @@ function Cruncher(samp::Sample,
     return Cruncher(pmb,Domb,bomb,bpt,bDot,bbot,vP,vD,vd,sPD,sPd,sDd,bd,t,T)
     
 end
+export Cruncher
