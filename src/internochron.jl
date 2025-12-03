@@ -17,96 +17,36 @@ end
 function internochron(samp::Sample,
                       method::Gmethod,
                       fit::Gfit)
-    a = atomic(samp,method,fit)
-    vP = var_timeseries(a.P)
-    vD = var_timeseries(a.D)
-    vd = var_timeseries(a.d)
-    return internochron(a.P,a.D,a.d,vP,vD,vd)
-end
-
-function internochron(Phat::AbstractVector,
-                      Dhat::AbstractVector,
-                      dhat::AbstractVector,
-                      vP::AbstractVector,
-                      vD::AbstractVector,
-                      vd::AbstractVector)
-    init = init_internochron(Phat,Dhat,dhat)
-    objective = (par) -> SSinternochron(par[1],par[2],
-                                        Phat,Dhat,dhat,
-                                        vP,vD,vd)
+    a = Averager(samp,method,fit)
+    init = init_internochron(a)
+    objective = (par) -> LLinternochron(par[1],par[2],a)
     fit = Optim.optimize(objective,init)
     x0, y0 = Optim.minimizer(fit)
     H = ForwardDiff.hessian(objective,[x0,y0])
     out = hessian2xyerr(H,[x0,y0])
-    #E = covmat_internochron(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
     return out
 end
 export internochron
 
-function init_internochron(Phat::AbstractVector,
-                           Dhat::AbstractVector,
-                           dhat::AbstractVector)
-    minx = minimum(Phat./Dhat)
-    maxx = maximum(Phat./Dhat)
-    miny = minimum(dhat./Dhat)
-    maxy = maximum(dhat./Dhat)
+function init_internochron(a::Averager)
+    minx = minimum(a.Phat./a.Dhat)
+    maxx = maximum(a.Phat./a.Dhat)
+    miny = minimum(a.dhat./a.Dhat)
+    maxy = maximum(a.dhat./a.Dhat)
     slope = (maxy-miny)/(maxx-minx)
     y0i = maxy+slope*minx
     x0i = y0i/slope
     return [x0i,y0i]
 end
 
-function SSinternochron(x0::Real,
+function LLinternochron(x0::Real,
                         y0::Real,
-                        Phat::AbstractVector,
-                        Dhat::AbstractVector,
-                        dhat::AbstractVector,
-                        vP::AbstractVector,
-                        vD::AbstractVector,
-                        vd::AbstractVector)
-    P, D, d = internochronPDd(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
-    return sum(@. (P-Phat)^2/vP + (D-Dhat)^2/vd + (d-dhat)^2/vd )/2
-end
-
-function internochronPd(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
-    P = @. ((Phat*vD*x0^2+Dhat*vP*x0)*y0^2-dhat*vP*x0*y0+Phat*vd*x0^2)/((vD*x0^2+vP)*y0^2+vd*x0^2)
-    d = @. ((dhat*vD*x0^2+dhat*vP)*y0^2+(Dhat*vd*x0^2-Phat*vd*x0)*y0)/((vD*x0^2+vP)*y0^2+vd*x0^2)
-    return P, d
-end
-
-function internochronPDd(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
-    P, d = internochronPd(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
-    D = @. d/y0 + P/x0
-    return P, D, d
-end
-
-function covmat_internochron(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
-    P, D, d = internochronPDd(x0,y0,Phat,Dhat,dhat,vP,vD,vd)
-    H11 = sum(@. P^2/(vD*x0^4)-(2*P*((-d/y0)-P/x0+Dhat))/(vD*x0^3) )
-    H12 = sum(@. (P*d)/(vD*x0^2*y0^2) )
-    H13 = @. ((-d/y0)-P/x0+Dhat)/(vD*x0^2)-P/(vD*x0^3)
-    H14 = @. -P/(vD*x0^2*y0)
-    H21 = sum(@. (P*d)/(vD*x0^2*y0^2) )
-    H22 = sum(@. d^2/(vD*y0^4)-(2*d*((-d/y0)-P/x0+Dhat))/(vD*y0^3) )
-    H23 = @. -d/(vD*x0*y0^2)
-    H24 = @. ((-d/y0)-P/x0+Dhat)/(vD*y0^2)-d/(vD*y0^3)
-    H31 = @. ((2*((-d/y0)-P/x0+Dhat))/(vD*x0^2)-(2*P)/(vD*x0^3))/2
-    H32 = @. -d/(vD*x0*y0^2)
-    H33 = @. (2/(vD*x0^2)+2/vP)/2
-    H34 = @. 1/(vD*x0*y0)
-    H41 = @. -P/(vD*x0^2*y0)
-    H42 = @. ((2*((-d/y0)-P/x0+Dhat))/(vD*y0^2)-(2*d)/(vD*y0^3))/2
-    H43 = @. 1/(vD*x0*y0)
-    H44 = @. (2/(vD*y0^2)+2/vd)/2
-    O11 = [ [H11 H12]
-            [H21 H22] ]
-    O12 = [ [ H13' H14' ]
-            [ H23' H24' ] ]
-    O21 = [ [ H31 H32 ]
-            [ H41 H42 ] ]
-    O22 = [ [ diagm(H33) diagm(H34) ]
-            [ diagm(H43) diagm(H44) ] ]
-    return inv( O11 - O12 * inv(O22) * O21 )
+                        a::Averager)
+    Phat,Dhat,dhat,vP,vD,vd,sPD,sPd,sDd = unpack(a)
+    P = @. (((Phat*vD-Dhat*sPD)*x0^2+(Dhat*vP-Phat*sPD)*x0)*y0^2+((Dhat*sPd+dhat*sPD-2*Phat*sDd)*x0^2+(Phat*sPd-dhat*vP)*x0)*y0+(Phat*vd-dhat*sPd)*x0^2)/((vD*x0^2-2*sPD*x0+vP)*y0^2+(2*sPd*x0-2*sDd*x0^2)*y0+vd*x0^2)
+    d = @. (((dhat*vD-Dhat*sDd)*x0^2+(Dhat*sPd-2*dhat*sPD+Phat*sDd)*x0+dhat*vP-Phat*sPd)*y0^2+((Dhat*vd-dhat*sDd)*x0^2+(dhat*sPd-Phat*vd)*x0)*y0)/((vD*x0^2-2*sPD*x0+vP)*y0^2+(2*sPd*x0-2*sDd*x0^2)*y0+vd*x0^2)
+    SS = @. (-(d/y0)-P/x0+Dhat)*(((vP*vd-sPd^2)*(-(d/y0)-P/x0+Dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((Phat-P)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((dhat-d)*(sPD*sPd-sDd*vP))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(Phat-P)*(((sDd*sPd-sPD*vd)*(-(d/y0)-P/x0+Dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((Phat-P)*(vD*vd-sDd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((dhat-d)*(sDd*sPD-sPd*vD))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(dhat-d)*(((sPD*sPd-sDd*vP)*(-(d/y0)-P/x0+Dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((dhat-d)*(vD*vP-sPD^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((Phat-P)*(sDd*sPD-sPd*vD))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))
+    return sum(@. SS/2)
 end
 
 function x0y02t(x0y0::AbstractDataFrame,
