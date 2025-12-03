@@ -1,11 +1,11 @@
-function getAnchors(method::AbstractString,
-                    refmats::AbstractVector)
+function getAnchors(method::Gmethod)
     out = Dict()
-    for refmat in refmats
-        out[refmat] = getAnchor(method,refmat)
+    for refmat in keys(method.standards)
+        out[refmat] = getAnchor(method.name,refmat)
     end
     return out
 end
+export getAnchors
 
 function getAnchor(method::AbstractString,
                    refmat::AbstractString)

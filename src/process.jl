@@ -3,9 +3,9 @@ function process!(run::Vector{Sample},
                   standards::AbstractDict;
                   reject_outliers::Bool=true,
                   verbose::Bool=false)
-    setStandards!(run,method;standards=standards)
+    setStandards!(run,method,standards)
     if reject_outliers
-        ch = collect(values(getChannels(method)))
+        ch = getChannels(method)
         detect_outliers!(run;channels=ch)
     end
     fit = KJfit(method)

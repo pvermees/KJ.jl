@@ -79,7 +79,7 @@ function synthetic!(method::Gmethod;
     x0_std = 1/(exp(lambda*t_std)-1)
     x0_smp = 1/(exp(lambda*t_smp)-1)
     D_blank = 1.0
-    a = method.anchors
+    a = getAnchors(method)
     x0_std = a[first(keys(a))].x0
     y0_std = a[first(keys(a))].y0
     ch = getChannels(method;as_tuple=true)

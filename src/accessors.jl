@@ -41,7 +41,6 @@ function getChannels(method::Cmethod)
     return names(method.elements)
 end
 export getChannels
-
 """
 getSnames(run::Vector{Sample})
 
@@ -85,15 +84,23 @@ function getAttr(run::Vector{Sample},
     return out
 end
 
-function setStandards!(run::Vector{Sample},
-                       method::Gmethod;
-                       standards::AbstractDict=Dict())
-    setGroup!(run,standards)
-    setStandards(method,standards)
+function setStandards!(method::Gmethod,
+                       standards::AbstractDict)
+    method.standards = standards
 end
 function setStandards!(run::Vector{Sample},
-                       method::Cmethod;
-                       standards::AbstractDict=Dict())
+                       method::Gmethod)
+    setGroup!(run,method.standards)
+end
+function setStandards!(run::Vector{Sample},
+                       method::Gmethod,
+                       standards::AbstractDict)
+    setStandards!(method,standards)
+    setStandards!(run,method)
+end
+function setStandards!(run::Vector{Sample},
+                       method::Cmethod,
+                       standards::AbstractDict)
     setGroup!(run,standards)
     channels = getChannels(run)
     if nrow(method.elements) == 0
@@ -109,15 +116,6 @@ function setStandards!(run::Vector{Sample},
             append!(method.concentrations,conc)
         end
     end
-end
-function setStandards!(method::Gmethod,
-                       standards::AbstractDict)
-    refmats = collect(keys(standards))
-    setStandards!(method,refmats)
-end
-function setStandards!(method::Gmethod,
-                       refmats::AbstractVector)
-    method.anchors = getAnchors(method.name,refmats)
 end
 export setStandards!
 

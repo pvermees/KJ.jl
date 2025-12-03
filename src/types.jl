@@ -36,7 +36,7 @@ mutable struct Gmethod <: KJmethod
     ndrift::Int
     ndown::Int
     PAcutoff::Union{Nothing,Float64}
-    anchors::Dict
+    standards::Dict
 end
 export Gmethod
 

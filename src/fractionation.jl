@@ -5,7 +5,7 @@ function fractionation!(fit::Gfit,
 
     # extract the grouped data for the SS function from the run
     cruncher_groups = Dict()
-    for refmat in keys(method.anchors)
+    for refmat in keys(method.standards)
         anchor = getAnchor(method.name,refmat)
         selection = group2selection(run,refmat)
         ns = length(selection)

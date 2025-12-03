@@ -76,7 +76,7 @@ function predict(samp::Sample,
                  method::Gmethod,
                  fit::Gfit;
                  kw...)
-    if samp.group in collect(keys(method.anchors))
+    if samp.group in keys(method.standards)
         a = getAnchor(method.name,samp.group)
         c = Cruncher(samp,method,fit)
         ft, FT = ft_FT(c,method,fit)
