@@ -90,7 +90,7 @@ function predict(samp::Sample,
                  method::Cmethod,
                  fit::Cfit;
                  kw...)
-    if samp.group in method.refmats
+    if samp.group in keys(method.standards)
         internal = method.internal[1]
         dat = swinData(samp)
         bt = polyVal(fit.blank,dat.t)

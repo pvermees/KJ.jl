@@ -67,7 +67,7 @@ function fractionation!(fit::Cfit,
     num = fit.blank[1:1,:] .* 0.0
     den = copy(num)
     internal = method.internal[1]
-    for SRM in method.refmats
+    for SRM in keys(method.standards)
         selection = getIndicesInGroup(run,SRM)
         dats = [swinData(samp) for samp in run[selection]]
         for dat in dats

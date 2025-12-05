@@ -1,9 +1,8 @@
 function process!(run::Vector{Sample},
-                  method::KJmethod,
-                  standards::AbstractDict;
+                  method::KJmethod;
                   reject_outliers::Bool=true,
                   verbose::Bool=false)
-    setStandards!(run,method,standards)
+    setGroup!(run,method)
     if reject_outliers
         ch = getChannels(method)
         detect_outliers!(run;channels=ch)

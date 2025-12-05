@@ -84,41 +84,6 @@ function getAttr(run::Vector{Sample},
     return out
 end
 
-function setStandards!(method::Gmethod,
-                       standards::AbstractDict)
-    method.standards = standards
-end
-function setStandards!(run::Vector{Sample},
-                       method::Gmethod)
-    setGroup!(run,method.standards)
-end
-function setStandards!(run::Vector{Sample},
-                       method::Gmethod,
-                       standards::AbstractDict)
-    setStandards!(method,standards)
-    setStandards!(run,method)
-end
-function setStandards!(run::Vector{Sample},
-                       method::Cmethod,
-                       standards::AbstractDict)
-    setGroup!(run,standards)
-    channels = getChannels(run)
-    if nrow(method.elements) == 0
-        elements = channel2element.(channels)
-        method.elements = DataFrame(permutedims(elements), channels)
-    end
-    refmats = string.(keys(standards))
-    if sort(refmats) != sort(method.refmats)
-        method.refmats = refmats
-        method.concentrations = DataFrame()
-        for refmat in refmats
-            conc = elements2concs(method.elements,refmat)
-            append!(method.concentrations,conc)
-        end
-    end
-end
-export setStandards!
-
 function setGroup!(run::Vector{Sample},
                    selection::Vector{Int},
                    group::AbstractString)
@@ -153,6 +118,7 @@ function setGroup!(run::Vector{Sample},
         sample.group = group
     end
 end
+export setGroup!
 
 """
 geti0(signals::AbstractDataFrame)

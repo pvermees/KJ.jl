@@ -37,13 +37,14 @@ mutable struct Gmethod <: KJmethod
     ndown::Int
     PAcutoff::Union{Nothing,Float64}
     standards::Dict
+    anchors::Dict
 end
 export Gmethod
 
 mutable struct Cmethod <: KJmethod
     elements::DataFrame
-    refmats::Vector{String}
-    concentrations::DataFrame
+    standards::Dict
+    concentrations::Dict{String,DataFrame}
     internal::Tuple
     nblank::Int
 end

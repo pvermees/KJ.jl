@@ -111,17 +111,18 @@ end
 function standardtest(verbose=false)
     myrun = loadtest()
     standards = Dict("BP_gt" => "BP")
-    method = Gmethod("Lu-Hf")
-    setStandards!(myrun,method,standards)
+    method = Gmethod("Lu-Hf",standards)
+    setGroup!(myrun,method)
     if verbose
         summarise(myrun;verbose=true,n=5)
     end
     return myrun
 end
 
-function getmethod(name="Lu-Hf")
+function getmethod(name::AbstractString,
+                   standards::AbstractDict)
     if name == "U-Pb"
-        return Gmethod(name)
+        return Gmethod(name,standards)
     end
     ndrift = 2
     ndown = 1
@@ -139,12 +140,12 @@ function getmethod(name="Lu-Hf")
         ndrift = 1
         ndown = 0
     end
-    return Gmethod(name;ndrift=ndrift,ndown=ndown,proxies=p,channels=c)
+    return Gmethod(name,standards;
+                   ndrift=ndrift,ndown=ndown,proxies=p,channels=c)
 end
 
-function predictsettings(option="Lu-Hf")
+function predictsettings(option::AbstractString="Lu-Hf")
     dname = nothing
-    method = getmethod(option)
     standards = nothing
     drift = nothing
     down = nothing
@@ -165,18 +166,18 @@ function predictsettings(option="Lu-Hf")
         down = [0.0]
     end
     myrun = loadtest(;dname=dname)
-    setStandards!(myrun,method,standards)
-    PAcutoff=nothing            
-    adrift=drift
-    return myrun,method,drift,down,PAcutoff,adrift
+    method = getmethod(option,standards)
+    setGroup!(myrun,method)
+    method.PAcutoff = nothing
+    fit = Gfit(DataFrame(),drift,down,copy(drift))
+    return myrun, method, fit
 end
 
 function predictest(option="Lu-Hf";
                     snum=1,
                     transformation="log")
-    myrun, method, drift, down, PAcutoff, adrift = predictsettings(option)
-    blk = blanktest(;myrun=myrun)
-    fit = Gfit(blk,drift,down,adrift)
+    myrun, method, fit = predictsettings(option)
+    fit.blank = blanktest(;myrun=myrun)
     samp = myrun[snum]
     if samp.group == "sample"
         println("Not a standard")
@@ -227,7 +228,6 @@ end
 function processsettings(option="Lu-Hf")
     dname = joinpath("data",option)
     head2name = true
-    method = getmethod(option)
     standards = nothing
     snum = 1
     if option == "Lu-Hf"
@@ -244,16 +244,17 @@ function processsettings(option="Lu-Hf")
                          "91500_zr" => "91500")
         snum = 3
     end
-    return (dname, head2name, method, standards, snum)
+    method = getmethod(option,standards)
+    return (dname, head2name, method, snum)
 end
 
 function processtest(option="Lu-Hf";
                      show=true,
                      verbose=false,
                      transformation="log")
-    dname, head2name, method, standards, snum = processsettings(option)
+    dname, head2name, method, snum = processsettings(option)
     myrun = load(dname;format="Agilent",head2name=head2name)
-    fit = process!(myrun,method,standards;verbose=verbose)
+    fit = process!(myrun,method;verbose=verbose)
     if verbose
         println("drift=",fit.drift,", down=",fit.down)
     end
@@ -316,10 +317,10 @@ function histest(option="Lu-Hf";show=true)
 end
 
 function PAtest()
-    dname, head2name, method, standards, snum = processsettings("Lu-Hf")
+    dname, head2name, method, snum = processsettings("Lu-Hf")
     myrun = load(dname)
     method.PAcutoff = 1e7
-    fit = process!(myrun,method,standards)
+    fit = process!(myrun,method)
     return myrun, method, fit
 end
 
@@ -359,9 +360,9 @@ end
 
 function carbonatetest(verbose=false)
     myrun = load("data/carbonate",format="Agilent")
-    method = getmethod("U-Pb")
     standards = Dict("WC1_cc"=>"WC1")
-    fit = process!(myrun,method,standards)
+    method = getmethod("U-Pb",standards)
+    fit = process!(myrun,method)
     export2IsoplotR(myrun,method,fit;
                     prefix="Duff",
                     fname="output/Duff.json")
@@ -387,9 +388,10 @@ end
 
 function concentrationtest()
     myrun = load("data/Lu-Hf",format="Agilent")
-    method = Cmethod(;internal = ("Al27 -> 27",1.2e5))
-    glass = Dict("NIST612" => "NIST612p")
-    fit = process!(myrun,method,glass)
+    internal =  ("Al27 -> 27",1.2e5)
+    standards = Dict("NIST612" => "NIST612p")
+    method = Cmethod(myrun,standards,internal)
+    fit = process!(myrun,method)
     conc = concentrations(myrun,method,fit)
     p = KJ.plot(myrun[4],method,fit;
                 transformation="log",
@@ -410,9 +412,8 @@ end
 
 function internochronUPbtest(show=true)
     myrun = load("data/carbonate",format="Agilent")
-    method = Gmethod("U-Pb")
-    standards = Dict("WC1_cc"=>"WC1")
-    fit = process!(myrun,method,standards)
+    method = Gmethod("U-Pb",Dict("WC1_cc"=>"WC1"))
+    fit = process!(myrun,method)
     isochron = internochron(myrun,method,fit)
     CSV.write("output/isochronUPb.csv",isochron)
     if show
@@ -425,9 +426,10 @@ function maptest()
     myrun = load("data/timestamp/NHM_cropped.csv",
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
-    method = Cmethod(;internal=getInternal("zircon","Si29"))
-    glass = Dict("NIST612" => "NIST612")
-    fit = process!(myrun,method,glass)
+    method = Cmethod(myrun,
+                     Dict("NIST612" => "NIST612"),
+                     getInternal("zircon","Si29"))
+    fit = process!(myrun,method)
     conc = concentrations(myrun[10],method,fit)
     p = plotMap(conc,"ppm[U] from U238";
                 clims=(0,500),
@@ -440,9 +442,8 @@ function map_dating_test()
     myrun = load("data/timestamp/NHM_cropped.csv",
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
-    method = Gmethod("U-Pb")
-    standards = Dict("91500_zr"=>"91500")
-    fit = process!(myrun,method,standards)
+    method = Gmethod("U-Pb",Dict("91500_zr"=>"91500"))
+    fit = process!(myrun,method)
     a = atomic(myrun[10],method,fit;add_xy=true)
     df = DataFrame(a)
     p = plotMap(df,"D";clims=(0,1e4))
@@ -462,10 +463,10 @@ end
 
 function glass_only_test()
     myrun = load("data/U-Pb",format="Agilent",head2name=false)
-    method = Gmethod("U-Pb")
-    standards = Dict("NIST610" => "610",
-                     "NIST612" => "612")
-    fit = process!(myrun,method,standards)
+    method = Gmethod("U-Pb",
+                     Dict("NIST610" => "610",
+                          "NIST612" => "612"))
+    fit = process!(myrun,method)
     export2IsoplotR(myrun,method,fit;
                     fname="output/UPb_with_glass.json")
     p = KJ.plot(myrun[9],method,fit;
@@ -474,9 +475,7 @@ function glass_only_test()
 end
 
 function synthetictest(;drift=[0.0],down=[0.0,0.0],kw...)
-    method = getmethod("Lu-Hf")
-    standards = Dict("BP_gt" => "BP")
-    setStandards!(method,standards)
+    method = getmethod("Lu-Hf",Dict("BP_gt" => "BP"))
     myrun, fit = synthetic!(method;
                             drift=drift,
                             down=down,
@@ -493,8 +492,7 @@ function SS4test(run::Vector{Sample},
                  method::Gmethod,
                  fit::Gfit)
     out = 0.0
-    anchors = getAnchors(method)
-    a = first(values(anchors))
+    a = first(values(method.anchors))
     for samp in run
         c = Cruncher(samp,method,fit)
         ft = polyFac(fit.drift,c.t)
