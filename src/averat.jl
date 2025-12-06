@@ -21,10 +21,10 @@ function averat(samp::Sample,
     a = Averager(samp,method,fit)
     init = [sum(a.Phat)/sum(a.Dhat),sum(a.dhat)/sum(a.Dhat)]
     objective = (par) -> LLaverat(par[1],par[2],a)
-    fit = Optim.optimize(objective,init)
-    x, y = Optim.minimizer(fit)
-    H = ForwardDiff.hessian(objective,[x,y])
-    out = hessian2xyerr(H,[x,y])
+    optimum = Optim.optimize(objective,init)
+    xy = Optim.minimizer(optimum)
+    H = ForwardDiff.hessian(objective,xy)
+    out = hessian2xyerr(H,xy)
     return out
 end
 export averat

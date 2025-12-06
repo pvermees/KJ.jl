@@ -84,7 +84,9 @@ function synthetic!(method::Gmethod;
     ch = getChannels(method;as_tuple=true)
     b = D/1000.0
     blank = DataFrame(ch.P => [b], ch.D => [b], ch.d => [b])
-    fit = Gfit(blank,drift,down,drift)
+    covmat = zeros(length(drift)+length(down)-1,
+                   length(drift)+length(down)-1)
+    fit = Gfit(blank,drift,down,drift,covmat)
     run = [
         random_sample(method,fit;i=1,n=4,
                       nblk=nblk,nsig=nsig,sname="BP_1",

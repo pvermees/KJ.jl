@@ -1,6 +1,6 @@
 function atomic(samp::Sample,
-                method::KJmethod,
-                fit::KJfit;
+                method::Gmethod,
+                fit::Gfit;
                 add_xy::Bool=false)
     dat = swinData(samp;add_xy=add_xy)
     c = Cruncher(samp,method,fit)

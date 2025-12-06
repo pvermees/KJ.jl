@@ -55,10 +55,9 @@ function SS(par::AbstractVector,
             method::Gmethod,
             cruncher_groups::AbstractDict;
             verbose::Bool=false)
-
     fit = par2fit(par,method)
     out = 0.0
-    for (refmat,crunchers) in cruncher_groups
+    for crunchers in values(cruncher_groups)
         a = crunchers.anchor
         for c in crunchers.crunchers
             ft, FT = ft_FT(c,method,fit)
@@ -139,7 +138,6 @@ function predict(samp::Sample,
     if samp.group in _KJ["glass"].names
         dat = windowData(samp;signal=true)
         sig = getSignals(dat)
-        Xm = sig[:,Not(internal)]
         Sm = sig[:,internal]
         concs = elements2concs(elements,samp.group)
         R = collect((concs[:,Not(internal)]./concs[:,internal])[1,:])

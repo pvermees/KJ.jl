@@ -72,6 +72,7 @@ mutable struct Gfit <: KJfit
     drift::Vector{Float64}
     down::Vector{Float64}
     adrift::Vector{Float64}
+    covmat::Matrix
 end
 export Gfit
 

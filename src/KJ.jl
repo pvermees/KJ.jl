@@ -5,8 +5,9 @@ A Julia package to process LA-ICP-MS data
 """
 module KJ
 
-using Dates, DataFrames, Printf, Infiltrator, LinearAlgebra, ForwardDiff
-import Plots, Statistics, Distributions, Optim, CSV
+using Infiltrator, DataFrames, Dates, LinearAlgebra, Printf
+
+import Plots, Statistics, Distributions, Optim, CSV, ForwardDiff, FiniteDiff
 
 include("errors.jl")
 include("json.jl")

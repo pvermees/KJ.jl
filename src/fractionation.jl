@@ -30,28 +30,39 @@ function fractionation!(fit::Gfit,
                             verbose=verbose)
 
     # fit the model
-    out = Optim.optimize(objective,init)
+    optimum = Optim.optimize(objective,init)
     if verbose
         println("Drift and downhole fractionation correction:\n")
-        println(out)
+        println(optimum)
     else
-        if out.stopped_by.time_limit
+        if optimum.stopped_by.time_limit
             @warn "Reached the maximum number of iterations " *
                 "before achieving convergence. " *
                 "Reduce the order of the polynomials or fix " *
                 "the mass fractionation and try again."
         end
-        if hasproperty(out.stopped_by,:ls_failed) &&
-            out.stopped_by.ls_failed
+        if hasproperty(optimum.stopped_by,:ls_failed) &&
+            optimum.stopped_by.ls_failed
             @warn "Least squares algorithm did not converge."
         end
     end
 
     # update the fit
-    par = Optim.minimizer(out)
-    par2Gfit!(fit,par,method)
-
+    solution = Optim.minimizer(optimum)
+    par2Gfit!(fit,method,solution)
+    fractionation_error!(fit,objective,solution)
 end
+function fractionation_error!(fit::Gfit,
+                              objective::Function,
+                              solution::AbstractVector)
+    H = FiniteDiff.finite_difference_hessian(objective, solution)
+    if rank(H)==size(H,1)
+        fit.covmat = inv(H/2.0)
+    else
+        fit.covmat = pinv(H/2.0)
+    end
+end
+
 """
      Cs  sum(S_i X_i)
 [f = -- --------------]
@@ -83,15 +94,15 @@ end
 export fractionation!
 
 function par2Gfit!(fit::Gfit,
-                  par::AbstractVector,
-                  method::KJmethod)
+                   method::Gmethod,
+                   par::AbstractVector)
     fit.drift = par[1:method.ndrift]
     fit.down = vcat(0.0,par[method.ndrift+1:method.ndrift+method.ndown])
     fit.adrift = isnothing(method.PAcutoff) ? fit.drift : par[end-method.ndrift+1:end]
 end
 function par2fit(par::AbstractVector,
-                 method::KJmethod)
-    fit = KJfit(method)
-    par2Gfit!(fit,par,method)
+                 method::Gmethod)
+    fit = Gfit(method)
+    par2Gfit!(fit,method,par)
     return fit
 end

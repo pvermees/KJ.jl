@@ -169,7 +169,9 @@ function predictsettings(option::AbstractString="Lu-Hf")
     method = getmethod(option,standards)
     setGroup!(myrun,method)
     method.PAcutoff = nothing
-    fit = Gfit(DataFrame(),drift,down,copy(drift))
+    E = zeros(length(drift)+length(down),
+              length(drift)+length(down))
+    fit = Gfit(DataFrame(),drift,down,copy(drift),E)
     return myrun, method, fit
 end
 
@@ -207,7 +209,8 @@ function partest(parname,paroffsetfact)
         adjusted_fit = Gfit(fit.blank,      # blank
                             [drift,0.0],    # drift
                             [0.0,down],     # down
-                            [drift,0.0])    # adrift
+                            [drift,0.0],    # adrift
+                            zeros(2,2))     # covariance matrix
         plotFitted!(p,samp,method,adjusted_fit;
                     den=getChannels(method;as_tuple=true).D,
                     transformation="log",
@@ -529,10 +532,12 @@ end
 function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     myrun, method, truefit = synthetictest(;drift=drift,down=down,kw...)
     fit = process!(myrun,method)
-    SS_solution = SS4test(myrun,method,fit)
-    SS_truth = SS4test(myrun,method,truefit)
-    println("SS (truth) = ",SS_truth)
-    println("SS (solution) = ",SS_solution)
+    lldrift = fit.drift[1] - 5*sqrt(fit.covmat[1,1])
+    uldrift = fit.drift[1] + 5*sqrt(fit.covmat[1,1])
+    #@test uldrift > truefit.drift[1] && lldrift < truefit.drift[1]
+    lldown = fit.down[2] - 5*sqrt(fit.covmat[2,2])
+    uldown = fit.down[2] + 5*sqrt(fit.covmat[2,2])
+    #@test uldown > truefit.down[2] && lldown < truefit.down[2]
     if show
         den = nothing # "Hf176 -> 258" #
         p1 = KJ.plot(myrun[1],method,fit;
