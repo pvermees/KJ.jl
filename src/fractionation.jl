@@ -57,9 +57,9 @@ function fractionation_error!(fit::Gfit,
                               solution::AbstractVector)
     H = FiniteDiff.finite_difference_hessian(objective, solution)
     if rank(H)==size(H,1)
-        fit.covmat = inv(H/2.0)
+        fit.covmat = inv(H/2)
     else
-        fit.covmat = pinv(H/2.0)
+        fit.covmat = pinv(H/2)
     end
 end
 
