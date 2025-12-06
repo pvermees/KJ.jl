@@ -66,10 +66,10 @@ function synthetic!(method::Gmethod;
                     t_smp::T,
                     y0_smp::T,
                     y0_glass::T,
+                    D::T=1e4,
                     relerr_D::T=0.1,
                     relerr_P::T=0.1,
-                    relerr_d::T=0.1,
-                    ) where T <: Real
+                    relerr_d::T=0.1) where T <: Real
     nblk = 10
     nsig = 50
     spot_time = range(start=0.0,stop=60.0,length=nblk+nsig)
@@ -78,14 +78,12 @@ function synthetic!(method::Gmethod;
     swin = [(11,59)]
     x0_std = 1/(exp(lambda*t_std)-1)
     x0_smp = 1/(exp(lambda*t_smp)-1)
-    D_blank = 1.0
     a = method.anchors
     x0_std = a[first(keys(a))].x0
     y0_std = a[first(keys(a))].y0
     ch = getChannels(method;as_tuple=true)
-    blank = DataFrame(ch.P => [x0_std*D_blank*exp(drift[1])],
-                      ch.D => [D_blank],
-                      ch.d => [y0_std*D_blank])
+    b = D/1000.0
+    blank = DataFrame(ch.P => [b], ch.D => [b], ch.d => [b])
     fit = Gfit(blank,drift,down,drift)
     run = [
         random_sample(method,fit;i=1,n=4,
@@ -93,27 +91,27 @@ function synthetic!(method::Gmethod;
                       dtime=DateTime("2025-01-01T08:00:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
                       mu_p=0.5,sigma_p=0.1,x0=x0_std,y0=y0_std,
-                      D=1e4,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
+                      D=D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
                       group="BP_gt"),
         random_sample(method,fit;i=2,n=4,
                       nblk=nblk,nsig=nsig,sname="Hog_1",
                       dtime=DateTime("2025-01-01T08:01:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
                       mu_p=0.5,sigma_p=0.1,x0=x0_smp,y0=y0_smp,
-                      D=1e4,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d),
+                      D=D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d),
         random_sample(method,fit;i=3,n=4,
                       nblk=nblk,nsig=nsig,sname="NIST612_1",
                       dtime=DateTime("2025-01-01T08:02:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
                       mu_p=0.5,sigma_p=0.0,y0=2*y0_glass,
-                      D=1e4,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
+                      D=D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
                       group="NIST612"),
         random_sample(method,fit;i=4,n=4,
                       nblk=nblk,nsig=nsig,sname="BP_2",
                       dtime=DateTime("2025-01-01T08:03:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
                       mu_p=0.5,sigma_p=0.1,x0=x0_std,y0=y0_std,
-                      D=2e4,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
+                      D=2*D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
                       group="BP_gt")
     ]
     return run, fit
