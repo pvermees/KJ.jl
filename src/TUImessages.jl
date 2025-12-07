@@ -35,10 +35,41 @@ function TUIinternalMessage(ctrl::AbstractDict)
 end
 
 function TUIlistChannels(ctrl::AbstractDict)
+    msg = ""
     channels = getChannels(ctrl["run"])
     for i in eachindex(channels)
         msg *= string(i)*". "*channels[i]*"\n"
     end
+    return msg
+end
+
+function TUIlistIsotopes(ctrl::AbstractDict)
+    msg = ""
+    ions = getIons(ctrl["method"])
+    nuclidelist = ions2nuclidelist(ions)
+    for i in eachindex(nuclidelist)
+        msg *= string(i) * ". " * nuclidelist[i] * "\n"
+    end
+    return msg
+end
+
+function ions2nuclidelist(ions::NamedTuple)
+    out = []
+    all_elements = string.(keys(_KJ["nuclides"]))
+    for ion in ions
+        matching_elements = filter(x -> occursin(x, ion), all_elements)
+        for matching_element in matching_elements
+            all_isotopes = string.(_KJ["nuclides"][matching_element])
+            matching_isotopes = filter(x -> occursin(x, ion), all_isotopes)
+            if length(matching_isotopes) > 0
+                for isotope in all_isotopes
+                    nuclide = matching_element * isotope
+                    push!(out,nuclide)
+                end
+            end
+        end
+    end
+    return unique(out)
 end
 
 function TUImineralMessage(ctrl::AbstractDict)
@@ -65,6 +96,18 @@ function TUIcolumnMessage(ctrl::AbstractDict)
     "the following isotopes or their proxies:\n"
     P, D, d = getPDd(ctrl["method"].name)
     msg *= P *", "* D *", "* d *"\n"
+    msg *= "Specify your selection as a "*
+    "comma-separated list of numbers:"
+    return msg
+end
+
+function TUIsetProxiesMessage(ctrl::AbstractDict)
+    msg = "Choose from the following list of isotopes:\n"
+    msg *= TUIlistIsotopes(ctrl)
+    msg *= "and select those corresponding to "*
+    "the channels that you selected earlier:\n"
+    channels = getChannels(ctrl["method"];as_tuple=true)
+    msg *= channels.P *", "* channels.D *", "* channels.d *"\n"
     msg *= "Specify your selection as a "*
     "comma-separated list of numbers:"
     return msg

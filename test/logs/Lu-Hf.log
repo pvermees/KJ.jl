@@ -12,11 +12,5 @@ chooseStandard,2
 addStandardGroup,p
 addStandardsByPrefix,BP
 standards,x
-top,g
-glass,a
-chooseGlass,2
-addGlassGroup,p
-addGlassByPrefix,NIST612
-glass,x
 top,p
 top,x

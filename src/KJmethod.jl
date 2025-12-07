@@ -89,6 +89,38 @@ function setAnchors!(method::Gmethod)
     end
 end
 
+function channels2proxies!(method::Gmethod)
+    equivocal = false
+    all_elements = string.(keys(_KJ["nuclides"]))
+    for col in eachcol(method.channels)[2:end]
+        channel = col[3]
+        matching_elements = filter(x -> occursin(x, channel), all_elements)
+        if length(matching_elements)==1
+            equivocal |= get_proxy_isotopes!(col,matching_elements[1])
+        elseif length(matching_elements) > 1
+            for matching_element in matching_elements
+                equivocal |= get_proxy_isotopes!(col,matching_element)
+            end
+        else
+            equivocal = true
+        end
+    end
+    return equivocal
+end
+export channels2proxies!
+
+function get_proxy_isotopes!(col::AbstractVector,
+                             matching_element::AbstractString)
+    channel = col[3]
+    all_isotopes = string.(_KJ["nuclides"][matching_element])
+    matching_isotope = filter(x -> occursin(x, channel), all_isotopes)
+    equivocal = (length(matching_isotope) != 1)
+    if length(matching_isotope) > 0
+        col[2] = matching_element * matching_isotope[1]
+    end
+    return equivocal
+end
+
 function Cmethod(run::Vector{Sample},
                  standards::AbstractDict,
                  internal::Tuple;

@@ -551,6 +551,17 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     end
 end
 
+function channels2proxies_test()
+    method = getmethod("Lu-Hf",Dict())
+    proxies = getProxies(method)
+    setProxies!(method;P="foo",D="bar",d="foo")
+    equivocal = channels2proxies!(method)
+    @test proxies == getProxies(method)
+    setChannels!(method;d="Hf177 -> Hf178")
+    equivocal = channels2proxies!(method)
+    @test equivocal
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -613,7 +624,8 @@ Plots.closeall()
 @testset "accuracy test 1" begin accuracytest() end
 @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
-# @testset "TUI test" begin TUItest() end
+@testset "channels2proxy test" begin channels2proxies_test() end
+@testset "TUI test" begin TUItest() end
 @testset "dependency test" begin dependencytest() end
 
-#TUI()
+# TUI()

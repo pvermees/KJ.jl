@@ -136,7 +136,7 @@ end
 function TUImethod!(ctrl::AbstractDict,
                     response::AbstractString)
     if response=="c"
-        ctrl["method"] = Cmethod(ctrl["run"])
+        ctrl["method"] = Cmethod(ctrl["run"],Dict(),(nothing,nothing))
         return "internal"
     else
         i = parse(Int,response)
@@ -183,30 +183,47 @@ function TUIchooseMineral!(ctrl::AbstractDict,
     end
 end
 
-function TUIcolumns!(ctrl::AbstractDict,
-                     response::AbstractString)
+function TUIsetChannels!(ctrl::AbstractDict,
+                         response::AbstractString)
     labels = getChannels(ctrl["run"])
     selected = parse.(Int,split(response,","))
-    setProxies(ctrl["run"];
-               P=labels[selected[1]],
-               D=labels[selected[2]],
-               d=labels[selected[d]])
-    ctrl["priority"]["method"] = false
-    return "xx"
+    setChannels!(ctrl["method"];
+                 P=labels[selected[1]],
+                 D=labels[selected[2]],
+                 d=labels[selected[3]])
+    equivocal = channels2proxies!(ctrl["method"])
+    if equivocal
+        return "setProxies"
+    else
+        ctrl["priority"]["method"] = false
+        return "xx"
+    end
+end
+
+function TUIsetProxies!(ctrl::AbstractDict,
+                        response::AbstractString)
+    selection = parse.(Int,split(response,","))
+    ions = getIons(ctrl["method"])
+    nuclides = ions2nuclidelist(ions)
+    setProxies(ctrl["method"];
+               P=nuclides[selection[1]],
+               D=nuclides[selection[2]],
+               d=nuclides[selection[3]])
+    return "xxx"
 end
 
 function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)
     ctrl["cache"] = _KJ["refmat"][ctrl["method"]].names[i]
-    ctrl["method"].standards = nothing
     return "addStandardGroup"
 end
 
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
                                   response::AbstractString)
-    setGroup!(ctrl["run"],response,ctrl["cache"])
-    ctrl["standards"][ctrl["cache"]] = response
+    refmat = ctrl["cache"]
+    ctrl["method"].standards[refmat] = response
+    setGroup!(ctrl["run"],response,refmat)
     ctrl["priority"]["standards"] = false
     return "xxx"
 end

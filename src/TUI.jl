@@ -252,7 +252,15 @@ function init_KJtree()
         "columns" => (
             message = TUIcolumnMessage,
             help = nothing,
-            action = TUIcolumns!
+            action = TUIsetChannels!
+        ),
+        "setProxies" => (
+            message = TUIsetProxiesMessage,
+            help = "KJ is having trouble mapping the mass spectrometer " *
+            "channels to isotopic proxies. Please help it by identifying " *
+            "the isotopes measured by the different channels by listing " *
+            "them as a comma-separated list of numbers.",
+            action = TUIsetProxies!
         ),
         "mineral" => (
             message = TUImineralMessage,
