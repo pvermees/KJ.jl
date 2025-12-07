@@ -10,8 +10,8 @@ function random_sample(method::Gmethod,
                        t0::Real,
                        bwin::AbstractArray,
                        swin::AbstractArray,
-                       mu_p::Real=0.5,
-                       sigma_p::Real=0.2,
+                       mu::Real=0.5,
+                       sigma::Real=0.2,
                        x0::Real=1.0,
                        y0::Real=1.0,
                        y1::Real=0.0,
@@ -29,30 +29,34 @@ function random_sample(method::Gmethod,
     for col in eachcol(bt)
         col .+= (sqrt(Distributions.median(col)) .* randn(nsig+nblk))
     end
-    p = fill(mu_p + randn() * sigma_p, nsig)
-    x = p.*x0
+    px = fill(mu + randn() * sigma, nsig)
+    x = px.*x0
     y = @. y0 + (y1-y0)*x/x0
     isig = nblk.+(1:nsig)
     P = x.*D
     d = y.*D
+    ions = getIons(method)
+    proxies = getProxies(method)
+    bd = iratio(proxies.d,ions.d)
+    b = d.*bd
     ch = getChannels(method;as_tuple=true)
-    Pm = bt[:,ch.P]
-    Dm = bt[:,ch.D]
-    dm = bt[:,ch.d]
-    Dm[isig] .+= D
-    Pm[isig] .+= P.*ft[isig].*FT[isig]
-    dm[isig] .+= d
-    eD = Distributions.median(Dm[isig]).*relerr_D.*randn(nsig)
-    eP = Distributions.median(Pm[isig]).*relerr_P.*randn(nsig)
-    ed = Distributions.median(dm[isig]).*relerr_d.*randn(nsig)
-    Pm[isig] .+= eP
-    Dm[isig] .+= eD
-    dm[isig] .+= ed
+    pm = bt[:,ch.P]
+    Dom = bt[:,ch.D]
+    bom = bt[:,ch.d]
+    pm[isig] .+= P.*ft[isig].*FT[isig]
+    Dom[isig] .+= D
+    bom[isig] .+= b
+    ep = Distributions.median(pm[isig]).*relerr_P.*randn(nsig)
+    eDo = Distributions.median(Dom[isig]).*relerr_D.*randn(nsig)
+    ebo = Distributions.median(bom[isig]).*relerr_d.*randn(nsig)
+    pm[isig] .+= ep
+    Dom[isig] .+= eDo
+    bom[isig] .+= ebo
     channels = getChannels(method;as_tuple=true)
     dat = DataFrame("Time [sec]" => spot_time,
-                    channels.P => Pm,
-                    channels.D => Dm,
-                    channels.d => dm,
+                    channels.P => pm,
+                    channels.D => Dom,
+                    channels.d => bom,
                     "outlier" => falses(nblk+nsig),
                     "t" => t)
     return Sample(sname,dtime,dat,t0,bwin,swin,group)
@@ -92,28 +96,28 @@ function synthetic!(method::Gmethod;
                       nblk=nblk,nsig=nsig,sname="BP_1",
                       dtime=DateTime("2025-01-01T08:00:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
-                      mu_p=0.5,sigma_p=0.1,x0=x0_std,y0=y0_std,
+                      mu=0.5,sigma=0.1,x0=x0_std,y0=y0_std,
                       D=D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
                       group="BP_gt"),
         random_sample(method,fit;i=2,n=4,
                       nblk=nblk,nsig=nsig,sname="Hog_1",
                       dtime=DateTime("2025-01-01T08:01:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
-                      mu_p=0.5,sigma_p=0.1,x0=x0_smp,y0=y0_smp,
+                      mu=0.5,sigma=0.1,x0=x0_smp,y0=y0_smp,
                       D=D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d),
         random_sample(method,fit;i=3,n=4,
                       nblk=nblk,nsig=nsig,sname="NIST612_1",
                       dtime=DateTime("2025-01-01T08:02:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
-                      mu_p=0.5,sigma_p=0.0,y0=2*y0_glass,
+                      mu=0.5,sigma=0.0,y0=2*y0_glass,
                       D=D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
                       group="NIST612"),
         random_sample(method,fit;i=4,n=4,
                       nblk=nblk,nsig=nsig,sname="BP_2",
                       dtime=DateTime("2025-01-01T08:03:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
-                      mu_p=0.5,sigma_p=0.1,x0=x0_std,y0=y0_std,
-                      D=2*D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
+                      mu=0.5,sigma=0.1,x0=x0_std,y0=y0_std,
+                      D=D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
                       group="BP_gt")
     ]
     return run, fit

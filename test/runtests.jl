@@ -534,11 +534,11 @@ end
 function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     myrun, method, truefit = synthetictest(;drift=drift,down=down,kw...)
     fit = process!(myrun,method)
-    lldrift = fit.drift[1] - 5*sqrt(fit.covmat[1,1])
-    uldrift = fit.drift[1] + 5*sqrt(fit.covmat[1,1])
+    lldrift = fit.drift[1] - 3*sqrt(fit.covmat[1,1])
+    uldrift = fit.drift[1] + 3*sqrt(fit.covmat[1,1])
     @test uldrift > truefit.drift[1] && lldrift < truefit.drift[1]
-    lldown = fit.down[2] - 5*sqrt(fit.covmat[2,2])
-    uldown = fit.down[2] + 5*sqrt(fit.covmat[2,2])
+    lldown = fit.down[2] - 3*sqrt(fit.covmat[2,2])
+    uldown = fit.down[2] + 3*sqrt(fit.covmat[2,2])
     @test uldown > truefit.down[2] && lldown < truefit.down[2]
     if show
         den = nothing # "Hf176 -> 258" #
@@ -610,7 +610,7 @@ Plots.closeall()
 # @testset "glass as age standard test" begin glass_only_test() end
 # @testset "extension test" begin extensiontest() end
 @testset "synthetic data" begin SStest() end
-# @testset "accuracy test 1" begin accuracytest() end
+@testset "accuracy test 1" begin accuracytest() end
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 # @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 # @testset "TUI test" begin TUItest() end
