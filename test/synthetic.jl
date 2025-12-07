@@ -21,6 +21,9 @@ function random_sample(method::Gmethod,
                        relerr_d::Real=0.1,
                        group::String="sample")
     Random.seed!(1)
+    ch = getChannels(method;as_tuple=true)
+    ions = getIons(method)
+    proxies = getProxies(method)
     t = range((i-1)/n,i/n,length=nblk+nsig)
     T = (spot_time .- t0)./60
     ft = polyFac(fit.drift,t)
@@ -35,17 +38,12 @@ function random_sample(method::Gmethod,
     isig = nblk.+(1:nsig)
     P = x.*D
     d = y.*D
-    ions = getIons(method)
-    proxies = getProxies(method)
-    bd = iratio(proxies.d,ions.d)
-    b = d.*bd
-    ch = getChannels(method;as_tuple=true)
     pm = bt[:,ch.P]
     Dom = bt[:,ch.D]
     bom = bt[:,ch.d]
     pm[isig] .+= P.*ft[isig].*FT[isig]
     Dom[isig] .+= D
-    bom[isig] .+= b
+    bom[isig] .+= d*iratio(proxies.d,ions.d)
     ep = Distributions.median(pm[isig]).*relerr_P.*randn(nsig)
     eDo = Distributions.median(Dom[isig]).*relerr_D.*randn(nsig)
     ebo = Distributions.median(bom[isig]).*relerr_d.*randn(nsig)
@@ -85,12 +83,8 @@ function synthetic!(method::Gmethod;
     a = method.anchors
     x0_std = a[first(keys(a))].x0
     y0_std = a[first(keys(a))].y0
-    ch = getChannels(method;as_tuple=true)
-    b = D/1000.0
-    blank = DataFrame(ch.P => [b], ch.D => [b], ch.d => [b])
-    covmat = zeros(length(drift)+length(down)-1,
-                   length(drift)+length(down)-1)
-    fit = Gfit(blank,drift,down,drift,covmat)
+    fit = Gfit(method;drift=drift,down=down)
+    fit.blank[:,:] .= D./1000
     run = [
         random_sample(method,fit;i=1,n=4,
                       nblk=nblk,nsig=nsig,sname="BP_1",
@@ -117,7 +111,7 @@ function synthetic!(method::Gmethod;
                       dtime=DateTime("2025-01-01T08:03:00"),
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
                       mu=0.5,sigma=0.1,x0=x0_std,y0=y0_std,
-                      D=D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
+                      D=D*2,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
                       group="BP_gt")
     ]
     return run, fit
