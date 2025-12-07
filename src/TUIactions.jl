@@ -4,34 +4,29 @@ function TUIinit!()
 end
 function TUIinit()
     return Dict(
-        "priority" => Dict("load" => true, "method" => true,
-                           "standards" => true, "glass" => true,
+        "priority" => Dict("load" => true, 
+                           "method" => true,
+                           "standards" => true, 
+                           "glass" => false,
                            "process" => true),
         "history" => DataFrame(task=String[],action=String[]),
         "chain" => ["top"],
-        "run" => nothing,
-        "i" => 1,
-        "den" => nothing,
+        "template" => false,
         "multifile" => true,
         "head2name" => true,
-        "method" => "",
         "format" => "",
         "ICPpath" => "",
         "LApath" => "",
-        "channels" => nothing,
-        "standards" => Dict{String,Union{Nothing,String}}(),
-        "glass" => Dict{String,Union{Nothing,String}}(),
-        "internal" => nothing,
-        "options" => Dict("blank" => 2, "drift" => 1, "down" => 1),
-        "PAcutoff" => nothing,
-        "blank" => nothing,
-        "par" => nothing,
-        "cache" => nothing,
+        "run" => nothing,
+        "method" => nothing,
+        "fit" => nothing,
+        "i" => 1,
+        "den" => nothing,
         "transformation" => "sqrt",
         "mapcolumn" => 2,
         "clims" => nothing,
         "log" => false,
-        "template" => false
+        "cache" => nothing
     )
 end
 
@@ -78,9 +73,6 @@ function TUIloadICPdir!(ctrl::AbstractDict,
     ctrl["run"] = load(response;
                        format=ctrl["format"],
                        head2name=ctrl["head2name"])
-    if isnothing(ctrl["channels"])
-        ctrl["channels"] = getChannels(ctrl["run"])
-    end
     ctrl["priority"]["load"] = false
     ctrl["multifile"] = true
     ctrl["ICPpath"] = response
@@ -108,9 +100,6 @@ end
 function TUIloadICPLAdata!(ctrl::AbstractDict)
     ctrl["run"] = load(ctrl["ICPpath"],ctrl["LApath"];
                        format=ctrl["format"])
-    if isnothing(ctrl["channels"])
-        ctrl["channels"] = getChannels(ctrl["run"]) # reset
-    end
     ctrl["priority"]["load"] = false
     ctrl["head2name"] = true
     ctrl["multifile"] = false
@@ -147,11 +136,12 @@ end
 function TUImethod!(ctrl::AbstractDict,
                     response::AbstractString)
     if response=="c"
-        ctrl["method"] = "concentrations"
+        ctrl["method"] = Cmethod(ctrl["run"])
         return "internal"
     else
         i = parse(Int,response)
-        ctrl["method"] = _KJ["methods"].names[i]
+        methodname = _KJ["methods"].names[i]
+        ctrl["method"] = Gmethod(methodname,Dict())
         return "columns"
     end
 end
@@ -172,7 +162,7 @@ function TUIstoichiometry!(ctrl::AbstractDict,
                            response::AbstractString)
     channel = ctrl["cache"]
     concentration = parse(Float64,response)
-    ctrl["internal"] = (channel,concentration)
+    ctrl["method"].internal = (channel,concentration)
     ctrl["priority"]["method"] = false
     ctrl["priority"]["standards"] = false
     return "xxxx"
@@ -186,7 +176,7 @@ function TUIchooseMineral!(ctrl::AbstractDict,
         i = parse(Int,response)
         mineral = _KJ["stoichiometry"].names[i]
         channel = ctrl["cache"]
-        ctrl["internal"] = getInternal(mineral,channel)
+        ctrl["method"].internal = getInternal(mineral,channel)
         ctrl["priority"]["method"] = false
         ctrl["priority"]["standards"] = false
         return "xxx"
@@ -195,10 +185,12 @@ end
 
 function TUIcolumns!(ctrl::AbstractDict,
                      response::AbstractString)
-    labels = names(getSignals(ctrl["run"][1]))
+    labels = getChannels(ctrl["run"])
     selected = parse.(Int,split(response,","))
-    PDd = labels[selected]
-    ctrl["channels"] = Dict("d" => PDd[3], "D" => PDd[2], "P" => PDd[1])
+    setProxies(ctrl["run"];
+               P=labels[selected[1]],
+               D=labels[selected[2]],
+               d=labels[selected[d]])
     ctrl["priority"]["method"] = false
     return "xx"
 end
@@ -207,7 +199,7 @@ function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)
     ctrl["cache"] = _KJ["refmat"][ctrl["method"]].names[i]
-    ctrl["standards"][ctrl["cache"]] = nothing
+    ctrl["method"].standards = nothing
     return "addStandardGroup"
 end
 
@@ -228,10 +220,13 @@ function TUIaddStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIremoveAllStandards!(ctrl::AbstractDict)
-    for (standard,prefix) in ctrl["standards"]
-        setGroup!(ctrl["run"],prefix,"sample")
+    standardnames = keys(ctrl["method"])
+    for samp in ctrl["run"]
+        if samp.group in standardnames
+            setGroup!(samp,"sample")
+        end
     end
-    empty!(ctrl["standards"])
+    ctrl["method"].standards = Dict()
     ctrl["priority"]["standards"] = true
     return "x"
 end
@@ -241,12 +236,12 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
     selection = parse.(Int,split(response,","))
     setGroup!(ctrl["run"],selection,"sample")
     groups = unique(getGroups(ctrl["run"]))
-    for (k,v) in ctrl["standards"]
+    for k in keys(ctrl["standards"])
         if !in(k,groups)
-            delete!(ctrl["standards"],k)
+            delete!(ctrl["method"].standards,k)
         end
     end
-    ctrl["priority"]["standards"] = length(ctrl["standards"])<1
+    ctrl["priority"]["standards"] = length(ctrl["standards"]) < 1
     return "xxx"
 end
 
@@ -281,7 +276,7 @@ function TUIchooseGlass!(ctrl::AbstractDict,
     i = parse(Int,response)
     glass = _KJ["glass"].names[i]
     ctrl["cache"] = glass
-    ctrl["glass"][glass] = nothing
+    ctrl["method"].glass = Dict()
     return "addGlassGroup"
 end
 
@@ -302,10 +297,13 @@ function TUIaddGlassByNumber!(ctrl::AbstractDict,
 end
 
 function TUIremoveAllGlass!(ctrl::AbstractDict)
-    for (glass,prefix) in ctrl["glass"]
-        setGroup!(ctrl["run"],prefix,"sample")
+    glassnames = keys(ctrl["method"].glass)
+    for samp in ctrl["run"]
+        if samp.group in glassnames
+            setGroup!(samp,"sample")
+        end
     end
-    empty!(ctrl["glass"])
+    ctrl["glass"] = Dict()
     ctrl["priority"]["glass"] = true
     return "x"
 end
@@ -336,47 +334,23 @@ function TUIviewer(ctrl::AbstractDict)
     return "view"
 end
 
+function TUItitle(samp::Sample)
+    return string(ctrl["i"]) * ". " * samp.sname * " [" * samp.group * "]"
+end
+
 function TUIplotter(ctrl::AbstractDict)
     samp = ctrl["run"][ctrl["i"]]
-    if ctrl["method"] == "concentrations"
-        p = TUIconcentrationPlotter(ctrl,samp)
-    else
-        p = TUIgeochronPlotter(ctrl,samp)
-    end
-    if !isnothing(ctrl["PAcutoff"])
-        TUIaddPAline!(p,ctrl["PAcutoff"])
+    p = plot(samp,
+             ctrl["method"],
+             ctrl["fit"];
+             den=ctrl["den"],
+             transformation=ctrl["transformation"],
+             title=TUItitle(samp))
+    if !isnothing(ctrl["method"].PAcutoff)
+        TUIaddPAline!(p,ctrl["method"].PAcutoff)
     end
     display(p)
     return nothing
-end
-
-function TUIconcentrationPlotter(ctrl::AbstractDict,samp::Sample)
-    if (samp.group in keys(ctrl["glass"])) & !isnothing(ctrl["blank"])
-        p = plot(samp,ctrl["blank"],ctrl["par"],ctrl["internal"][1];
-                 den=ctrl["den"],transformation=ctrl["transformation"],i=ctrl["i"])
-    else
-        p = plot(samp;
-                 den=ctrl["den"],
-                 transformation=ctrl["transformation"],
-                 i=ctrl["i"])
-    end
-    return p
-end
-
-function TUIgeochronPlotter(ctrl::AbstractDict,samp::Sample)
-    if isnothing(ctrl["blank"]) | (samp.group=="sample")
-        p = plot(samp;
-                 channels=collect(values(ctrl["channels"])),
-                 den=ctrl["den"],
-                 transformation=ctrl["transformation"],
-                 i=ctrl["i"])
-    else
-        anchors = getAnchors(ctrl["method"],ctrl["standards"],ctrl["glass"])
-        p = plot(samp,ctrl["channels"],ctrl["blank"],ctrl["par"],anchors;
-                 i=ctrl["i"],den=ctrl["den"],
-                 transformation=ctrl["transformation"])
-    end
-    return p
 end
 
 function TUIaddPAline!(p,cutoff::AbstractFloat)
@@ -419,13 +393,7 @@ function TUIratios!(ctrl::AbstractDict,
         return "xx"
     else
         i = parse(Int,response)
-        if isa(ctrl["channels"],AbstractVector)
-            channels = ctrl["channels"]
-        elseif isa(ctrl["channels"],AbstractDict)
-            channels = collect(values(ctrl["channels"]))
-        else
-            channels = getChannels(ctrl["run"])
-        end
+        channels = getChannels(ctrl["run"])
         ctrl["den"] = channels[i]
     end
     TUIplotter(ctrl)
@@ -475,8 +443,8 @@ function TUIoneAutoBlankWindow!(ctrl::AbstractDict)
     return TUIplotter(ctrl)
 end
 
-function TUIoneSingleBlankWindow!(ctrl::AbstractDict,
-                                  response::AbstractString)
+function TUIoneBlankWindow!(ctrl::AbstractDict,
+                            response::AbstractString)
     samp = ctrl["run"][ctrl["i"]]
     bwin = string2windows(samp,response,true)
     setBwin!(samp,bwin)
@@ -484,36 +452,15 @@ function TUIoneSingleBlankWindow!(ctrl::AbstractDict,
     return "xx"
 end
 
-function TUIoneMultiBlankWindow!(ctrl::AbstractDict,
-                                 response::AbstractString)
-    samp = ctrl["run"][ctrl["i"]]
-    bwin = string2windows(samp,response,false)
-    setBwin!(samp,bwin)
-    TUIplotter(ctrl)
-    return "xx"
-end
-
-function TUIallAutoBlankWindow!(ctrl::AbstractDict)
+function TUIallAutoBlankWindows!(ctrl::AbstractDict)
     setBwin!(ctrl["run"])
     return TUIplotter(ctrl)
 end
 
-function TUIallSingleBlankWindow!(ctrl::AbstractDict,
-                                  response::AbstractString)
-    for i in eachindex(ctrl["run"])
-        samp = ctrl["run"][i]
+function TUIallBlankWindows!(ctrl::AbstractDict,
+                              response::AbstractString)
+    for samp in ctrl["run"]
         bwin = string2windows(samp,response,true)
-        setBwin!(samp,bwin)
-    end
-    TUIplotter(ctrl)
-    return "xx"
-end
-
-function TUIallMultiBlankWindow!(ctrl::AbstractDict,
-                                 response::AbstractString)
-    for i in eachindex(ctrl["run"])
-        samp = ctrl["run"][i]
-        bwin = string2windows(samp,response,false)
         setBwin!(samp,bwin)
     end
     TUIplotter(ctrl)
@@ -525,8 +472,8 @@ function TUIoneAutoSignalWindow!(ctrl::AbstractDict)
     return TUIplotter(ctrl)
 end
 
-function TUIoneSingleSignalWindow!(ctrl::AbstractDict,
-                                   response::AbstractString)
+function TUIoneSignalWindow!(ctrl::AbstractDict,
+                             response::AbstractString)
     samp = ctrl["run"][ctrl["i"]]
     swin = string2windows(samp,response,true)
     setSwin!(samp,swin)
@@ -534,36 +481,15 @@ function TUIoneSingleSignalWindow!(ctrl::AbstractDict,
     return "xx"
 end
 
-function TUIoneMultiSignalWindow!(ctrl::AbstractDict,
-                                  response::AbstractString)
-    samp = ctrl["run"][ctrl["i"]]
-    swin = string2windows(samp,response,false)
-    setSwin!(samp,swin)
-    TUIplotter(ctrl)
-    return "xx"
-end
-
-function TUIallAutoSignalWindow!(ctrl::AbstractDict)
+function TUIallAutoSignalWindows!(ctrl::AbstractDict)
     setSwin!(ctrl["run"])
     return TUIplotter(ctrl)
 end
 
-function TUIallSingleSignalWindow!(ctrl::AbstractDict,
-                                   response::AbstractString)
-    for i in eachindex(ctrl["run"])
-        samp = ctrl["run"][i]
+function TUIallSignalWindows!(ctrl::AbstractDict,
+                              response::AbstractString)
+    for samp in ctrl["run"]
         swin = string2windows(samp,response,true)
-        setSwin!(samp,swin)
-    end
-    TUIplotter(ctrl)
-    return "xx"
-end
-
-function TUIallMultiSignalWindow!(ctrl::AbstractDict,
-                                  response::AbstractString)
-    for i in eachindex(ctrl["run"])
-        samp = ctrl["run"][i]
-        swin = string2windows(samp,response,false)
         setSwin!(samp,swin)
     end
     TUIplotter(ctrl)
@@ -591,29 +517,8 @@ function TUItransformation!(ctrl::AbstractDict,
 end
 
 function TUIprocess!(ctrl::AbstractDict)
-    println("Fitting blanks...")
-    ctrl["blank"] = fitBlanks(ctrl["run"],
-                              nblank=ctrl["options"]["blank"])
-    println("Fractionation correction...")
-    if ctrl["method"] == "concentrations"
-        ctrl["par"] = fractionation(ctrl["run"],
-                                    ctrl["blank"],
-                                    ctrl["internal"],
-                                    ctrl["glass"])
-    else
-        ctrl["anchors"] = getAnchors(ctrl["method"],
-                                     ctrl["standards"],
-                                     ctrl["glass"])
-        ctrl["par"] = fractionation(ctrl["run"],
-                                    ctrl["method"],
-                                    ctrl["blank"],
-                                    ctrl["channels"],
-                                    ctrl["standards"],
-                                    ctrl["glass"];
-                                    ndrift=ctrl["options"]["drift"],
-                                    ndown=ctrl["options"]["down"],
-                                    PAcutoff=ctrl["PAcutoff"])
-    end
+    println("Fitting the model...")
+    ctrl["fit"] = process!(ctrl["run"],ctrl["method"])
     ctrl["priority"]["process"] = false
     println("Done")
     return nothing
@@ -621,24 +526,26 @@ end
 
 function TUIexport2csv(ctrl::AbstractDict,
                        response::AbstractString)
-    if ctrl["method"]=="concentrations"
-        out = concentrations(ctrl["run"],ctrl["blank"],ctrl["par"],ctrl["internal"])
-    else
-        out = averat(ctrl["run"],ctrl["channels"],ctrl["blank"],ctrl["par"];
-                     method=ctrl["method"])
-    end
+    tab, out = TUIexportHelper(ctrl["run"],ctrl["method"],ctrl["fit"])
     fname = splitext(response)[1]*".csv"
-    CSV.write(fname,out)
-    if ctrl["method"] == "concentrations"
-        return "x"
-    else
-        return "xx"
-    end
+    CSV.write(fname,tab)
+    return out
+end
+
+function TUIexportHelper(run::Vector{Sample},method::Gmethod,fit::Gfit)
+    tab = averat(ctrl["run"],ctrl["method"],ctrl["fit"])
+    out = "xx"
+    return tab, out
+end
+function TUIexportHelper(run::Vector{Sample},method::Cmethod,fit::Cfit)
+    tab = concentrations(ctrl["run"],ctrl["method"],ctrl["fit"])
+    out = "x"
+    return tab, out
 end
 
 function TUIexport2json(ctrl::AbstractDict,
                         response::AbstractString)
-    ratios = averat(ctrl["run"],ctrl["channels"],ctrl["blank"],ctrl["par"])
+    ratios = averat(ctrl["run"],ctrl["method"],ctrl["fit"])
     fname = splitext(response)[1]*".json"
     export2IsoplotR(ratios,ctrl["method"];fname=fname)
     return "xx"
@@ -676,19 +583,8 @@ function TUIopenTemplate!(ctrl::AbstractDict,
     ctrl["head2name"] = head2name
     ctrl["multifile"] = multifile
     ctrl["method"] = method
-    ctrl["channels"] = channels
-    ctrl["options"] = options
-    ctrl["PAcutoff"] = PAcutoff
-    if @isdefined(standards)
-        ctrl["standards"] = standards
-        ctrl["priority"]["standards"] = all(isnothing.(values(standards)))
-    end
-    if @isdefined(glass)
-        ctrl["glass"] = glass
-        ctrl["priority"]["glass"] = all(isnothing.(values(glass)))
-    end
+    ctrl["priority"]["standards"] = (length(method.standards) == 0)
     ctrl["transformation"] = transformation
-    ctrl["internal"] = internal
     ctrl["priority"]["method"] = false
     ctrl["template"] = true
     return "xx"
@@ -729,19 +625,19 @@ end
 
 function TUIsetNblank!(ctrl::AbstractDict,
                        response::AbstractString)
-    ctrl["options"]["blank"] = parse(Int,response)
+    ctrl["method"].nblank = parse(Int,response)
     return "x"
 end
 
 function TUIsetNdrift!(ctrl::AbstractDict,
                        response::AbstractString)
-    ctrl["options"]["drift"] = parse(Int,response)
+    ctrl["method"].ndrift = parse(Int,response)
     return "x"    
 end
 
 function TUIsetNdown!(ctrl::AbstractDict,
                       response::AbstractString)
-    ctrl["options"]["down"] = parse(Int,response)
+    ctrl["method"].ndown = parse(Int,response)
     return "x"    
 end
 
@@ -759,12 +655,12 @@ end
 function TUIsetPAcutoff!(ctrl::AbstractDict,
                          response::AbstractString)
     cutoff = tryparse(Float64,response)
-    ctrl["PAcutoff"] = cutoff
+    ctrl["method"].PAcutoff = cutoff
     return "xx"
 end
 
 function TUIclearPAcutoff!(ctrl::AbstractDict)
-    ctrl["PAcutoff"] = nothing
+    ctrl["method"].PAcutoff = nothing
     return "xx"
 end
 
@@ -793,7 +689,6 @@ function TUIrefresh!(ctrl::AbstractDict)
         TUIloadICPfile!(ctrl,ctrl["ICPpath"])
         TUIloadLAfile!(ctrl,ctrl["LApath"])
     end
-    snames = getSnames(ctrl["run"])
     TUIsetGroups!(ctrl,"standards")
     TUIsetGroups!(ctrl,"glass")
     TUIprocess!(ctrl)
@@ -846,43 +741,24 @@ function TUInternochron_goto!(ctrl::AbstractDict,
 end
 
 function TUInternochron(ctrl::AbstractDict)
-    p = internoplot(ctrl["run"][ctrl["i"]],
-                    ctrl["channels"],
-                    ctrl["blank"],
-                    ctrl["par"];
-                    method=ctrl["method"],
-                    i=ctrl["i"])
+    p = internoplot(ctrl["run"][ctrl["i"]],ctrl["method"],ctrl["fit"];
+                    title = string(ctrl["i"])*". "*samp.sname*" ["*samp.group*"]")
     display(p)
     return nothing
 end
 
 function internochron2csv(ctrl::AbstractDict,
                           fname::AbstractString)
-    tab = internochron(ctrl["run"],
-                       ctrl["channels"],
-                       ctrl["blank"],
-                       ctrl["par"];
-                       method=ctrl["method"])
+    tab = internochron(ctrl["run"],ctrl["method"],ctrl["fit"])
     CSV.write(fname,tab)
     return "xx"
 end
 
-function ctrl2df(ctrl::AbstractDict,
-                 samp::Sample)
-    if ctrl["method"] == "concentrations"
-        df = concentrations(samp,
-                            ctrl["blank"],
-                            ctrl["par"],
-                            ctrl["internal"])
-    else
-        P,D,d,x,y = atomic(samp,
-                           ctrl["channels"],
-                           ctrl["blank"],
-                           ctrl["par"];
-                           add_xy=true)
-        df = DataFrame(P=P,D=D,d=d,x=x,y=y)
-    end
-    return df
+function CSVhelper(samp::Sample,method::Gmethod,fit::Gfit)
+    return atomic(samp,method,fit;add_xy=true)
+end
+function CSVhelper(samp::Sample,method::Cmethod,fit::Cfit)
+    return concentrations(samp,method,fit)
 end
 
 function TUItimeresolved2csv(ctrl::AbstractDict,
@@ -890,7 +766,7 @@ function TUItimeresolved2csv(ctrl::AbstractDict,
     for samp in ctrl["run"]
         fname = samp.sname * ".csv"
         path = joinpath(dname,fname)
-        df = ctrl2df(ctrl,samp)
+        df = CSVhelper(samp,ctrl["method"],ctrl["fit"])
         CSV.write(path,df)
     end
     return "x"
@@ -902,7 +778,8 @@ function TUImapper(ctrl::AbstractDict)
 end
 
 function TUImap(ctrl::AbstractDict)
-    ctrl["cache"] = ctrl2df(ctrl,ctrl["run"][ctrl["i"]])
+    ctrl["cache"] = CSVhelper(ctrl["run"][ctrl["i"]],
+                              ctrl["method"],ctrl["fit"])
     colnames = names(ctrl["cache"])
     selected_column = colnames[ctrl["mapcolumn"]]
     p = plotMap(ctrl["cache"],

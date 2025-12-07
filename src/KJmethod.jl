@@ -8,7 +8,8 @@ function Gmethod(name::String,
                  ndrift::Int=2,
                  ndown::Int=1,
                  PAcutoff::Union{Nothing,Float64}=nothing,
-                 anchors::AbstractDict=standards2anchors(name,standards))
+                 anchors::AbstractDict=standards2anchors(name,standards),
+                 glass::AbstractDict=Dict())
 
     chdf = DataFrame(par=["ion","proxy","channel"],
                      P=[ions.P,proxies.P,channels.P],
@@ -17,14 +18,14 @@ function Gmethod(name::String,
     
     return Gmethod(name,chdf,interferences,
                    nblank,ndrift,ndown,PAcutoff,
-                   standards,anchors)
+                   standards,anchors,glass)
 end
 
-function standards2anchors(method::AbstractString,
+function standards2anchors(methodname::AbstractString,
                            standards::AbstractDict)
     out = Dict()
     for refmat in keys(standards)
-        out[refmat] = getAnchor(method,refmat)
+        out[refmat] = getAnchor(methodname,refmat)
     end
     return out
 end

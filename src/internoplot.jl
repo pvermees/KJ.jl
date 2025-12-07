@@ -3,8 +3,7 @@ function internoplot(samp::Sample,
                      fit::Gfit;
                      legend::Bool = false,
                      nsigma::Integer = 2,
-                     i::Union{Integer,Nothing}=nothing,
-                     show_title::Bool=true,
+                     title = samp.sname*" ["*samp.group*"]",
                      titlefontsize::Integer=10,
                      plot_options...)
     Phat, Dhat, dhat = atomic(samp,method,fit)
@@ -36,13 +35,7 @@ function internoplot(samp::Sample,
             add_concordia_line(xmax,ymax)
         end
     end
-    if show_title
-        title = samp.sname*" ["*samp.group*"]"
-        if !isnothing(i)
-            title = string(i) * ". " * title
-        end
-        Plots.title!(title;titlefontsize=titlefontsize)
-    end
+    Plots.title!(title;titlefontsize=titlefontsize)
     return p
 end
 

@@ -29,11 +29,16 @@ end
 
 function TUIinternalMessage(ctrl::AbstractDict)
     msg = "Choose an internal standard from the following list of channels:\n"
-    for i in eachindex(ctrl["channels"])
-        msg *= string(i)*". "*ctrl["channels"][i]*"\n"
-    end
+    msg *= TUIlistChannels(ctrl)
     msg *= "x: Exit\n"*"?: Help"
     return msg
+end
+
+function TUIlistChannels(ctrl::AbstractDict)
+    channels = getChannels(ctrl["run"])
+    for i in eachindex(channels)
+        msg *= string(i)*". "*channels[i]*"\n"
+    end
 end
 
 function TUImineralMessage(ctrl::AbstractDict)
@@ -55,13 +60,10 @@ end
 
 function TUIcolumnMessage(ctrl::AbstractDict)
     msg = "Choose from the following list of channels:\n"
-    labels = names(getSignals(ctrl["run"][1]))
-    for i in eachindex(labels)
-        msg *= string(i)*". "*labels[i]*"\n"
-    end
+    msg *= TUIlistChannels(ctrl)
     msg *= "and select the channels corresponding to "*
     "the following isotopes or their proxies:\n"
-    P, D, d = getPDd(ctrl["method"])
+    P, D, d = getPDd(ctrl["method"].name)
     msg *= P *", "* D *", "* d *"\n"
     msg *= "Specify your selection as a "*
     "comma-separated list of numbers:"
@@ -70,7 +72,7 @@ end
 
 function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg = "Choose one of the following standards:\n"
-    standards = _KJ["refmat"][ctrl["method"]].names
+    standards = _KJ["refmat"][ctrl["method"].name].names
     for i in eachindex(standards)
         msg *= string(i)*": "*standards[i]*"\n"
     end

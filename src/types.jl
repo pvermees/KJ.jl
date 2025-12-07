@@ -38,6 +38,7 @@ mutable struct Gmethod <: KJmethod
     PAcutoff::Union{Nothing,Float64}
     standards::Dict
     anchors::Dict
+    glass::Dict
 end
 export Gmethod
 

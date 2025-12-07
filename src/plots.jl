@@ -7,10 +7,9 @@ function plot(samp::Sample,
               xlim=:auto,ylim=:auto,
               linecol="black",
               linestyle=:solid,
-              i=nothing,
+              title=samp.sname*" ["*samp.group*"]",
               legend=:topleft,
               cpalette=:viridis,
-              show_title=true,
               titlefontsize=10,
               return_offset::Bool=false)
 
@@ -21,8 +20,7 @@ function plot(samp::Sample,
                      num=num,den=den,
                      transformation=transformation,
                      ms=ms,ma=ma,xlim=xlim,ylim=ylim,
-                     i=i,legend=legend,cpalette=cpalette,
-                     show_title=show_title,
+                     title=title,legend=legend,cpalette=cpalette,
                      titlefontsize=titlefontsize,
                      return_offset=true)
     
@@ -53,10 +51,9 @@ function plot(samp::Sample;
               transformation::Union{Nothing,AbstractString}=nothing,
               ms::Number=2,ma::Number=0.5,
               xlim=:auto,ylim=:auto,
-              i::Union{Nothing,Integer}=nothing,
+              title=samp.sname*" ["*samp.group*"]",
               legend=:topleft,
               cpalette=:viridis,
-              show_title=true,
               titlefontsize=10,
               padding::Number=0.1,
               return_offset::Bool=false)
@@ -80,13 +77,7 @@ function plot(samp::Sample;
     end
     Plots.xlabel!(xlab)
     Plots.ylabel!(ylab)
-    if show_title
-        title = samp.sname*" ["*samp.group*"]"
-        if !isnothing(i)
-            title = string(i) * ". " * title
-        end
-        Plots.title!(title;titlefontsize=titlefontsize)
-    end
+    Plots.title!(title;titlefontsize=titlefontsize)
     buffer = (ylim[2]-ylim[1])*padding/2
     dy_win = (ylim[1] + buffer, ylim[2] - buffer)
     # plot t0:

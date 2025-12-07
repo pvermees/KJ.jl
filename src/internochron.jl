@@ -61,7 +61,7 @@ function x0y02t(x0y0::AbstractDataFrame,
         E = [ [ row["s[x0]"]^2 sx0y0 ]
               [ sx0y0 row["s[y0]"]^2 ] ]
         ty0 = x0y02t(row.x0,row.y0,E,method.name)
-        out[i,2:end] = values(ty0)
+        out[i,2:end] = Tuple(ty0)
     end
     return out
 end
