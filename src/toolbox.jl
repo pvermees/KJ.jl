@@ -495,16 +495,8 @@ function iratio(nuclide1::Union{Missing,AbstractString},
 end
 export iratio
 
-function unpack(a::IsochronAnchor)
-    return (a.x0,a.y0,a.y1)
-end
-
-function unpack(a::PointAnchor)
-    return (a.x,a.y)
-end
-function unpack(c::Cruncher)
-    return (c.pmb,c.Dombi,c.bomb,c.bpt,c.bDot,c.bbot,c.vp,c.vD,c.vb,c.spD,c.spb,c.sDb,c.bd,c.t,c.T)
-end
-function unpack(a::Averager)
-    return (a.Phat,a.Dhat,a.dhat,a.vP,a.vD,a.vd,a.sPD,a.sPd,a.sDd)
+function unpack(s)
+    type = typeof(s)
+    field_names = fieldnames(type)
+    return map(field -> getfield(s, field), field_names)
 end
