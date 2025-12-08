@@ -274,7 +274,7 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIrefmatTab(ctrl::AbstractDict)
-    for (key, value) in _KJ["refmat"][ctrl["method"]].dict
+    for (key, value) in _KJ["refmat"][ctrl["method"].name].dict
         print(key)
         print(": ")
         print_refmat_tx(value)
@@ -387,7 +387,9 @@ function TUIaddPAline!(p,cutoff::AbstractFloat)
         Plots.plot!(p,collect(Plots.xlims(p)),
                     fill(sqrt(cutoff),2),
                     seriestype=:line,label="",
-                    linewidth=2,linestyle=:dash)
+                    linewidth=1,linestyle=:dash,
+                    linecolor="black",
+                    labels="P/A cutoff")
     end
     return nothing
 end
@@ -566,12 +568,12 @@ function TUIexport2csv(ctrl::AbstractDict,
 end
 
 function TUIexportHelper(run::Vector{Sample},method::Gmethod,fit::Gfit)
-    tab = averat(ctrl["run"],ctrl["method"],ctrl["fit"])
+    tab = averat(run,method,fit)
     out = "xx"
     return tab, out
 end
 function TUIexportHelper(run::Vector{Sample},method::Cmethod,fit::Cfit)
-    tab = concentrations(ctrl["run"],ctrl["method"],ctrl["fit"])
+    tab = concentrations(run,method,fit)
     out = "x"
     return tab, out
 end
@@ -675,12 +677,13 @@ function TUIsetNdown!(ctrl::AbstractDict,
 end
 
 function TUIPAlist(ctrl::AbstractDict)
-    snames = getSnames(ctrl["run"])
-    for i in eachindex(snames)
-        dat = getSignals(ctrl["run"][i],ctrl["channels"])
+    for i in eachindex(ctrl["run"])
+        samp = ctrl["run"][i]
+        channels = getChannels(ctrl["method"])
+        dat = getSignals(samp)[:,channels]
         maxval = maximum(Matrix(dat))
         formatted = @sprintf("%.*e", 3, maxval)
-        println(formatted*" ("*snames[i]*")")
+        println(formatted*" ("*samp.sname*")")
     end
     return "x"
 end

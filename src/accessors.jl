@@ -195,15 +195,6 @@ Returns a dataframe with signals (no time, coordinates or outliers)
 function getSignals(samp::Sample)
     return getSignals(samp.dat)
 end
-
-"""
-getSignals(samp::Sample,
-           channels::AbstractDict)
-"""
-function getSignals(samp::Sample,
-                    channels::AbstractDict)
-    return samp.dat[:,collect(values(channels))]
-end
 export getSignals
 
 """
