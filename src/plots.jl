@@ -1,7 +1,8 @@
 function plot(samp::Sample,
-              method::KJmethod,
-              fit::KJfit;
-              num=nothing,den=nothing,
+              method::KJmethod;
+              fit::Union{Nothing,KJfit}=nothing,
+              num=nothing,
+              den=nothing,
               transformation=nothing,
               ms=2,ma=0.5,
               xlim=:auto,ylim=:auto,
@@ -23,19 +24,18 @@ function plot(samp::Sample,
                      title=title,legend=legend,cpalette=cpalette,
                      titlefontsize=titlefontsize,
                      return_offset=true)
-    
-    if samp.group != "sample"
 
-        plotFitted!(p,samp,method,fit;
-                    num=num,den=den,transformation=transformation,
-                    offset=offset,linecolor=linecol,linestyle=linestyle)
-        
+    if !isnothing(fit)
+        if samp.group !== "sample"
+            plotFitted!(p,samp,method,fit;
+                        num=num,den=den,transformation=transformation,
+                        offset=offset,linecolor=linecol,linestyle=linestyle)
+        end
+        plotFittedBlank!(p,samp,method,fit;
+                        num=num,den=den,
+                        transformation=transformation,offset=offset,
+                        linecolor=linecol,linestyle=linestyle)
     end
-
-    plotFittedBlank!(p,samp,method,fit;
-                     num=num,den=den,
-                     transformation=transformation,offset=offset,
-                     linecolor=linecol,linestyle=linestyle)
 
     if return_offset
         return p, offset

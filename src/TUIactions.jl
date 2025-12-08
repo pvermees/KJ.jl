@@ -215,7 +215,9 @@ end
 function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)
-    ctrl["cache"] = _KJ["refmat"][ctrl["method"]].names[i]
+    methodname = ctrl["method"].name
+    odict = _KJ["refmat"][methodname]
+    ctrl["cache"] = odict.names[i]
     return "addStandardGroup"
 end
 
@@ -358,8 +360,8 @@ end
 function TUIplotter(ctrl::AbstractDict)
     samp = ctrl["run"][ctrl["i"]]
     p = plot(samp,
-             ctrl["method"],
-             ctrl["fit"];
+             ctrl["method"];
+             fit=ctrl["fit"],
              den=ctrl["den"],
              transformation=ctrl["transformation"],
              title=TUItitle(samp))
