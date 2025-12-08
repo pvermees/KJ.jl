@@ -147,9 +147,9 @@ function init_KJtree()
                 "r" => TUIread,
                 "m" => "method",
                 "t" => TUItabulate,
-                "s" => "standards",
-                "g" => "glass",
                 "v" => TUIviewer,
+                "f" => "standards",
+                "b" => "glass",
                 "p" => TUIprocess!,
                 "e" => "export",
                 "l" => "log",
@@ -810,7 +810,7 @@ function init_KJtree()
             message = TUIsetNblankMessage,
             help =
             "The blank is fitted by the following equation: " * 
-            "b = exp(a[1]) + exp(a[2])*t[1] + ... + exp(a[n])*t^(n-1). " * 
+            "b = a[1] + a[2]*t[1] + ... + a[n]*t^(n-1). " *
             "Here you can specify the value of n.",
             action = TUIsetNblank!
         ),
