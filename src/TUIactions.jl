@@ -200,6 +200,15 @@ function TUIsetChannels!(ctrl::AbstractDict,
     end
 end
 
+function TUIgetChannels(ctrl::AbstractDict)
+    if isnothing(ctrl["method"])
+        channels = getChannels(ctrl["run"])
+    else
+        channels = getChannels(ctrl["method"])
+    end
+    return channels
+end
+
 function TUIsetProxies!(ctrl::AbstractDict,
                         response::AbstractString)
     selection = parse.(Int,split(response,","))
@@ -353,18 +362,18 @@ function TUIviewer(ctrl::AbstractDict)
     return "view"
 end
 
-function TUItitle(samp::Sample)
+function TUItitle(ctrl::AbstractDict)
+    samp = ctrl["run"][ctrl["i"]]
     return string(ctrl["i"]) * ". " * samp.sname * " [" * samp.group * "]"
 end
 
 function TUIplotter(ctrl::AbstractDict)
-    samp = ctrl["run"][ctrl["i"]]
-    p = plot(samp,
+    p = plot(ctrl["run"][ctrl["i"]],
              ctrl["method"];
              fit=ctrl["fit"],
              den=ctrl["den"],
              transformation=ctrl["transformation"],
-             title=TUItitle(samp))
+             title=TUItitle(ctrl))
     if !isnothing(ctrl["method"].PAcutoff)
         TUIaddPAline!(p,ctrl["method"].PAcutoff)
     end
@@ -412,7 +421,7 @@ function TUIratios!(ctrl::AbstractDict,
         return "xx"
     else
         i = parse(Int,response)
-        channels = getChannels(ctrl["run"])
+        channels = TUIgetChannels(ctrl)
         ctrl["den"] = channels[i]
     end
     TUIplotter(ctrl)
@@ -458,58 +467,62 @@ function TUIt0All!(ctrl::AbstractDict,
 end
 
 function TUIoneAutoBlankWindow!(ctrl::AbstractDict)
-    setBwin!(ctrl["run"][ctrl["i"]])
-    return TUIplotter(ctrl)
+    TUIWindowHandler(ctrl;all=false,single=true,blank=true)
 end
-
-function TUIoneBlankWindow!(ctrl::AbstractDict,
-                            response::AbstractString)
-    samp = ctrl["run"][ctrl["i"]]
-    bwin = string2windows(samp,response,true)
-    setBwin!(samp,bwin)
-    TUIplotter(ctrl)
-    return "xx"
-end
-
 function TUIallAutoBlankWindows!(ctrl::AbstractDict)
-    setBwin!(ctrl["run"])
-    return TUIplotter(ctrl)
+    TUIWindowHandler(ctrl;all=true,single=true,blank=true)
 end
-
-function TUIallBlankWindows!(ctrl::AbstractDict,
-                              response::AbstractString)
-    for samp in ctrl["run"]
-        bwin = string2windows(samp,response,true)
-        setBwin!(samp,bwin)
-    end
-    TUIplotter(ctrl)
-    return "xx"
-end
-
 function TUIoneAutoSignalWindow!(ctrl::AbstractDict)
-    setSwin!(ctrl["run"][ctrl["i"]])
-    return TUIplotter(ctrl)
+    TUIWindowHandler(ctrl;all=false,single=true,blank=false)
 end
-
-function TUIoneSignalWindow!(ctrl::AbstractDict,
-                             response::AbstractString)
-    samp = ctrl["run"][ctrl["i"]]
-    swin = string2windows(samp,response,true)
-    setSwin!(samp,swin)
-    TUIplotter(ctrl)
-    return "xx"
-end
-
 function TUIallAutoSignalWindows!(ctrl::AbstractDict)
-    setSwin!(ctrl["run"])
-    return TUIplotter(ctrl)
+    TUIWindowHandler(ctrl;all=true,single=true,blank=false)
+end
+function TUIoneSingleBlankWindow(ctrl::AbstractDict,
+                                 response::AbstractString)
+    TUIwindowHandler(ctrl;response=response,all=false,single=true,blank=true)
+end
+function TUIoneMultiBlankWindow(ctrl::AbstractDict,
+                                response::AbstractString)
+    TUIwindowHandler(ctrl;response=response,all=false,single=false,blank=true)
+end
+function TUIallSingleBlankWindows(ctrl::AbstractDict,
+                                  response::AbstractString)
+    TUIwindowHandler(ctrl;response=response,all=true,single=true,blank=true)
+end
+function TUIallMultiBlankWindows(ctrl::AbstractDict,
+                                 response::AbstractString)
+    TUIwindowHandler(ctrl;response=response,all=true,single=false,blank=true)
+end
+function TUIoneSingleSignalWindow(ctrl::AbstractDict,
+                                  response::AbstractString)
+    TUIwindowHandler(ctrl;response=response,all=false,single=true,blank=false)
+end
+function TUIoneMultiSignalWindow(ctrl::AbstractDict,
+                                 response::AbstractString)
+    TUIwindowHandler(ctrl;response=response,all=false,single=false,blank=false)
+end
+function TUIallSingleSignalWindows(ctrl::AbstractDict,
+                                   response::AbstractString)
+    TUIwindowHandler(ctrl;response=response,all=true,single=true,blank=false)
+end
+function TUIallMultiSignalWindows(ctrl::AbstractDict,
+                                  response::AbstractString)
+    TUIwindowHandler(ctrl;response=response,all=true,single=false,blank=false)
 end
 
-function TUIallSignalWindows!(ctrl::AbstractDict,
-                              response::AbstractString)
-    for samp in ctrl["run"]
-        swin = string2windows(samp,response,true)
-        setSwin!(samp,swin)
+function TUIwindowHandler(ctrl::AbstractDict;
+                          response::AbstractString="",
+                          all::Bool=false,
+                          single::Bool=false,
+                          blank::Bool=false)
+    target = ifelse(all,ctrl["run"],ctrl["run"][ctrl["i"]])
+    fun! = ifselse(blank,setBwin!,setSwin!)
+    if response==""
+        fun!(target)
+    else
+        win = string2windows(target,response,single)
+        fun!(target,win)
     end
     TUIplotter(ctrl)
     return "xx"

@@ -147,13 +147,7 @@ function TUIaddByNumberMessage(ctrl::AbstractDict)
 end
 
 function TUIratioMessage(ctrl::AbstractDict)
-    if isa(ctrl["channels"],AbstractVector)
-        channels = ctrl["channels"]
-    elseif isa(ctrl["channels"],AbstractDict)
-        channels = collect(values(ctrl["channels"]))
-    else
-        channels = getChannels(ctrl["run"])
-    end
+    channels = TUIgetChannels(ctrl)
     msg = "Choose one of the following denominators:\n"
     for i in eachindex(channels)
         msg *= string(i)*": "*channels[i]*"\n"

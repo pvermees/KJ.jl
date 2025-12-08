@@ -184,6 +184,7 @@ function windows2selection(windows::AbstractVector;
 end
 
 function string2windows(samp::Sample,text::AbstractString,single::Bool)
+    @infiltrate
     if single
         parts = split(text,',')
         stime = [parse(Float64,parts[1])]

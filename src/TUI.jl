@@ -571,7 +571,7 @@ function init_KJtree()
             "Specify the start and end point of the blank window " * 
             "as a comma-separated pair of numbers. For example: " * 
             "0,20 marks a blank window from 0 to 20 seconds.",
-            action = TUIoneBlankWindow!
+            action = TUIoneSingleBlankWindow!
         ),
         "oneMultiBlankWindow" => (
             message =
@@ -583,7 +583,7 @@ function init_KJtree()
             "as a comma-separated list of bracketed pairs " * 
             " of numbers. For example: (0,20),(25,30) marks a two-part " * 
             "selection window from 0 to 20s, and from 25 to 30s.",
-            action = TUIoneBlankWindow!
+            action = TUIoneMultiBlankWindow!
         ),
         "allSingleBlankWindows" => (
             message =
@@ -593,7 +593,7 @@ function init_KJtree()
             "Specify the start and end point of the blank windows " * 
             "as a comma-separated pair of numbers. For example: " * 
             "0,20 marks a blank window from 0 to 20 seconds.",
-            action = TUIallBlankWindows!
+            action = TUIallSingleBlankWindows!
         ),
         "allMultiBlankWindows" => (
             message =
@@ -605,7 +605,7 @@ function init_KJtree()
             "as a comma-separated list of bracketed pairs " * 
             " of numbers. For example: (0,20),(25,30) marks a two-part " * 
             "selection window from 0 to 20s, and from 25 to 30s.",
-            action = TUIallBlankWindows!
+            action = TUIallMultiBlankWindows!
         ),
         "Swin" => (
             message =
@@ -653,7 +653,7 @@ function init_KJtree()
             "as a comma-separated list of bracketed pairs " * 
             "of numbers. For example: (40,45),(50,60) marks a two-part " * 
             "signal window from 40 to 45s, and from 50 to 60s.",
-            action = TUIoneSignalWindow!
+            action = TUIoneMultiSignalWindow!
         ),
         "allSingleSignalWindows" => (
             message =
@@ -663,13 +663,13 @@ function init_KJtree()
             "Specify the start and end points of the signal windows " * 
             "as a comma-separated pair of numbers. For example: " * 
             "30,60 marks a signal window from 30 to 60 seconds.",
-            action = TUIallSignalWindows!
+            action = TUIallSingleSignalWindows!
         ),
         "allMultiSignalWindows" => (
             message =
             "Enter the start and end points of the multi-part " * 
             "selection windows (in seconds)\n" * 
-            "Type 'h' for help.",
+            "Type '?' for help.",
             help =
             "Specify the start and end points of the signal windows " * 
             "as a comma-separated list of bracketed pairs " * 
