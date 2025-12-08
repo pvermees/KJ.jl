@@ -467,65 +467,66 @@ function TUIt0All!(ctrl::AbstractDict,
 end
 
 function TUIoneAutoBlankWindow!(ctrl::AbstractDict)
-    TUIWindowHandler(ctrl;all=false,single=true,blank=true)
+    TUIwindowHandler!(ctrl;all=false,single=true,blank=true)
 end
 function TUIallAutoBlankWindows!(ctrl::AbstractDict)
-    TUIWindowHandler(ctrl;all=true,single=true,blank=true)
+    TUIwindowHandler!(ctrl;all=true,single=true,blank=true)
 end
 function TUIoneAutoSignalWindow!(ctrl::AbstractDict)
-    TUIWindowHandler(ctrl;all=false,single=true,blank=false)
+    TUIwindowHandler!(ctrl;all=false,single=true,blank=false)
 end
 function TUIallAutoSignalWindows!(ctrl::AbstractDict)
-    TUIWindowHandler(ctrl;all=true,single=true,blank=false)
+    TUIwindowHandler!(ctrl;all=true,single=true,blank=false)
 end
-function TUIoneSingleBlankWindow(ctrl::AbstractDict,
-                                 response::AbstractString)
-    TUIwindowHandler(ctrl;response=response,all=false,single=true,blank=true)
-end
-function TUIoneMultiBlankWindow(ctrl::AbstractDict,
-                                response::AbstractString)
-    TUIwindowHandler(ctrl;response=response,all=false,single=false,blank=true)
-end
-function TUIallSingleBlankWindows(ctrl::AbstractDict,
+function TUIoneSingleBlankWindow!(ctrl::AbstractDict,
                                   response::AbstractString)
-    TUIwindowHandler(ctrl;response=response,all=true,single=true,blank=true)
+    TUIwindowHandler!(ctrl;response=response,all=false,single=true,blank=true)
 end
-function TUIallMultiBlankWindows(ctrl::AbstractDict,
+function TUIoneMultiBlankWindow!(ctrl::AbstractDict,
                                  response::AbstractString)
-    TUIwindowHandler(ctrl;response=response,all=true,single=false,blank=true)
+    TUIwindowHandler!(ctrl;response=response,all=false,single=false,blank=true)
 end
-function TUIoneSingleSignalWindow(ctrl::AbstractDict,
-                                  response::AbstractString)
-    TUIwindowHandler(ctrl;response=response,all=false,single=true,blank=false)
-end
-function TUIoneMultiSignalWindow(ctrl::AbstractDict,
-                                 response::AbstractString)
-    TUIwindowHandler(ctrl;response=response,all=false,single=false,blank=false)
-end
-function TUIallSingleSignalWindows(ctrl::AbstractDict,
+function TUIallSingleBlankWindows!(ctrl::AbstractDict,
                                    response::AbstractString)
-    TUIwindowHandler(ctrl;response=response,all=true,single=true,blank=false)
+    TUIwindowHandler!(ctrl;response=response,all=true,single=true,blank=true)
 end
-function TUIallMultiSignalWindows(ctrl::AbstractDict,
+function TUIallMultiBlankWindows!(ctrl::AbstractDict,
                                   response::AbstractString)
-    TUIwindowHandler(ctrl;response=response,all=true,single=false,blank=false)
+    TUIwindowHandler!(ctrl;response=response,all=true,single=false,blank=true)
 end
-
-function TUIwindowHandler(ctrl::AbstractDict;
-                          response::AbstractString="",
-                          all::Bool=false,
-                          single::Bool=false,
-                          blank::Bool=false)
+function TUIoneSingleSignalWindow!(ctrl::AbstractDict,
+                                   response::AbstractString)
+    TUIwindowHandler!(ctrl;response=response,all=false,single=true,blank=false)
+end
+function TUIoneMultiSignalWindow!(ctrl::AbstractDict,
+                                  response::AbstractString)
+    TUIwindowHandler!(ctrl;response=response,all=false,single=false,blank=false)
+end
+function TUIallSingleSignalWindows!(ctrl::AbstractDict,
+                                    response::AbstractString)
+    TUIwindowHandler!(ctrl;response=response,all=true,single=true,blank=false)
+end
+function TUIallMultiSignalWindows!(ctrl::AbstractDict,
+                                   response::AbstractString)
+    TUIwindowHandler!(ctrl;response=response,all=true,single=false,blank=false)
+end
+function TUIwindowHandler!(ctrl::AbstractDict;
+                           response::AbstractString="",
+                           all::Bool=false,
+                           single::Bool=false,
+                           blank::Bool=false)
     target = ifelse(all,ctrl["run"],ctrl["run"][ctrl["i"]])
-    fun! = ifselse(blank,setBwin!,setSwin!)
+    fun! = ifelse(blank,setBwin!,setSwin!)
     if response==""
         fun!(target)
+        next = "x"
     else
         win = string2windows(target,response,single)
         fun!(target,win)
+        next = "xx"
     end
     TUIplotter(ctrl)
-    return "xx"
+    return next
 end
 
 function TUImoveWin!(ctrl::AbstractDict,

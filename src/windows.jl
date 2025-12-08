@@ -183,8 +183,10 @@ function windows2selection(windows::AbstractVector;
     return selection, x, y
 end
 
+function string2windows(run::Vector{Sample},text::AbstractString,single::Bool)
+    return string2windows(run[1],text,single)
+end
 function string2windows(samp::Sample,text::AbstractString,single::Bool)
-    @infiltrate
     if single
         parts = split(text,',')
         stime = [parse(Float64,parts[1])]
