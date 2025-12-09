@@ -153,7 +153,7 @@ end
 function TUIinternal!(ctrl::AbstractDict,
                       response::AbstractString)
     i = parse(Int,response)
-    ctrl["cache"] = ctrl["channels"][i]
+    ctrl["cache"] = getChannels(ctrl["run"])[i]
     return "mineral"
 end
 
@@ -373,7 +373,7 @@ function TUIplotter(ctrl::AbstractDict)
              den=ctrl["den"],
              transformation=ctrl["transformation"],
              title=TUItitle(ctrl))
-    if !isnothing(ctrl["method"].PAcutoff)
+    if ctrl["method"] isa Gmethod && !isnothing(ctrl["method"].PAcutoff)
         TUIaddPAline!(p,ctrl["method"].PAcutoff)
     end
     display(p)

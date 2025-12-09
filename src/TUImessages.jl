@@ -115,6 +115,10 @@ function TUIsetProxiesMessage(ctrl::AbstractDict)
 end
 
 function TUIchooseStandardMessage(ctrl::AbstractDict)
+    return TUIchooseFractionationRefmatsMessage(ctrl["method"])
+end
+
+function TUIchooseFractionationRefmatsMessage(method::Gmethod)
     msg = "Choose one of the following standards:\n"
     standards = _KJ["refmat"][ctrl["method"].name].names
     for i in eachindex(standards)
@@ -124,7 +128,7 @@ function TUIchooseStandardMessage(ctrl::AbstractDict)
     return msg
 end
 
-function TUIchooseGlassMessage(ctrl::AbstractDict)
+function TUIchooseFractionationRefmatsMessage(method::Cmethod)
     msg = "Choose one of the following reference glasses:\n"
     glasses = _KJ["glass"].names
     for i in eachindex(glasses)
@@ -132,6 +136,10 @@ function TUIchooseGlassMessage(ctrl::AbstractDict)
     end
     msg *= "x: Exit\n"*"?: Help"
     return msg
+end
+
+function TUIchooseGlassMessage(ctrl::AbstractDict)
+    error("TODO")
 end
 
 function TUIaddByPrefixMessage(ctrl::AbstractDict)

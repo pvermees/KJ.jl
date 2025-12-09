@@ -6,7 +6,7 @@ loadICPdir,data/Lu-Hf
 top,m
 method,1
 columns,"15,17,18"
-top,s
+top,f
 standards,a
 chooseStandard,1
 addStandardGroup,p

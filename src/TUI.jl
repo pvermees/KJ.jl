@@ -274,18 +274,16 @@ function init_KJtree()
         ),
         "standards" => (
             message =
-            "a: Add a mineral standard\n" * 
-            "r: Remove mineral standards\n" * 
-            "l: List the available mineral standards\n" * 
+            "a: Add a reference material\n" * 
+            "r: Remove reference materials\n" * 
+            "l: List the available reference materials\n" * 
             "t: Tabulate all the samples\n" * 
             "x: Exit\n" * 
             "?: Help",
             help =
             "Choose one or more primary reference materials. " * 
             "Note that secondary reference materials should be " * 
-            "treated as regular samples. It is always better to use " *
-            "matrix matched reference materials. Only use (NIST) glass " *
-            "if no matrix matched standard is available.",
+            "treated as regular samples.",
             action = Dict(
                 "a" => "chooseStandard",
                 "r" => "removeStandard",
@@ -296,7 +294,7 @@ function init_KJtree()
         "chooseStandard" => (
             message = TUIchooseStandardMessage,
             help =
-            "If you do not find your mineral standard in this list, " * 
+            "If you do not find your reference material in this list, " * 
             "then you can either specify your own reference " * 
             "material under 'options' in the top menu, or " * 
             "you can email us to add the material to the software.",
