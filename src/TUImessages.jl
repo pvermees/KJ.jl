@@ -4,7 +4,8 @@ function TUIwelcomeMessage(ctrl::AbstractDict)
     "t: Tabulate the samples\n"*
     "v: View and adjust each sample\n"*
     "f: Fractionation"*TUIcheck(ctrl,"standards")*"\n"*
-    "b: Mass bias"*TUIcheck(ctrl,"glass")*"\n"*
+    "b: Mass bias\n"*
+    "i: Interferences\n"*
     "p: Process the data"*TUIcheck(ctrl,"process")*"\n"*
     "e: Export the results\n"*
     "l: Logs and templates\n"*

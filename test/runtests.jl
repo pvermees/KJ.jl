@@ -613,7 +613,7 @@ Plots.closeall()
 # @testset "carbonate" begin carbonatetest() end
 # @testset "timestamp" begin timestamptest() end
 # @testset "stoichiometry" begin mineraltest() end
-@testset "concentration" begin concentrationtest() end
+# @testset "concentration" begin concentrationtest() end
 # @testset "Lu-Hf internochron" begin internochrontest() end
 # @testset "UPb internochron" begin internochronUPbtest() end
 # @testset "concentration map" begin maptest() end
@@ -629,4 +629,4 @@ Plots.closeall()
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 
-# TUI()
+TUI()

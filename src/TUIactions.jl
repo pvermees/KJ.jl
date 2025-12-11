@@ -862,3 +862,10 @@ function TUIchooseClims!(ctrl::AbstractDict,
     TUImap(ctrl)
     return "x"
 end
+
+function TUItodo!(ctrl::AbstractDict)
+    println("This function has not yet been implemented, " * 
+            "because KJ is still in development. " * 
+            "Please check again later.")
+    return nothing
+end
