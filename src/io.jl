@@ -169,50 +169,7 @@ function io_df2sample(df::AbstractDataFrame,
     return Sample(sname,datetime,df,t0,bwin,swin,"sample")
 end
 
-"""
-export2IsoplotR
 
-Export isotopic ratio data to an IsoplotRgui json file
-
-# Methods
-
-- `export2IsoplotR(run::Vector{Sample},
-                   method::AbstractString,
-                   channels::AbstractDict,
-                   blank::AbstractDataFrame,
-                   pars::NamedTuple;
-                   PAcutoff=nothing,prefix=nothing,
-                   fname::AbstractString="KJ.json")`
-- `export2IsoplotR(ratios::AbstractDataFrame,
-                   method::AbstractString;
-                   fname::AbstractString="KJ.json")`
-
-# Arguments
-
-- `run`: the output of `load`
-- `method`: a geochronometer (e.g., `Lu-Hf`, `Rb-Sr`, `U-Pb`)
-- `channels`: dictionary of the type Dict("P" => "parent", "D" => "daughter", "d" => "sister")
-- `blank`: the output of fitBlanks()
-- `pars`: the output of fractionation() or process!()
-- `PAcutoff`: the pulse-analog signal cutoff
-- `fname`: path of the output file
-
-# Examples
-```julia
-myrun = load("data/Lu-Hf",format="Agilent")
-method = "Lu-Hf"
-channels = Dict("d"=>"Hf178 -> 260",
-                "D"=>"Hf176 -> 258",
-                "P"=>"Lu175 -> 175")
-standards = Dict("Hogsbo" => "hogsbo")
-glass = Dict("NIST612" => "NIST612p")
-cutoff = 1e7
-blk, fit = process!(myrun,method,channels,standards,glass;
-                    PAcutoff=cutoff,nblank=2,ndrift=1,ndown=1)
-selection = prefix2subset(ratios,"BP")
-export2IsoplotR(selection,"Lu-Hf",fname="BP.json")
-```
-"""
 function export2IsoplotR(run::Vector{Sample},
                          method::Gmethod,
                          fit::Gfit;
@@ -227,6 +184,7 @@ function export2IsoplotR(run::Vector{Sample},
                         fname=fname)
     end
 end
+
 function export2IsoplotR(ratios::AbstractDataFrame,
                          method::Gmethod;
                          fname::AbstractString="KJ.json")
