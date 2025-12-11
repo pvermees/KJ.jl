@@ -622,8 +622,8 @@ function TUIopenTemplate!(ctrl::AbstractDict,
     ctrl["head2name"] = head2name
     ctrl["multifile"] = multifile
     ctrl["method"] = method
-    ctrl["priority"]["standards"] = (length(method.standards) == 0)
     ctrl["transformation"] = transformation
+    ctrl["priority"]["standards"] = (length(method.standards) == 0)
     ctrl["priority"]["method"] = false
     ctrl["template"] = true
     return "xx"
@@ -644,17 +644,17 @@ end
 function TUImethod2text(method::Gmethod)
     i = getIons(method)
     p = getProxies(method)
-    c = getChannels(method)
+    c = getChannels(method;as_tuple=true)
     PA = method.PAcutoff
     out = TUIstandards2text(method.standards)
-    out *= "method = Gmethod(" * method.name * ", standards; \n"
-    out *= "                  ions = (P=" * i.P * ", D=" * i.D * ", d=" * i.d * "),\n"
-    out *= "                  proxies = (P=" * p.P * ", D=" * p.D * ", d=" * p.d * "),\n"
-    out *= "                  channels = (P=" * c.P * ", D=" * c.D * ", d=" * c.d * "),\n"
-    out *= "                  nblank = " * method.nblank * ",\n"
-    out *= "                  ndrift = " * method.ndrift * ",\n"
-    out *= "                  ndown = " * method.ndown * ",\n"
-    out *= "                  PAcutoff = " * ifelse(isnothing(PA),"nothing",PA) * ")\n"
+    out *= "method = Gmethod(\"" * method.name * "\", standards; \n"
+    out *= "                 ions = (P=\"" * i.P * "\", D=\"" * i.D * "\", d=\"" * i.d * "\"),\n"
+    out *= "                 proxies = (P=\"" * p.P * "\", D=\"" * p.D * "\", d=\"" * p.d * "\"),\n"
+    out *= "                 channels = (P=\"" * c.P * "\", D=\"" * c.D * "\", d=\"" * c.d * "\"),\n"
+    out *= "                 nblank = " * string(method.nblank) * ",\n"
+    out *= "                 ndrift = " * string(method.ndrift) * ",\n"
+    out *= "                 ndown = " * string(method.ndown) * ",\n"
+    out *= "                 PAcutoff = " * ifelse(isnothing(PA),"nothing",PA) * ")\n"
     return out
 end
 
@@ -667,9 +667,8 @@ function TUImethod2text(method::Cmethod)
     end
     out  = "elements = DataFrame(" * join(chunks,",\n                     ") * ")\n"
     out *= TUIstandards2text(method.standards)
-    out *= "internal = (" * method.internal[1] * "," * string(method.internal[2]) * ")\n"
-    out *= "method = Cmethod(run,standards,internal;\n"
-    out *= "                 nblank = " * string(method.nblank) * ")"
+    out *= "internal = (\"" * method.internal[1] * "\"," * string(method.internal[2]) * ")\n"
+    out *= "method = Cmethod(elements,standards,internal," * string(method.nblank) * ")"
     return out
 end
 

@@ -12,6 +12,5 @@ elements = DataFrame("Cl35" => "Cl",
                      "U235" => "U",
                      "U238" => "U")
 standards = Dict("NIST612" => "GLASS")
-internal = (Ca43,3.936e6)
-method = Cmethod(run,standards,internal;
-                 nblank = 2)
+internal = ("Ca43",3.936e6)
+method = Cmethod(elements,standards,internal,2)
