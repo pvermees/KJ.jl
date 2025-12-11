@@ -1,0 +1,16 @@
+format = "Agilent"
+multifile = true
+head2name = true
+transformation = "sqrt"
+elements = DataFrame("Cl35" => "Cl",
+                     "Ca43" => "Ca",
+                     "Y89" => "Y",
+                     "Pb206" => "Pb",
+                     "Pb207" => "Pb",
+                     "Pb208" => "Pb",
+                     "Th232" => "Th",
+                     "U235" => "U",
+                     "U238" => "U")
+standards = Dict("NIST612" => "GLASS")
+internal = ("Ca43",3.936e6)
+method = Cmethod(elements,standards,internal,2)

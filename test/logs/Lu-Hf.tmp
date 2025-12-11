@@ -1,11 +1,13 @@
 format = "Agilent"
 multifile = true
 head2name = true
-method = "Lu-Hf"
-options = Dict("drift" => 1,"blank" => 2,"down" => 1)
-PAcutoff = nothing
 transformation = "sqrt"
-glass = Dict("NIST612" => "NIST612")
-standards = Dict("BP_gt" => "BP")
-channels = Dict("P" => "Lu175 -> 175","D" => "Hf176 -> 258","d" => "Hf178 -> 260")
-internal = nothing
+standards = Dict("Hogsbo_gt" => "hog")
+method = Gmethod("Lu-Hf", standards; 
+                 ions = (P="Lu176", D="Hf176", d="Hf177"),
+                 proxies = (P="Lu175", D="Hf176", d="Hf178"),
+                 channels = (P="Lu175 -> 175", D="Hf176 -> 258", d="Hf178 -> 260"),
+                 nblank = 2,
+                 ndrift = 2,
+                 ndown = 1,
+                 PAcutoff = nothing)

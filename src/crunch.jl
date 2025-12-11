@@ -1,157 +1,65 @@
-"""
-getP(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-     vP::Real,vD::Real,vd::Real,
-     sPD::Real,sPd::Real,sDd::Real,
-     x0::Real,y0::Real,y1::Real,
-     ft::AbstractVector,FT::AbstractVector,mf::Real,
-     bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-
-Estimate the true parent intensity from the measurements for isochron-based standards
-"""
-function getP(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-              vP::Real,vD::Real,vd::Real,
-              sPD::Real,sPd::Real,sDd::Real,
-              x0::Real,y0::Real,y1::Real,
-              ft::AbstractVector,FT::AbstractVector,mf::Real,
-              bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. ((((bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*x0*y0+((dm-bdt)*mf^2*vP+(bPt-Pm)*mf^2*sPd)*x0)*y1+(((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*x0^2+((Dm-bDt)*mf*vP+(bPt-Pm)*mf*sPD)*x0)*y0^2+(((Dm*FT-FT*bDt)*ft*mf*sPd+(FT*dm-FT*bdt)*ft*mf*sPD+(2*FT*bPt-2*FT*Pm)*ft*mf*sDd)*x0^2+((bdt-dm)*mf^2*vP+(Pm-bPt)*mf^2*sPd)*x0)*y0+((FT*Pm-FT*bPt)*ft*mf^2*vd+(FT*bdt-FT*dm)*ft*mf^2*sPd)*x0^2)/(mf^2*vP*y1^2+((2*FT*ft*mf*sPD*x0-2*mf^2*vP)*y0-2*FT*ft*mf^2*sPd*x0)*y1+(FT^2*ft^2*vD*x0^2-2*FT*ft*mf*sPD*x0+mf^2*vP)*y0^2+(2*FT*ft*mf^2*sPd*x0-2*FT^2*ft^2*mf*sDd*x0^2)*y0+FT^2*ft^2*mf^2*vd*x0^2)
+function getP(a::IsochronAnchor,
+              c::Cruncher,
+              ft::AbstractVector,
+              FT::AbstractVector)
+    x0,y0,y1 = unpack(a)
+    pmb,Dombi,bomb,bpt,bDot,bbot,vp,vD,vb,spD,spb,sDb,bd,t,T = unpack(c)
+    return @. -((((Dombi*bd^2*vp-bd^2*pmb*spD)*x0*y0+(bd*pmb*spb-bd*bomb*vp)*x0)*y1+((Dombi*FT*bd^2*ft*spD-FT*bd^2*ft*pmb*vD)*x0^2+(bd^2*pmb*spD-Dombi*bd^2*vp)*x0)*y0^2+((-(Dombi*FT*bd*ft*spb)-FT*bd*bomb*ft*spD+2*FT*bd*ft*pmb*sDb)*x0^2+(bd*bomb*vp-bd*pmb*spb)*x0)*y0+(FT*bomb*ft*spb-FT*ft*pmb*vb)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spD*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spb*x0)*y1+(FT^2*bd^2*ft^2*vD*x0^2-2*FT*bd^2*ft*spD*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spb*x0-2*FT^2*bd*ft^2*sDb*x0^2)*y0+FT^2*ft^2*vb*x0^2))
 end
 export getP
-"""
-getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-     vP::Real,vD::Real,vd::Real,
-     sPD::Real,sPd::Real,sDd::Real,
-     x0::Real,y0::Real,y1::Real,
-     ft::AbstractVector,FT::AbstractVector,mf::Real,
-     bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
 
-Estimate the true daughter intensity from the measurements for isochron-based standards
-"""
-function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-              vP::Real,vD::Real,vd::Real,
-              sPD::Real,sPd::Real,sDd::Real,
-              x0::Real,y0::Real,y1::Real,
-              ft::AbstractVector,FT::AbstractVector,mf::Real,
-              bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. -((((bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*y1^2+((((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*x0+(2*Dm-2*bDt)*mf*vP+(2*bPt-2*Pm)*mf*sPD)*y0+((2*Dm*FT-2*FT*bDt)*ft*mf*sPd+(FT*bdt-FT*dm)*ft*mf*sPD+(FT*bPt-FT*Pm)*ft*mf*sDd)*x0)*y1+(((FT*bPt-FT*Pm)*ft*vD+(Dm*FT-FT*bDt)*ft*sPD)*x0+(bDt-Dm)*mf*vP+(Pm-bPt)*mf*sPD)*y0^2+(((FT^2*bdt-FT^2*dm)*ft^2*vD+(Dm*FT^2-FT^2*bDt)*ft^2*sDd)*x0^2+((2*FT*bDt-2*Dm*FT)*ft*mf*sPd+(FT*dm-FT*bdt)*ft*mf*sPD+(FT*Pm-FT*bPt)*ft*mf*sDd)*x0)*y0+((FT^2*bDt-Dm*FT^2)*ft^2*mf*vd+(FT^2*dm-FT^2*bdt)*ft^2*mf*sDd)*x0^2)/(mf^2*vP*y1^2+((2*FT*ft*mf*sPD*x0-2*mf^2*vP)*y0-2*FT*ft*mf^2*sPd*x0)*y1+(FT^2*ft^2*vD*x0^2-2*FT*ft*mf*sPD*x0+mf^2*vP)*y0^2+(2*FT*ft*mf^2*sPd*x0-2*FT^2*ft^2*mf*sDd*x0^2)*y0+FT^2*ft^2*mf^2*vd*x0^2))
+function getD(a::IsochronAnchor,
+              c::Cruncher,
+              ft::AbstractVector,
+              FT::AbstractVector)
+    x0,y0,y1 = unpack(a)
+    pmb,Dombi,bomb,bpt,bDot,bbot,vp,vD,vb,spD,spb,sDb,bd,t,T = unpack(c)
+    return @. ((Dombi*bd^2*vp-bd^2*pmb*spD)*y1^2+(((Dombi*FT*bd^2*ft*spD-FT*bd^2*ft*pmb*vD)*x0-2*Dombi*bd^2*vp+2*bd^2*pmb*spD)*y0+(-(2*Dombi*FT*bd*ft*spb)+FT*bd*bomb*ft*spD+FT*bd*ft*pmb*sDb)*x0)*y1+((FT*bd^2*ft*pmb*vD-Dombi*FT*bd^2*ft*spD)*x0+Dombi*bd^2*vp-bd^2*pmb*spD)*y0^2+((FT^2*bd*bomb*ft^2*vD-Dombi*FT^2*bd*ft^2*sDb)*x0^2+(2*Dombi*FT*bd*ft*spb-FT*bd*bomb*ft*spD-FT*bd*ft*pmb*sDb)*x0)*y0+(Dombi*FT^2*ft^2*vb-FT^2*bomb*ft^2*sDb)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spD*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spb*x0)*y1+(FT^2*bd^2*ft^2*vD*x0^2-2*FT*bd^2*ft*spD*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spb*x0-2*FT^2*bd*ft^2*sDb*x0^2)*y0+FT^2*ft^2*vb*x0^2)
 end
-"""
-getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-     vP::Real,vD::Real,vd::Real,
-     sPD::Real,sPd::Real,sDd::Real,
-     x::Real,y::Real,
-     ft::AbstractVector,FT::AbstractVector,mf::Real,
-     bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
 
-Estimate the true daughter intensity from the measurements for homogeneous standards
-"""
-function getD(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-              vP::Real,vD::Real,vd::Real,
-              sPD::Real,sPd::Real,sDd::Real,
-              x::Real,y::Real,
-              ft::AbstractVector,FT::AbstractVector,mf::Real,
-              bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    return @. ((((dm-bdt)*vD+(bDt-Dm)*sDd)*vP+(bPt-Pm)*sPd*vD+(Dm-bDt)*sPD*sPd+(bdt-dm)*sPD^2+(Pm-bPt)*sDd*sPD)*y+(((FT*Pm-FT*bPt)*ft*vD+(FT*bDt-Dm*FT)*ft*sPD)*vd+(FT*bdt-FT*dm)*ft*sPd*vD+(Dm*FT-FT*bDt)*ft*sDd*sPd+(FT*dm-FT*bdt)*ft*sDd*sPD+(FT*bPt-FT*Pm)*ft*sDd^2)*x+((Dm-bDt)*mf*vP+(bPt-Pm)*mf*sPD)*vd+(bdt-dm)*mf*sDd*vP+(bDt-Dm)*mf*sPd^2+((dm-bdt)*mf*sPD+(Pm-bPt)*mf*sDd)*sPd)/((vD*vP-sPD^2)*y^2+((2*FT*ft*sDd*sPD-2*FT*ft*sPd*vD)*x-2*mf*sDd*vP+2*mf*sPD*sPd)*y+(FT^2*ft^2*vD*vd-FT^2*ft^2*sDd^2)*x^2+(2*FT*ft*mf*sDd*sPd-2*FT*ft*mf*sPD*vd)*x+mf^2*vP*vd-mf^2*sPd^2)
+function getD(a::PointAnchor,
+              c::Cruncher,
+              ft::AbstractVector,
+              FT::AbstractVector)
+    x,y = unpack(a)
+    pmb,Dombi,bomb,bpt,bDot,bbot,vp,vD,vb,spD,spb,sDb,bd,t,T = unpack(c)
+    return @. (((bd*bomb*vD-Dombi*bd*sDb)*vp-bd*pmb*spb*vD+Dombi*bd*spD*spb-bd*bomb*spD^2+bd*pmb*sDb*spD)*y+((FT*ft*pmb*vD-Dombi*FT*ft*spD)*vb-FT*bomb*ft*spb*vD+Dombi*FT*ft*sDb*spb+FT*bomb*ft*sDb*spD-FT*ft*pmb*sDb^2)*x+(Dombi*vb-bomb*sDb)*vp-pmb*spD*vb-Dombi*spb^2+(bomb*spD+pmb*sDb)*spb)/((bd^2*vD*vp-bd^2*spD^2)*y^2+((2*FT*bd*ft*sDb*spD-2*FT*bd*ft*spb*vD)*x-2*bd*sDb*vp+2*bd*spD*spb)*y+(FT^2*ft^2*vD*vb-FT^2*ft^2*sDb^2)*x^2+(2*FT*ft*sDb*spb-2*FT*ft*spD*vb)*x+vb*vp-spb^2)
 end
-"""
-getD(Dm::AbstractVector,dm::AbstractVector,
-     vD::Real,vd::Real,sDd::Real,
-     y::Real,
-     mf::Real,
-     bDt::AbstractVector,bdt::AbstractVector)
 
-Estimate the true daughter intensity from the measurements for reference glass
-"""
-function getD(Dm::AbstractVector,dm::AbstractVector,
-              vD::Real,vd::Real,sDd::Real,
-              y::Real,
-              mf::Real,
-              bDt::AbstractVector,bdt::AbstractVector)
-    return (((dm-bdt)*vD+(bDt-Dm)*sDd)*y+(Dm-bDt)*mf*vd+(bdt-dm)*mf*sDd)/(vD*y^2-2*mf*sDd*y+mf^2*vd)
-
+function SS(a::IsochronAnchor,
+            c::Cruncher,
+            ft::AbstractVector,
+            FT::AbstractVector)
+    Po = getP(a,c,ft,FT)
+    Do = getD(a,c,ft,FT)
+    x0,y0,y1 = unpack(a)
+    pmb,Dombi,bomb,bpt,bDot,bbot,vp,vD,vb,spD,spb,sDb,bd,t,T = unpack(c)
+    maha = @. (bomb-bd*((Po*(y1-y0))/x0+Do*y0))*(((vD*vp-spD^2)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(sDb*spD-spb*vD))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(Dombi-Do)*(((spD*spb-sDb*vp)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(pmb-FT*Po*ft)*(((sDb*spD-spb*vD)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(vD*vb-sDb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
+    return sum(@. maha )
 end
-export getD
 
-"""
-SS(par::NamedTuple,
-   run::Vector{Sample},
-   method::AbstractString,
-   standards::AbstractDict,
-   blank::AbstractDataFrame,
-   channels::AbstractDict;
-   verbose::Bool=false)
-
-Sum of squares function for testing purposes
-"""
-function SS(par::NamedTuple,
-            run::Vector{Sample},
-            method::AbstractString,
-            standards::AbstractDict,
-            blank::AbstractDataFrame,
-            channels::AbstractDict;
-            verbose::Bool=false)
-    anchors = getStandardAnchors(method,standards)
-    dats, covs, bP, bD, bd = SSfitprep(run,blank,anchors,channels)
-    parvec = [par.drift; par.down]
-    ndrift = length(par.drift)
-    ndown = length(par.down)
-    mf = exp(par.mfrac)
-    return SS(parvec,bP,bD,bd,dats,covs,channels,anchors,mf;
-              ndrift=ndrift,ndown=ndown,PAcutoff=par.PAcutoff,
-              verbose=verbose)
+function SS(a::PointAnchor,
+            c::Cruncher,
+            ft::AbstractVector,
+            FT::AbstractVector)
+    Do = getD(a,c,ft,FT)
+    x,y= unpack(a)
+    pmb,Dombi,bomb,bpt,bDot,bbot,vp,vD,vb,spD,spb,sDb,bd,t,T = unpack(c)
+    maha = @. (bomb-Do*bd*y)*(((vD*vp-spD^2)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spD-spb*vD)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(Dombi-Do)*(((spD*spb-sDb*vp)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spb-spD*vb)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(pmb-Do*FT*ft*x)*(((sDb*spD-spb*vD)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((vD*vb-sDb^2)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
+    return sum(@. maha )
 end
-"""
-SS(par::AbstractVector,
-   bP::AbstractVector,
-   bD::AbstractVector,
-   bd::AbstractVector,
-   dats::AbstractDict,
-   covs::AbstractDict,
-   channels::AbstractDict,
-   anchors::AbstractDict,
-   mf::Union{Real,Nothing};
-   ndrift::Integer=1,
-   ndown::Integer=0,
-   PAcutoff::Union{Real,Nothing}=nothing,
-   verbose::Bool=false)
 
-Sum of squares for mass fractionation + elemental fractionation
-"""
 function SS(par::AbstractVector,
-            bP::AbstractVector,
-            bD::AbstractVector,
-            bd::AbstractVector,
-            dats::AbstractDict,
-            covs::AbstractDict,
-            channels::AbstractDict,
-            anchors::AbstractDict,
-            mf::Union{Real,Nothing};
-            ndrift::Integer=1,
-            ndown::Integer=0,
-            PAcutoff::Union{Real,Nothing}=nothing,
+            method::Gmethod,
+            cruncher_groups::AbstractDict;
             verbose::Bool=false)
-    drift = par[1:ndrift]
-    down = vcat(0.0,par[ndrift+1:ndrift+ndown])
-    mfrac = isnothing(mf) ? par[ndrift+ndown+1] : log(mf)
-    adrift = isnothing(PAcutoff) ? drift : par[end-ndrift+1:end]
+    fit = par2fit(par,method)
     out = 0.0
-    for (refmat,dat) in dats
-        covmat = covs[refmat]
-        a = anchors[refmat]
-        for spot in eachindex(dat)
-            Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,ft,FT,mf,bPt,bDt,bdt =
-                SSprep(bP,bD,bd,dat[spot],covmat[spot],
-                       channels,mfrac,drift,down;
-                       PAcutoff=PAcutoff,adrift=adrift)
-            if is_isochron_anchor(a)
-                out += SS(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,
-                          a.x0,a.y0,a.y1,ft,FT,mf,bPt,bDt,bdt)
-            elseif is_point_anchor(a)
-                out += SS(Pm,Dm,dm,vP,vD,vd,sPD,sPD,sDd,
-                          a.x,a.y,ft,FT,mf,bPt,bDt,bdt)
-            else
-                error("Invalid anchor.")
-            end
+    for crunchers in values(cruncher_groups)
+        a = crunchers.anchor
+        for c in crunchers.crunchers
+            ft, FT = ft_FT(c,method,fit)
+            out += SS(a,c,ft,FT)
         end
     end
     if verbose
@@ -159,353 +67,71 @@ function SS(par::AbstractVector,
     end
     return out
 end
-"""
-SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-   vP::Real,vD::Real,vd::Real,
-   sPD::Real,sPd::Real,sDd::Real,
-   x0::Real,y0::Real,y1::Real,
-   ft::AbstractVector,FT::AbstractVector,mf::Real,
-   bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-
-Sum of squares for isochron-based standards
-"""
-function SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-            vP::Real,vD::Real,vd::Real,
-            sPD::Real,sPd::Real,sDd::Real,
-            x0::Real,y0::Real,y1::Real,
-            ft::AbstractVector,FT::AbstractVector,mf::Real,
-            bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    P = getP(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    maha = @. (-((P*(y1-y0))/x0)-D*y0+dm-bdt)*(((vD*vP-sPD^2)*(-((P*(y1-y0))/x0)-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sPD*sPd-sDd*vP))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(sDd*sPD-sPd*vD))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(D*mf)-bDt+Dm)*(((sPD*sPd-sDd*vP)*(-((P*(y1-y0))/x0)-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(vP*vd-sPd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(FT*P*ft)-bPt+Pm)*(((sDd*sPD-sPd*vD)*(-((P*(y1-y0))/x0)-D*y0+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(FT*P*ft)-bPt+Pm)*(vD*vd-sDd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))
-    return sum(@. maha )
-end
-"""
-SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-   vP::Real,vD::Real,vd::Real,
-   sPD::Real,sPd::Real,sDd::Real,
-   x::Real,y::Real,
-   ft::AbstractVector,FT::AbstractVector,mf::Real,
-   bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-
-Sum of squares for homogeneous standards
-"""
-function SS(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-            vP::Real,vD::Real,vd::Real,
-            sPD::Real,sPd::Real,sDd::Real,
-            x::Real,y::Real,
-            ft::AbstractVector,FT::AbstractVector,mf::Real,
-            bPt::AbstractVector,bDt::AbstractVector,bdt::AbstractVector)
-    D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x,y,ft,FT,mf,bPt,bDt,bdt)
-    maha = @. (-(D*y)+dm-bdt)*(((vD*vP-sPD^2)*(-(D*y)+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((sDd*sPD-sPd*vD)*(-(D*FT*ft*x)-bPt+Pm))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sPD*sPd-sDd*vP))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(D*mf)-bDt+Dm)*(((sPD*sPd-sDd*vP)*(-(D*y)+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((sDd*sPd-sPD*vd)*(-(D*FT*ft*x)-bPt+Pm))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(vP*vd-sPd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(-(D*FT*ft*x)-bPt+Pm)*(((sDd*sPD-sPd*vD)*(-(D*y)+dm-bdt))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((vD*vd-sDd^2)*(-(D*FT*ft*x)-bPt+Pm))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((-(D*mf)-bDt+Dm)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))
-    return sum(@. maha )
-end
-"""
-SS(par::AbstractVector,
-   bD::AbstractVector,bd::AbstractVector,
-   dats::AbstractDict,covs::AbstractDict,
-   channels::AbstractDict,
-   anchors::AbstractDict;
-   verbose::Bool=false)
-
-Sum of squares for glass
-"""
-function SS(par::AbstractVector,
-            bD::AbstractVector,bd::AbstractVector,
-            dats::AbstractDict,covs::AbstractDict,
-            channels::AbstractDict,
-            anchors::AbstractDict;
-            verbose::Bool=false)
-    mf = exp(par[1])
-    out = 0.0
-    for (refmat,dat) in dats
-        y = anchors[refmat]
-        covmat = covs[refmat]
-        for spot in eachindex(dat)
-            Dm,dm,vD,vd,sDd,bDt,bdt =
-                SSprep(bD,bd,dat[spot],covmat[spot],channels)
-            out += SS(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
-        end
-    end
-    if verbose
-        println(par,out)
-    end
-    return out
-end
-"""
-SS(Dm::AbstractVector,
-   dm::AbstractVector,
-   vD::Real,
-   vd::Real,
-   sDd::Real,
-   y::Real,
-   mf::Real,
-   bDt::AbstractVector,bdt::AbstractVector)
-
-Sum of squares for glass
-"""
-function SS(Dm::AbstractVector,
-            dm::AbstractVector,
-            vD::Real,
-            vd::Real,
-            sDd::Real,
-            y::Real,
-            mf::Real,
-            bDt::AbstractVector,bdt::AbstractVector)
-    D = getD(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
-    maha = @. (-(D*y)+dm-bdt)*((vD*(-(D*y)+dm-bdt))/(vD*vd-sDd^2)-((-(D*mf)-bDt+Dm)*sDd)/(vD*vd-sDd^2))+(-(D*mf)-bDt+Dm)*(((-(D*mf)-bDt+Dm)*vd)/(vD*vd-sDd^2)-(sDd*(-(D*y)+dm-bdt))/(vD*vd-sDd^2))
-    return sum(@. maha )
-end
 export SS
 
-# isochron or point
-function SSprep(bP::AbstractVector,
-                bD::AbstractVector,
-                bd::AbstractVector,
-                dat::AbstractDataFrame,
-                covmat::Matrix,
-                channels::AbstractDict,
-                mfrac::Number,
-                drift::AbstractVector,
-                down::AbstractVector;
-                PAcutoff::Union{Real,Nothing}=nothing,
-                adrift::AbstractVector=drift)
-    t = dat.t
-    T = dat.T
-    sig = getSignals(dat)
-    iP = columnindex(sig,channels["P"])
-    iD = columnindex(sig,channels["D"])
-    id = columnindex(sig,channels["d"])
-    Pm = sig[:,iP]
-    Dm = sig[:,iD]
-    dm = sig[:,id]
-    vP = covmat[iP,iP]
-    vD = covmat[iD,iD]
-    vd = covmat[id,id]
-    sPD = covmat[iP,iD]
-    sPd = covmat[iP,id]
-    sDd = covmat[iD,id]
-    ft = get_drift(Pm,t,drift;
-                   PAcutoff=PAcutoff,adrift=adrift)
-    FT = polyFac(down,T)
-    mf = exp(mfrac)
-    bPt = polyVal(bP,t)
-    bDt = polyVal(bD,t)
-    bdt = polyVal(bd,t)
-    return Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,ft,FT,mf,bPt,bDt,bdt
-end
-# glass
-function SSprep(bD::AbstractVector,bd::AbstractVector,
-                dat::AbstractDataFrame,covmat::Matrix,
-                channels::AbstractDict)
-    t = dat.t
-    sig = getSignals(dat)
-    iD = columnindex(sig,channels["D"])
-    id = columnindex(sig,channels["d"])
-    Dm = sig[:,iD]
-    dm = sig[:,id]
-    vD = covmat[iD,iD]
-    vd = covmat[id,id]
-    sDd = covmat[iD,id]
-    bDt = polyVal(bD,t)
-    bdt = polyVal(bd,t)
-    return Dm,dm,vD,vd,sDd,bDt,bdt
-end
-
-"""
-predict(samp::Sample,
-        method::AbstractString,
-        pars::NamedTuple,
-        blank::AbstractDataFrame,
-        channels::AbstractDict,
-        standards::AbstractDict,
-        glass::AbstractDict;
-        debug::Bool=false)
-
-Predict fitted signals for isochrons or points
-"""
 function predict(samp::Sample,
-                 method::AbstractString,
-                 pars::NamedTuple,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 standards::AbstractDict,
-                 glass::AbstractDict;
-                 debug::Bool=false)
-    anchors = getAnchors(method,standards,glass)
-    return predict(samp,pars,blank,channels,anchors;debug=debug)
-end
-"""
-predict(samp::Sample,
-        pars::NamedTuple,
-        blank::AbstractDataFrame,
-        channels::AbstractDict,
-        anchors::AbstractDict;
-        debug::Bool=false)
-"""
-function predict(samp::Sample,
-                 pars::NamedTuple,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 anchors::AbstractDict;
-                 debug::Bool=false)
-    if samp.group == "sample"
+                 method::Gmethod,
+                 fit::Gfit;
+                 kw...)
+    if samp.group in keys(method.standards)
+        a = getAnchor(method.name,samp.group)
+        c = Cruncher(samp,method,fit)
+        ft, FT = ft_FT(c,method,fit)
+        return predict(a,c,ft,FT)
+    else
         KJerror("notStandard")
-    else
-        dat = windowData(samp;signal=true)
-        sig = getSignals(dat)
-        covmat = df2cov(sig)
-        anchor = anchors[samp.group]
-        return predict(dat,covmat,pars,blank,channels,anchor;debug=debug)
     end
 end
-"""
-predict(dat::AbstractDataFrame,
-        covmat::Matrix,
-        pars::NamedTuple,
-        blank::AbstractDataFrame,
-        channels::AbstractDict,
-        anchor::NamedTuple;
-        debug::Bool=false)
-"""
-function predict(dat::AbstractDataFrame,
-                 covmat::Matrix,
-                 pars::NamedTuple,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 anchor::NamedTuple;
-                 debug::Bool=false)
-    bP = blank[:,channels["P"]]
-    bD = blank[:,channels["D"]]
-    bd = blank[:,channels["d"]]
-    Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,ft,FT,mf,bPt,bDt,bdt =
-        SSprep(bP,bD,bd,dat,covmat,channels,
-               pars.mfrac,pars.drift,pars.down;
-               PAcutoff=pars.PAcutoff,adrift=pars.adrift)
-    if is_isochron_anchor(anchor)
-        return predict(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,
-                       anchor.x0,anchor.y0,anchor.y1,
-                       ft,FT,mf,bPt,bDt,bdt)
-    elseif is_point_anchor(anchor)
-        return predict(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,
-                       anchor.x,anchor.y,
-                       ft,FT,mf,bPt,bDt,bdt)        
+
+function predict(samp::Sample,
+                 method::Cmethod,
+                 fit::Cfit;
+                 kw...)
+    if samp.group in keys(method.standards)
+        internal = method.internal[1]
+        dat = swinData(samp)
+        bt = polyVal(fit.blank,dat.t)
+        S = getSignals(dat)[:,internal] .- bt[:,internal]
+        C = getConcentrations(method,samp.group)
+        Cs = C[1,internal]
+        return @. S * fit.par * C / Cs + bt
     else
-        error("Invalid anchor")
+        KJerror("notStandard")
     end
 end
-"""
-predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-        vP::Real,vD::Real,vd::Real,
-        sPD::Real,sPd::Real,sDd::Real,
-        x0::Real,y0::Real,y1::Real,
-        ft::AbstractVector,FT::AbstractVector,mf::Real,
-        bPt::AbstractVector,bDt::AbstractVector,
-        bdt::AbstractVector)
 
-For isochron-based standards
-"""
-function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-                 vP::Real,vD::Real,vd::Real,
-                 sPD::Real,sPd::Real,sDd::Real,
-                 x0::Real,y0::Real,y1::Real,
-                 ft::AbstractVector,FT::AbstractVector,mf::Real,
-                 bPt::AbstractVector,bDt::AbstractVector,
-                 bdt::AbstractVector)
-    P = getP(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x0,y0,y1,ft,FT,mf,bPt,bDt,bdt)
-    Pf = @. P*ft*FT + bPt
-    Df = @. D*mf + bDt
-    df = @. D*y0 + P*(y1-y0)/x0 + bdt
-    return DataFrame(P=Pf,D=Df,d=df)
+function predict(a::IsochronAnchor,
+                 c::Cruncher,
+                 ft::AbstractVector,
+                 FT::AbstractVector)
+    Po = getP(a,c,ft,FT)
+    Do = getD(a,c,ft,FT)
+    pf = @. Po*ft*FT + c.bpt
+    Dof = @. Do + c.bDot
+    bof = @. (Do*a.y0 + Po*(a.y1-a.y0)/a.x0)*c.bd + c.bbot
+    return DataFrame(P=pf,D=Dof,d=bof)
 end
-"""
-predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-        vP::Real,vD::Real,vd::Real,
-        sPD::Real,sPd::Real,sDd::Real,
-        x::Real,y::Real,
-        ft::AbstractVector,FT::AbstractVector,mf::Real,
-        bPt::AbstractVector,bDt::AbstractVector,
-        bdt::AbstractVector)
 
-For homogeneous standards
-"""
-function predict(Pm::AbstractVector,Dm::AbstractVector,dm::AbstractVector,
-                 vP::Real,vD::Real,vd::Real,
-                 sPD::Real,sPd::Real,sDd::Real,
-                 x::Real,y::Real,
-                 ft::AbstractVector,FT::AbstractVector,mf::Real,
-                 bPt::AbstractVector,bDt::AbstractVector,
-                 bdt::AbstractVector)
-    D = getD(Pm,Dm,dm,vP,vD,vd,sPD,sPd,sDd,x,y,ft,FT,mf,bPt,bDt,bdt)
-    Pf = @. D*x*ft*FT + bPt
-    Df = @. D*mf + bDt
-    df = @. D*y + bdt
-    return DataFrame(P=Pf,D=Df,d=df)
+function predict(a::PointAnchor,
+                 c::Cruncher,
+                 ft::AbstractVector,
+                 FT::AbstractVector)
+    Do = getD(a,c,ft,FT)
+    pf = @. Do*a.x*ft*FT + c.bpt
+    Dof = @. Do + c.bDot
+    bof = @. Do*a.y*c.bd + c.bbot
+    return DataFrame(P=pf,D=Dof,d=bof)
 end
-"""
-predict(dat::AbstractDataFrame,
-        covmat::Matrix,
-        pars::NamedTuple,
-        blank::AbstractDataFrame,
-        channels::AbstractDict,
-        y::Real;
-        debug::Bool=false)
 
-For glass
-"""
-function predict(dat::AbstractDataFrame,
-                 covmat::Matrix,
-                 pars::NamedTuple,
-                 blank::AbstractDataFrame,
-                 channels::AbstractDict,
-                 y::Real;
-                 debug::Bool=false)
-    mf = exp(pars.mfrac)
-    bD = blank[:,channels["D"]]
-    bd = blank[:,channels["d"]]
-    Dm,dm,vD,vd,sDd,bDt,bdt = SSprep(bD,bd,dat,covmat,channels)
-    return predict(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
-end
-"""
-predict(Dm::AbstractVector,dm::AbstractVector,
-        vD::Real,vd::Real,sDd::Real,
-        y::Real,
-        mf::Real,
-        bDt::AbstractVector,
-        bdt::AbstractVector)
-"""
-function predict(Dm::AbstractVector,dm::AbstractVector,
-                 vD::Real,vd::Real,sDd::Real,
-                 y::Real,
-                 mf::Real,
-                 bDt::AbstractVector,
-                 bdt::AbstractVector)
-    D = getD(Dm,dm,vD,vd,sDd,y,mf,bDt,bdt)
-    Df = @. D*mf + bDt
-    df = @. D*y + bdt
-    return DataFrame(D=Df,d=df)
-end
-"""
-predict(samp::Sample,
-        ef::AbstractVector,
-        blank::AbstractDataFrame,
-        elements::AbstractDataFrame,
-        internal::AbstractString;
-        debug::Bool=false)
-
-For concentrations
-"""
 function predict(samp::Sample,
                  ef::AbstractVector,
                  blank::AbstractDataFrame,
                  elements::AbstractDataFrame,
                  internal::AbstractString;
-                 debug::Bool=false)
+                 kwargs...)
     if samp.group in _KJ["glass"].names
         dat = windowData(samp;signal=true)
         sig = getSignals(dat)
-        Xm = sig[:,Not(internal)]
         Sm = sig[:,internal]
         concs = elements2concs(elements,samp.group)
         R = collect((concs[:,Not(internal)]./concs[:,internal])[1,:])
@@ -520,17 +146,66 @@ function predict(samp::Sample,
         KJerror("notStandard")
     end
 end
-"""
-predict(samp::Sample,
-        blank::AbstractDataFrame;
-        debug::Bool=false)
 
-For blanks
-"""
+
 function predict(samp::Sample,
                  blank::AbstractDataFrame;
-                 debug::Bool=false)
-    dat = windowData(samp;blank=true)
+                 kwargs...)
+    dat = bwinData(samp)
     return polyVal(blank,dat.t)
 end
 export predict
+
+function ft_FT(c::Cruncher,
+               m::Gmethod,
+               f::Gfit)
+    ft = polyFac(f.drift,c.t)
+    if !isnothing(m.PAcutoff)
+        analog = c.pmb .> m.PAcutoff
+        ft[analog] = polyFac(f.adrift,c.t)[analog]
+    end
+    FT = polyFac(f.down,c.T)
+    return ft, FT
+end
+
+function Cruncher(samp::Sample,
+                  method::Gmethod,
+                  fit::Gfit)
+
+    dat = swinData(samp)
+    
+    ch = getChannels(method;as_tuple=true)
+    pm = dat[:,ch.P]
+    Dom = dat[:,ch.D]
+    bom = dat[:,ch.d]
+
+    blank = fit.blank
+    t = dat.t
+    bpt = polyVal(blank[:,ch.P],t)
+    bDot = polyVal(blank[:,ch.D],t)
+    bbot = polyVal(blank[:,ch.d],t)
+
+    pmb = pm - bpt
+    Domb = Dom - bDot # TODO: add interference correction
+    bomb = bom - bbot
+
+    sig = hcat(pmb,Domb,bomb)
+    covmat = df2cov(sig)
+    vP = covmat[1,1]
+    vD = covmat[2,2]
+    vd = covmat[3,3]
+    sPD = covmat[1,2]
+    sPd = covmat[1,3]
+    sDd = covmat[2,3]
+    
+    ions = getIons(method)
+    proxies = getProxies(method)
+    bd = iratio(proxies.d,ions.d)
+
+    t = dat.t
+    T = dat.T
+
+    return Cruncher(pmb,Domb,bomb,bpt,bDot,bbot,vP,vD,vd,sPD,sPd,sDd,bd,t,T)
+    
+end
+export Cruncher

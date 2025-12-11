@@ -82,7 +82,7 @@ end
 """
 polyFac(p::AbstractVector,t::AbstractVector)
 
-Returns the sum od p[i].*t.^(i-1) for all values of p
+Returns the exponent of the sum of p[i].*t.^(i-1) for all values of p
 """
 function polyFac(p::AbstractVector,
                  t::AbstractVector)
@@ -185,49 +185,6 @@ function autoWindow(samp::Sample;
     return autoWindow(samp.dat[:,1],samp.t0;blank=blank)
 end
 
-"""
-pool(run::Vector{Sample};
-     blank::Bool=false,
-     signal::Bool=false,
-     group::Union{Nothing,AbstractString}=nothing,
-     include_covmats::Bool=false,
-     add_xy::Bool=false)
-
-Returns a vector of blanks and/or signals plus
-(if include_covmats is true), a vector of their
-covariance matrices. Does not include any values
-marked as outliers.
-"""
-function pool(run::Vector{Sample};
-              blank::Bool=false,
-              signal::Bool=false,
-              group::Union{Nothing,AbstractString}=nothing,
-              include_covmats::Bool=false,
-              add_xy::Bool=false)
-    selection = group2selection(run,group)
-    ns = length(selection)
-    dats = Vector{DataFrame}(undef,ns)
-    for i in eachindex(selection)
-        dat = windowData(run[selection[i]];
-                         blank=blank,
-                         signal=signal,
-                         add_xy=add_xy)
-        good = .!dat.outlier
-        dats[i] = dat[good,:]
-    end
-    if include_covmats
-        covs = Vector{Matrix}(undef,ns)
-        for i in eachindex(selection)
-            sig = getSignals(dats[i])
-            covs[i] = df2cov(sig)
-        end
-        return dats, covs
-    else
-        return dats
-    end
-end
-export pool
-
 function group2selection(run::Vector{Sample},
                          group::Union{Nothing,AbstractString}=nothing)
     if isnothing(group)
@@ -268,91 +225,6 @@ function var_timeseries(cps::AbstractVector)
     return fill(var,length(cps))
 end
 export var_timeseries
-
-"""
-windowData(samp::Sample;
-           blank::Bool=false,
-           signal::Bool=false,
-           add_xy::Bool=false)
-
-Return the blank and/or signal data from samp.
-"""
-function windowData(samp::Sample;
-                    blank::Bool=false,
-                    signal::Bool=false,
-                    add_xy::Bool=false)
-    if blank
-        windows = samp.bwin
-    elseif signal
-        windows = samp.swin
-    else
-        windows = [(1,size(samp.dat,1))]
-    end
-    selection, x, y = windows2selection(windows;add_xy=add_xy)
-    selected_dat =  samp.dat[selection,:]
-    if signal
-        selected_dat.T = (selected_dat[:,1] .- samp.t0)./60 # in minutes
-        if !(isnothing(x) || isnothing(y))
-            selected_dat.x = x
-            selected_dat.y = y
-        end
-    end
-    return selected_dat
-end
-export windowData
-
-function windows2selection(windows::AbstractVector;
-                           add_xy::Bool=false)
-    selection = Integer[]
-    add_xy = add_xy && length(windows[1])>2
-    if add_xy
-        x = Float64[]
-        y = Float64[]
-    else
-        x = y = nothing
-    end
-    for w in windows
-        append!(selection, w[1]:w[2])
-        if add_xy
-            nsweeps = w[2]-w[1]+1
-            append!(x,range(w[3],w[4];length=nsweeps))
-            append!(y,range(w[5],w[6];length=nsweeps))
-        end
-    end
-    return selection, x, y
-end
-
-function string2windows(samp::Sample,text::AbstractString,single::Bool)
-    if single
-        parts = split(text,',')
-        stime = [parse(Float64,parts[1])]
-        ftime = [parse(Float64,parts[2])]
-        nw = 1
-    else
-        parts = split(text,['(',')',','])
-        stime = parse.(Float64,parts[2:4:end])
-        ftime = parse.(Float64,parts[3:4:end])
-        nw = Int(round(size(parts,1)/4))
-    end
-    windows = Vector{Tuple}(undef,nw)
-    t = samp.dat[:,1]
-    nt = size(t,1)
-    maxt = t[end]
-    for i in 1:nw
-        if stime[i]>t[end]
-            stime[i] = t[end-1]
-            print("Warning: start point out of bounds and truncated to ")
-            print(string(stime[i]) * " seconds.")
-        end
-        if ftime[i]>t[end]
-            ftime[i] = t[end]
-            print("Warning: end point out of bounds and truncated to ")
-            print(string(maxt) * " seconds.")
-        end
-        windows[i] = time2window(samp,stime[i],ftime[i])
-    end
-    return windows
-end
 
 """
 t2i(samp::Sample,t::Number)
@@ -533,11 +405,11 @@ end
 function dict2string(dict::AbstractDict)
     k = collect(keys(dict))
     v = collect(values(dict))
-    q = isa(v[1],AbstractString) ? '"' : ""
-    out = "Dict(" * '"' * k[1] * '"' * " => " * q * string(v[1]) * q
-    for i in 2:length(k)
+    out = "Dict("
+    for i in eachindex(k)
         q = isa(v[i],AbstractString) ? '"' : ""
-        out *= "," * '"' * k[i] * '"' * " => " * q * string(v[i]) * q
+        if i>1 out *= ',' end
+        out *= '"' * k[i] * '"' * " => " * q * string(v[i]) * q
     end
     out *= ")"
     return out
@@ -547,49 +419,30 @@ function vec2string(v::AbstractVector)
     return "[\"" * join(v .* "\",\"")[1:end-3] * "\"]"
 end
 
-"""
-channels2elements(samp::Sample)
-
-Export the names of the elements corresponding to the channels in a
-sample or run.
-"""
 function channels2elements(samp::Sample)
     channels = getChannels(samp)
-    out = DataFrame()
-    elements = collect(keys(_KJ["nuclides"]))
-    for channel in channels
-        out[!,channel] = channel2element(channel,elements)
-    end
-    return out    
+    channel2element.(channels)
 end
-"""
-channels2elements(run::AbstractVector)
-"""
-function channels2elements(run::AbstractVector)
+function channels2elements(run::Vector{Sample})
     return channels2elements(run[1])
 end
-export channels2elements
 
-function channel2element(channel::AbstractString,
-                         elements::AbstractVector)
+function channel2element(channel::AbstractString)
+    nuclides = _KJ["nuclides"]
+    elements = String.(keys(nuclides))
     matches = findall(occursin.(elements,channel))
     if length(matches)>1 # e.g. "B" and "Be"
         for element in elements[matches]
-            isotopes = string.(_KJ["nuclides"][element])
+            isotopes = string.(nuclides[element])
             hasisotope = findall(occursin.(isotopes,channel))
             if !isempty(hasisotope)
-                return [element]
-                break
+                return element
             end
         end
     else # e.g. "Pb"
-        return elements[matches]
+        return only(elements[matches])
     end
     return nothing
-end
-function channel2element(channel::AbstractString)
-    elements = collect(keys(_KJ["nuclides"]))
-    return channel2element(channel,elements)
 end
 
 # elements = 1-row dataframe of elements with channels as column names
@@ -628,4 +481,22 @@ function dataframe_sum(df::AbstractDataFrame)
         end
     end
     return total
+end
+
+function iratio(nuclide1::Union{Missing,AbstractString},
+                nuclide2::Union{Missing,AbstractString})
+    if ismissing(nuclide1) || ismissing(nuclide2)
+        return 1.0
+    end
+    abundances = merge(values(_KJ["iratio"])...)
+    key1 = Symbol(nuclide1)
+    key2 = Symbol(nuclide2)
+    return abundances[key1]/abundances[key2]
+end
+export iratio
+
+function unpack(s)
+    type = typeof(s)
+    field_names = fieldnames(type)
+    return map(field -> getfield(s, field), field_names)
 end

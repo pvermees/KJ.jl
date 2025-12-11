@@ -49,14 +49,13 @@ end
 export TUI
 
 function dispatch!(ctrl::AbstractDict;
-                   key=nothing,response=nothing,verbose=false)
+                   key = ctrl["chain"][end],
+                   response = nothing,
+                   verbose::Bool=false)
     if verbose
         println(ctrl["chain"])
         print("key: " * key)
         println(", response: " * response)
-    end
-    if isnothing(key)
-        key = ctrl["chain"][end]
     end
     (message,help,action) = _KJ["tree"][key]
     if isa(message,Function)
@@ -148,9 +147,10 @@ function init_KJtree()
                 "r" => TUIread,
                 "m" => "method",
                 "t" => TUItabulate,
-                "s" => "standards",
-                "g" => "glass",
                 "v" => TUIviewer,
+                "f" => "standards",
+                "b" => TUItodo!, # "glass",
+                "i" => TUItodo!, # "interferences",
                 "p" => TUIprocess!,
                 "e" => "export",
                 "l" => "log",
@@ -253,7 +253,15 @@ function init_KJtree()
         "columns" => (
             message = TUIcolumnMessage,
             help = nothing,
-            action = TUIcolumns!
+            action = TUIsetChannels!
+        ),
+        "setProxies" => (
+            message = TUIsetProxiesMessage,
+            help = "KJ is having trouble mapping the mass spectrometer " *
+            "channels to isotopic proxies. Please help it by identifying " *
+            "the isotopes measured by the different channels by listing " *
+            "them as a comma-separated list of numbers.",
+            action = TUIsetProxies!
         ),
         "mineral" => (
             message = TUImineralMessage,
@@ -267,18 +275,16 @@ function init_KJtree()
         ),
         "standards" => (
             message =
-            "a: Add a mineral standard\n" * 
-            "r: Remove mineral standards\n" * 
-            "l: List the available mineral standards\n" * 
+            "a: Add a reference material\n" * 
+            "r: Remove reference materials\n" * 
+            "l: List the available reference materials\n" * 
             "t: Tabulate all the samples\n" * 
             "x: Exit\n" * 
             "?: Help",
             help =
             "Choose one or more primary reference materials. " * 
             "Note that secondary reference materials should be " * 
-            "treated as regular samples. It is always better to use " *
-            "matrix matched reference materials. Only use (NIST) glass " *
-            "if no matrix matched standard is available.",
+            "treated as regular samples.",
             action = Dict(
                 "a" => "chooseStandard",
                 "r" => "removeStandard",
@@ -289,7 +295,7 @@ function init_KJtree()
         "chooseStandard" => (
             message = TUIchooseStandardMessage,
             help =
-            "If you do not find your mineral standard in this list, " * 
+            "If you do not find your reference material in this list, " * 
             "then you can either specify your own reference " * 
             "material under 'options' in the top menu, or " * 
             "you can email us to add the material to the software.",
@@ -551,9 +557,9 @@ function init_KJtree()
                 "a" => TUIoneAutoBlankWindow!,
                 "s" => "oneSingleBlankWindow",
                 "m" => "oneMultiBlankWindow",
-                "A" => TUIallAutoBlankWindow!,
-                "S" => "allSingleBlankWindow",
-                "M" => "allMultiBlankWindow"
+                "A" => TUIallAutoBlankWindows!,
+                "S" => "allSingleBlankWindows",
+                "M" => "allMultiBlankWindows"
             )
         ),
         "oneSingleBlankWindow" => (
@@ -578,7 +584,7 @@ function init_KJtree()
             "selection window from 0 to 20s, and from 25 to 30s.",
             action = TUIoneMultiBlankWindow!
         ),
-        "allSingleBlankWindow" => (
+        "allSingleBlankWindows" => (
             message =
             "Enter the start and end point of the selection window " * 
             "(in seconds). Type '?' for help and 'x' to exit.",
@@ -586,9 +592,9 @@ function init_KJtree()
             "Specify the start and end point of the blank windows " * 
             "as a comma-separated pair of numbers. For example: " * 
             "0,20 marks a blank window from 0 to 20 seconds.",
-            action = TUIallSingleBlankWindow!
+            action = TUIallSingleBlankWindows!
         ),
-        "allMultiBlankWindow" => (
+        "allMultiBlankWindows" => (
             message =
             "Enter the start and end points of the multi-part " * 
             "selection window (in seconds). " * 
@@ -598,7 +604,7 @@ function init_KJtree()
             "as a comma-separated list of bracketed pairs " * 
             " of numbers. For example: (0,20),(25,30) marks a two-part " * 
             "selection window from 0 to 20s, and from 25 to 30s.",
-            action = TUIallMultiBlankWindow!
+            action = TUIallMultiBlankWindows!
         ),
         "Swin" => (
             message =
@@ -621,9 +627,9 @@ function init_KJtree()
                 "a" => TUIoneAutoSignalWindow!,
                 "s" => "oneSingleSignalWindow",
                 "m" => "oneMultiSignalWindow",
-                "A" => TUIallAutoSignalWindow!,
-                "S" => "allSingleSignalWindow",
-                "M" => "allMultiSignalWindow"
+                "A" => TUIallAutoSignalWindows!,
+                "S" => "allSingleSignalWindows",
+                "M" => "allMultiSignalWindows"
             )
         ),
         "oneSingleSignalWindow" => (
@@ -648,7 +654,7 @@ function init_KJtree()
             "signal window from 40 to 45s, and from 50 to 60s.",
             action = TUIoneMultiSignalWindow!
         ),
-        "allSingleSignalWindow" => (
+        "allSingleSignalWindows" => (
             message =
             "Enter the start and end point of the selection windows " * 
             "(in seconds). Type '?' for help and 'x' to exit.",
@@ -656,19 +662,19 @@ function init_KJtree()
             "Specify the start and end points of the signal windows " * 
             "as a comma-separated pair of numbers. For example: " * 
             "30,60 marks a signal window from 30 to 60 seconds.",
-            action = TUIallSingleSignalWindow!
+            action = TUIallSingleSignalWindows!
         ),
-        "allMultiSignalWindow" => (
+        "allMultiSignalWindows" => (
             message =
             "Enter the start and end points of the multi-part " * 
             "selection windows (in seconds)\n" * 
-            "Type 'h' for help.",
+            "Type '?' for help.",
             help =
             "Specify the start and end points of the signal windows " * 
             "as a comma-separated list of bracketed pairs " * 
             "of numbers. For example: (40,45),(50,60) marks a two-part " * 
             "signal window from 40 to 45s, and from 50 to 60s.",
-            action = TUIallMultiSignalWindow!
+            action = TUIallMultiSignalWindows!
         ),
         "moveWin" => (
             message =
@@ -803,7 +809,7 @@ function init_KJtree()
             message = TUIsetNblankMessage,
             help =
             "The blank is fitted by the following equation: " * 
-            "b = exp(a[1]) + exp(a[2])*t[1] + ... + exp(a[n])*t^(n-1). " * 
+            "b = a[1] + a[2]*t[1] + ... + a[n]*t^(n-1). " *
             "Here you can specify the value of n.",
             action = TUIsetNblank!
         ),
