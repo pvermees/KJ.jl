@@ -631,35 +631,55 @@ end
 
 function TUIsaveTemplate(ctrl::AbstractDict,
                          response::AbstractString)
-    PAcutoff = isnothing(ctrl["PAcutoff"]) ? "nothing" : string(ctrl["PAcutoff"])
     open(response, "w") do file
         write(file,"format = \"" * ctrl["format"] * "\"\n")
         write(file,"multifile = " * string(ctrl["multifile"]) * "\n")
         write(file,"head2name = " * string(ctrl["head2name"]) * "\n")
-        write(file,"method = \"" * ctrl["method"] * "\"\n")
-        write(file,"options = " * dict2string(ctrl["options"]) * "\n")
-        write(file,"PAcutoff = " * PAcutoff * "\n")
         write(file,"transformation = \"" * ctrl["transformation"] * "\"\n")
-        if length(ctrl["glass"])>0
-            write(file,"glass = " * dict2string(ctrl["glass"]) * "\n")
-        end
-        if length(ctrl["standards"])>0
-            write(file,"standards = " * dict2string(ctrl["standards"]) * "\n")
-        end
-        if ctrl["method"] == "concentrations"
-            write(file,"channels = " * vec2string(ctrl["channels"]) * "\n")
-        else
-            write(file,"channels = " * dict2string(ctrl["channels"]) * "\n")
-        end
-        if isnothing(ctrl["internal"])
-            write(file,"internal = nothing\n")
-        else
-            write(file,"internal = (\"" *
-                  ctrl["internal"][1] * "\"," *
-                  string(ctrl["internal"][2]) * ")")
-        end
+        write(file,TUImethod2text(ctrl["method"]))
     end
     return "xx"
+end
+
+function TUImethod2text(method::Gmethod)
+    i = getIons(method)
+    p = getProxies(method)
+    c = getChannels(method)
+    PA = method.PAcutoff
+    out = TUIstandards2text(method.standards)
+    out *= "method = Gmethod(" * method.name * ", standards; \n"
+    out *= "                  ions = (P=" * i.P * ", D=" * i.D * ", d=" * i.d * "),\n"
+    out *= "                  proxies = (P=" * p.P * ", D=" * p.D * ", d=" * p.d * "),\n"
+    out *= "                  channels = (P=" * c.P * ", D=" * c.D * ", d=" * c.d * "),\n"
+    out *= "                  nblank = " * method.nblank * ",\n"
+    out *= "                  ndrift = " * method.ndrift * ",\n"
+    out *= "                  ndown = " * method.ndown * ",\n"
+    out *= "                  PAcutoff = " * ifelse(isnothing(PA),"nothing",PA) * ")\n"
+    return out
+end
+
+function TUImethod2text(method::Cmethod)
+    elements = method.elements
+    channels = names(elements)
+    chunks = String[]
+    for ch in channels
+        push!(chunks,"\"" * ch * "\" => " * "\"" * elements[1,ch] * "\"")
+    end
+    out  = "elements = DataFrame(" * join(chunks,",\n                     ") * ")\n"
+    out *= TUIstandards2text(method.standards)
+    out *= "internal = (" * method.internal[1] * "," * string(method.internal[2]) * ")\n"
+    out *= "method = Cmethod(run,standards,internal;\n"
+    out *= "                 nblank = " * string(method.nblank) * ")"
+    return out
+end
+
+function TUIstandards2text(standards::AbstractDict)
+    chunks = String[]
+    for (k,v) in standards
+        push!(chunks, "\"" * k * "\" => \"" * v * "\"")
+    end
+    out = "standards = Dict(" * join(chunks,",") * ")\n"
+    return out
 end
 
 function TUIsetNblank!(ctrl::AbstractDict,
