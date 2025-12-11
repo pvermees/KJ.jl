@@ -252,12 +252,7 @@ function TUIaddStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIremoveAllStandards!(ctrl::AbstractDict)
-    standardnames = keys(ctrl["method"])
-    for samp in ctrl["run"]
-        if samp.group in standardnames
-            setGroup!(samp,"sample")
-        end
-    end
+    setGroup!(ctrl["run"],"sample")
     ctrl["method"].standards = Dict()
     ctrl["priority"]["standards"] = true
     return "x"
@@ -268,12 +263,13 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
     selection = parse.(Int,split(response,","))
     setGroup!(ctrl["run"],selection,"sample")
     groups = unique(getGroups(ctrl["run"]))
-    for k in keys(ctrl["standards"])
+    standards  = ctrl["method"].standards
+    for k in keys(standards)
         if !in(k,groups)
-            delete!(ctrl["method"].standards,k)
+            delete!(standards,k)
         end
     end
-    ctrl["priority"]["standards"] = length(ctrl["standards"]) < 1
+    ctrl["priority"]["standards"] = length(standards) < 1
     return "xxx"
 end
 
