@@ -35,21 +35,23 @@ Here is a short example of a menu-driven KJ session:
 julia> using KJ
 julia> TUI()
 ----------
- KJ 0.3.0
+ KJ 0.8.0
 ----------
 
 r: Read data files[*]
 m: Specify the method[*]
 t: Tabulate the samples
-s: Mark mineral standards[*]
-g: Mark reference glasses[*]
 v: View and adjust each sample
+f: Fractionation[*]
+b: Mass bias
+i: Interferences
 p: Process the data[*]
 e: Export the results
 l: Logs and templates
 o: Options
 u: Update
 c: Clear
+a: Extra
 x: Exit
 ?: Help
 r
@@ -71,15 +73,17 @@ data/Lu-Hf
 r: Read data files
 m: Specify the method[*]
 t: Tabulate the samples
-s: Mark mineral standards[*]
-g: Mark reference glasses[*]
 v: View and adjust each sample
+f: Fractionation[*]
+b: Mass bias
+i: Interferences
 p: Process the data[*]
 e: Export the results
 l: Logs and templates
 o: Options
 u: Update
 c: Clear
+a: Extra
 x: Exit
 ?: Help
 v
@@ -98,13 +102,13 @@ exports all the aliquots of the "Duff" sample to a JSON file that can
 be opened in IsoplotR:
 
 ```
-method = "U-Pb"
-run = load("data/carbonate",format="Agilent")
-standards = Dict("WC1"=>"WC1")
-glass = Dict("NIST612"=>"NIST612")
-channels = Dict("d"=>"Pb207","D"=>"Pb206","P"=>"U238")
-blk, fit = process!(run,method,channels,standards,glass)
-export2IsoplotR(run,method,channels,blk,fit,prefix="Duff",fname="Duff.json")
+myrun = load("data/carbonate",format="Agilent")
+standards = Dict("WC1_cc"=>"WC1")
+method = getmethod("U-Pb",standards)
+fit = process!(myrun,method)
+export2IsoplotR(myrun,method,fit;
+                prefix="Duff",
+                fname="output/Duff.json")
 ```
 
 Type `?load`, `?process!`, `?export2IsoplotR` or `?KJ` at the REPL to
@@ -122,21 +126,23 @@ manipulate the contents of `ctrl` and sync it with the TUI using the
 julia> using KJ
 julia> TUI()
 ----------
- KJ 0.3.0
+ KJ 0.8.0
 ----------
 
 r: Read data files[*]
 m: Specify the method[*]
 t: Tabulate the samples
-s: Mark mineral standards[*]
-g: Mark reference glasses[*]
 v: View and adjust each sample
+f: Fractionation[*]
+b: Mass bias
+i: Interferences
 p: Process the data[*]
 e: Export the results
 l: Logs and templates
 o: Options
 u: Update
 c: Clear
+a: Extra
 x: Exit
 ?: Help
 r

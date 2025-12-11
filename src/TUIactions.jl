@@ -797,7 +797,8 @@ function TUInternochron_goto!(ctrl::AbstractDict,
 end
 
 function TUInternochron(ctrl::AbstractDict)
-    p = internoplot(ctrl["run"][ctrl["i"]],ctrl["method"],ctrl["fit"];
+    samp = ctrl["run"][ctrl["i"]]
+    p = internoplot(samp,ctrl["method"],ctrl["fit"];
                     title = string(ctrl["i"])*". "*samp.sname*" ["*samp.group*"]")
     display(p)
     return nothing
@@ -810,10 +811,19 @@ function internochron2csv(ctrl::AbstractDict,
     return "xx"
 end
 
-function CSVhelper(samp::Sample,method::Gmethod,fit::Gfit)
-    return atomic(samp,method,fit;add_xy=true)
+function CSVhelper(samp::Sample,
+                   method::Gmethod,
+                   fit::Gfit)
+    a = atomic(samp,method,fit;add_xy=true)
+    ions = getIons(method)
+    out = DataFrame(ions.P => a.P, ions.D => a.D, ions.d => a.d)
+    if !isnothing(a.x) out.x = x end
+    if !isnothing(a.y) out.y = y end
+    return out
 end
-function CSVhelper(samp::Sample,method::Cmethod,fit::Cfit)
+function CSVhelper(samp::Sample,
+                   method::Cmethod,
+                   fit::Cfit)
     return concentrations(samp,method,fit)
 end
 
