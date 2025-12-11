@@ -8,6 +8,7 @@ function getAnchor(methodname::AbstractString,
     end
     return out
 end
+export getAnchor
 
 function get_isochron_anchor(methodname::AbstractString,
                              refmat::AbstractString)

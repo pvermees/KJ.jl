@@ -8,7 +8,6 @@ function Gmethod(name::String,
                  ndrift::Int=2,
                  ndown::Int=1,
                  PAcutoff::Union{Nothing,Float64}=nothing,
-                 anchors::AbstractDict=standards2anchors(name,standards),
                  glass::AbstractDict=Dict())
 
     chdf = DataFrame(par=["ion","proxy","channel"],
@@ -18,16 +17,7 @@ function Gmethod(name::String,
     
     return Gmethod(name,chdf,interferences,
                    nblank,ndrift,ndown,PAcutoff,
-                   standards,anchors,glass)
-end
-
-function standards2anchors(methodname::AbstractString,
-                           standards::AbstractDict)
-    out = Dict()
-    for refmat in keys(standards)
-        out[refmat] = getAnchor(methodname,refmat)
-    end
-    return out
+                   standards,glass)
 end
 
 function default_ions(name)
@@ -81,13 +71,6 @@ function setChannels!(method::Gmethod;
     channelAccessor!(method.channels,"channel";P,D,d)
 end
 export setChannels!
-
-function setAnchors!(method::Gmethod)
-    method.anchors = Dict()
-    for refmat in keys(method.standards)
-        method.anchors[refmat] = getAnchor(method.name,refmat)
-    end
-end
 
 function channels2proxies!(method::Gmethod)
     equivocal = false

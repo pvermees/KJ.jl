@@ -163,7 +163,6 @@ function TUIstoichiometry!(ctrl::AbstractDict,
     concentration = parse(Float64,response)
     ctrl["method"].internal = (channel,concentration)
     ctrl["priority"]["method"] = false
-    ctrl["priority"]["standards"] = false
     return "xxxx"
 end
 
@@ -177,7 +176,6 @@ function TUIchooseMineral!(ctrl::AbstractDict,
         channel = ctrl["cache"]
         ctrl["method"].internal = getInternal(mineral,channel)
         ctrl["priority"]["method"] = false
-        ctrl["priority"]["standards"] = false
         return "xxx"
     end
 end
@@ -223,10 +221,17 @@ end
 function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)
-    methodname = ctrl["method"].name
-    odict = _KJ["refmat"][methodname]
-    ctrl["cache"] = odict.names[i]
+    refmats = TUIlistRefmats(ctrl["method"])
+    ctrl["cache"] = refmats[i]
     return "addStandardGroup"
+end
+
+function TUIlistRefmats(method::Gmethod)
+    return _KJ["refmat"][method.name].names
+end
+
+function TUIlistRefmats(method::Cmethod)
+    return _KJ["glass"].names
 end
 
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,

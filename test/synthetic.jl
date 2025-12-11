@@ -80,9 +80,8 @@ function synthetic!(method::Gmethod;
     swin = [(11,59)]
     x0_std = 1/(exp(lambda*t_std)-1)
     x0_smp = 1/(exp(lambda*t_smp)-1)
-    a = method.anchors
-    x0_std = a[first(keys(a))].x0
-    y0_std = a[first(keys(a))].y0
+    a = getAnchor(method.name,first(keys(method.standards)))
+    y0_std = a.y0
     fit = Gfit(method;drift=drift,down=down)
     fit.blank[:,:] .= D./1000
     run = [
