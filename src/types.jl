@@ -44,7 +44,6 @@ export Gmethod
 mutable struct Cmethod <: KJmethod
     elements::DataFrame
     standards::Dict
-    concentrations::Dict{String,DataFrame}
     internal::Tuple
     nblank::Int
 end

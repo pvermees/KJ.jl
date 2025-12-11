@@ -111,18 +111,17 @@ function Cmethod(run::Vector{Sample},
     ch = getChannels(run)
     el = channel2element.(ch)
     elements = DataFrame(reshape(el,1,:),ch)
-    concs = Dict{String,DataFrame}()
-    for refmat in keys(standards)
-        all_concs = get(_KJ["glass"],refmat)
-        concs[refmat] = DataFrame(zeros(1, length(ch)), ch)
-        for channel in names(elements)
-            concs[refmat][1,channel] = all_concs[elements[1,channel]]
-        end
-    end
-    return Cmethod(elements,standards,concs,internal,nblank)
+    return Cmethod(elements,standards,internal,nblank)
 end
 
 function getConcentrations(method::Cmethod,
                            refmat::AbstractString)
-    return method.concentrations[refmat]
+    all_concs = get(_KJ["glass"],refmat)
+    elements = method.elements
+    channels = names(elements)
+    out = DataFrame(zeros(1, length(channels)), channels)
+    for ch in channels
+        out[1,ch] = all_concs[elements[1,ch]]
+    end
+    return out
 end
