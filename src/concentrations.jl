@@ -1,12 +1,13 @@
 function concentrations(samp::Sample,
                         method::Cmethod,
-                        fit::Cfit)
+                        fit::Cfit;
+                        internal::Tuple=method.internal)
     dat = swinData(samp;add_xy=true)
     sig = getSignals(dat)
     bt = polyVal(fit.blank,dat.t)
     X = getSignals(dat) .- bt
-    Cs = method.internal[2]
-    Xs = X[:,method.internal[1]]
+    Cs = internal[2]
+    Xs = X[:,internal[1]]
     out = (X .* Cs) ./ (Xs .* fit.par)
     nms = "ppm[" .* Vector(method.elements[1,:]) .* "] from " .* names(sig)
     if "x" in names(dat) && "y" in names(dat)
@@ -26,7 +27,15 @@ function concentrations(run::Vector{Sample},
     conc = nothing
     for i in eachindex(run)
         samp = run[i]
-        conc = concentrations(samp,method,fit)
+        if samp.group in keys(method.standards)
+            refconcs = getConcentrations(method,samp.group)
+            ich = method.internal[1] # ich = internal channel
+            internal = (ich,refconcs[1,ich])
+            conc = concentrations(samp,method,fit;
+                                  internal = internal)
+        else
+            conc = concentrations(samp,method,fit)
+        end
         mu = Statistics.mean.(eachcol(conc))
         sigma = Statistics.std.(eachcol(conc))
         mat[i,1:2:nc-1] .= mu
