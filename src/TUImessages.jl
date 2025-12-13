@@ -173,10 +173,17 @@ function TUIratioMessage(ctrl::AbstractDict)
 end
 
 function TUIexportFormatMessage(ctrl::AbstractDict)
+    return TUIexportFormatMessage(ctrl["method"])
+end
+function TUIexportFormatMessage(method::Gmethod)
     msg = "c: Export to .csv\n" 
-    if ctrl["method"]!="concentrations"
-        msg *= "j: Export to .json\n"
-    end
+    msg *= "j: Export to .json\n"
+    msg *= "x: Exit\n"
+    msg *= "?: Help"
+    return msg
+end
+function TUIexportFormatMessage(method::Cmethod)
+    msg = "c: Export to .csv\n" 
     msg *= "x: Exit\n"
     msg *= "?: Help"
     return msg
