@@ -92,22 +92,25 @@ function init_glass!(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.cs
     _KJ["glass"] = init_glass(csv)
 end
 
-function init_referenceMaterials(csv::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"))
-    tab = CSV.read(csv, DataFrame)
+function init_referenceMaterials(;isochrons::AbstractString=joinpath(@__DIR__,"../settings/isochron_standards.csv"),
+                                  points::AbstractString=joinpath(@__DIR__,"../settings/point_standards.csv"))
     out = Dict()
-    for row in eachrow(tab)
-        method = row["method"]
-        if !(method in keys(out))
-            out[method] = OrderedDict()
+    for (fname,fun) in Dict(isochrons => IsochronRefmat,
+                            points => PointRefmat)
+        for row in eachrow(CSV.read(fname, DataFrame))
+            method = row["method"]
+            if !(method in keys(out))
+                out[method] = OrderedDict()
+            end
+            val = fun(row[4],row[5],row[6],row[7],row[3])
+            add2od!(out[method],row["name"],val)
         end
-        val = (tx=(row["tx"],row["stx"]),
-               y0=(row["y0"],row["sy0"]),
-               type=row["type"])
-        add2od!(out[method],row["name"],val)
     end
     return out
 end
 
-function init_referenceMaterials!(csv::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"))
-    _KJ["refmat"] = init_referenceMaterials(csv)
+function init_referenceMaterials!(;isochrons::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"),
+                                   points::AbstractString=joinpath(@__DIR__,"../settings/point_standards.csv"))
+    _KJ["refmat"] = init_referenceMaterials(;isochrons=isochrons,
+                                             points=points)
 end

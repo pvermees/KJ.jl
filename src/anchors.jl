@@ -1,18 +1,11 @@
 function getAnchor(methodname::AbstractString,
                    refmat::AbstractString)
-    t = get(_KJ["refmat"][methodname],refmat).type
-    if t == "isochron"
-        out = get_isochron_anchor(methodname,refmat)
-    else
-        out = get_point_anchor(methodname,refmat)
-    end
-    return out
+    standard = get(_KJ["refmat"][methodname],refmat)
+    return getAnchor(standard;methodname=methodname)
 end
-export getAnchor
-
-function get_isochron_anchor(methodname::AbstractString,
-                             refmat::AbstractString)
-    t = get(_KJ["refmat"][methodname],refmat).tx[1]
+function getAnchor(standard::IsochronRefmat;
+                   methodname::AbstractString)
+    t = standard.t
     if methodname=="U-Pb"
         L8 = _KJ["lambda"]["U238-Pb206"][1]
         L5 = _KJ["lambda"]["U235-Pb207"][1]
@@ -24,16 +17,13 @@ function get_isochron_anchor(methodname::AbstractString,
         x0 = 1/(exp(L*t)-1)
         y1 = 0.0
     end
-    y0 = get(_KJ["refmat"][methodname],refmat).y0[1]
+    y0 = standard.y0
     return IsochronAnchor(x0,y0,y1)
 end
-
-function get_point_anchor(methodname::AbstractString,
-                          refmat::AbstractString)
-    x = get(_KJ["refmat"][methodname],refmat).tx[1]
-    y = get(_KJ["refmat"][methodname],refmat).y0[1]
-    return PointAnchor(x,y)
+function getAnchor(standard::PointRefmat;kwargs...)
+    return PointAnchor(standard.x,standard.y)
 end
+export getAnchor
 
 function getGlassAnchors(methodname::AbstractString,
                          refmats::AbstractVector)

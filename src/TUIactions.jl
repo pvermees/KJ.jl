@@ -276,27 +276,27 @@ end
 function TUIrefmatTab(ctrl::AbstractDict)
     for (key, value) in _KJ["refmat"][ctrl["method"].name].dict
         print(key)
-        print(": ")
-        print_refmat_tx(value)
-        print("y0=")
-        print(value.y0[1])
+        print(" (")
+        print(value.material)
+        print("): ")
+        print_refmat(value)
         print("\n")
     end
     return nothing
 end
-function print_refmat_tx(entry::NamedTuple)
-    if ismissing(entry.tx[1])
-        nothing
-    elseif entry.type == "isochron"
+function print_refmat(entry::IsochronRefmat)
         print("t=")
-        print(entry.tx[1])
+        print(entry.t)
         print("Ma, ")
-    elseif entry.type == "point"
-        print("x0=")
-        print(entry.tx[1])
-    else
-        nothing
-    end
+        print("y0=")
+        print(entry.y0)
+end
+function print_refmat(entry::PointRefmat)
+        print("x=")
+        print(entry.x)
+        print(", ")
+        print("y=")
+        print(entry.y)
 end
 
 function TUIchooseGlass!(ctrl::AbstractDict,
