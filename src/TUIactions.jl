@@ -221,17 +221,16 @@ end
 function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)
-    refmats = TUIlistRefmats(ctrl["method"])
-    ctrl["cache"] = refmats[i]
+    ctrl["cache"] = TUIgetRefmatName(ctrl["method"],i)
     return "addStandardGroup"
 end
 
-function TUIlistRefmats(method::Gmethod)
-    return _KJ["refmat"][method.name].names
+function TUIgetRefmatName(method::Gmethod,i::Int)
+    return _KJ["refmat"][method.name].names[i]
 end
 
-function TUIlistRefmats(method::Cmethod)
-    return _KJ["glass"].names
+function TUIgetRefmatName(method::Cmethod,i::Int)
+    return _KJ["glass"].names[i]
 end
 
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
@@ -274,12 +273,14 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIrefmatTab(ctrl::AbstractDict)
-    for (key, value) in _KJ["refmat"][ctrl["method"].name].dict
-        print(key)
+    refmats = _KJ["refmat"][ctrl["method"].name]
+    for name in refmats.names
+        refmat = get(refmats,name)
+        print(name)
         print(" (")
-        print(value.material)
+        print(refmat.material)
         print("): ")
-        print_refmat(value)
+        print_refmat(refmat)
         print("\n")
     end
     return nothing
