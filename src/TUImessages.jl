@@ -120,10 +120,19 @@ function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg = "Choose one of the following reference materials:\n"
     refmats = TUIgetRefmats(ctrl["method"])
     for i in eachindex(refmats.names)
-        msg *= string(i)*": "*refmats.names[i]*" ("*get(refmats,i).material*")\n"
+        refmat = get(refmats,i)
+        msg *= string(i)*": "*refmats.names[i]*TUIprintRefmatInfo(refmat)*"\n"
     end
     msg *= "x: Exit\n"*"?: Help"
     return msg
+end
+
+function TUIprintRefmatInfo(refmat::AbstractRefmat)
+    return " ("*refmat.material*")"
+end
+
+function TUIprintRefmatInfo(refmat::DataFrameRow)
+    return ""
 end
 
 function TUIgetRefmats(method::Gmethod)

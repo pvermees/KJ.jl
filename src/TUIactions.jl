@@ -273,7 +273,17 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIrefmatTab(ctrl::AbstractDict)
-    refmats = _KJ["refmat"][ctrl["method"].name]
+    return TUIrefmatTab(ctrl["method"])
+end
+function TUIrefmatTab(method::Cmethod)
+    refmats = TUIgetRefmats(method)
+    for name in refmats.names
+        print(name * "\n")
+    end
+    return nothing
+end
+function TUIrefmatTab(method::Gmethod)
+    refmats = TUIgetRefmats(method)
     for name in refmats.names
         refmat = get(refmats,name)
         print(name)
