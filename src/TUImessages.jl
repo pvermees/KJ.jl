@@ -104,7 +104,8 @@ function TUIcolumnMessage(ctrl::AbstractDict)
 end
 
 function TUIsetProxiesMessage(ctrl::AbstractDict)
-    msg = "Choose from the following list of isotopes:\n"
+    msg = "KJ is having trouble mapping channels to isotopes. " *
+          "Choose from the following list of isotopes:\n"
     msg *= TUIlistIsotopes(ctrl)
     msg *= "and select those corresponding to "*
     "the channels that you selected earlier:\n"
@@ -117,12 +118,29 @@ end
 
 function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg = "Choose one of the following reference materials:\n"
-    refmats = TUIlistRefmats(ctrl["method"])
-    for i in eachindex(refmats)
-        msg *= string(i)*": "*refmats[i]*"\n"
+    refmats = TUIgetRefmats(ctrl["method"])
+    for i in eachindex(refmats.names)
+        refmat = get(refmats,i)
+        msg *= string(i)*": "*refmats.names[i]*TUIprintRefmatInfo(refmat)*"\n"
     end
     msg *= "x: Exit\n"*"?: Help"
     return msg
+end
+
+function TUIprintRefmatInfo(refmat::AbstractRefmat)
+    return " ("*refmat.material*")"
+end
+
+function TUIprintRefmatInfo(refmat::DataFrameRow)
+    return ""
+end
+
+function TUIgetRefmats(method::Gmethod)
+    return _KJ["refmat"][method.name]
+end
+
+function TUIgetRefmats(method::Cmethod)
+    return _KJ["glass"]
 end
 
 function TUIchooseGlassMessage(ctrl::AbstractDict)
@@ -155,10 +173,17 @@ function TUIratioMessage(ctrl::AbstractDict)
 end
 
 function TUIexportFormatMessage(ctrl::AbstractDict)
+    return TUIexportFormatMessage(ctrl["method"])
+end
+function TUIexportFormatMessage(method::Gmethod)
     msg = "c: Export to .csv\n" 
-    if ctrl["method"]!="concentrations"
-        msg *= "j: Export to .json\n"
-    end
+    msg *= "j: Export to .json\n"
+    msg *= "x: Exit\n"
+    msg *= "?: Help"
+    return msg
+end
+function TUIexportFormatMessage(method::Cmethod)
+    msg = "c: Export to .csv\n" 
     msg *= "x: Exit\n"
     msg *= "?: Help"
     return msg

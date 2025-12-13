@@ -25,6 +25,25 @@ mutable struct OrderedDict
     dict::Dict
 end
 
+abstract type AbstractRefmat end
+export AbstractRefmat
+
+mutable struct IsochronRefmat <: AbstractRefmat
+    t::Float64
+    st::Float64
+    y0::Float64
+    sy0::Float64
+    material::String
+end
+
+mutable struct PointRefmat <: AbstractRefmat
+    x::Float64
+    sx::Float64
+    y::Float64
+    sy::Float64
+    material::String
+end
+
 abstract type KJmethod end
 export KJmethod
 

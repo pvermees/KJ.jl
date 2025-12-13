@@ -78,17 +78,27 @@ function channels2proxies!(method::Gmethod)
     for col in eachcol(method.channels)[2:end]
         channel = col[3]
         matching_elements = filter(x -> occursin(x, channel), all_elements)
-        if length(matching_elements)==1
-            equivocal |= get_proxy_isotopes!(col,matching_elements[1])
-        elseif length(matching_elements) > 1
+        if length(matching_elements) > 0
+            already_found = false
+            newly_found = false
             for matching_element in matching_elements
-                equivocal |= get_proxy_isotopes!(col,matching_element)
+                newly_found = get_proxy_isotopes!(col,matching_element)
+                if already_found & newly_found
+                    equivocal = true
+                    break
+                else
+                    already_found = newly_found
+                end
+            end
+            if !already_found
+                equivocal = true
             end
         else
             equivocal = true
         end
     end
     return equivocal
+
 end
 export channels2proxies!
 
@@ -97,11 +107,12 @@ function get_proxy_isotopes!(col::AbstractVector,
     channel = col[3]
     all_isotopes = string.(_KJ["nuclides"][matching_element])
     matching_isotope = filter(x -> occursin(x, channel), all_isotopes)
-    equivocal = (length(matching_isotope) != 1)
-    if length(matching_isotope) > 0
+    found = false
+    if length(matching_isotope) == 1
         col[2] = matching_element * matching_isotope[1]
+        found = true
     end
-    return equivocal
+    return found
 end
 
 function Cmethod(run::Vector{Sample},

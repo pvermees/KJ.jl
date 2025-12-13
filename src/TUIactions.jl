@@ -221,17 +221,16 @@ end
 function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)
-    refmats = TUIlistRefmats(ctrl["method"])
-    ctrl["cache"] = refmats[i]
+    ctrl["cache"] = TUIgetRefmatName(ctrl["method"],i)
     return "addStandardGroup"
 end
 
-function TUIlistRefmats(method::Gmethod)
-    return _KJ["refmat"][method.name].names
+function TUIgetRefmatName(method::Gmethod,i::Int)
+    return _KJ["refmat"][method.name].names[i]
 end
 
-function TUIlistRefmats(method::Cmethod)
-    return _KJ["glass"].names
+function TUIgetRefmatName(method::Cmethod,i::Int)
+    return _KJ["glass"].names[i]
 end
 
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
@@ -274,29 +273,41 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIrefmatTab(ctrl::AbstractDict)
-    for (key, value) in _KJ["refmat"][ctrl["method"].name].dict
-        print(key)
-        print(": ")
-        print_refmat_tx(value)
-        print("y0=")
-        print(value.y0[1])
+    return TUIrefmatTab(ctrl["method"])
+end
+function TUIrefmatTab(method::Cmethod)
+    refmats = TUIgetRefmats(method)
+    for name in refmats.names
+        print(name * "\n")
+    end
+    return nothing
+end
+function TUIrefmatTab(method::Gmethod)
+    refmats = TUIgetRefmats(method)
+    for name in refmats.names
+        refmat = get(refmats,name)
+        print(name)
+        print(" (")
+        print(refmat.material)
+        print("): ")
+        print_refmat(refmat)
         print("\n")
     end
     return nothing
 end
-function print_refmat_tx(entry::NamedTuple)
-    if ismissing(entry.tx[1])
-        nothing
-    elseif entry.type == "isochron"
+function print_refmat(entry::IsochronRefmat)
         print("t=")
-        print(entry.tx[1])
+        print(entry.t)
         print("Ma, ")
-    elseif entry.type == "point"
-        print("x0=")
-        print(entry.tx[1])
-    else
-        nothing
-    end
+        print("y0=")
+        print(entry.y0)
+end
+function print_refmat(entry::PointRefmat)
+        print("x=")
+        print(entry.x)
+        print(", ")
+        print("y=")
+        print(entry.y)
 end
 
 function TUIchooseGlass!(ctrl::AbstractDict,
