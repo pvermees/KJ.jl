@@ -9,15 +9,13 @@ function Gmethod(name::String,
                  ndown::Int=1,
                  PAcutoff::Union{Nothing,Float64}=nothing,
                  glass::AbstractDict=Dict())
+    return Gmethod(name,PDd(ions),PDd(proxies),PDd(channels),
+                   interferences,nblank,ndrift,ndown,
+                   PAcutoff,standards,glass)
+end
 
-    chdf = DataFrame(par=["ion","proxy","channel"],
-                     P=[ions.P,proxies.P,channels.P],
-                     D=[ions.D,proxies.D,channels.D],
-                     d=[ions.d,proxies.d,channels.d])
-    
-    return Gmethod(name,chdf,interferences,
-                   nblank,ndrift,ndown,PAcutoff,
-                   standards,glass)
+function PDd(arg::NamedTuple{(:P,:D,:d)})
+    return PDd(arg.P,arg.D,arg.d)
 end
 
 function default_ions(name)
@@ -25,64 +23,18 @@ function default_ions(name)
     return (P=String(m.P),D=String(m.D),d=String(m.d))
 end
 
-function channelAccessor(channels::AbstractDataFrame,
-                         rowname::AbstractString)
-    ch = channels[findfirst(==(rowname),channels.par),2:end]
-    return (P=ch.P,D=ch.D,d=ch.d)
-end
-
-function getIons(method::Gmethod)
-    return channelAccessor(method.channels,"ion")
-end
-export getIons
-
-function getProxies(method::Gmethod)
-    return channelAccessor(method.channels,"proxy")
-end
-export getProxies
-
-function channelAccessor!(channels::AbstractDataFrame,
-                          rowname::AbstractString;
-                          P,D,d)
-    row = findfirst(==(rowname),channels.par)
-    channels[row,2:end] = [P,D,d]
-end
-
-function setIons!(method::Gmethod;
-                  P=getIons(method).P,
-                  D=getIons(method).D,
-                  d=getIons(method).d)
-    channelAccessor!(method.channels,"ion";P,D,d)
-end
-export setIons!
-
-function setProxies!(method::Gmethod;
-                     P=getIons(method).P,
-                     D=getIons(method).D,
-                     d=getIons(method).d)
-    channelAccessor!(method.channels,"proxy";P,D,d)
-end
-export setProxies!
-
-function setChannels!(method::Gmethod;
-                      P=getProxies(method).P,
-                      D=getProxies(method).D,
-                      d=getProxies(method).d)
-    channelAccessor!(method.channels,"channel";P,D,d)
-end
-export setChannels!
-
 function channels2proxies!(method::Gmethod)
     equivocal = false
     all_elements = string.(keys(_KJ["nuclides"]))
-    for col in eachcol(method.channels)[2:end]
-        channel = col[3]
+    for nuclide in (:P,:D,:d)
+        channel = getproperty(method.channels,nuclide)
         matching_elements = filter(x -> occursin(x, channel), all_elements)
         if length(matching_elements) > 0
             already_found = false
             newly_found = false
             for matching_element in matching_elements
-                newly_found = get_proxy_isotopes!(col,matching_element)
+                newly_found = get_proxy_isotopes!(method,nuclide,
+                                                  matching_element)
                 if already_found & newly_found
                     equivocal = true
                     break
@@ -102,14 +54,16 @@ function channels2proxies!(method::Gmethod)
 end
 export channels2proxies!
 
-function get_proxy_isotopes!(col::AbstractVector,
+function get_proxy_isotopes!(method::Gmethod,
+                             nuclide::Symbol,
                              matching_element::AbstractString)
-    channel = col[3]
+    channel = getproperty(method.channels,nuclide)
     all_isotopes = string.(_KJ["nuclides"][matching_element])
     matching_isotope = filter(x -> occursin(x, channel), all_isotopes)
     found = false
     if length(matching_isotope) == 1
-        col[2] = matching_element * matching_isotope[1]
+        setproperty!(method.proxies,nuclide,
+                     matching_element * matching_isotope[1])
         found = true
     end
     return found

@@ -184,10 +184,8 @@ function TUIsetChannels!(ctrl::AbstractDict,
                          response::AbstractString)
     labels = getChannels(ctrl["run"])
     selected = parse.(Int,split(response,","))
-    setChannels!(ctrl["method"];
-                 P=labels[selected[1]],
-                 D=labels[selected[2]],
-                 d=labels[selected[3]])
+    ch = ctrl["method"].channels
+    ch.P, ch.D, ch.d = labels[selected[1:3]]
     equivocal = channels2proxies!(ctrl["method"])
     if equivocal
         return "setProxies"
@@ -209,12 +207,10 @@ end
 function TUIsetProxies!(ctrl::AbstractDict,
                         response::AbstractString)
     selection = parse.(Int,split(response,","))
-    ions = getIons(ctrl["method"])
+    ions = ctrl["method"].ions
     nuclides = ions2nuclidelist(ions)
-    setProxies(ctrl["method"];
-               P=nuclides[selection[1]],
-               D=nuclides[selection[2]],
-               d=nuclides[selection[3]])
+    pr = ctrl["method"].proxies
+    pr.P, pr.D, pr.d = nuclides[selection[1:3]]
     return "xxx"
 end
 
@@ -649,9 +645,9 @@ function TUIsaveTemplate(ctrl::AbstractDict,
 end
 
 function TUImethod2text(method::Gmethod)
-    i = getIons(method)
-    p = getProxies(method)
-    c = getChannels(method;as_tuple=true)
+    i = method.ions
+    p = method.proxies
+    c = method.channels
     PA = method.PAcutoff
     out = TUIstandards2text(method.standards)
     out *= "method = Gmethod(\"" * method.name * "\", standards; \n"
@@ -822,8 +818,8 @@ function CSVhelper(samp::Sample,
                    method::Gmethod,
                    fit::Gfit)
     a = atomic(samp,method,fit;add_xy=true)
-    ions = getIons(method)
-    out = DataFrame(ions.P => a.P, ions.D => a.D, ions.d => a.d)
+    i = method.ions
+    out = DataFrame(i.P => a.P, i.D => a.D, i.d => a.d)
     if !isnothing(a.x) out.x = x end
     if !isnothing(a.y) out.y = y end
     return out

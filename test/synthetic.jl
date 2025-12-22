@@ -21,9 +21,6 @@ function random_sample(method::Gmethod,
                        relerr_d::Real=0.1,
                        group::String="sample")
     Random.seed!(1)
-    ch = getChannels(method;as_tuple=true)
-    ions = getIons(method)
-    proxies = getProxies(method)
     t = range((i-1)/n,i/n,length=nblk+nsig)
     T = (spot_time .- t0)./60
     ft = polyFac(fit.drift,t)
@@ -38,23 +35,22 @@ function random_sample(method::Gmethod,
     isig = nblk.+(1:nsig)
     P = x.*D
     d = y.*D
-    pm = bt[:,ch.P]
-    Dom = bt[:,ch.D]
-    bom = bt[:,ch.d]
+    pm = bt[:,method.channels.P]
+    Dom = bt[:,method.channels.D]
+    bom = bt[:,method.channels.d]
     pm[isig] .+= P.*ft[isig].*FT[isig]
     Dom[isig] .+= D
-    bom[isig] .+= d*iratio(proxies.d,ions.d)
+    bom[isig] .+= d*iratio(method.proxies.d,method.ions.d)
     ep = Distributions.median(pm[isig]).*relerr_P.*randn(nsig)
     eDo = Distributions.median(Dom[isig]).*relerr_D.*randn(nsig)
     ebo = Distributions.median(bom[isig]).*relerr_d.*randn(nsig)
     pm[isig] .+= ep
     Dom[isig] .+= eDo
     bom[isig] .+= ebo
-    channels = getChannels(method;as_tuple=true)
     dat = DataFrame("Time [sec]" => spot_time,
-                    channels.P => pm,
-                    channels.D => Dom,
-                    channels.d => bom,
+                    method.channels.P => pm,
+                    method.channels.D => Dom,
+                    method.channels.d => bom,
                     "outlier" => falses(nblk+nsig),
                     "t" => t)
     return Sample(sname,dtime,dat,t0,bwin,swin,group)

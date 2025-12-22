@@ -190,7 +190,7 @@ function export2IsoplotR(ratios::AbstractDataFrame,
                          fname::AbstractString="KJ.json")
     json = jsonTemplate()
 
-    P, D, d = values(getIons(method))
+    P, D, d = unpack(method.ions)
 
     snames = ratios[:,1]
     PD = replace(ratios[:,2], NaN => "\"NA\"")

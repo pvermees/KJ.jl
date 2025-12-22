@@ -47,9 +47,17 @@ end
 abstract type KJmethod end
 export KJmethod
 
+mutable struct PDd
+    P::String
+    D::String
+    d::String
+end
+
 mutable struct Gmethod <: KJmethod
     name::String
-    channels::DataFrame
+    ions::PDd
+    proxies::PDd
+    channels::PDd
     interferences::Dict
     nblank::Int
     ndrift::Int

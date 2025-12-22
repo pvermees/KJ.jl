@@ -186,7 +186,7 @@ function predictest(option="Lu-Hf";
         return samp, method, fit
     else
         p, offset = KJ.plot(samp,method;fit=fit,
-                            den=getChannels(method;as_tuple=true).D,
+                            den=method.channels.D,
                             transformation=transformation,
                             return_offset=true)
         @test display(p) != NaN
@@ -212,7 +212,7 @@ function partest(parname,paroffsetfact)
                             [drift,0.0],    # adrift
                             zeros(2,2))     # covariance matrix
         plotFitted!(p,samp,method,adjusted_fit;
-                    den=getChannels(method;as_tuple=true).D,
+                    den=method.channels.D,
                     transformation="log",
                     offset=offset,
                     linecolor="red")
@@ -264,7 +264,7 @@ function processtest(option="Lu-Hf";
     if show
         p = KJ.plot(myrun[snum],method;fit=fit,
                     transformation=transformation,
-                    den=getChannels(method;as_tuple=true).D)
+                    den=method.channels.D)
         @test display(p) != NaN
     end
     return myrun, method, fit
@@ -554,11 +554,7 @@ end
 
 function channels2proxies_test()
     method = getmethod("Lu-Hf",Dict())
-    proxies = getProxies(method)
-    setProxies!(method;P="foo",D="bar",d="foo")
-    equivocal = channels2proxies!(method)
-    @test proxies == getProxies(method)
-    setChannels!(method;d="Hf177 -> Hf178")
+    method.channels.d = "Hf177 -> Hf178"
     equivocal = channels2proxies!(method)
     @test equivocal
 end
@@ -629,4 +625,4 @@ Plots.closeall()
 @testset "TUI test" begin TUItest() end
 @testset "dependency test" begin dependencytest() end
 
-TUI()
+# TUI()

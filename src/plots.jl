@@ -14,7 +14,7 @@ function plot(samp::Sample,
               titlefontsize=10,
               return_offset::Bool=false)
 
-    channelvec = collect(values(getChannels(method)))
+    channelvec = getChannels(method)
     
     p, offset = plot(samp;
                      channels=channelvec,
@@ -186,7 +186,7 @@ function plotFittedBlank!(p,
                           offset::Union{Nothing,Number}=0.0,
                           linecolor="black",
                           linestyle::Symbol=:solid)
-    channels = collect(values(getChannels(method)))
+    channels = getChannels(method)
     pred = predict(samp,fit.blank[:,channels])
     plotFitted!(p,samp,pred;
                 blank=true,num=num,den=den,transformation=transformation,

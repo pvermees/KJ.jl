@@ -32,10 +32,8 @@ end
 function getChannels(samp::Sample)
     return names(getSignals(samp))
 end
-function getChannels(method::Gmethod;
-                     as_tuple::Bool=false)
-    ch = channelAccessor(method.channels,"channel")
-    return ifelse(as_tuple,ch,collect(values(ch)))
+function getChannels(method::Gmethod)
+    return collect(unpack(method.channels))
 end
 function getChannels(method::Cmethod)
     return names(method.elements)

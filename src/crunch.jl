@@ -174,7 +174,7 @@ function Cruncher(samp::Sample,
 
     dat = swinData(samp)
     
-    ch = getChannels(method;as_tuple=true)
+    ch = method.channels
     pm = dat[:,ch.P]
     Dom = dat[:,ch.D]
     bom = dat[:,ch.d]
@@ -198,9 +198,7 @@ function Cruncher(samp::Sample,
     sPd = covmat[1,3]
     sDd = covmat[2,3]
     
-    ions = getIons(method)
-    proxies = getProxies(method)
-    bd = iratio(proxies.d,ions.d)
+    bd = iratio(method.proxies.d,method.ions.d)
 
     t = dat.t
     T = dat.T

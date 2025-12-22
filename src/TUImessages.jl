@@ -47,7 +47,7 @@ end
 
 function TUIlistIsotopes(ctrl::AbstractDict)
     msg = ""
-    ions = getIons(ctrl["method"])
+    ions = ctrl["method"].ions
     nuclidelist = ions2nuclidelist(ions)
     for i in eachindex(nuclidelist)
         msg *= string(i) * ". " * nuclidelist[i] * "\n"
@@ -109,7 +109,7 @@ function TUIsetProxiesMessage(ctrl::AbstractDict)
     msg *= TUIlistIsotopes(ctrl)
     msg *= "and select those corresponding to "*
     "the channels that you selected earlier:\n"
-    channels = getChannels(ctrl["method"];as_tuple=true)
+    channels = ctrl["method"].channels
     msg *= channels.P *", "* channels.D *", "* channels.d *"\n"
     msg *= "Specify your selection as a "*
     "comma-separated list of numbers:"
