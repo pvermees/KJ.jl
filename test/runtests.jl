@@ -559,6 +559,20 @@ function channels2proxies_test()
     @test equivocal
 end
 
+function biastest()
+    bias = Dict("Lu" => (num=176,den=175),
+                "Hf" => (num=176,den=178),
+                "Yb" => (num=172,den=175))
+end
+
+function interference_test()
+    interferences = Dict("Hf176" => [(ion="Lu176",proxy="Lu175",channel="Lu175 -> 257"),
+                                     (ion="Yb176",proxy="Yb172",channel="Yb172 -> 172")])
+    # NOTE TO SELF: DEFINE TYPE 'PAIRING' WITH MEMBERS ION, PROXY AND CHANNEL
+    # THEN REDEFINE TYPE GMETHOD ACCORDINGLY (REPLACING PDd)
+    # IN GMETHOD, REPLACE IONS, PROXIES AND CHANNELS WITH A PDd item containing pairings
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -622,6 +636,8 @@ Plots.closeall()
 @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 @testset "channels2proxy test" begin channels2proxies_test() end
+@testset "bias test" begin biastest() end
+@testset "interference test" begin interference_test() end
 @testset "TUI test" begin TUItest() end
 @testset "dependency test" begin dependencytest() end
 

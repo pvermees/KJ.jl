@@ -728,7 +728,7 @@ end
 
 function TUIaddStandard!(ctrl::AbstractDict,
                          response::AbstractString)
-    init_referenceMaterials!(response)
+    init_referenceMaterials!(;isochrons=response)
     return "x"
 end
 
