@@ -9,7 +9,7 @@ function concentrations(samp::Sample,
     Cs = internal[2]
     Xs = X[:,internal[1]]
     out = (X .* Cs) ./ (Xs .* fit.par)
-    nms = "ppm[" .* Vector(method.elements[1,:]) .* "] from " .* names(sig)
+    nms = "ppm[" .* collect(string.(values(method.elements))) .* "] from " .* names(sig)
     if "x" in names(dat) && "y" in names(dat)
         out.x = dat.x
         out.y = dat.y
@@ -22,7 +22,7 @@ function concentrations(run::Vector{Sample},
                         method::Cmethod,
                         fit::Cfit)
     nr = length(run)
-    nc = 2*ncol(method.elements)
+    nc = 2*length(method.elements)
     mat = fill(0.0,nr,nc)
     conc = nothing
     for i in eachindex(run)

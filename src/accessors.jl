@@ -26,19 +26,20 @@ function getExt(format)
     end
 end
 
-function getChannels(run::Vector{Sample})
+function getChannels(run::Vector{Sample}) :: AbstractVector
     return getChannels(run[1])
 end
-function getChannels(samp::Sample)
+function getChannels(samp::Sample) :: AbstractVector
     return names(getSignals(samp))
 end
-function getChannels(method::Gmethod)
+function getChannels(method::Gmethod) :: AbstractVector
     return collect(unpack(method.channels))
 end
-function getChannels(method::Cmethod)
-    return names(method.elements)
+function getChannels(method::Cmethod) :: AbstractVector
+    return collect(string.(keys(method.elements)))
 end
 export getChannels
+
 """
 getSnames(run::Vector{Sample})
 

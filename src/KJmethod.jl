@@ -75,18 +75,17 @@ function Cmethod(run::Vector{Sample},
                  nblank::Int=2)
     ch = getChannels(run)
     el = channel2element.(ch)
-    elements = DataFrame(reshape(el,1,:),ch)
+    elements = NamedTuple{Tuple(Symbol.(ch))}(Tuple(el))
     return Cmethod(elements,standards,internal,nblank)
 end
 
 function getConcentrations(method::Cmethod,
                            refmat::AbstractString)
     all_concs = get(_KJ["glass"],refmat)
-    elements = method.elements
-    channels = names(elements)
+    channels = getChannels(method)
     out = DataFrame(zeros(1, length(channels)), channels)
-    for ch in channels
-        out[1,ch] = all_concs[elements[1,ch]]
+    for (ch,el) in pairs(method.elements)
+        out[1,ch] = all_concs[el]
     end
     return out
 end

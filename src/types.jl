@@ -69,7 +69,7 @@ end
 export Gmethod
 
 mutable struct Cmethod <: KJmethod
-    elements::DataFrame
+    elements::NamedTuple
     standards::Dict
     internal::Tuple
     nblank::Int

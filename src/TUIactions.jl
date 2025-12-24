@@ -662,11 +662,9 @@ function TUImethod2text(method::Gmethod)
 end
 
 function TUImethod2text(method::Cmethod)
-    elements = method.elements
-    channels = names(elements)
     chunks = String[]
-    for ch in channels
-        push!(chunks,"\"" * ch * "\" => " * "\"" * elements[1,ch] * "\"")
+    for (channel,element) in pairs(method.elements)
+        push!(chunks,"\"" * channel * "\" => " * "\"" * element * "\"")
     end
     out  = "elements = DataFrame(" * join(chunks,",\n                     ") * ")\n"
     out *= TUIstandards2text(method.standards)
