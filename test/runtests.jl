@@ -562,7 +562,7 @@ end
 function interference_test()
     myrun = loadtest()
     standards = Dict("BP" => "BP")
-    method = Gmethod("Lu-Hf",standards)
+    method = getmethod("Lu-Hf",standards)
     method.interferences = Dict("Hf176" => [(ion="Lu176",proxy="Lu175",channel="Lu175 -> 257"),
                                             (ion="Yb176",proxy="Yb172",channel="Yb172 -> 172")])
     interference_correction!(myrun,method)
