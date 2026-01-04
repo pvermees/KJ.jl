@@ -1,21 +1,26 @@
-function Gmethod(name::String,
-                 standards::AbstractDict;
+function Gmethod(name::String;
                  ions::NamedTuple{(:P,:D,:d)}=default_ions(name),
-                 proxies::NamedTuple{(:P,:D,:d)}=ions,
-                 channels::NamedTuple{(:P,:D,:d)}=proxies,
-                 interferences::AbstractDict=Dict(),
+                 channels::AbstractDict{String,String}=Dict(v => v for v in values(ions)),
+                 proxies::AbstractDict{String,String}=channels2proxies(channels),
+                 refmats::Dict{String,String}=Dict{String,String}(),
+                 standards::Vector{String}=collect(keys(refmats)),
+                 bias::Dict{String,String}=Dict{String,String}(),
+                 fractionation::Fractionation=Fractionation(ions,proxies,channels,standards,bias),
+                 interference::Interference=Interference(),
                  nblank::Int=2,
                  ndrift::Int=2,
                  ndown::Int=1,
-                 PAcutoff::Union{Nothing,Float64}=nothing,
-                 glass::AbstractDict=Dict())
-    return Gmethod(name,PDd(ions),PDd(proxies),PDd(channels),
-                   interferences,nblank,ndrift,ndown,
-                   PAcutoff,standards,glass)
+                 nbias::Int=1,
+                 PAcutoff::Union{Nothing,Float64}=nothing)
+    return Gmethod(name,refmats,fractionation,interference,
+                   nblank,ndrift,ndown,nbias,PAcutoff)
 end
 
-function PDd(arg::NamedTuple{(:P,:D,:d)})
-    return PDd(arg.P,arg.D,arg.d)
+function Interference(;ions::Dict{String,Vector{String}}=Dict{String,Vector{String}}(),
+                       proxies::Dict{String,String}=Dict{String,String}(),
+                       channels::Dict{String,String}=Dict{String,String}(),
+                       bias::Dict{String,Vector{String}}=Dict{String,Vector{String}}())
+    return Interference(ions,proxies,channels,bias)
 end
 
 function default_ions(name)
@@ -23,50 +28,45 @@ function default_ions(name)
     return (P=String(m.P),D=String(m.D),d=String(m.d))
 end
 
-function channels2proxies!(method::Gmethod)
-    equivocal = false
-    all_elements = string.(keys(_KJ["nuclides"]))
-    for nuclide in (:P,:D,:d)
-        channel = getproperty(method.channels,nuclide)
-        matching_elements = filter(x -> occursin(x, channel), all_elements)
-        if length(matching_elements) > 0
-            already_found = false
-            newly_found = false
-            for matching_element in matching_elements
-                newly_found = get_proxy_isotopes!(method,nuclide,
-                                                  matching_element)
-                if already_found & newly_found
-                    equivocal = true
-                    break
-                else
-                    already_found = newly_found
-                end
-            end
-            if !already_found
-                equivocal = true
-            end
-        else
-            equivocal = true
+function channels2proxies(channels::AbstractDict)
+    out = Dict{String,String}()
+    for (proxy,channel) in pairs(channels)
+        ion = channel2proxy(channel)
+        if !isnothing(ion)
+            out[ion] = proxy
         end
     end
-    return equivocal
-
+    return out
 end
-export channels2proxies!
+function channel2proxy(channel::AbstractString)
+    proxy = nothing
+    all_elements = string.(keys(_KJ["nuclides"]))
+    matching_elements = filter(x -> occursin(x, channel), all_elements)
+    if length(matching_elements) > 0
+        already_found = false
+        for matching_element in matching_elements
+            proxy = get_proxy_isotope(channel,matching_element)
+            if !isnothing(proxy)
+                if already_found
+                    return nothing
+                else
+                    already_found = true
+                end
+            end
+        end
+    end
+    return proxy
+end
 
-function get_proxy_isotopes!(method::Gmethod,
-                             nuclide::Symbol,
-                             matching_element::AbstractString)
-    channel = getproperty(method.channels,nuclide)
+function get_proxy_isotope(channel::AbstractString,
+                           matching_element::AbstractString)
     all_isotopes = string.(_KJ["nuclides"][matching_element])
     matching_isotope = filter(x -> occursin(x, channel), all_isotopes)
-    found = false
     if length(matching_isotope) == 1
-        setproperty!(method.proxies,nuclide,
-                     matching_element * matching_isotope[1])
-        found = true
+        return matching_element * matching_isotope[1]
+    else
+        return nothing
     end
-    return found
 end
 
 function Cmethod(run::Vector{Sample},

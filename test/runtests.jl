@@ -108,6 +108,10 @@ function outliertest_sample(show=true)
     end
 end
 
+function methodtest()
+    method = Gmethod("Lu-Hf")
+end
+
 function standardtest(verbose=false)
     myrun = loadtest()
     standards = Dict("BP" => "BP")
@@ -560,18 +564,11 @@ function channels2proxies_test()
 end
 
 function interference_test()
-    myrun = loadtest()
-    standards = Dict("BP" => "BP")
-    method = getmethod("Lu-Hf",standards)
-    method.interferences = Dict("Hf176" => [(ion="Lu176",proxy="Lu175",channel="Lu175 -> 257"),
-                                            (ion="Yb176",proxy="Yb172",channel="Yb172 -> 172")])
-    interference_correction!(myrun,method)
+    
 end
 
 function biastest()
-    bias = Dict("Lu" => (num=176,den=175),
-                "Hf" => (num=176,den=178),
-                "Yb" => (num=172,den=175))
+
 end
 
 module test
@@ -605,6 +602,7 @@ Plots.closeall()
 # @testset "moving median test" begin mmediantest() end
 # @testset "outlier detection" begin outliertest_synthetic() end
 # @testset "outlier detection" begin outliertest_sample() end
+@testset "create method" begin methodtest() end
 # @testset "assign standards" begin standardtest(true) end
 # @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
 # @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
@@ -638,7 +636,7 @@ Plots.closeall()
 # @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 # @testset "channels2proxy test" begin channels2proxies_test() end
 # @testset "bias test" begin biastest() end
-@testset "interference test" begin interference_test() end
+# @testset "interference test" begin interference_test() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 

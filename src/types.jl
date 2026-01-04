@@ -47,24 +47,31 @@ end
 abstract type KJmethod end
 export KJmethod
 
-mutable struct PDd
-    P::String
-    D::String
-    d::String
+mutable struct Fractionation
+    ions::NamedTuple{(:P,:D,:d)}
+    proxies::Dict{String,String}
+    channels::Dict{String,String}
+    standards::Vector{String}
+    bias::Dict{String,String}
+end
+
+mutable struct Interference
+    ions::Dict{String,Vector{String}}
+    proxies::Dict{String,String}
+    channels::Dict{String,String}
+    bias::Dict{String,Vector{String}}
 end
 
 mutable struct Gmethod <: KJmethod
     name::String
-    ions::PDd
-    proxies::PDd
-    channels::PDd
-    interferences::Dict
+    refmats::Dict{String,String}
+    fractionation::Fractionation
+    interference::Interference
     nblank::Int
     ndrift::Int
     ndown::Int
-    PAcutoff::Union{Nothing,Float64}
-    standards::Dict
-    glass::Dict
+    nbias::Int
+    PAcutoff::Union{Nothing,Float64}    
 end
 export Gmethod
 
