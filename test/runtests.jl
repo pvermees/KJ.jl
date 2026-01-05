@@ -183,6 +183,7 @@ function predictsettings(option::AbstractString="Lu-Hf")
     myrun = loadtest(;dname=dname)
     method = getmethod(option,refmats)
     setGroup!(myrun,method)
+    detect_outliers!(myrun;channels=getChannels(method))
     method.PAcutoff = nothing
     E = zeros(length(drift)+length(down),
               length(drift)+length(down))
@@ -616,8 +617,8 @@ Plots.closeall()
 @testset "create method" begin methodtest() end
 @testset "assign standards" begin standardtest(true) end
 @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
-# @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
-# @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
+@testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
+@testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
 # @testset "predict drift" begin driftest() end
 # @testset "predict down" begin downtest() end#
 # @testset "Lu-Hf" begin processtest("Lu-Hf") end
