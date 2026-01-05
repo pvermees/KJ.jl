@@ -33,9 +33,6 @@ mutable struct PointRefmat <: AbstractRefmat
     material::String
 end
 
-abstract type KJmethod end
-export KJmethod
-
 mutable struct PDd
     P::String
     D::String
@@ -56,6 +53,9 @@ mutable struct Interference
     channels::Dict{String,String}
     bias::Dict{String,Vector{String}}
 end
+
+abstract type KJmethod end
+export KJmethod
 
 mutable struct Gmethod <: KJmethod
     name::String

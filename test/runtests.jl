@@ -109,7 +109,9 @@ function outliertest_sample(show=true)
 end
 
 function methodtest()
-    method = Gmethod("Lu-Hf")
+    method = Gmethod("Lu-Hf";
+                     channels=(P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"))
+    @test method.fractionation.proxies.d == "Hf178"
 end
 
 function standardtest(verbose=false)
@@ -595,13 +597,13 @@ end
 
 Plots.closeall()
 
-# @testset "load" begin loadtest(;verbose=true) end
-# @testset "plot raw data" begin plottest(2) end
-# @testset "set selection window" begin windowtest() end
-# @testset "set method and blanks" begin blanktest() end
-# @testset "moving median test" begin mmediantest() end
-# @testset "outlier detection" begin outliertest_synthetic() end
-# @testset "outlier detection" begin outliertest_sample() end
+@testset "load" begin loadtest(;verbose=true) end
+@testset "plot raw data" begin plottest(2) end
+@testset "set selection window" begin windowtest() end
+@testset "set method and blanks" begin blanktest() end
+@testset "moving median test" begin mmediantest() end
+@testset "outlier detection" begin outliertest_synthetic() end
+@testset "outlier detection" begin outliertest_sample() end
 @testset "create method" begin methodtest() end
 # @testset "assign standards" begin standardtest(true) end
 # @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
