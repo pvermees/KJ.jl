@@ -109,7 +109,17 @@ function outliertest_sample(show=true)
 end
 
 function methodtest()
-    method = Gmethod("Lu-Hf")
+    interferences = Interference(ions = Dict("Hf176" => ["Lu176","Yb176"]),
+                                 proxies = Dict("Lu176" => "Lu175","Yb176" => "Yb172"),
+                                 channels = Dict("Lu175" => "Lu175 -> 257","Yb172" => "Yb172 -> 254"),
+                                 bias = Dict("Lu175" => ["some_Lu_standard"], "Yb172" => ["some_REE_standard"]))
+    method = Gmethod("Lu-Hf";
+                     channels=(P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"),
+                     refmats=Dict("Hogsbo" => "Hog", "NIST612" => "NIST"),
+                     standards=["Hogsbo"],
+                     bias=Dict("Hf" => ["NIST612"]),
+                     interference=interferences)
+    @test method.fractionation.proxies.d == "Hf178"
 end
 
 function standardtest(verbose=false)
@@ -595,13 +605,13 @@ end
 
 Plots.closeall()
 
-# @testset "load" begin loadtest(;verbose=true) end
-# @testset "plot raw data" begin plottest(2) end
-# @testset "set selection window" begin windowtest() end
-# @testset "set method and blanks" begin blanktest() end
-# @testset "moving median test" begin mmediantest() end
-# @testset "outlier detection" begin outliertest_synthetic() end
-# @testset "outlier detection" begin outliertest_sample() end
+@testset "load" begin loadtest(;verbose=true) end
+@testset "plot raw data" begin plottest(2) end
+@testset "set selection window" begin windowtest() end
+@testset "set method and blanks" begin blanktest() end
+@testset "moving median test" begin mmediantest() end
+@testset "outlier detection" begin outliertest_synthetic() end
+@testset "outlier detection" begin outliertest_sample() end
 @testset "create method" begin methodtest() end
 # @testset "assign standards" begin standardtest(true) end
 # @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end

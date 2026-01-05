@@ -1,3 +1,10 @@
+function Interference(;ions::Dict{String,Vector{String}}=Dict{String,Vector{String}}(),
+                       channels::Dict{String,String}=Dict{Strings,Strings}(),
+                       proxies::Dict{String,String}=Dict{String,String}(),
+                       bias::Dict{String,Vector{String}}=Dict{String,Vector{String}}())
+    return Interference(ions,channels,proxies,bias)
+end
+    
 function interference_correction!(run::Vector{Sample},
                                   method::KJmethod)
     for samp in run

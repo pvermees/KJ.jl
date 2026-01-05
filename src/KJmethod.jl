@@ -4,7 +4,7 @@ function Gmethod(name::String;
                  proxies::NamedTuple{(:P,:D,:d)}=channels2proxies(channels),
                  refmats::Dict{String,String}=Dict{String,String}(),
                  standards::Vector{String}=collect(keys(refmats)),
-                 bias::Dict{String,String}=Dict{String,String}(),
+                 bias::Dict{String,Vector{String}}=Dict{String,Vector{String}}(),
                  fractionation::Fractionation=Fractionation(ions,proxies,channels,standards,bias),
                  interference::Interference=Interference(),
                  nblank::Int=2,

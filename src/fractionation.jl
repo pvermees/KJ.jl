@@ -2,7 +2,7 @@ function Fractionation(ions::NamedTuple{(:P,:D,:d)},
                        proxies::NamedTuple{(:P,:D,:d)},
                        channels::NamedTuple{(:P,:D,:d)},
                        standards::Vector{String},
-                       bias::Dict{String,String})
+                       bias::Dict{String,Vector{String}})
     return Fractionation(PDd(ions.P,ions.D,ions.d),
                          PDd(proxies.P,proxies.D,proxies.d),
                          PDd(channels.P,channels.D,channels.d),
