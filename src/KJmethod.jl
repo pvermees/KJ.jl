@@ -1,7 +1,7 @@
 function Gmethod(name::String;
                  ions::NamedTuple{(:P,:D,:d)}=default_ions(name),
-                 channels::AbstractDict{String,String}=Dict(v => v for v in values(ions)),
-                 proxies::AbstractDict{String,String}=channels2proxies(channels),
+                 channels::NamedTuple{(:P,:D,:d)}=ions,
+                 proxies::NamedTuple{(:P,:D,:d)}=channels2proxies(channels),
                  refmats::Dict{String,String}=Dict{String,String}(),
                  standards::Vector{String}=collect(keys(refmats)),
                  bias::Dict{String,String}=Dict{String,String}(),
@@ -28,15 +28,10 @@ function default_ions(name)
     return (P=String(m.P),D=String(m.D),d=String(m.d))
 end
 
-function channels2proxies(channels::AbstractDict)
-    out = Dict{String,String}()
-    for (proxy,channel) in pairs(channels)
-        ion = channel2proxy(channel)
-        if !isnothing(ion)
-            out[ion] = proxy
-        end
-    end
-    return out
+function channels2proxies(channels::NamedTuple{(:P,:D,:d)})
+    return (P=channel2proxy(channels.P),
+            D=channel2proxy(channels.D),
+            d=channel2proxy(channels.d))
 end
 function channel2proxy(channel::AbstractString)
     proxy = nothing
