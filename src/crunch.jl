@@ -73,7 +73,7 @@ function predict(samp::Sample,
                  method::Gmethod,
                  fit::Gfit;
                  kw...)
-    if samp.group in keys(method.standards)
+    if samp.group in method.fractionation.standards
         a = getAnchor(method.name,samp.group)
         c = Cruncher(samp,method,fit)
         ft, FT = ft_FT(c,method,fit)
@@ -174,7 +174,7 @@ function Cruncher(samp::Sample,
 
     dat = swinData(samp)
     
-    ch = method.channels
+    ch = method.fractionation.channels
     pm = dat[:,ch.P]
     Dom = dat[:,ch.D]
     bom = dat[:,ch.d]
@@ -198,7 +198,8 @@ function Cruncher(samp::Sample,
     sPd = covmat[1,3]
     sDd = covmat[2,3]
     
-    bd = iratio(method.proxies.d,method.ions.d)
+    bd = iratio(method.fractionation.proxies.d,
+                method.fractionation.ions.d)
 
     t = dat.t
     T = dat.T

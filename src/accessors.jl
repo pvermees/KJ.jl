@@ -33,39 +33,23 @@ function getChannels(samp::Sample) :: AbstractVector
     return names(getSignals(samp))
 end
 function getChannels(method::Gmethod) :: AbstractVector
-    return collect(unpack(method.channels))
+    return collect(unpack(method.fractionation.channels))
 end
 function getChannels(method::Cmethod) :: AbstractVector
     return collect(string.(keys(method.elements)))
 end
 export getChannels
 
-"""
-getSnames(run::Vector{Sample})
-
-Get a vector of sample names
-"""
 function getSnames(run::Vector{Sample})
     return getAttr(run,:sname)
 end
 export getSnames
 
-"""
-getGroups(run::Vector{Sample})
-
-Get the vector of group names (standards, samples, glasses).
-"""
 function getGroups(run::Vector{Sample})
     return getAttr(run,:group)
 end
 export getGroups
 
-"""
-getIndicesInGroup(run::Vector{Sample},
-                  group::AbstractString)
-
-Get the indices of the samples belonging to 'group'
-"""
 function getIndicesInGroup(run::Vector{Sample},
                            group::AbstractString)
     return findall(getGroups(run) .== group)
@@ -99,12 +83,12 @@ function setGroup!(run::Vector{Sample},
 end
 function setGroup!(run::Vector{Sample},
                    method::KJmethod)
-    setGroup!(run,method.standards)
+    setGroup!(run,method.refmats)
 end
 function setGroup!(run::Vector{Sample},
-                   standards::AbstractDict)
-    if length(standards)>0
-        for (group,prefix) in standards
+                   refmats::AbstractDict)
+    if length(refmats)>0
+        for (group,prefix) in refmats
             setGroup!(run,prefix,group)
         end
     else

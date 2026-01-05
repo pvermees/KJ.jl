@@ -124,8 +124,8 @@ end
 
 function standardtest(verbose=false)
     myrun = loadtest()
-    standards = Dict("BP" => "BP")
-    method = Gmethod("Lu-Hf",standards)
+    refmats = Dict("BP" => "BP")
+    method = Gmethod("Lu-Hf";refmats=refmats)
     setGroup!(myrun,method)
     if verbose
         summarise(myrun;verbose=true,n=5)
@@ -134,9 +134,9 @@ function standardtest(verbose=false)
 end
 
 function getmethod(name::AbstractString,
-                   standards::AbstractDict)
+                   refmats::AbstractDict)
     if name == "U-Pb"
-        return Gmethod(name,standards)
+        return Gmethod(name;refmats=refmats)
     end
     ndrift = 2
     ndown = 1
@@ -154,33 +154,34 @@ function getmethod(name::AbstractString,
         ndrift = 1
         ndown = 0
     end
-    return Gmethod(name,standards;
-                   ndrift=ndrift,ndown=ndown,proxies=p,channels=c)
+    return Gmethod(name;
+                   refmats=refmats,proxies=p,channels=c,
+                   ndrift=ndrift,ndown=ndown)
 end
 
 function predictsettings(option::AbstractString="Lu-Hf")
     dname = nothing
-    standards = nothing
+    refmats = nothing
     drift = nothing
     down = nothing
     if option=="Lu-Hf"
         dname = "data/Lu-Hf"
-        standards = Dict("BP" => "BP")
+        refmats = Dict("BP" => "BP")
         drift = [4.22,0.0]
         down = [0.0,0.15]
     elseif option=="Rb-Sr"
         dname = "data/Rb-Sr"
-        standards = Dict("MDC" => "MDC -")
+        refmats = Dict("MDC" => "MDC -")
         drift = [1.0,0.0]
         down = [0.0,0.14]
     elseif option=="K-Ca"
         dname = "data/K-Ca"
-        standards = Dict("MDC" => "MDC_")
+        refmats = Dict("MDC" => "MDC_")
         drift = [100.0]
         down = [0.0]
     end
     myrun = loadtest(;dname=dname)
-    method = getmethod(option,standards)
+    method = getmethod(option,refmats)
     setGroup!(myrun,method)
     method.PAcutoff = nothing
     E = zeros(length(drift)+length(down),
@@ -200,7 +201,7 @@ function predictest(option="Lu-Hf";
         return samp, method, fit
     else
         p, offset = KJ.plot(samp,method;fit=fit,
-                            den=method.channels.D,
+                            den=method.fractionation.channels.D,
                             transformation=transformation,
                             return_offset=true)
         @test display(p) != NaN
@@ -613,8 +614,8 @@ Plots.closeall()
 @testset "outlier detection" begin outliertest_synthetic() end
 @testset "outlier detection" begin outliertest_sample() end
 @testset "create method" begin methodtest() end
-# @testset "assign standards" begin standardtest(true) end
-# @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
+@testset "assign standards" begin standardtest(true) end
+@testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
 # @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
 # @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
 # @testset "predict drift" begin driftest() end
