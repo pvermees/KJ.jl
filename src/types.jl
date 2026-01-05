@@ -59,6 +59,9 @@ export Interference
 abstract type KJmethod end
 export KJmethod
 
+abstract type KJmethod end
+export KJmethod
+
 mutable struct Gmethod <: KJmethod
     name::String
     refmats::Dict{String,String}
