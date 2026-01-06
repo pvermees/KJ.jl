@@ -135,12 +135,12 @@ end
 function TUImethod!(ctrl::AbstractDict,
                     response::AbstractString)
     if response=="c"
-        ctrl["method"] = Cmethod(ctrl["run"],Dict(),(nothing,nothing))
+        ctrl["method"] = Cmethod(ctrl["run"])
         return "internal"
     else
         i = parse(Int,response)
         methodname = _KJ["methods"].names[i]
-        ctrl["method"] = Gmethod(methodname,Dict())
+        ctrl["method"] = Gmethod(methodname)
         return "columns"
     end
 end
@@ -184,12 +184,13 @@ function TUIsetChannels!(ctrl::AbstractDict,
                          response::AbstractString)
     labels = getChannels(ctrl["run"])
     selected = parse.(Int,split(response,","))
-    ch = ctrl["method"].channels
-    ch.P, ch.D, ch.d = labels[selected[1:3]]
-    equivocal = channels2proxies!(ctrl["method"])
-    if equivocal
+    channels = NamedTuple{(:P,:D,:d)}(labels[selected[1:3]])
+    ctrl["method"].fractionation.channels = channels
+    proxies = channels2proxies(channels)
+    if any(isnothing,proxies)
         return "setProxies"
     else
+        ctrl["method"].fractionation.proxies = proxies
         ctrl["priority"]["method"] = false
         return "xx"
     end

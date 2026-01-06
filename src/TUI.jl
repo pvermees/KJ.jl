@@ -40,7 +40,8 @@ function TUI(extensions...;logbook::AbstractString="",reset=false)
         try
             dispatch!(_KJ["ctrl"];verbose=false)
         catch e
-            println(e)
+            showerror(stdout, e, catch_backtrace())
+            println("")
             println("Press 'x' to quit or any other key to continue")
             if readline() == "x" break end
         end
@@ -117,20 +118,11 @@ function dispatch!(ctrl::AbstractDict;
     end
 end
 
-"""
-KJtree!(tree::AbstractDict)
-
-Replace the internal structure of TUI tree, including all the KJ settings.
-"""
 function KJtree!(tree::AbstractDict)
     _KJ["tree"] = tree
 end
 export KJtree!
-"""
-KJtree()
 
-Returns the internal structure of TUI tree, including all the KJ settings.
-"""
 function KJtree()
     return _KJ["tree"]
 end

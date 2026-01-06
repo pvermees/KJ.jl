@@ -33,16 +33,10 @@ mutable struct PointRefmat <: AbstractRefmat
     material::String
 end
 
-mutable struct PDd
-    P::String
-    D::String
-    d::String
-end
-
 mutable struct Fractionation
-    ions::PDd
-    proxies::PDd
-    channels::PDd
+    ions::NamedTuple{(:P,:D,:d)}
+    proxies::NamedTuple{(:P,:D,:d)}
+    channels::NamedTuple{(:P,:D,:d)}
     standards::Vector{String}
     bias::Dict{String,Vector{String}}
 end

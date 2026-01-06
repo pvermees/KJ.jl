@@ -1,15 +1,3 @@
-function Fractionation(ions::NamedTuple{(:P,:D,:d)},
-                       proxies::NamedTuple{(:P,:D,:d)},
-                       channels::NamedTuple{(:P,:D,:d)},
-                       standards::AbstractVector,
-                       bias::AbstractDict)
-    return Fractionation(PDd(ions.P,ions.D,ions.d),
-                         PDd(proxies.P,proxies.D,proxies.d),
-                         PDd(channels.P,channels.D,channels.d),
-                         standards,
-                         bias)
-end
-
 function fractionation!(fit::Gfit,
                         method::Gmethod,
                         run::Vector{Sample};

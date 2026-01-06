@@ -16,13 +16,6 @@ function Gmethod(name::String;
                    nblank,ndrift,ndown,nbias,PAcutoff)
 end
 
-function Interference(;ions::Dict{String,Vector{String}}=Dict{String,Vector{String}}(),
-                       proxies::Dict{String,String}=Dict{String,String}(),
-                       channels::Dict{String,String}=Dict{String,String}(),
-                       bias::Dict{String,Vector{String}}=Dict{String,Vector{String}}())
-    return Interference(ions,proxies,channels,bias)
-end
-
 function default_ions(name)
     m = get(_KJ["methods"],name)
     return (P=String(m.P),D=String(m.D),d=String(m.d))
@@ -64,9 +57,9 @@ function get_proxy_isotope(channel::AbstractString,
     end
 end
 
-function Cmethod(run::Vector{Sample},
-                 refmats::AbstractDict,
-                 internal::Tuple;
+function Cmethod(run::Vector{Sample};
+                 refmats::AbstractDict=Dict{String,String}(),
+                 internal::Tuple=(nothing,nothing),
                  nblank::Int=2)
     ch = getChannels(run)
     el = channel2element.(ch)
