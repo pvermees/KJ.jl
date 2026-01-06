@@ -74,7 +74,7 @@ export Gmethod
 
 mutable struct Cmethod <: KJmethod
     elements::NamedTuple
-    standards::Dict
+    refmats::Dict
     internal::Tuple
     nblank::Int
 end

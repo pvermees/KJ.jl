@@ -122,7 +122,7 @@ function methodtest()
     @test method.fractionation.proxies.d == "Hf178"
 end
 
-function standardtest(verbose=false)
+function refmattest(verbose=false)
     myrun = loadtest()
     refmats = Dict("BP" => "BP")
     method = Gmethod("Lu-Hf";refmats=refmats)
@@ -228,7 +228,7 @@ function partest(parname,paroffsetfact)
                             [drift,0.0],    # adrift
                             zeros(2,2))     # covariance matrix
         plotFitted!(p,samp,method,adjusted_fit;
-                    den=method.channels.D,
+                    den=method.fractionation.channels.D,
                     transformation="log",
                     offset=offset,
                     linecolor="red")
@@ -247,23 +247,23 @@ end
 function processsettings(option="Lu-Hf")
     dname = joinpath("data",option)
     head2name = true
-    standards = nothing
+    refmats = nothing
     snum = 1
     if option == "Lu-Hf"
-        standards =  Dict("BP" => "BP")
+        refmats =  Dict("BP" => "BP")
     elseif option == "Rb-Sr"
-        standards = Dict("MDC" => "MDC -")
+        refmats = Dict("MDC" => "MDC -")
         snum = 4
     elseif option == "K-Ca"
-        standards = Dict("MDC" => "MDC_")
+        refmats = Dict("MDC" => "MDC_")
         snum = 1 # 1, 2, 5, 6
     elseif option == "U-Pb"
         head2name = false
-        standards = Dict("Plesovice" => "STDCZ",
-                         "91500" => "91500")
+        refmats = Dict("Plesovice" => "STDCZ",
+                       "91500" => "91500")
         snum = 3
     end
-    method = getmethod(option,standards)
+    method = getmethod(option,refmats)
     return (dname, head2name, method, snum)
 end
 
@@ -280,7 +280,7 @@ function processtest(option="Lu-Hf";
     if show
         p = KJ.plot(myrun[snum],method;fit=fit,
                     transformation=transformation,
-                    den=method.channels.D)
+                    den=method.fractionation.channels.D)
         @test display(p) != NaN
     end
     return myrun, method, fit
@@ -408,8 +408,8 @@ end
 function concentrationtest()
     myrun = load("data/Lu-Hf",format="Agilent")
     internal =  ("Al27 -> 27",1.2e5)
-    standards = Dict("NIST612" => "NIST612p")
-    method = Cmethod(myrun,standards,internal)
+    refmats = Dict("NIST612" => "NIST612p")
+    method = Cmethod(myrun,refmats,internal)
     fit = process!(myrun,method)
     conc = concentrations(myrun,method,fit)
     p = KJ.plot(myrun[4],method;fit=fit,
@@ -432,7 +432,7 @@ end
 
 function internochronUPbtest(show=true)
     myrun = load("data/carbonate",format="Agilent")
-    method = Gmethod("U-Pb",Dict("WC1"=>"WC1"))
+    method = Gmethod("U-Pb";refmats=Dict("WC1"=>"WC1"))
     fit = process!(myrun,method)
     isochron = internochron(myrun,method,fit)
     CSV.write("output/isochronUPb.csv",isochron)
@@ -462,7 +462,7 @@ function map_dating_test()
     myrun = load("data/timestamp/NHM_cropped.csv",
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
-    method = Gmethod("U-Pb",Dict("91500"=>"91500"))
+    method = Gmethod("U-Pb";refmats=Dict("91500"=>"91500"))
     fit = process!(myrun,method)
     a = atomic(myrun[10],method,fit;add_xy=true)
     df = DataFrame(a)
@@ -483,9 +483,9 @@ end
 
 function glass_only_test()
     myrun = load("data/U-Pb",format="Agilent",head2name=false)
-    method = Gmethod("U-Pb",
-                     Dict("NIST610" => "610",
-                          "NIST612" => "612"))
+    method = Gmethod("U-Pb";
+                     refmats=Dict("NIST610" => "610",
+                                  "NIST612" => "612"))
     fit = process!(myrun,method)
     export2IsoplotR(myrun,method,fit;
                     fname="output/UPb_with_glass.json")
@@ -515,7 +515,7 @@ function SS4test(run::Vector{Sample},
                  fit::Gfit)
     out = 0.0
     for samp in run
-        if samp.group in keys(method.standards)
+        if samp.group in keys(method.refmats)
             a = getAnchor(method.name,samp.group)
             c = Cruncher(samp,method,fit)
             ft = polyFac(fit.drift,c.t)
@@ -568,13 +568,6 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     end
 end
 
-function channels2proxies_test()
-    method = getmethod("Lu-Hf",Dict())
-    method.channels.d = "Hf177 -> Hf178"
-    equivocal = channels2proxies!(method)
-    @test equivocal
-end
-
 function interference_test()
     
 end
@@ -615,40 +608,39 @@ Plots.closeall()
 @testset "outlier detection" begin outliertest_synthetic() end
 @testset "outlier detection" begin outliertest_sample() end
 @testset "create method" begin methodtest() end
-@testset "assign standards" begin standardtest(true) end
+@testset "assign refmats" begin refmattest(true) end
 @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
 @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
 @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
-# @testset "predict drift" begin driftest() end
-# @testset "predict down" begin downtest() end#
-# @testset "Lu-Hf" begin processtest("Lu-Hf") end
-# @testset "Rb-Sr" begin processtest("Rb-Sr") end
-# @testset "K-Ca" begin processtest("K-Ca") end
-# @testset "U-Pb" begin processtest("U-Pb") end
-# @testset "hist" begin histest() end
-# @testset "PA test" begin PAtest() end
-# @testset "atomic test" begin atomictest("Rb-Sr") end
-# @testset "averat test" begin averatest("K-Ca") end
-# @testset "export" begin exporttest() end
-# @testset "iCap" begin iCaptest() end
-# @testset "carbonate" begin carbonatetest() end
-# @testset "timestamp" begin timestamptest() end
-# @testset "stoichiometry" begin mineraltest() end
-# @testset "concentration" begin concentrationtest() end
-# @testset "Lu-Hf internochron" begin internochrontest() end
-# @testset "UPb internochron" begin internochronUPbtest() end
-# @testset "concentration map" begin maptest() end
-# @testset "isotope ratio map" begin map_dating_test() end
-# @testset "map fail test" begin map_fail_test() end
-# @testset "glass as age standard test" begin glass_only_test() end
-# @testset "extension test" begin extensiontest() end
-# @testset "synthetic data" begin SStest() end
-# @testset "accuracy test 1" begin accuracytest() end
-# @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
-# @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
-# @testset "channels2proxy test" begin channels2proxies_test() end
-# @testset "bias test" begin biastest() end
-# @testset "interference test" begin interference_test() end
+@testset "predict drift" begin driftest() end
+@testset "predict down" begin downtest() end
+@testset "Lu-Hf" begin processtest("Lu-Hf") end
+@testset "Rb-Sr" begin processtest("Rb-Sr") end
+@testset "K-Ca" begin processtest("K-Ca") end
+@testset "U-Pb" begin processtest("U-Pb") end
+@testset "hist" begin histest() end
+@testset "PA test" begin PAtest() end
+@testset "atomic test" begin atomictest("Rb-Sr") end
+@testset "averat test" begin averatest("K-Ca") end
+@testset "export" begin exporttest() end
+@testset "iCap" begin iCaptest() end
+@testset "carbonate" begin carbonatetest() end
+@testset "timestamp" begin timestamptest() end
+@testset "stoichiometry" begin mineraltest() end
+@testset "concentration" begin concentrationtest() end
+@testset "Lu-Hf internochron" begin internochrontest() end
+@testset "UPb internochron" begin internochronUPbtest() end
+@testset "concentration map" begin maptest() end
+@testset "isotope ratio map" begin map_dating_test() end
+@testset "map fail test" begin map_fail_test() end
+@testset "glass as age standard test" begin glass_only_test() end
+@testset "extension test" begin extensiontest() end
+@testset "synthetic data" begin SStest() end
+@testset "accuracy test 1" begin accuracytest() end
+@testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
+@testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
+@testset "bias test" begin biastest() end
+@testset "interference test" begin interference_test() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 

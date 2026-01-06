@@ -2,9 +2,9 @@ function Gmethod(name::String;
                  ions::NamedTuple{(:P,:D,:d)}=default_ions(name),
                  channels::NamedTuple{(:P,:D,:d)}=ions,
                  proxies::NamedTuple{(:P,:D,:d)}=channels2proxies(channels),
-                 refmats::Dict{String,String}=Dict{String,String}(),
-                 standards::Vector{String}=collect(keys(refmats)),
-                 bias::Dict{String,Vector{String}}=Dict{String,Vector{String}}(),
+                 refmats::AbstractDict=Dict{String,String}(),
+                 standards::AbstractVector=collect(keys(refmats)),
+                 bias::AbstractDict=Dict{String,Vector{String}}(),
                  fractionation::Fractionation=Fractionation(ions,proxies,channels,standards,bias),
                  interference::Interference=Interference(),
                  nblank::Int=2,
@@ -65,13 +65,13 @@ function get_proxy_isotope(channel::AbstractString,
 end
 
 function Cmethod(run::Vector{Sample},
-                 standards::AbstractDict,
+                 refmats::AbstractDict,
                  internal::Tuple;
                  nblank::Int=2)
     ch = getChannels(run)
     el = channel2element.(ch)
     elements = NamedTuple{Tuple(Symbol.(ch))}(Tuple(el))
-    return Cmethod(elements,standards,internal,nblank)
+    return Cmethod(elements,refmats,internal,nblank)
 end
 
 function getConcentrations(method::Cmethod,

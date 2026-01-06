@@ -1,8 +1,8 @@
 function Fractionation(ions::NamedTuple{(:P,:D,:d)},
                        proxies::NamedTuple{(:P,:D,:d)},
                        channels::NamedTuple{(:P,:D,:d)},
-                       standards::Vector{String},
-                       bias::Dict{String,Vector{String}})
+                       standards::AbstractVector,
+                       bias::AbstractDict)
     return Fractionation(PDd(ions.P,ions.D,ions.d),
                          PDd(proxies.P,proxies.D,proxies.d),
                          PDd(channels.P,channels.D,channels.d),
@@ -17,15 +17,15 @@ function fractionation!(fit::Gfit,
 
     # extract the grouped data for the SS function from the run
     cruncher_groups = Dict()
-    for refmat in keys(method.standards)
-        anchor = getAnchor(method.name,refmat)
-        selection = group2selection(run,refmat)
+    for standard in method.fractionation.standards
+        anchor = getAnchor(method.name,standard)
+        selection = group2selection(run,standard)
         ns = length(selection)
         crunchers = Vector{Cruncher}(undef,ns)
         for i in eachindex(selection)
             crunchers[i] = Cruncher(run[selection[i]],method,fit)
         end
-        cruncher_groups[refmat] = (anchor=anchor,crunchers=crunchers)
+        cruncher_groups[standard] = (anchor=anchor,crunchers=crunchers)
     end
 
     # initialise the parameters
@@ -90,13 +90,13 @@ function fractionation!(fit::Cfit,
     num = fit.blank[1:1,:] .* 0.0
     den = copy(num)
     internal = method.internal[1]
-    for SRM in keys(method.standards)
-        selection = getIndicesInGroup(run,SRM)
+    for refmat in keys(method.refmats)
+        selection = getIndicesInGroup(run,refmat)
         dats = [swinData(samp) for samp in run[selection]]
         for dat in dats
             bt = polyVal(fit.blank,dat.t)
             X = getSignals(dat) .- bt
-            C = getConcentrations(method,SRM)
+            C = getConcentrations(method,refmat)
             num[1,:] = Vector(num[1,:]) + sum.(eachcol(C[1,internal].*X.*X[:,internal]))
             den[1,:] = Vector(den[1,:]) + sum.(eachcol(C.*(X[:,internal].^2)))
         end

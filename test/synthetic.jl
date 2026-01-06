@@ -35,12 +35,14 @@ function random_sample(method::Gmethod,
     isig = nblk.+(1:nsig)
     P = x.*D
     d = y.*D
-    pm = bt[:,method.channels.P]
-    Dom = bt[:,method.channels.D]
-    bom = bt[:,method.channels.d]
+    fractionation = method.fractionation
+    channels = fractionation.channels
+    pm = bt[:,channels.P]
+    Dom = bt[:,channels.D]
+    bom = bt[:,channels.d]
     pm[isig] .+= P.*ft[isig].*FT[isig]
     Dom[isig] .+= D
-    bom[isig] .+= d*iratio(method.proxies.d,method.ions.d)
+    bom[isig] .+= d*iratio(fractionation.proxies.d,fractionation.ions.d)
     ep = Distributions.median(pm[isig]).*relerr_P.*randn(nsig)
     eDo = Distributions.median(Dom[isig]).*relerr_D.*randn(nsig)
     ebo = Distributions.median(bom[isig]).*relerr_d.*randn(nsig)
@@ -48,9 +50,9 @@ function random_sample(method::Gmethod,
     Dom[isig] .+= eDo
     bom[isig] .+= ebo
     dat = DataFrame("Time [sec]" => spot_time,
-                    method.channels.P => pm,
-                    method.channels.D => Dom,
-                    method.channels.d => bom,
+                    channels.P => pm,
+                    channels.D => Dom,
+                    channels.d => bom,
                     "outlier" => falses(nblk+nsig),
                     "t" => t)
     return Sample(sname,dtime,dat,t0,bwin,swin,group)
@@ -76,7 +78,7 @@ function synthetic!(method::Gmethod;
     swin = [(11,59)]
     x0_std = 1/(exp(lambda*t_std)-1)
     x0_smp = 1/(exp(lambda*t_smp)-1)
-    a = getAnchor(method.name,first(keys(method.standards)))
+    a = getAnchor(method.name,method.fractionation.standards[1])
     y0_std = a.y0
     fit = Gfit(method;drift=drift,down=down)
     fit.blank[:,:] .= D./1000

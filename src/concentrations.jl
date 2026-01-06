@@ -27,7 +27,7 @@ function concentrations(run::Vector{Sample},
     conc = nothing
     for i in eachindex(run)
         samp = run[i]
-        if samp.group in keys(method.standards)
+        if samp.group in keys(method.refmats)
             refconcs = getConcentrations(method,samp.group)
             ich = method.internal[1] # ich = internal channel
             internal = (ich,refconcs[1,ich])
