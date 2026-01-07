@@ -140,9 +140,9 @@ function init_KJtree()
                 "m" => "method",
                 "t" => TUItabulate,
                 "v" => TUIviewer,
-                "f" => "standards",
-                "b" => TUItodo!, # "glass",
                 "i" => TUItodo!, # "interferences",
+                "f" => "fractionation",
+                "b" => TUItodo!, # "bias",
                 "p" => TUIprocess!,
                 "e" => "export",
                 "l" => "log",
@@ -265,7 +265,7 @@ function init_KJtree()
             help = nothing,
             action = TUIstoichiometry!
         ),
-        "standards" => (
+        "fractionation" => (
             message =
             "a: Add a reference material\n" * 
             "r: Remove reference materials\n" * 

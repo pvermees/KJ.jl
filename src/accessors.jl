@@ -82,10 +82,6 @@ function setGroup!(run::Vector{Sample},
     setGroup!(run,selection,group)
 end
 function setGroup!(run::Vector{Sample},
-                   method::KJmethod)
-    setGroup!(run,method.refmats)
-end
-function setGroup!(run::Vector{Sample},
                    refmats::AbstractDict)
     if length(refmats)>0
         for (group,prefix) in refmats

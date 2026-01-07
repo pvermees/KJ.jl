@@ -2,12 +2,12 @@ function TUIinit!()
     _KJ["ctrl"] = TUIinit()
     return nothing
 end
+
 function TUIinit()
     return Dict(
         "priority" => Dict("load" => true, 
                            "method" => true,
-                           "standards" => true, 
-                           "glass" => false,
+                           "fractionation" => true,
                            "process" => true),
         "history" => DataFrame(task=String[],action=String[]),
         "chain" => ["top"],
@@ -103,8 +103,7 @@ function TUIloadICPLAdata!(ctrl::AbstractDict)
     ctrl["head2name"] = true
     ctrl["multifile"] = false
     if ctrl["template"]
-        ctrl["priority"]["standards"] = false
-        ctrl["priority"]["glass"] = false
+        ctrl["priority"]["fractionation"] = false
         return "xx"
     else
         return "xxxx"
@@ -233,9 +232,9 @@ end
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
                                   response::AbstractString)
     refmat = ctrl["cache"]
-    ctrl["method"].standards[refmat] = response
+    push!(ctrl["method"].fractionation.refmats,refmat)
     setGroup!(ctrl["run"],response,refmat)
-    ctrl["priority"]["standards"] = false
+    ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
 
@@ -243,14 +242,14 @@ function TUIaddStandardsByNumber!(ctrl::AbstractDict,
                                   response::AbstractString)
     selection = parse.(Int,split(response,","))
     setGroup!(ctrl["run"],selection,ctrl["cache"])
-    ctrl["priority"]["standards"] = false
+    ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
 
 function TUIremoveAllStandards!(ctrl::AbstractDict)
     setGroup!(ctrl["run"],"sample")
     ctrl["method"].standards = Dict()
-    ctrl["priority"]["standards"] = true
+    ctrl["priority"]["fractionation"] = true
     return "x"
 end
 
@@ -259,13 +258,13 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
     selection = parse.(Int,split(response,","))
     setGroup!(ctrl["run"],selection,"sample")
     groups = unique(getGroups(ctrl["run"]))
-    standards  = ctrl["method"].standards
-    for k in keys(standards)
+    refmats  = ctrl["method"].refmats
+    for k in keys(refmats)
         if !in(k,groups)
-            delete!(standards,k)
+            delete!(refmats,k)
         end
     end
-    ctrl["priority"]["standards"] = length(standards) < 1
+    ctrl["priority"]["fractionation"] = length(refmats) < 1
     return "xxx"
 end
 
@@ -320,7 +319,6 @@ function TUIaddGlassByPrefix!(ctrl::AbstractDict,
                               response::AbstractString)
     setGroup!(ctrl["run"],response,ctrl["cache"])
     ctrl["glass"][ctrl["cache"]] = response
-    ctrl["priority"]["glass"] = false
     return "xxx"
 end
 
@@ -328,7 +326,6 @@ function TUIaddGlassByNumber!(ctrl::AbstractDict,
                               response::AbstractString)
     selection = parse.(Int,split(response,","))
     setGroup!(ctrl["run"],selection,ctrl["cache"])
-    ctrl["priority"]["glass"] = false
     return "xxx"
 end
 
@@ -340,7 +337,6 @@ function TUIremoveAllGlass!(ctrl::AbstractDict)
         end
     end
     ctrl["glass"] = Dict()
-    ctrl["priority"]["glass"] = true
     return "x"
 end
 
@@ -354,7 +350,6 @@ function TUIremoveGlassByNumber!(ctrl::AbstractDict,
             delete!(ctrl["glass"],k)
         end
     end
-    ctrl["priority"]["glass"] = length(ctrl["glass"])<1
     return "xxx"
 end
 
@@ -627,7 +622,7 @@ function TUIopenTemplate!(ctrl::AbstractDict,
     ctrl["multifile"] = multifile
     ctrl["method"] = method
     ctrl["transformation"] = transformation
-    ctrl["priority"]["standards"] = (length(method.standards) == 0)
+    ctrl["priority"]["fractionation"] = (length(method.standards) == 0)
     ctrl["priority"]["method"] = false
     ctrl["template"] = true
     return "xx"

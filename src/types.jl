@@ -37,7 +37,7 @@ mutable struct Fractionation
     ions::NamedTuple{(:P,:D,:d)}
     proxies::NamedTuple{(:P,:D,:d)}
     channels::NamedTuple{(:P,:D,:d)}
-    standards::Vector{String}
+    standards::Set{String}
     bias::Dict{String,Vector{String}}
 end
 export Fractionation
@@ -55,7 +55,6 @@ export KJmethod
 
 mutable struct Gmethod <: KJmethod
     name::String
-    refmats::Dict{String,String}
     fractionation::Fractionation
     interference::Interference
     nblank::Int
@@ -68,7 +67,7 @@ export Gmethod
 
 mutable struct Cmethod <: KJmethod
     elements::NamedTuple
-    refmats::Dict
+    standards::Set{String}
     internal::Tuple
     nblank::Int
 end

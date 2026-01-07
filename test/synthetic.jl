@@ -78,7 +78,7 @@ function synthetic!(method::Gmethod;
     swin = [(11,59)]
     x0_std = 1/(exp(lambda*t_std)-1)
     x0_smp = 1/(exp(lambda*t_smp)-1)
-    a = getAnchor(method.name,method.fractionation.standards[1])
+    a = getAnchor(method.name,collect(method.fractionation.standards)[1])
     y0_std = a.y0
     fit = Gfit(method;drift=drift,down=down)
     fit.blank[:,:] .= D./1000
@@ -89,7 +89,7 @@ function synthetic!(method::Gmethod;
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
                       mu=0.5,sigma=0.1,x0=x0_std,y0=y0_std,
                       D=D,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
-                      group="BP_gt"),
+                      group="BP"),
         random_sample(method,fit;i=2,n=4,
                       nblk=nblk,nsig=nsig,sname="Hog_1",
                       dtime=DateTime("2025-01-01T08:01:00"),
@@ -109,7 +109,7 @@ function synthetic!(method::Gmethod;
                       spot_time=spot_time,t0=t0,bwin=bwin,swin=swin,
                       mu=0.5,sigma=0.1,x0=x0_std,y0=y0_std,
                       D=D*2,relerr_D=relerr_D,relerr_P=relerr_P,relerr_d=relerr_d,
-                      group="BP_gt")
+                      group="BP")
     ]
     return run, fit
 end

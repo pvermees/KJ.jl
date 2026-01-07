@@ -78,13 +78,13 @@ function fractionation!(fit::Cfit,
     num = fit.blank[1:1,:] .* 0.0
     den = copy(num)
     internal = method.internal[1]
-    for refmat in keys(method.refmats)
-        selection = getIndicesInGroup(run,refmat)
+    for standard in method.standards
+        selection = getIndicesInGroup(run,standard)
         dats = [swinData(samp) for samp in run[selection]]
         for dat in dats
             bt = polyVal(fit.blank,dat.t)
             X = getSignals(dat) .- bt
-            C = getConcentrations(method,refmat)
+            C = getConcentrations(method,standard)
             num[1,:] = Vector(num[1,:]) + sum.(eachcol(C[1,internal].*X.*X[:,internal]))
             den[1,:] = Vector(den[1,:]) + sum.(eachcol(C.*(X[:,internal].^2)))
         end

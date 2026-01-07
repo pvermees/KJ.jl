@@ -3,9 +3,9 @@ function TUIwelcomeMessage(ctrl::AbstractDict)
     "m: Specify the method"*TUIcheck(ctrl,"method")*"\n"*
     "t: Tabulate the samples\n"*
     "v: View and adjust each sample\n"*
-    "f: Fractionation"*TUIcheck(ctrl,"standards")*"\n"*
-    "b: Mass bias\n"*
     "i: Interferences\n"*
+    "f: Fractionation"*TUIcheck(ctrl,"fractionation")*"\n"*
+    "b: Mass bias\n"*
     "p: Process the data"*TUIcheck(ctrl,"process")*"\n"*
     "e: Export the results\n"*
     "l: Logs and templates\n"*
