@@ -10,6 +10,7 @@ function TUIinit()
                            "fractionation" => true,
                            "process" => true),
         "history" => DataFrame(task=String[],action=String[]),
+        "refmats" => Dict{String,String}(),
         "chain" => ["top"],
         "template" => false,
         "multifile" => true,
@@ -76,8 +77,8 @@ function TUIloadICPdir!(ctrl::AbstractDict,
     ctrl["priority"]["load"] = false
     ctrl["multifile"] = true
     ctrl["ICPpath"] = response
+    setGroup!(ctrl["run"],ctrl["refmats"])
     if ctrl["template"]
-        TUIsetGroups!(ctrl)
         return "x"
     else
         return "xxx"
@@ -232,6 +233,7 @@ end
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
                                   response::AbstractString)
     standard = ctrl["cache"]
+    ctrl["refmats"][standard] = response
     push!(ctrl["method"].fractionation.standards,standard)
     setGroup!(ctrl["run"],response,standard)
     ctrl["priority"]["fractionation"] = false
@@ -249,6 +251,9 @@ function TUIaddStandardsByNumber!(ctrl::AbstractDict,
 end
 
 function TUIremoveAllStandards!(ctrl::AbstractDict)
+    for standard in ctrl["method"].fractionation.standards
+        delete!(ctrl["refmats"],standard)
+    end
     setGroup!(ctrl["run"],"sample")
     ctrl["method"].fractionation.standards = Set{String}()
     ctrl["priority"]["fractionation"] = true
@@ -263,6 +268,7 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
     standards = ctrl["method"].fractionation.standards
     for standard in standards
         if !in(standard,groups)
+            delete!(method["refmats"],standard)
             pop!(standards,standard)
         end
     end
@@ -741,6 +747,7 @@ function TUIhead2name!(ctrl::AbstractDict,
 end
 
 function TUIrefresh!(ctrl::AbstractDict)
+    nold = length(ctrl["run"])
     if ctrl["ICPpath"] == ""
         return nothing
     end
@@ -750,12 +757,10 @@ function TUIrefresh!(ctrl::AbstractDict)
         TUIloadICPfile!(ctrl,ctrl["ICPpath"])
         TUIloadLAfile!(ctrl,ctrl["LApath"])
     end
-    TUIsetGroups!(ctrl)
-    return nothing
-end
-
-function TUIsetGroups!(ctrl::AbstractDict)
-    setGroup!(ctrl["run"],ctrl["method"])
+    nnew = length(ctrl["run"])
+    if nnew > nold
+        setGroup!(ctrl["run"][nold+1:nn],ctrl["refmats"])
+    end
 end
 
 function TUIclear!(ctrl::AbstractDict)

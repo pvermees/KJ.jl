@@ -7,10 +7,10 @@ top,m
 method,1
 columns,"15,17,18"
 top,f
-standards,a
+fractionation,a
 chooseStandard,1
 addStandardGroup,p
 addStandardsByPrefix,hog
-standards,x
+fractionation,x
 top,p
 top,x
