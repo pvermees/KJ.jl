@@ -1,9 +1,9 @@
 function averat(run::Vector{Sample},
                 method::Gmethod,
                 fit::Gfit)
-    P, D, d = getChannels(method)
-    xlab = P * "/" * D
-    ylab = d * "/" * D
+    ions = method.fractionation.ions
+    xlab = ions.P * "/" * ions.D
+    ylab = ions.d * "/" * ions.D
     column_names = ["name", xlab, "s[" * xlab * "]", ylab, "s[" * ylab * "]", "rho"]
     ns = length(run)
     out = DataFrame(hcat(fill("",ns),zeros(ns,5)),column_names)
