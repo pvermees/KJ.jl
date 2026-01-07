@@ -231,9 +231,9 @@ end
 
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
                                   response::AbstractString)
-    refmat = ctrl["cache"]
-    push!(ctrl["method"].fractionation.refmats,refmat)
-    setGroup!(ctrl["run"],response,refmat)
+    standard = ctrl["cache"]
+    push!(ctrl["method"].fractionation.standards,standard)
+    setGroup!(ctrl["run"],response,standard)
     ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
@@ -241,14 +241,16 @@ end
 function TUIaddStandardsByNumber!(ctrl::AbstractDict,
                                   response::AbstractString)
     selection = parse.(Int,split(response,","))
-    setGroup!(ctrl["run"],selection,ctrl["cache"])
+    standard = ctrl["cache"]
+    push!(ctrl["method"].fractionation.standards,standard)
+    setGroup!(ctrl["run"],selection,standard)
     ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
 
 function TUIremoveAllStandards!(ctrl::AbstractDict)
     setGroup!(ctrl["run"],"sample")
-    ctrl["method"].standards = Dict()
+    ctrl["method"].fractionation.standards = Set{String}()
     ctrl["priority"]["fractionation"] = true
     return "x"
 end
@@ -258,14 +260,14 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
     selection = parse.(Int,split(response,","))
     setGroup!(ctrl["run"],selection,"sample")
     groups = unique(getGroups(ctrl["run"]))
-    refmats  = ctrl["method"].refmats
-    for k in keys(refmats)
-        if !in(k,groups)
-            delete!(refmats,k)
+    standards = ctrl["method"].fractionation.standards
+    for standard in standards
+        if !in(standard,groups)
+            pop!(standards,standard)
         end
     end
-    ctrl["priority"]["fractionation"] = length(refmats) < 1
-    return "xxx"
+    ctrl["priority"]["fractionation"] = length(standards) < 1
+    return "xx"
 end
 
 function TUIrefmatTab(ctrl::AbstractDict)
