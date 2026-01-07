@@ -96,6 +96,7 @@ mutable struct Gfit <: KJfit
     down::Vector{Float64}
     adrift::Vector{Float64}
     covmat::Matrix
+    bias::DataFrame
 end
 export Gfit
 

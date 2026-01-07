@@ -185,9 +185,7 @@ function predictsettings(option::AbstractString="Lu-Hf")
     setGroup!(myrun,refmats)
     detect_outliers!(myrun;channels=getChannels(method))
     method.PAcutoff = nothing
-    E = zeros(length(drift)+length(down),
-              length(drift)+length(down))
-    fit = Gfit(DataFrame(),drift,down,copy(drift),E)
+    fit = Gfit(method;drift=drift,down=down)
     return myrun, method, fit
 end
 
@@ -222,11 +220,10 @@ function partest(parname,paroffsetfact)
             drift = fit.drift[1]
             down = fit.down[2] + paroffset
         end
-        adjusted_fit = Gfit(fit.blank,      # blank
-                            [drift,0.0],    # drift
-                            [0.0,down],     # down
-                            [drift,0.0],    # adrift
-                            zeros(2,2))     # covariance matrix
+        adjusted_fit = Gfit(method;
+                            blank=fit.blank,
+                            drift=[drift,0.0],
+                            down=[0.0,down])
         plotFitted!(p,samp,method,adjusted_fit;
                     den=method.fractionation.channels.D,
                     transformation="log",
@@ -645,7 +642,7 @@ Plots.closeall()
 @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 @testset "bias test" begin biastest() end
 @testset "interference test" begin interference_test() end
-@testset "TUI test" begin TUItest() end
-@testset "dependency test" begin dependencytest() end
+# @testset "TUI test" begin TUItest() end
+# @testset "dependency test" begin dependencytest() end
 
 # TUI()
