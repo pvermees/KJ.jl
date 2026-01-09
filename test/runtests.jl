@@ -316,7 +316,7 @@ function histest(option="Lu-Hf";show=true)
     Pp = Float64[]; Dp = Float64[]; dp = Float64[]
     for samp in myrun
         if samp.group !== "sample"
-            c = Cruncher(samp,method,fit)
+            c = FCruncher(samp,method.fractionation,fit.blank)
             append!(Pm,c.pmb+c.bpt)
             append!(Dm,c.Dombi+c.bDot)
             append!(dm,c.bomb+c.bbot)
@@ -518,7 +518,7 @@ function SS4test(run::Vector{Sample},
     for samp in run
         if samp.group in method.fractionation.standards
             a = getAnchor(method.name,samp.group)
-            c = Cruncher(samp,method,fit)
+            c = FCruncher(samp,method.fractionation,fit.blank)
             ft = polyFac(fit.drift,c.t)
             FT = polyFac(fit.down,c.T)
             out += SS(a,c,ft,FT)

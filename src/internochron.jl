@@ -17,7 +17,7 @@ end
 function internochron(samp::Sample,
                       method::Gmethod,
                       fit::Gfit)
-    a = Averager(samp,method,fit)
+    a = ACruncher(samp,method,fit)
     init = init_internochron(a)
     objective = (par) -> LLinternochron(par[1],par[2],a)
     fit = Optim.optimize(objective,init)
@@ -28,7 +28,7 @@ function internochron(samp::Sample,
 end
 export internochron
 
-function init_internochron(a::Averager)
+function init_internochron(a::ACruncher)
     minx = minimum(a.Phat./a.Dhat)
     maxx = maximum(a.Phat./a.Dhat)
     miny = minimum(a.dhat./a.Dhat)
@@ -41,7 +41,7 @@ end
 
 function LLinternochron(x0::Real,
                         y0::Real,
-                        a::Averager)
+                        a::ACruncher)
     Phat,Dhat,dhat,vP,vD,vd,sPD,sPd,sDd = unpack(a)
     P = @. (((Phat*vD-Dhat*sPD)*x0^2+(Dhat*vP-Phat*sPD)*x0)*y0^2+((Dhat*sPd+dhat*sPD-2*Phat*sDd)*x0^2+(Phat*sPd-dhat*vP)*x0)*y0+(Phat*vd-dhat*sPd)*x0^2)/((vD*x0^2-2*sPD*x0+vP)*y0^2+(2*sPd*x0-2*sDd*x0^2)*y0+vd*x0^2)
     d = @. (((dhat*vD-Dhat*sDd)*x0^2+(Dhat*sPd-2*dhat*sPD+Phat*sDd)*x0+dhat*vP-Phat*sPd)*y0^2+((Dhat*vd-dhat*sDd)*x0^2+(dhat*sPd-Phat*vd)*x0)*y0)/((vD*x0^2-2*sPD*x0+vP)*y0^2+(2*sPd*x0-2*sDd*x0^2)*y0+vd*x0^2)

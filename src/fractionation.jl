@@ -9,9 +9,11 @@ function fractionation!(fit::Gfit,
         anchor = getAnchor(method.name,standard)
         selection = group2selection(run,standard)
         ns = length(selection)
-        crunchers = Vector{Cruncher}(undef,ns)
+        crunchers = Vector{FCruncher}(undef,ns)
         for i in eachindex(selection)
-            crunchers[i] = Cruncher(run[selection[i]],method,fit)
+            crunchers[i] = FCruncher(run[selection[i]],
+                                    method.fractionation,
+                                    fit.blank)
         end
         cruncher_groups[standard] = (anchor=anchor,crunchers=crunchers)
     end

@@ -1,8 +1,8 @@
 function Interference(;ions::Dict{String,Vector{String}}=Dict{String,Vector{String}}(),
-                       channels::Dict{String,String}=Dict{String,String}(),
                        proxies::Dict{String,String}=Dict{String,String}(),
+                       channels::Dict{String,String}=Dict{String,String}(),
                        bias::Dict{String,Vector{String}}=Dict{String,Vector{String}}())
-    return Interference(ions,channels,proxies,bias)
+    return Interference(ions,proxies,channels,bias)
 end
     
 function interference_correction!(run::Vector{Sample},

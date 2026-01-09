@@ -3,8 +3,8 @@ function atomic(samp::Sample,
                 fit::Gfit;
                 add_xy::Bool=false)
     dat = swinData(samp;add_xy=add_xy)
-    c = Cruncher(samp,method,fit)
-    ft, FT = ft_FT(c,method,fit)
+    c = FCruncher(samp,method.fractionation,fit.blank)
+    ft, FT = ft_FT(c,fit,method.PAcutoff)
     Phat = @. c.pmb/(ft*FT)
     Dhat = @. c.Dombi
     dhat = @. c.bomb/c.bd

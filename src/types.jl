@@ -112,7 +112,7 @@ mutable struct Cfit <: KJfit
 end
 export Cfit
 
-mutable struct Cruncher
+mutable struct FCruncher
     pmb::Vector{Float64}
     Dombi::Vector{Float64}
     bomb::Vector{Float64}
@@ -129,9 +129,9 @@ mutable struct Cruncher
     t::Vector{Float64}
     T::Vector{Float64}
 end
-export Cruncher
+export FCruncher
 
-mutable struct Averager
+mutable struct ACruncher
     Phat::Vector{Float64}
     Dhat::Vector{Float64}
     dhat::Vector{Float64}

@@ -1,5 +1,5 @@
 function getP(a::IsochronAnchor,
-              c::Cruncher,
+              c::FCruncher,
               ft::AbstractVector,
               FT::AbstractVector)
     x0,y0,y1 = unpack(a)
@@ -9,7 +9,7 @@ end
 export getP
 
 function getD(a::IsochronAnchor,
-              c::Cruncher,
+              c::FCruncher,
               ft::AbstractVector,
               FT::AbstractVector)
     x0,y0,y1 = unpack(a)
@@ -18,7 +18,7 @@ function getD(a::IsochronAnchor,
 end
 
 function getD(a::PointAnchor,
-              c::Cruncher,
+              c::FCruncher,
               ft::AbstractVector,
               FT::AbstractVector)
     x,y = unpack(a)
@@ -26,8 +26,13 @@ function getD(a::PointAnchor,
     return @. (((bd*bomb*vD-Dombi*bd*sDb)*vp-bd*pmb*spb*vD+Dombi*bd*spD*spb-bd*bomb*spD^2+bd*pmb*sDb*spD)*y+((FT*ft*pmb*vD-Dombi*FT*ft*spD)*vb-FT*bomb*ft*spb*vD+Dombi*FT*ft*sDb*spb+FT*bomb*ft*sDb*spD-FT*ft*pmb*sDb^2)*x+(Dombi*vb-bomb*sDb)*vp-pmb*spD*vb-Dombi*spb^2+(bomb*spD+pmb*sDb)*spb)/((bd^2*vD*vp-bd^2*spD^2)*y^2+((2*FT*bd*ft*sDb*spD-2*FT*bd*ft*spb*vD)*x-2*bd*sDb*vp+2*bd*spD*spb)*y+(FT^2*ft^2*vD*vb-FT^2*ft^2*sDb^2)*x^2+(2*FT*ft*sDb*spb-2*FT*ft*spD*vb)*x+vb*vp-spb^2)
 end
 
+function getD(y::AbstractFloat,
+              c::FCruncher)
+    return @. ((bd*bmb*mf*vD-Dmb*bd*mf*sDb)*y+Dmb*vb-bmb*sDb)/(bd^2*mf^2*vD*y^2-2*bd*mf*sDb*y+vb)
+end
+
 function SS(a::IsochronAnchor,
-            c::Cruncher,
+            c::FCruncher,
             ft::AbstractVector,
             FT::AbstractVector)
     Po = getP(a,c,ft,FT)
@@ -39,7 +44,7 @@ function SS(a::IsochronAnchor,
 end
 
 function SS(a::PointAnchor,
-            c::Cruncher,
+            c::FCruncher,
             ft::AbstractVector,
             FT::AbstractVector)
     Do = getD(a,c,ft,FT)
@@ -58,7 +63,7 @@ function SS(par::AbstractVector,
     for crunchers in values(cruncher_groups)
         a = crunchers.anchor
         for c in crunchers.crunchers
-            ft, FT = ft_FT(c,method,fit)
+            ft, FT = ft_FT(c,fit,method.PAcutoff)
             out += SS(a,c,ft,FT)
         end
     end
@@ -75,8 +80,8 @@ function predict(samp::Sample,
                  kw...)
     if samp.group in method.fractionation.standards
         a = getAnchor(method.name,samp.group)
-        c = Cruncher(samp,method,fit)
-        ft, FT = ft_FT(c,method,fit)
+        c = FCruncher(samp,method.fractionation,fit.blank)
+        ft, FT = ft_FT(c,fit,method.PAcutoff)
         return predict(a,c,ft,FT)
     else
         KJerror("notStandard")
@@ -101,7 +106,7 @@ function predict(samp::Sample,
 end
 
 function predict(a::IsochronAnchor,
-                 c::Cruncher,
+                 c::FCruncher,
                  ft::AbstractVector,
                  FT::AbstractVector)
     Po = getP(a,c,ft,FT)
@@ -113,7 +118,7 @@ function predict(a::IsochronAnchor,
 end
 
 function predict(a::PointAnchor,
-                 c::Cruncher,
+                 c::FCruncher,
                  ft::AbstractVector,
                  FT::AbstractVector)
     Do = getD(a,c,ft,FT)
@@ -156,37 +161,36 @@ function predict(samp::Sample,
 end
 export predict
 
-function ft_FT(c::Cruncher,
-               m::Gmethod,
-               f::Gfit)
+function ft_FT(c::FCruncher,
+               f::Gfit,
+               PAcutoff::Union{Nothing,AbstractFloat})
     ft = polyFac(f.drift,c.t)
-    if !isnothing(m.PAcutoff)
-        analog = c.pmb .> m.PAcutoff
+    if !isnothing(PAcutoff)
+        analog = c.pmb .> PAcutoff
         ft[analog] = polyFac(f.adrift,c.t)[analog]
     end
     FT = polyFac(f.down,c.T)
     return ft, FT
 end
 
-function Cruncher(samp::Sample,
-                  method::Gmethod,
-                  fit::Gfit)
+function FCruncher(samp::Sample,
+                   fractionation::Fractionation,
+                   blank::AbstractDataFrame)
 
     dat = swinData(samp)
     
-    ch = method.fractionation.channels
+    ch = fractionation.channels
     pm = dat[:,ch.P]
     Dom = dat[:,ch.D]
     bom = dat[:,ch.d]
 
-    blank = fit.blank
     t = dat.t
     bpt = polyVal(blank[:,ch.P],t)
     bDot = polyVal(blank[:,ch.D],t)
     bbot = polyVal(blank[:,ch.d],t)
 
     pmb = pm - bpt
-    Domb = Dom - bDot # TODO: add interference correction
+    Domb = Dom - bDot
     bomb = bom - bbot
 
     sig = hcat(pmb,Domb,bomb)
@@ -198,13 +202,12 @@ function Cruncher(samp::Sample,
     sPd = covmat[1,3]
     sDd = covmat[2,3]
     
-    bd = iratio(method.fractionation.proxies.d,
-                method.fractionation.ions.d)
+    bd = iratio(fractionation.proxies.d,
+                fractionation.ions.d)
 
     t = dat.t
     T = dat.T
 
-    return Cruncher(pmb,Domb,bomb,bpt,bDot,bbot,vP,vD,vd,sPD,sPd,sDd,bd,t,T)
+    return FCruncher(pmb,Domb,bomb,bpt,bDot,bbot,vP,vD,vd,sPD,sPd,sDd,bd,t,T)
     
 end
-export Cruncher
