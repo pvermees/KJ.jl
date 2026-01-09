@@ -27,7 +27,7 @@ function getD(a::PointAnchor,
 end
 
 function getD(y::AbstractFloat,
-              c::FCruncher)
+              c::BCruncher)
     return @. ((bd*bmb*mf*vD-Dmb*bd*mf*sDb)*y+Dmb*vb-bmb*sDb)/(bd^2*mf^2*vD*y^2-2*bd*mf*sDb*y+vb)
 end
 
@@ -171,43 +171,4 @@ function ft_FT(c::FCruncher,
     end
     FT = polyFac(f.down,c.T)
     return ft, FT
-end
-
-function FCruncher(samp::Sample,
-                   fractionation::Fractionation,
-                   blank::AbstractDataFrame)
-
-    dat = swinData(samp)
-    
-    ch = fractionation.channels
-    pm = dat[:,ch.P]
-    Dom = dat[:,ch.D]
-    bom = dat[:,ch.d]
-
-    t = dat.t
-    bpt = polyVal(blank[:,ch.P],t)
-    bDot = polyVal(blank[:,ch.D],t)
-    bbot = polyVal(blank[:,ch.d],t)
-
-    pmb = pm - bpt
-    Domb = Dom - bDot
-    bomb = bom - bbot
-
-    sig = hcat(pmb,Domb,bomb)
-    covmat = df2cov(sig)
-    vP = covmat[1,1]
-    vD = covmat[2,2]
-    vd = covmat[3,3]
-    sPD = covmat[1,2]
-    sPd = covmat[1,3]
-    sDd = covmat[2,3]
-    
-    bd = iratio(fractionation.proxies.d,
-                fractionation.ions.d)
-
-    t = dat.t
-    T = dat.T
-
-    return FCruncher(pmb,Domb,bomb,bpt,bDot,bbot,vP,vD,vd,sPD,sPd,sDd,bd,t,T)
-    
 end

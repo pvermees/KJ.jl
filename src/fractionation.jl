@@ -12,8 +12,8 @@ function fractionation!(fit::Gfit,
         crunchers = Vector{FCruncher}(undef,ns)
         for i in eachindex(selection)
             crunchers[i] = FCruncher(run[selection[i]],
-                                    method.fractionation,
-                                    fit.blank)
+                                     method.fractionation,
+                                     fit.blank)
         end
         cruncher_groups[standard] = (anchor=anchor,crunchers=crunchers)
     end
@@ -107,4 +107,43 @@ function par2fit(par::AbstractVector,
     fit = Gfit(method)
     par2Gfit!(fit,method,par)
     return fit
+end
+
+function FCruncher(samp::Sample,
+                   fractionation::Fractionation,
+                   blank::AbstractDataFrame)
+
+    dat = swinData(samp)
+    
+    ch = fractionation.channels
+    pm = dat[:,ch.P]
+    Dom = dat[:,ch.D]
+    bom = dat[:,ch.d]
+
+    t = dat.t
+    bpt = polyVal(blank[:,ch.P],t)
+    bDot = polyVal(blank[:,ch.D],t)
+    bbot = polyVal(blank[:,ch.d],t)
+
+    pmb = pm - bpt
+    Domb = Dom - bDot
+    bomb = bom - bbot
+
+    sig = hcat(pmb,Domb,bomb)
+    covmat = df2cov(sig)
+    vP = covmat[1,1]
+    vD = covmat[2,2]
+    vd = covmat[3,3]
+    sPD = covmat[1,2]
+    sPd = covmat[1,3]
+    sDd = covmat[2,3]
+    
+    bd = iratio(fractionation.proxies.d,
+                fractionation.ions.d)
+
+    t = dat.t
+    T = dat.T
+
+    return FCruncher(pmb,Domb,bomb,bpt,bDot,bbot,vP,vD,vd,sPD,sPd,sDd,bd,t,T)
+    
 end
