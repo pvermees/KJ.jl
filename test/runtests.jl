@@ -569,12 +569,28 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     end
 end
 
-function interference_test()
-    
+function biastest()
+    method = Gmethod("Re-Os";
+                     ions = (P="Re187",D="Os187",d="Os188"),
+                     channels = (P="Re185 -> 185",D="Os187 -> 251",d="Os189 -> 253"),
+                     standards = ["QMolyHill"],
+                     bias = Dict("Os" => ["NiS"]))
+    method.interference = Interference(;ions = Dict("Os187" => ["Re187"]),
+                                        proxies = Dict("Re187" => "Re185"),
+                                        channels = Dict("Re185" => "Re185 -> 249"),
+                                        bias = Dict("Re" => ["NIST610"]))
+    myrun = load("data/Re-Os";format="Agilent")
+    refmats = Dict("QMolyHill" => "Qmoly",
+                   "NiS-3" => "Nis3",
+                   "NIST612" => "Nist_massbias")
+    setGroup!(myrun,refmats)
+    fit = bias(myrun,
+               method.interference;
+               nbias=method.nbias)
 end
 
-function biastest()
-
+function interference_test()
+    
 end
 
 module test
@@ -642,7 +658,7 @@ Plots.closeall()
 @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 @testset "bias test" begin biastest() end
 @testset "interference test" begin interference_test() end
-# @testset "TUI test" begin TUItest() end
-# @testset "dependency test" begin dependencytest() end
+@testset "TUI test" begin TUItest() end
+@testset "dependency test" begin dependencytest() end
 
 # TUI()
