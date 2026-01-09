@@ -9,11 +9,11 @@ function fractionation!(fit::Gfit,
         anchor = getAnchor(method.name,standard)
         selection = group2selection(run,standard)
         ns = length(selection)
-        crunchers = Vector{FCruncher}(undef,ns)
+        crunchers = Vector{NamedTuple}(undef,ns)
         for i in eachindex(selection)
-            crunchers[i] = FCruncher(run[selection[i]],
-                                     method.fractionation,
-                                     fit.blank)
+            crunchers[i] = Cruncher(run[selection[i]],
+                                    method.fractionation,
+                                    fit.blank)
         end
         cruncher_groups[standard] = (anchor=anchor,crunchers=crunchers)
     end
@@ -109,9 +109,9 @@ function par2fit(par::AbstractVector,
     return fit
 end
 
-function FCruncher(samp::Sample,
-                   fractionation::Fractionation,
-                   blank::AbstractDataFrame)
+function Cruncher(samp::Sample,
+                  fractionation::Fractionation,
+                  blank::AbstractDataFrame)
 
     dat = swinData(samp)
     
@@ -144,6 +144,10 @@ function FCruncher(samp::Sample,
     t = dat.t
     T = dat.T
 
-    return FCruncher(pmb,Domb,bomb,bpt,bDot,bbot,vP,vD,vd,sPD,sPd,sDd,bd,t,T)
+    return (pmb=pmb,Dombi=Domb,bomb=bomb,
+            bpt=bpt,bDot=bDot,bbot=bbot,
+            vp=vP,vD=vD,vb=vd,spD=sPD,spb=sPd,sDb=sDd,
+            bd=bd,t=t,T=T)
     
 end
+export Cruncher

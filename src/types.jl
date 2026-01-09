@@ -112,25 +112,6 @@ mutable struct Cfit <: KJfit
 end
 export Cfit
 
-mutable struct FCruncher
-    pmb::Vector{Float64}
-    Dombi::Vector{Float64}
-    bomb::Vector{Float64}
-    bpt::Vector{Float64}
-    bDot::Vector{Float64}
-    bbot::Vector{Float64}
-    vp::Float64
-    vD::Float64
-    vb::Float64
-    spD::Float64
-    spb::Float64
-    sDb::Float64
-    bd::Float64
-    t::Vector{Float64}
-    T::Vector{Float64}
-end
-export FCruncher
-
 mutable struct BCruncher
     Dmb::Vector{Float64}
     bmb::Vector{Float64}
