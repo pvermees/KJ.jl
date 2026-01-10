@@ -53,8 +53,14 @@ function getD(a::PointAnchor,
     return @. (((bd*bomb*vD-Dombi*bd*sDb)*vp-bd*pmb*spb*vD+Dombi*bd*spD*spb-bd*bomb*spD^2+bd*pmb*sDb*spD)*y+((FT*ft*pmb*vD-Dombi*FT*ft*spD)*vb-FT*bomb*ft*spb*vD+Dombi*FT*ft*sDb*spb+FT*bomb*ft*sDb*spD-FT*ft*pmb*sDb^2)*x+(Dombi*vb-bomb*sDb)*vp-pmb*spD*vb-Dombi*spb^2+(bomb*spD+pmb*sDb)*spb)/((bd^2*vD*vp-bd^2*spD^2)*y^2+((2*FT*bd*ft*sDb*spD-2*FT*bd*ft*spb*vD)*x-2*bd*sDb*vp+2*bd*spD*spb)*y+(FT^2*ft^2*vD*vb-FT^2*ft^2*sDb^2)*x^2+(2*FT*ft*sDb*spb-2*FT*ft*spD*vb)*x+vb*vp-spb^2)
 end
 
-function getD(y::AbstractFloat,
-              c::BCruncher)
+function getD(y::AbstractFloat;
+              Dmb::AbstractFloat,
+              bmb::AbstractFloat,
+              vD::AbstractFloat,
+              vb::AbstractFloat,
+              sDb::AbstractFloat,
+              bd::AbstractFloat,
+              other...)
     return @. ((bd*bmb*mf*vD-Dmb*bd*mf*sDb)*y+Dmb*vb-bmb*sDb)/(bd^2*mf^2*vD*y^2-2*bd*mf*sDb*y+vb)
 end
 

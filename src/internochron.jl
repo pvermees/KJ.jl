@@ -17,9 +17,9 @@ end
 function internochron(samp::Sample,
                       method::Gmethod,
                       fit::Gfit)
-    a = ACruncher(samp,method,fit)
-    init = init_internochron(a)
-    objective = (par) -> LLinternochron(par[1],par[2],a)
+    a = Cruncher(samp,method,fit)
+    init = init_internochron(;a...)
+    objective = (par) -> LLinternochron(par[1],par[2];a...)
     fit = Optim.optimize(objective,init)
     x0, y0 = Optim.minimizer(fit)
     H = ForwardDiff.hessian(objective,[x0,y0])
@@ -28,11 +28,14 @@ function internochron(samp::Sample,
 end
 export internochron
 
-function init_internochron(a::ACruncher)
-    minx = minimum(a.Phat./a.Dhat)
-    maxx = maximum(a.Phat./a.Dhat)
-    miny = minimum(a.dhat./a.Dhat)
-    maxy = maximum(a.dhat./a.Dhat)
+function init_internochron(;Phat::Vector{Float64},
+                            Dhat::Vector{Float64},
+                            dhat::Vector{Float64},
+                            other...)
+    minx = minimum(Phat./Dhat)
+    maxx = maximum(Phat./Dhat)
+    miny = minimum(dhat./Dhat)
+    maxy = maximum(dhat./Dhat)
     slope = (maxy-miny)/(maxx-minx)
     y0i = maxy+slope*minx
     x0i = y0i/slope
@@ -40,9 +43,17 @@ function init_internochron(a::ACruncher)
 end
 
 function LLinternochron(x0::Real,
-                        y0::Real,
-                        a::ACruncher)
-    Phat,Dhat,dhat,vP,vD,vd,sPD,sPd,sDd = unpack(a)
+                        y0::Real;
+                        Phat::Vector{Float64},
+                        Dhat::Vector{Float64},
+                        dhat::Vector{Float64},
+                        vP::Float64,
+                        vD::Float64,
+                        vd::Float64,
+                        sPD::Float64,
+                        sPd::Float64,
+                        sDd::Float64,
+                        other...)
     P = @. (((Phat*vD-Dhat*sPD)*x0^2+(Dhat*vP-Phat*sPD)*x0)*y0^2+((Dhat*sPd+dhat*sPD-2*Phat*sDd)*x0^2+(Phat*sPd-dhat*vP)*x0)*y0+(Phat*vd-dhat*sPd)*x0^2)/((vD*x0^2-2*sPD*x0+vP)*y0^2+(2*sPd*x0-2*sDd*x0^2)*y0+vd*x0^2)
     d = @. (((dhat*vD-Dhat*sDd)*x0^2+(Dhat*sPd-2*dhat*sPD+Phat*sDd)*x0+dhat*vP-Phat*sPd)*y0^2+((Dhat*vd-dhat*sDd)*x0^2+(dhat*sPd-Phat*vd)*x0)*y0)/((vD*x0^2-2*sPD*x0+vP)*y0^2+(2*sPd*x0-2*sDd*x0^2)*y0+vd*x0^2)
     SS = @. (-(d/y0)-P/x0+Dhat)*(((vP*vd-sPd^2)*(-(d/y0)-P/x0+Dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((Phat-P)*(sDd*sPd-sPD*vd))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((dhat-d)*(sPD*sPd-sDd*vP))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(Phat-P)*(((sDd*sPd-sPD*vd)*(-(d/y0)-P/x0+Dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((Phat-P)*(vD*vd-sDd^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((dhat-d)*(sDd*sPD-sPd*vD))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))+(dhat-d)*(((sPD*sPd-sDd*vP)*(-(d/y0)-P/x0+Dhat))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((dhat-d)*(vD*vP-sPD^2))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD))+((Phat-P)*(sDd*sPD-sPd*vD))/(vP*(vD*vd-sDd^2)+sPD*(sDd*sPd-sPD*vd)+sPd*(sDd*sPD-sPd*vD)))

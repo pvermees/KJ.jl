@@ -28,14 +28,3 @@ function bias(run::Vector{Sample},
      return nothing
 end
 export bias
-
-function BCruncher(run::Vector{Sample},
-                   method::Gmethod,
-                   blank::AbstractDataFrame)
-    return nothing
-end
-
-function BCruncher(run::Vector{Sample},
-                   fractionation::Fractionation)
-    return nothing
-end

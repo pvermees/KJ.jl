@@ -111,24 +111,3 @@ mutable struct Cfit <: KJfit
     par::DataFrame
 end
 export Cfit
-
-mutable struct BCruncher
-    Dmb::Vector{Float64}
-    bmb::Vector{Float64}
-    vD::Float64
-    vb::Float64
-    sDb::Float64
-    bd::Float64
-end
-
-mutable struct ACruncher
-    Phat::Vector{Float64}
-    Dhat::Vector{Float64}
-    dhat::Vector{Float64}
-    vP::Float64
-    vD::Float64
-    vd::Float64
-    sPD::Float64
-    sPd::Float64
-    sDd::Float64
-end
