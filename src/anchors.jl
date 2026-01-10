@@ -23,6 +23,9 @@ end
 function getAnchor(standard::PointRefmat;kwargs...)
     return PointAnchor(standard.x,standard.y)
 end
+function getAnchor(standard::BiasRefmat;kwargs...)
+    return standard.y
+end
 export getAnchor
 
 function getGlassAnchors(methodname::AbstractString,

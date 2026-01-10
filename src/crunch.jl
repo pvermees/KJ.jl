@@ -54,14 +54,14 @@ function getD(a::PointAnchor,
 end
 
 function getD(y::AbstractFloat;
-              Dmb::AbstractFloat,
-              bmb::AbstractFloat,
+              Dmb::AbstractVector,
+              dmb::AbstractVector,
               vD::AbstractFloat,
-              vb::AbstractFloat,
-              sDb::AbstractFloat,
-              bd::AbstractFloat,
+              vd::AbstractFloat,
+              sDd::AbstractFloat,
+              mf::AbstractFloat,
               other...)
-    return @. ((bd*bmb*mf*vD-Dmb*bd*mf*sDb)*y+Dmb*vb-bmb*sDb)/(bd^2*mf^2*vD*y^2-2*bd*mf*sDb*y+vb)
+    return @. ((dmb*mf*vD-Dmb*mf*sDd)*y+Dmb*vd-dmb*sDd)/(mf^2*vD*y^2-2*mf*sDd*y+vd)
 end
 
 function mahalanobis(a::IsochronAnchor,
