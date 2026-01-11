@@ -575,7 +575,8 @@ function biastest()
                      proxies = (P="Re185",D="Os187",d="Os189"),
                      channels = (P="Re185 -> 185",D="Os187 -> 251",d="Os189 -> 253"),
                      standards = ["QMolyHill"],
-                     bias = Dict("Os" => ["NiS-3"]))
+                     bias = Dict("Os" => ["NiS-3"]),
+                     nbias = 2)
     method.interference = Interference(;ions = Dict("Os187" => ["Re187"]),
                                         proxies = Dict("Re187" => "Re185"),
                                         channels = Dict("Re185" => "Re185 -> 249"),
@@ -587,6 +588,7 @@ function biastest()
     setGroup!(myrun,refmats)
     blanks = fitBlanks(myrun)
     fit = bias(myrun,method,blanks)
+    return fit
 end
 
 function interference_test()

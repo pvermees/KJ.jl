@@ -1,6 +1,7 @@
 function bias(run::Vector{Sample},
               method::Gmethod,
               blank::AbstractDataFrame)
+    out = Dict()
     F = method.fractionation
     Fchannels = Dict(zip(values(F.proxies),values(F.channels)))
     I = method.interference
@@ -11,51 +12,65 @@ function bias(run::Vector{Sample},
             interference_proxy = I.proxies[interfering_ion]
             interference_proxy_channel = I.channels[interference_proxy]
             standards = I.bias[interfering_element]
-            cruncher_groups = Dict()
-            for standard in standards
-                y = iratio(interfering_element,
-                           interfering_ion,
-                           interference_proxy)
-                if isnothing(y)
-                    y = getAnchor(method.name,standard)
-                end
-                selection = group2selection(run,standard)
-                ns = length(selection)
-                crunchers = Vector{NamedTuple}(undef,ns)
-                 for i in eachindex(selection)
-                    crunchers[i] = Cruncher(run[selection[i]],
-                                            target_channel,
-                                            interference_proxy_channel,
-                                            blank)
-                end
-                cruncher_groups[standard] = (anchor=y,crunchers=crunchers)
-            end
+            num = (ion=interference_proxy,channel=interference_proxy_channel)
+            den = (ion=interfering_ion,channel=target_channel)
+            cruncher_groups = get_bias_cruncher_groups(run,method.name,blank,standards,num,den)
+            out[interfering_element] = bias(cruncher_groups,method.nbias)
         end
     end
-    return nothing
+    return out
 end
 
-function bias(run::Vector{Sample},
-              fractionation::Fractionation)
-    c = Cruncher(run,fractionation)
-     return nothing
+function bias(cruncher_groups::AbstractDict,
+              nbias::Int)
+    init = fill(0.0,nbias)
+    objective = (par) -> SS(par,cruncher_groups)
+    optimum = Optim.optimize(objective,init)
+    solution = Optim.minimizer(optimum)
+    return solution
 end
 export bias
 
+function get_bias_cruncher_groups(run::Vector{Sample},
+                                  methodname::AbstractString,
+                                  blank::AbstractDataFrame,
+                                  standards::AbstractVector,
+                                  num::NamedTuple{(:ion,:channel)},
+                                  den::NamedTuple{(:ion,:channel)})
+    cruncher_groups = Dict()
+    for standard in standards
+        element = channel2element(num.ion)
+        y = iratio(element,num.ion,den.ion)
+        if isnothing(y)
+            y = getAnchor(methodname,standard)
+        end
+        selection = group2selection(run,standard)
+        ns = length(selection)
+        crunchers = Vector{NamedTuple}(undef,ns)
+        for i in eachindex(selection)
+            crunchers[i] = Cruncher(run[selection[i]],
+                                    num.channel,den.channel,
+                                    blank)
+        end
+        cruncher_groups[standard] = (anchor=y,crunchers=crunchers)
+    end
+    return cruncher_groups
+end
+
 function Cruncher(samp::Sample,
-                  interference_channel::AbstractString,
-                  proxy_channel::AbstractString,
+                  num_channel::AbstractString,
+                  den_channel::AbstractString,
                   blank::AbstractDataFrame)
 
     dat = swinData(samp)
     
-    Dm = dat[:,interference_channel]
-    dm = dat[:,proxy_channel]
+    dm = dat[:,num_channel]
+    Dm = dat[:,den_channel]
 
     t = dat.t
 
-    bDt = polyVal(blank[:,interference_channel],t)
-    bdt = polyVal(blank[:,proxy_channel],t)
+    bdt = polyVal(blank[:,num_channel],t)
+    bDt = polyVal(blank[:,den_channel],t)
 
     Dmb = Dm - bDt
     dmb = dm - bdt
@@ -69,6 +84,7 @@ function Cruncher(samp::Sample,
     return (Dm=Dm,dm=dm,
             bDt=bDt,bdt=bdt,
             Dmb=Dmb,dmb=dmb,
-            vD=vD,vd=vd,sDd=sDd)
+            vD=vD,vd=vd,sDd=sDd,
+            t=t)
 
 end

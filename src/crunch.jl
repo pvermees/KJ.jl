@@ -53,13 +53,13 @@ function getD(a::PointAnchor,
     return @. (((bd*bomb*vD-Dombi*bd*sDb)*vp-bd*pmb*spb*vD+Dombi*bd*spD*spb-bd*bomb*spD^2+bd*pmb*sDb*spD)*y+((FT*ft*pmb*vD-Dombi*FT*ft*spD)*vb-FT*bomb*ft*spb*vD+Dombi*FT*ft*sDb*spb+FT*bomb*ft*sDb*spD-FT*ft*pmb*sDb^2)*x+(Dombi*vb-bomb*sDb)*vp-pmb*spD*vb-Dombi*spb^2+(bomb*spD+pmb*sDb)*spb)/((bd^2*vD*vp-bd^2*spD^2)*y^2+((2*FT*bd*ft*sDb*spD-2*FT*bd*ft*spb*vD)*x-2*bd*sDb*vp+2*bd*spD*spb)*y+(FT^2*ft^2*vD*vb-FT^2*ft^2*sDb^2)*x^2+(2*FT*ft*sDb*spb-2*FT*ft*spD*vb)*x+vb*vp-spb^2)
 end
 
-function getD(y::AbstractFloat;
+function getD(mf::AbstractVector,
+              y::AbstractFloat;
               Dmb::AbstractVector,
               dmb::AbstractVector,
               vD::AbstractFloat,
               vd::AbstractFloat,
               sDd::AbstractFloat,
-              mf::AbstractFloat,
               other...)
     return @. ((dmb*mf*vD-Dmb*mf*sDd)*y+Dmb*vd-dmb*sDd)/(mf^2*vD*y^2-2*mf*sDd*y+vd)
 end
@@ -103,6 +103,18 @@ function mahalanobis(a::PointAnchor,
     return @. (bomb-Do*bd*y)*(((vD*vp-spD^2)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spD-spb*vD)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(Dombi-Do)*(((spD*spb-sDb*vp)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spb-spD*vb)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(pmb-Do*FT*ft*x)*(((sDb*spD-spb*vD)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((vD*vb-sDb^2)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
 end
 
+function mahalanobis(mf::AbstractVector,
+                     y::AbstractFloat,
+                     D::AbstractVector;
+                     Dmb::AbstractVector,
+                     dmb::AbstractVector,
+                     vD::AbstractFloat,
+                     vd::AbstractFloat,
+                     sDd::AbstractFloat,
+                     other...)
+    return @. (dmb-D*mf*y)*((vD*(dmb-D*mf*y))/(vD*vd-sDd^2)-((Dmb-D)*sDd)/(vD*vd-sDd^2))+(Dmb-D)*(((Dmb-D)*vd)/(vD*vd-sDd^2)-(sDd*(dmb-D*mf*y))/(vD*vd-sDd^2))
+end
+
 function SS(a::IsochronAnchor,
             ft::AbstractVector,
             FT::AbstractVector;
@@ -140,6 +152,34 @@ function SS(par::AbstractVector,
     end
     return out
 end
+
+function SS(mf::AbstractVector,
+            y::AbstractFloat;
+            cruncher...)
+    D = getD(mf,y;cruncher...)
+    maha = mahalanobis(mf,y,D;cruncher...)
+    return sum(@. maha )
+end
+
+function SS(par::AbstractVector,
+            cruncher_groups::AbstractDict;
+            verbose::Bool=false)
+    out = 0.0
+    # loop through standards:
+    for cruncher_group in values(cruncher_groups)
+        y = cruncher_group.anchor
+        crunchers = cruncher_group.crunchers
+        for cruncher in crunchers
+            mf = polyFac(par,cruncher.t)
+            out += SS(mf,y;cruncher...)
+        end
+    end
+    if verbose
+        println(par,": ",out)
+    end
+    return out
+end
+
 export SS
 
 function predict(samp::Sample,
