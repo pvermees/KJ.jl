@@ -21,6 +21,18 @@ function bias(run::Vector{Sample},
     return out
 end
 
+function bias(run::Vector{Sample},
+              fractionation::Fractionation,
+              blank::AbstractDataFrame)
+    out = Dict()
+    element = channel2element(fractionation.ions.D)
+    standards = fractionation.bias[element]
+    for standard in standards
+        @infiltrate
+    end
+    return out
+end
+
 function bias(cruncher_groups::AbstractDict,
               nbias::Int)
     init = fill(0.0,nbias)

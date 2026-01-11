@@ -587,8 +587,8 @@ function biastest()
                    "NIST612" => "Nist_massbias")
     setGroup!(myrun,refmats)
     blanks = fitBlanks(myrun)
-    fit = bias(myrun,method,blanks)
-    return fit
+    bias_interference = bias(myrun,method,blanks)
+    bias_fractionation = bias(myrun,method.fractionation,blanks)
 end
 
 function interference_test()

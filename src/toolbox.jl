@@ -431,18 +431,13 @@ function channel2element(channel::AbstractString)
     nuclides = _KJ["nuclides"]
     elements = String.(keys(nuclides))
     matches = findall(occursin.(elements,channel))
-    if length(matches)>1 # e.g. "B" and "Be"
-        for element in elements[matches]
-            isotopes = string.(nuclides[element])
-            hasisotope = findall(occursin.(isotopes,channel))
-            if !isempty(hasisotope)
-                return element
-            end
-        end
-    else # e.g. "Pb"
-        return only(elements[matches])
+    if length(matches) > 0
+        nchar = length.(elements[matches]) # e.g. "B" and "Be"
+        longestmatch = matches[argmax(nchar)]
+        return elements[longestmatch]
+    else
+        return nothing
     end
-    return nothing
 end
 
 # elements = 1-row dataframe of elements with channels as column names
