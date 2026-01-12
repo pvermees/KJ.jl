@@ -1,6 +1,6 @@
-function bias(run::Vector{Sample},
-              method::Gmethod,
-              blank::AbstractDataFrame)
+function interference_bias(run::Vector{Sample},
+                           method::Gmethod,
+                           blank::AbstractDataFrame)
     out = Dict()
     F = method.fractionation
     Fchannels = Dict(zip(values(F.proxies),values(F.channels)))
@@ -20,18 +20,22 @@ function bias(run::Vector{Sample},
     end
     return out
 end
+export interference_bias
 
-function bias(run::Vector{Sample},
-              fractionation::Fractionation,
-              blank::AbstractDataFrame)
+function fractionation_bias(run::Vector{Sample},
+                            method::Gmethod,
+                            blank::AbstractDataFrame)
     out = Dict()
-    element = channel2element(fractionation.ions.D)
-    standards = fractionation.bias[element]
-    for standard in standards
-        @infiltrate
-    end
+    F = method.fractionation
+    element = channel2element(F.ions.D)
+    standards = F.bias[element]
+    num = (ion=F.proxies.d,channel=F.channels.d)
+    den = (ion=F.proxies.D,channel=F.channels.D)
+    cruncher_groups = get_bias_cruncher_groups(run,method.name,blank,standards,num,den)
+    out[element] = bias(cruncher_groups,method.nbias)
     return out
 end
+export fractionation_bias
 
 function bias(cruncher_groups::AbstractDict,
               nbias::Int)
