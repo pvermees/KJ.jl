@@ -1,6 +1,20 @@
-function interference_bias(run::Vector{Sample},
-                           method::Gmethod,
-                           blank::AbstractDataFrame)
+function fractionation_cruncher_groups(run::Vector{Sample},
+                                       method::Gmethod,
+                                       blank::AbstractDataFrame)
+    out = Dict()
+    F = method.fractionation
+    target_channel = F.channels.D
+    element = channel2element(F.ions.D)
+    standards = F.bias[element]
+    num = (ion=F.proxies.d,channel=F.channels.d)
+    den = (ion=F.proxies.D,channel=F.channels.D)
+    out[element] = bias_cruncher_groups_helper(run,method.name,blank,standards,num,den)
+    return out
+end
+
+function interference_cruncher_groups(run::Vector{Sample},
+                                      method::Gmethod,
+                                      blank::AbstractDataFrame)
     out = Dict()
     F = method.fractionation
     Fchannels = Dict(zip(values(F.proxies),values(F.channels)))
@@ -14,45 +28,19 @@ function interference_bias(run::Vector{Sample},
             standards = I.bias[interfering_element]
             num = (ion=interference_proxy,channel=interference_proxy_channel)
             den = (ion=interfering_ion,channel=target_channel)
-            cruncher_groups = get_bias_cruncher_groups(run,method.name,blank,standards,num,den)
-            out[interfering_element] = bias(cruncher_groups,method.nbias)
+            cruncher_groups = bias_cruncher_groups_helper(run,method.name,blank,standards,num,den)
+            out[interfering_element] = cruncher_groups
         end
     end
     return out
 end
-export interference_bias
 
-function fractionation_bias(run::Vector{Sample},
-                            method::Gmethod,
-                            blank::AbstractDataFrame)
-    out = Dict()
-    F = method.fractionation
-    element = channel2element(F.ions.D)
-    standards = F.bias[element]
-    num = (ion=F.proxies.d,channel=F.channels.d)
-    den = (ion=F.proxies.D,channel=F.channels.D)
-    cruncher_groups = get_bias_cruncher_groups(run,method.name,blank,standards,num,den)
-    out[element] = bias(cruncher_groups,method.nbias)
-    return out
-end
-export fractionation_bias
-
-function bias(cruncher_groups::AbstractDict,
-              nbias::Int)
-    init = fill(0.0,nbias)
-    objective = (par) -> SS(par,cruncher_groups)
-    optimum = Optim.optimize(objective,init)
-    solution = Optim.minimizer(optimum)
-    return solution
-end
-export bias
-
-function get_bias_cruncher_groups(run::Vector{Sample},
-                                  methodname::AbstractString,
-                                  blank::AbstractDataFrame,
-                                  standards::AbstractVector,
-                                  num::NamedTuple{(:ion,:channel)},
-                                  den::NamedTuple{(:ion,:channel)})
+function bias_cruncher_groups_helper(run::Vector{Sample},
+                                     methodname::AbstractString,
+                                     blank::AbstractDataFrame,
+                                     standards::AbstractVector,
+                                     num::NamedTuple{(:ion,:channel)},
+                                     den::NamedTuple{(:ion,:channel)})
     cruncher_groups = Dict()
     for standard in standards
         element = channel2element(num.ion)
@@ -72,6 +60,34 @@ function get_bias_cruncher_groups(run::Vector{Sample},
     end
     return cruncher_groups
 end
+
+function fractionation_bias(run::Vector{Sample},
+                            method::Gmethod,
+                            blank::AbstractDataFrame)
+    cruncher_groups = fractionation_cruncher_groups(run,method,blank)
+    return bias(cruncher_groups,method.nbias)
+end
+
+function interference_bias(run::Vector{Sample},
+                           method::Gmethod,
+                           blank::AbstractDataFrame)
+    cruncher_groups = interference_cruncher_groups(run,method,blank)
+    return bias(cruncher_groups,method.nbias)
+end
+
+function bias(cruncher_groups::AbstractDict,
+              nbias::Int)
+    out = DataFrame()
+    for (element,cruncher_groups) in cruncher_groups
+        init = fill(0.0,nbias)
+        objective = (par) -> SS(par,cruncher_groups)
+        optimum = Optim.optimize(objective,init)
+        solution = Optim.minimizer(optimum)
+        out[:,element] = solution
+    end
+    return out
+end
+export bias
 
 function Cruncher(samp::Sample,
                   num_channel::AbstractString,

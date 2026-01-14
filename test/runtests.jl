@@ -589,6 +589,8 @@ function biastest()
     blanks = fitBlanks(myrun)
     bias_interference = interference_bias(myrun,method,blanks)
     bias_fractionation = fractionation_bias(myrun,method,blanks)
+    bias = hcat(bias_interference,bias_fractionation)
+    print(bias)
 end
 
 function interference_test()
