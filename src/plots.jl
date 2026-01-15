@@ -1,5 +1,6 @@
 function plot(samp::Sample,
               method::KJmethod;
+              channels::AbstractVector=getChannels(method),
               fit::Union{Nothing,KJfit}=nothing,
               num=nothing,
               den=nothing,
@@ -14,10 +15,8 @@ function plot(samp::Sample,
               titlefontsize=10,
               return_offset::Bool=false)
 
-    channelvec = getChannels(method)
-    
     p, offset = plot(samp;
-                     channels=channelvec,
+                     channels=channels,
                      num=num,den=den,
                      transformation=transformation,
                      ms=ms,ma=ma,xlim=xlim,ylim=ylim,

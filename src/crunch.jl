@@ -203,7 +203,7 @@ function predict(samp::Sample,
     elseif samp.group in getStandards(method.interference.bias)
         p = bias_prep(method.interference,target_channel,interfering_ion)
         c = Cruncher(samp,p.num,p.den,fit.blank)
-        
+        @infiltrate
     else
         KJerror("notStandard")
     end
