@@ -200,3 +200,14 @@ function getInternal(mineral::AbstractString,
     return (channel,concentration)
 end
 export getInternal
+
+function getStandards(fractionation::Fractionation)
+    return fractionation.standards
+end
+function getStandards(bias::AbstractDict)
+    out = String[]
+    for standards in values(bias)
+        append!(out,standards)
+    end
+    return out
+end

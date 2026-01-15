@@ -185,11 +185,25 @@ export SS
 function predict(samp::Sample,
                  method::Gmethod,
                  fit::Gfit)
-    if samp.group in method.fractionation.standards
+    if samp.group in getStandards(method.fractionation)
         a = getAnchor(method.name,samp.group)
         c = Cruncher(samp,method.fractionation,fit.blank)
         ft, FT = ft_FT(fit,method.PAcutoff;c...)
         return predict(a,ft,FT;c...)
+    elseif samp.group in getStandards(method.fractionation.bias)
+        p = bias_prep(method.fractionation)
+        cg = bias_cruncher_groups_helper([samp],method.name,
+                                         fit.blank,[samp.group],
+                                         p.num,p.den)
+        cruncher = cg[samp.group].crunchers[1]
+        element = channel2element(p.num.channel)
+        mf = polyFac(fit.bias[:,element],cruncher.t)
+        y = cg[samp.group].anchor
+        return predict(mf,y;cruncher...)
+    elseif samp.group in getStandards(method.interference.bias)
+        p = bias_prep(method.interference,target_channel,interfering_ion)
+        c = Cruncher(samp,p.num,p.den,fit.blank)
+        
     else
         KJerror("notStandard")
     end
@@ -242,6 +256,17 @@ function predict(a::PointAnchor,
     return DataFrame(P=pf,D=Dof,d=bof)
 end
 
+function predict(mf::AbstractVector,
+                 y::AbstractFloat,
+                 D::AbstractVector;
+                 bDt::AbstractVector,
+                 bdt::AbstractVector,
+                 other...)
+    Df = @. D + bDt
+    df = @. D*y*mf + bdt
+    return DataFrame(D=Df,d=df)
+end
+
 function predict(a::IsochronAnchor,
                  ft::AbstractVector,
                  FT::AbstractVector;
@@ -257,6 +282,13 @@ function predict(a::PointAnchor,
                  cruncher...)
     Do = getD(a,ft,FT;cruncher...)
     return predict(a,ft,FT,Do;cruncher...)
+end
+
+function predict(mf::AbstractVector,
+                 y::AbstractFloat;
+                 cruncher...)
+    D = getD(mf,y;cruncher...)
+    return predict(mf,y,D;cruncher...)
 end
 
 function predict(samp::Sample,

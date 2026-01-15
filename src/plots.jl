@@ -148,11 +148,22 @@ function plotFitted!(p,
                      linecolor="black",
                      linestyle=:solid)
     pred = predict(samp,method,fit)
-    rename!(pred,getChannels(method))
+    generic_to_specific_pred_names!(pred,method)
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,
                 linestyle=linestyle)
+end
+
+function generic_to_specific_pred_names!(pred::AbstractDataFrame,
+                                         method::Gmethod)
+    channels = method.fractionation.channels
+    rename!(pred, [k => channels[k] for k in propertynames(pred) if haskey(channels, k)])
+end
+function generic_to_specific_pred_names!(pred::AbstractDataFrame,
+                                         method::Cmethod)
+    channels = getChannels(method)
+    rename!(pred,channels)
 end
 
 # helper

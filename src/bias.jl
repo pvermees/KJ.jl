@@ -2,14 +2,18 @@ function fractionation_cruncher_groups(run::Vector{Sample},
                                        method::Gmethod,
                                        blank::AbstractDataFrame)
     out = Dict()
-    F = method.fractionation
-    target_channel = F.channels.D
+    standards, num, den = bias_prep(method.fractionation)
+    element = channel2element(method.fractionation.ions.D)
+    out[element] = bias_cruncher_groups_helper(run,method.name,blank,standards,num,den)
+    return out
+end
+
+function bias_prep(F::Fractionation)
     element = channel2element(F.ions.D)
     standards = F.bias[element]
     num = (ion=F.proxies.d,channel=F.channels.d)
     den = (ion=F.proxies.D,channel=F.channels.D)
-    out[element] = bias_cruncher_groups_helper(run,method.name,blank,standards,num,den)
-    return out
+    return (standards=standards, num=num, den=den)
 end
 
 function interference_cruncher_groups(run::Vector{Sample},
@@ -22,17 +26,25 @@ function interference_cruncher_groups(run::Vector{Sample},
     for (target,interfering_ions) in I.ions
         target_channel = Fchannels[target]
         for interfering_ion in interfering_ions
-            interfering_element = channel2element(interfering_ion)
-            interference_proxy = I.proxies[interfering_ion]
-            interference_proxy_channel = I.channels[interference_proxy]
-            standards = I.bias[interfering_element]
-            num = (ion=interference_proxy,channel=interference_proxy_channel)
-            den = (ion=interfering_ion,channel=target_channel)
+            standards, num, den = bias_prep(I,target_channel,interfering_ion)
             cruncher_groups = bias_cruncher_groups_helper(run,method.name,blank,standards,num,den)
+            interfering_element = channel2element(interfering_ion)
             out[interfering_element] = cruncher_groups
         end
     end
     return out
+end
+
+function bias_prep(I::Interference,
+                   target_channel::AbstractString,
+                   interfering_ion::AbstractString)
+    interfering_element = channel2element(interfering_ion)
+    interference_proxy = I.proxies[interfering_ion]
+    interference_proxy_channel = I.channels[interference_proxy]
+    standards = I.bias[interfering_element]
+    num = (ion=interference_proxy,channel=interference_proxy_channel)
+    den = (ion=interfering_ion,channel=target_channel)
+    return (standards=standards, num=num, den=den)
 end
 
 function bias_cruncher_groups_helper(run::Vector{Sample},
@@ -67,6 +79,7 @@ function fractionation_bias(run::Vector{Sample},
     cruncher_groups = fractionation_cruncher_groups(run,method,blank)
     return bias(cruncher_groups,method.nbias)
 end
+export fractionation_bias
 
 function interference_bias(run::Vector{Sample},
                            method::Gmethod,
@@ -74,6 +87,7 @@ function interference_bias(run::Vector{Sample},
     cruncher_groups = interference_cruncher_groups(run,method,blank)
     return bias(cruncher_groups,method.nbias)
 end
+export interference_bias
 
 function bias(cruncher_groups::AbstractDict,
               nbias::Int)
