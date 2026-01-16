@@ -190,23 +190,23 @@ function predict(samp::Sample,
         c = Cruncher(samp,method.fractionation,fit.blank)
         ft, FT = ft_FT(fit,method.PAcutoff;c...)
         return predict(a,ft,FT;c...)
-    elseif samp.group in getStandards(method.fractionation.bias)
+    end
+    if samp.group in getStandards(method.fractionation.bias)
         p = bias_prep(method.fractionation)
-        cg = bias_cruncher_groups_helper([samp],method.name,
-                                         fit.blank,[samp.group],
-                                         p.num,p.den)
-        cruncher = cg[samp.group].crunchers[1]
-        element = channel2element(p.num.channel)
-        mf = polyFac(fit.bias[:,element],cruncher.t)
-        y = cg[samp.group].anchor
-        return predict(mf,y;cruncher...)
     elseif samp.group in getStandards(method.interference.bias)
+        target_channel, interfering_ion = infer_interference(method,samp.group)
         p = bias_prep(method.interference,target_channel,interfering_ion)
-        c = Cruncher(samp,p.num,p.den,fit.blank)
-        @infiltrate
     else
         KJerror("notStandard")
     end
+    cg = bias_cruncher_groups_helper([samp],method.name,
+                                     fit.blank,[samp.group],
+                                     p.num,p.den)
+    cruncher = cg[samp.group].crunchers[1]
+    element = channel2element(p.num.channel)
+    mf = polyFac(fit.bias[:,element],cruncher.t)
+    y = cg[samp.group].anchor
+    return predict(mf,y;cruncher...)
 end
 
 function predict(samp::Sample,
