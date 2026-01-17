@@ -64,8 +64,7 @@ function init_stoichiometry(csv::AbstractString=joinpath(@__DIR__,"../settings/s
     tab = CSV.read(csv, DataFrame)
     out = OrderedDict()
     good = .!ismissing.(tab)
-    (nr,nc) = size(tab)
-    for i in 1:nr
+    for i in axes(tab,1)
         mineral = tab[i,"mineral"]
         conc = tab[i,2:end]
         concvec = collect(conc)

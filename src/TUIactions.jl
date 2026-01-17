@@ -230,11 +230,20 @@ function TUIgetRefmatName(method::Cmethod,i::Int)
     return _KJ["glass"].names[i]
 end
 
+function TUIaddStandard!(method::Gmethod,
+                         standard::AbstractString)
+    push!(method.fractionation.standards,standard)
+end
+function TUIaddStandard!(method::Cmethod,
+                         standard::AbstractString)
+    push!(method.standards,standard)
+end
+
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
                                   response::AbstractString)
     standard = ctrl["cache"]
     ctrl["refmats"][standard] = response
-    push!(ctrl["method"].fractionation.standards,standard)
+    TUIaddStandard!(ctrl["method"],standard)
     setGroup!(ctrl["run"],response,standard)
     ctrl["priority"]["fractionation"] = false
     return "xxx"
@@ -244,7 +253,7 @@ function TUIaddStandardsByNumber!(ctrl::AbstractDict,
                                   response::AbstractString)
     selection = parse.(Int,split(response,","))
     standard = ctrl["cache"]
-    push!(ctrl["method"].fractionation.standards,standard)
+    TUIaddStandard!(ctrl["method"],standard)
     setGroup!(ctrl["run"],selection,standard)
     ctrl["priority"]["fractionation"] = false
     return "xxx"
@@ -625,14 +634,17 @@ end
 function TUIopenTemplate!(ctrl::AbstractDict,
                           response::AbstractString)
     include(response)
-    ctrl["format"] = format
-    ctrl["head2name"] = head2name
-    ctrl["multifile"] = multifile
-    ctrl["method"] = method
-    ctrl["transformation"] = transformation
-    ctrl["priority"]["fractionation"] = (length(method.standards) == 0)
-    ctrl["priority"]["method"] = false
-    ctrl["template"] = true
+    Base.invokelatest() do
+        ctrl["refmats"] = refmats
+        ctrl["format"] = format
+        ctrl["head2name"] = head2name
+        ctrl["multifile"] = multifile
+        ctrl["method"] = method
+        ctrl["transformation"] = transformation
+        ctrl["priority"]["fractionation"] = (length(method.fractionation.standards) == 0)
+        ctrl["priority"]["method"] = false
+        ctrl["template"] = true
+    end
     return "xx"
 end
 
@@ -643,21 +655,24 @@ function TUIsaveTemplate(ctrl::AbstractDict,
         write(file,"multifile = " * string(ctrl["multifile"]) * "\n")
         write(file,"head2name = " * string(ctrl["head2name"]) * "\n")
         write(file,"transformation = \"" * ctrl["transformation"] * "\"\n")
+        write(file,"refmats = " * TUIrefmats2text(ctrl["refmats"]) * "\n") 
         write(file,TUImethod2text(ctrl["method"]))
     end
     return "xx"
 end
 
 function TUImethod2text(method::Gmethod)
-    i = method.ions
-    p = method.proxies
-    c = method.channels
+    F = method.fractionation
+    i = F.ions
+    p = F.proxies
+    c = F.channels
+    s = collect(F.standards)
     PA = method.PAcutoff
-    out = TUIstandards2text(method.standards)
-    out *= "method = Gmethod(\"" * method.name * "\", standards; \n"
+    out = "method = Gmethod(\"" * method.name * "\";\n"
     out *= "                 ions = (P=\"" * i.P * "\", D=\"" * i.D * "\", d=\"" * i.d * "\"),\n"
     out *= "                 proxies = (P=\"" * p.P * "\", D=\"" * p.D * "\", d=\"" * p.d * "\"),\n"
     out *= "                 channels = (P=\"" * c.P * "\", D=\"" * c.D * "\", d=\"" * c.d * "\"),\n"
+    out *= "                 standards = [" * join("\"" .* s .* "\"", ", ") * "],\n"
     out *= "                 nblank = " * string(method.nblank) * ",\n"
     out *= "                 ndrift = " * string(method.ndrift) * ",\n"
     out *= "                 ndown = " * string(method.ndown) * ",\n"
@@ -671,18 +686,18 @@ function TUImethod2text(method::Cmethod)
         push!(chunks,"\"" * channel * "\" => " * "\"" * element * "\"")
     end
     out  = "elements = DataFrame(" * join(chunks,",\n                     ") * ")\n"
-    out *= TUIstandards2text(method.standards)
+    out *= "standards = [" * join("\"" .* collect(method.standards) .* "\"", ", ") * "],\n"
     out *= "internal = (\"" * method.internal[1] * "\"," * string(method.internal[2]) * ")\n"
     out *= "method = Cmethod(elements,standards,internal," * string(method.nblank) * ")"
     return out
 end
 
-function TUIstandards2text(standards::AbstractDict)
+function TUIrefmats2text(refmats::AbstractDict)
     chunks = String[]
-    for (k,v) in standards
+    for (k,v) in refmats
         push!(chunks, "\"" * k * "\" => \"" * v * "\"")
     end
-    out = "standards = Dict(" * join(chunks,",") * ")\n"
+    out = "Dict(" * join(chunks,",") * ")"
     return out
 end
 

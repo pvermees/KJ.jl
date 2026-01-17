@@ -49,8 +49,6 @@ Load and parse an ICP-MS file using time stamps
 function load(dfile::AbstractString,
               tfile::AbstractString;
               format::AbstractString="Agilent")
-    samples = Vector{Sample}(undef,0)
-    datetimes = Vector{DateTime}(undef,0)
     dat = timestamps = DataFrame()
     try
         dat = readDat(dfile,format,false)[1]
