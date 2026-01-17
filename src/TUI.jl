@@ -18,7 +18,7 @@ p = plot(samp)
 display(p)
 ```
 """
-function TUI(extensions...;logbook::AbstractString="",reset=false)
+function TUI(extensions...;logbook::AbstractString="",reset=false,debug=false)
     if reset
         init_KJ!()
     end
@@ -40,8 +40,10 @@ function TUI(extensions...;logbook::AbstractString="",reset=false)
         try
             dispatch!(_KJ["ctrl"];verbose=false)
         catch e
-            showerror(stdout, e, catch_backtrace())
-            println("")
+            if debug 
+                showerror(stdout, e, catch_backtrace()) 
+                println("")
+            end
             println("Press 'x' to quit or any other key to continue")
             if readline() == "x" break end
         end
