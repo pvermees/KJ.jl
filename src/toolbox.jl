@@ -1,38 +1,17 @@
-function formRatios(df::AbstractDataFrame,
-                    num::AbstractString,
-                    den::Union{Nothing,AbstractVector};
-                    brackets=false)
-    formRatios(df,[num],den;brackets=brackets)
-end
-function formRatios(df::AbstractDataFrame,
-                    num::Union{Nothing,AbstractVector},
-                    den::AbstractString;
-                    brackets=false)
-    formRatios(df,num,[den];brackets=brackets)
-end
-function formRatios(df::AbstractDataFrame,
-                    num::Union{Nothing,AbstractVector},
-                    den::Union{Nothing,AbstractVector};
-                    brackets=false)
+function formRatios(df::AbstractDataFrame;
+                    num::AbstractString="",
+                    den::AbstractString="",
+                    brackets::Bool=false)
     labels = names(df)
     nc = size(labels,1)
-    if isnothing(num) && isnothing(den)
+    if (num=="" && den=="")
         return df
-    elseif isnothing(num)
-        n = findall(!=(den[1]),labels)
-        d = fill(findfirst(==(den[1]),labels),length(n))
-    elseif isnothing(den)
-        d = findall(!=(num[1]),labels)
-        n = fill(findfirst(==(num[1]),labels),length(d))
-    elseif length(num)==length(den)
-        n = findall(in(num),labels)
-        d = findall(in(den),labels)        
-    elseif length(num)>length(den)
-        n = findall(in(num),labels)
-        d = fill(findfirst(==(den[1]),labels),length(n))
-    else
-        d = findall(in(den),labels)
-        n = fill(findfirst(==(num[1]),labels),length(d))
+    elseif num==""
+        n = findall(!=(den),labels)
+        d = fill(findfirst(==(den),labels),length(n))
+    elseif den==""
+        d = findall(!=(num),labels)
+        n = fill(findfirst(==(num),labels),length(d))
     end
     mat = Matrix(df)
     ratios = @. (mat[:,n]+0.5)/(mat[:,d]+0.5)
@@ -186,8 +165,8 @@ function autoWindow(samp::Sample;
 end
 
 function group2selection(run::Vector{Sample},
-                         group::Union{Nothing,AbstractString}=nothing)
-    if isnothing(group)
+                         group::AbstractString="")
+    if group==""
         selection = 1:length(run)
     else
         groups = getGroups(run)
@@ -370,16 +349,13 @@ function rle(v::AbstractVector{T}) where T
 end
     
 function transformeer(df::AbstractDataFrame,
-                      transformation::Union{Nothing,AbstractString};
-                      offset::Union{Nothing,Real}=nothing,
-                      debug::Bool=false)
-    if isnothing(transformation)
+                      transformation::AbstractString;
+                      offset::Number=0.0)
+    if transformation==""
         out = df
     else
         out = copy(df)
-        if isnothing(offset)
-            offset = get_offset(df,transformation)
-        elseif transformation=="log"
+        if transformation=="log"
             out .= ifelse.(df .<= 0, NaN, df)
         elseif transformation=="sqrt"
             out .= ifelse.(df .< 0, NaN, df)
@@ -388,11 +364,11 @@ function transformeer(df::AbstractDataFrame,
             out[:,key] = eval(Symbol(transformation)).(out[:,key] .+ offset)
         end
     end
-    return out, offset
+    return out
 end
 
 function get_offset(df::AbstractDataFrame,
-                    transformation::Union{Nothing,AbstractString})
+                    transformation::AbstractString)
     min_val = minimum(Matrix(df))
     if (transformation == "log" && min_val <= 0) ||
         (transformation == "sqrt" && min_val < 0)
@@ -490,11 +466,8 @@ function iratio(element::AbstractString,
         return nothing
     end
 end
-function iratio(nuclide1::Union{Missing,AbstractString},
-                nuclide2::Union{Missing,AbstractString})
-    if ismissing(nuclide1) || ismissing(nuclide2)
-        return 1.0
-    end
+function iratio(nuclide1::AbstractString,
+                nuclide2::AbstractString)
     abundances = merge(values(_KJ["iratio"])...)
     key1 = Symbol(nuclide1)
     key2 = Symbol(nuclide2)

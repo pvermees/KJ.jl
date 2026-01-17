@@ -559,7 +559,7 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     uldown = fit.down[2] + 3*sqrt(fit.covmat[2,2])
     @test uldown > truefit.down[2] && lldown < truefit.down[2]
     if show
-        den = nothing # "Hf176 -> 258" #
+        den = "" # "Hf176 -> 258" #
         p1 = KJ.plot(myrun[1],method;fit=fit,
                      transformation="sqrt",den=den)
         p2 = KJ.plot(myrun[4],method;fit=fit,
