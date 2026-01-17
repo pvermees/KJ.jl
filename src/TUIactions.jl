@@ -230,11 +230,20 @@ function TUIgetRefmatName(method::Cmethod,i::Int)
     return _KJ["glass"].names[i]
 end
 
+function TUIaddStandard!(method::Gmethod,
+                         standard::AbstractString)
+    push!(method.fractionation.standards,standard)
+end
+function TUIaddStandard!(method::Cmethod,
+                         standard::AbstractString)
+    push!(method.standards,standard)
+end
+
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
                                   response::AbstractString)
     standard = ctrl["cache"]
     ctrl["refmats"][standard] = response
-    push!(ctrl["method"].fractionation.standards,standard)
+    TUIaddStandard!(ctrl["method"],standard)
     setGroup!(ctrl["run"],response,standard)
     ctrl["priority"]["fractionation"] = false
     return "xxx"
@@ -244,7 +253,7 @@ function TUIaddStandardsByNumber!(ctrl::AbstractDict,
                                   response::AbstractString)
     selection = parse.(Int,split(response,","))
     standard = ctrl["cache"]
-    push!(ctrl["method"].fractionation.standards,standard)
+    TUIaddStandard!(ctrl["method"],standard)
     setGroup!(ctrl["run"],selection,standard)
     ctrl["priority"]["fractionation"] = false
     return "xxx"
