@@ -2,14 +2,15 @@ function TUIinit!()
     _KJ["ctrl"] = TUIinit()
     return nothing
 end
+
 function TUIinit()
     return Dict(
         "priority" => Dict("load" => true, 
                            "method" => true,
-                           "standards" => true, 
-                           "glass" => false,
+                           "fractionation" => true,
                            "process" => true),
         "history" => DataFrame(task=String[],action=String[]),
+        "refmats" => Dict{String,String}(),
         "chain" => ["top"],
         "template" => false,
         "multifile" => true,
@@ -21,10 +22,10 @@ function TUIinit()
         "method" => nothing,
         "fit" => nothing,
         "i" => 1,
-        "den" => nothing,
+        "den" => "",
         "transformation" => "sqrt",
         "mapcolumn" => 2,
-        "clims" => nothing,
+        "clims" => (),
         "log" => false,
         "cache" => nothing
     )
@@ -76,8 +77,8 @@ function TUIloadICPdir!(ctrl::AbstractDict,
     ctrl["priority"]["load"] = false
     ctrl["multifile"] = true
     ctrl["ICPpath"] = response
+    setGroup!(ctrl["run"],ctrl["refmats"])
     if ctrl["template"]
-        TUIsetGroups!(ctrl)
         return "x"
     else
         return "xxx"
@@ -103,8 +104,7 @@ function TUIloadICPLAdata!(ctrl::AbstractDict)
     ctrl["head2name"] = true
     ctrl["multifile"] = false
     if ctrl["template"]
-        ctrl["priority"]["standards"] = false
-        ctrl["priority"]["glass"] = false
+        ctrl["priority"]["fractionation"] = false
         return "xx"
     else
         return "xxxx"
@@ -135,12 +135,12 @@ end
 function TUImethod!(ctrl::AbstractDict,
                     response::AbstractString)
     if response=="c"
-        ctrl["method"] = Cmethod(ctrl["run"],Dict(),(nothing,nothing))
+        ctrl["method"] = Cmethod(ctrl["run"])
         return "internal"
     else
         i = parse(Int,response)
         methodname = _KJ["methods"].names[i]
-        ctrl["method"] = Gmethod(methodname,Dict())
+        ctrl["method"] = Gmethod(methodname)
         return "columns"
     end
 end
@@ -184,14 +184,13 @@ function TUIsetChannels!(ctrl::AbstractDict,
                          response::AbstractString)
     labels = getChannels(ctrl["run"])
     selected = parse.(Int,split(response,","))
-    setChannels!(ctrl["method"];
-                 P=labels[selected[1]],
-                 D=labels[selected[2]],
-                 d=labels[selected[3]])
-    equivocal = channels2proxies!(ctrl["method"])
-    if equivocal
+    channels = NamedTuple{(:P,:D,:d)}(labels[selected[1:3]])
+    ctrl["method"].fractionation.channels = channels
+    proxies = channels2proxies(channels)
+    if any(isnothing,proxies)
         return "setProxies"
     else
+        ctrl["method"].fractionation.proxies = proxies
         ctrl["priority"]["method"] = false
         return "xx"
     end
@@ -209,12 +208,10 @@ end
 function TUIsetProxies!(ctrl::AbstractDict,
                         response::AbstractString)
     selection = parse.(Int,split(response,","))
-    ions = getIons(ctrl["method"])
+    ions = ctrl["method"].ions
     nuclides = ions2nuclidelist(ions)
-    setProxies(ctrl["method"];
-               P=nuclides[selection[1]],
-               D=nuclides[selection[2]],
-               d=nuclides[selection[3]])
+    pr = ctrl["method"].proxies
+    pr.P, pr.D, pr.d = nuclides[selection[1:3]]
     return "xxx"
 end
 
@@ -235,25 +232,31 @@ end
 
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
                                   response::AbstractString)
-    refmat = ctrl["cache"]
-    ctrl["method"].standards[refmat] = response
-    setGroup!(ctrl["run"],response,refmat)
-    ctrl["priority"]["standards"] = false
+    standard = ctrl["cache"]
+    ctrl["refmats"][standard] = response
+    push!(ctrl["method"].fractionation.standards,standard)
+    setGroup!(ctrl["run"],response,standard)
+    ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
 
 function TUIaddStandardsByNumber!(ctrl::AbstractDict,
                                   response::AbstractString)
     selection = parse.(Int,split(response,","))
-    setGroup!(ctrl["run"],selection,ctrl["cache"])
-    ctrl["priority"]["standards"] = false
+    standard = ctrl["cache"]
+    push!(ctrl["method"].fractionation.standards,standard)
+    setGroup!(ctrl["run"],selection,standard)
+    ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
 
 function TUIremoveAllStandards!(ctrl::AbstractDict)
+    for standard in ctrl["method"].fractionation.standards
+        delete!(ctrl["refmats"],standard)
+    end
     setGroup!(ctrl["run"],"sample")
-    ctrl["method"].standards = Dict()
-    ctrl["priority"]["standards"] = true
+    ctrl["method"].fractionation.standards = Set{String}()
+    ctrl["priority"]["fractionation"] = true
     return "x"
 end
 
@@ -262,14 +265,15 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
     selection = parse.(Int,split(response,","))
     setGroup!(ctrl["run"],selection,"sample")
     groups = unique(getGroups(ctrl["run"]))
-    standards  = ctrl["method"].standards
-    for k in keys(standards)
-        if !in(k,groups)
-            delete!(standards,k)
+    standards = ctrl["method"].fractionation.standards
+    for standard in standards
+        if !in(standard,groups)
+            delete!(method["refmats"],standard)
+            pop!(standards,standard)
         end
     end
-    ctrl["priority"]["standards"] = length(standards) < 1
-    return "xxx"
+    ctrl["priority"]["fractionation"] = length(standards) < 1
+    return "xx"
 end
 
 function TUIrefmatTab(ctrl::AbstractDict)
@@ -323,7 +327,6 @@ function TUIaddGlassByPrefix!(ctrl::AbstractDict,
                               response::AbstractString)
     setGroup!(ctrl["run"],response,ctrl["cache"])
     ctrl["glass"][ctrl["cache"]] = response
-    ctrl["priority"]["glass"] = false
     return "xxx"
 end
 
@@ -331,7 +334,6 @@ function TUIaddGlassByNumber!(ctrl::AbstractDict,
                               response::AbstractString)
     selection = parse.(Int,split(response,","))
     setGroup!(ctrl["run"],selection,ctrl["cache"])
-    ctrl["priority"]["glass"] = false
     return "xxx"
 end
 
@@ -343,7 +345,6 @@ function TUIremoveAllGlass!(ctrl::AbstractDict)
         end
     end
     ctrl["glass"] = Dict()
-    ctrl["priority"]["glass"] = true
     return "x"
 end
 
@@ -357,7 +358,6 @@ function TUIremoveGlassByNumber!(ctrl::AbstractDict,
             delete!(ctrl["glass"],k)
         end
     end
-    ctrl["priority"]["glass"] = length(ctrl["glass"])<1
     return "xxx"
 end
 
@@ -429,7 +429,7 @@ end
 function TUIratios!(ctrl::AbstractDict,
                     response::AbstractString)
     if response=="n"
-        ctrl["den"] = nothing
+        ctrl["den"] = ""
     elseif response=="x"
         return "xx"
     else
@@ -630,7 +630,7 @@ function TUIopenTemplate!(ctrl::AbstractDict,
     ctrl["multifile"] = multifile
     ctrl["method"] = method
     ctrl["transformation"] = transformation
-    ctrl["priority"]["standards"] = (length(method.standards) == 0)
+    ctrl["priority"]["fractionation"] = (length(method.standards) == 0)
     ctrl["priority"]["method"] = false
     ctrl["template"] = true
     return "xx"
@@ -649,9 +649,9 @@ function TUIsaveTemplate(ctrl::AbstractDict,
 end
 
 function TUImethod2text(method::Gmethod)
-    i = getIons(method)
-    p = getProxies(method)
-    c = getChannels(method;as_tuple=true)
+    i = method.ions
+    p = method.proxies
+    c = method.channels
     PA = method.PAcutoff
     out = TUIstandards2text(method.standards)
     out *= "method = Gmethod(\"" * method.name * "\", standards; \n"
@@ -666,11 +666,9 @@ function TUImethod2text(method::Gmethod)
 end
 
 function TUImethod2text(method::Cmethod)
-    elements = method.elements
-    channels = names(elements)
     chunks = String[]
-    for ch in channels
-        push!(chunks,"\"" * ch * "\" => " * "\"" * elements[1,ch] * "\"")
+    for (channel,element) in pairs(method.elements)
+        push!(chunks,"\"" * channel * "\" => " * "\"" * element * "\"")
     end
     out  = "elements = DataFrame(" * join(chunks,",\n                     ") * ")\n"
     out *= TUIstandards2text(method.standards)
@@ -732,7 +730,7 @@ end
 
 function TUIaddStandard!(ctrl::AbstractDict,
                          response::AbstractString)
-    init_referenceMaterials!(response)
+    init_referenceMaterials!(;isochrons=response)
     return "x"
 end
 
@@ -749,6 +747,7 @@ function TUIhead2name!(ctrl::AbstractDict,
 end
 
 function TUIrefresh!(ctrl::AbstractDict)
+    nold = length(ctrl["run"])
     if ctrl["ICPpath"] == ""
         return nothing
     end
@@ -758,12 +757,10 @@ function TUIrefresh!(ctrl::AbstractDict)
         TUIloadICPfile!(ctrl,ctrl["ICPpath"])
         TUIloadLAfile!(ctrl,ctrl["LApath"])
     end
-    TUIsetGroups!(ctrl)
-    return nothing
-end
-
-function TUIsetGroups!(ctrl::AbstractDict)
-    setGroup!(ctrl["run"],ctrl["method"])
+    nnew = length(ctrl["run"])
+    if nnew > nold
+        setGroup!(ctrl["run"][nold+1:nn],ctrl["refmats"])
+    end
 end
 
 function TUIclear!(ctrl::AbstractDict)
@@ -822,8 +819,8 @@ function CSVhelper(samp::Sample,
                    method::Gmethod,
                    fit::Gfit)
     a = atomic(samp,method,fit;add_xy=true)
-    ions = getIons(method)
-    out = DataFrame(ions.P => a.P, ions.D => a.D, ions.d => a.d)
+    i = method.ions
+    out = DataFrame(i.P => a.P, i.D => a.D, i.d => a.d)
     if !isnothing(a.x) out.x = x end
     if !isnothing(a.y) out.y = y end
     return out

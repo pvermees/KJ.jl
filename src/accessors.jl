@@ -26,47 +26,30 @@ function getExt(format)
     end
 end
 
-function getChannels(run::Vector{Sample})
+function getChannels(run::Vector{Sample}) :: AbstractVector
     return getChannels(run[1])
 end
-function getChannels(samp::Sample)
+function getChannels(samp::Sample) :: AbstractVector
     return names(getSignals(samp))
 end
-function getChannels(method::Gmethod;
-                     as_tuple::Bool=false)
-    ch = channelAccessor(method.channels,"channel")
-    return ifelse(as_tuple,ch,collect(values(ch)))
+function getChannels(method::Gmethod) :: AbstractVector
+    return collect(unpack(method.fractionation.channels))
 end
-function getChannels(method::Cmethod)
-    return names(method.elements)
+function getChannels(method::Cmethod) :: AbstractVector
+    return collect(string.(keys(method.elements)))
 end
 export getChannels
-"""
-getSnames(run::Vector{Sample})
 
-Get a vector of sample names
-"""
 function getSnames(run::Vector{Sample})
     return getAttr(run,:sname)
 end
 export getSnames
 
-"""
-getGroups(run::Vector{Sample})
-
-Get the vector of group names (standards, samples, glasses).
-"""
 function getGroups(run::Vector{Sample})
     return getAttr(run,:group)
 end
 export getGroups
 
-"""
-getIndicesInGroup(run::Vector{Sample},
-                  group::AbstractString)
-
-Get the indices of the samples belonging to 'group'
-"""
 function getIndicesInGroup(run::Vector{Sample},
                            group::AbstractString)
     return findall(getGroups(run) .== group)
@@ -99,13 +82,9 @@ function setGroup!(run::Vector{Sample},
     setGroup!(run,selection,group)
 end
 function setGroup!(run::Vector{Sample},
-                   method::KJmethod)
-    setGroup!(run,method.standards)
-end
-function setGroup!(run::Vector{Sample},
-                   standards::AbstractDict)
-    if length(standards)>0
-        for (group,prefix) in standards
+                   refmats::AbstractDict)
+    if length(refmats)>0
+        for (group,prefix) in refmats
             setGroup!(run,prefix,group)
         end
     else
@@ -221,3 +200,14 @@ function getInternal(mineral::AbstractString,
     return (channel,concentration)
 end
 export getInternal
+
+function getStandards(fractionation::Fractionation)
+    return fractionation.standards
+end
+function getStandards(bias::AbstractDict)
+    out = String[]
+    for standards in values(bias)
+        append!(out,standards)
+    end
+    return out
+end

@@ -1,23 +1,18 @@
-function Gmethod(name::String,
-                 standards::AbstractDict;
+function Gmethod(name::String;
                  ions::NamedTuple{(:P,:D,:d)}=default_ions(name),
-                 proxies::NamedTuple{(:P,:D,:d)}=ions,
-                 channels::NamedTuple{(:P,:D,:d)}=proxies,
-                 interferences::AbstractDict=Dict(),
+                 channels::NamedTuple{(:P,:D,:d)}=ions,
+                 proxies::NamedTuple{(:P,:D,:d)}=channels2proxies(channels),
+                 standards::AbstractVector=String[],
+                 bias::AbstractDict=Dict{String,Vector{String}}(),
+                 fractionation::Fractionation=Fractionation(ions,proxies,channels,Set(standards),bias),
+                 interference::Interference=Interference(),
                  nblank::Int=2,
                  ndrift::Int=2,
                  ndown::Int=1,
-                 PAcutoff::Union{Nothing,Float64}=nothing,
-                 glass::AbstractDict=Dict())
-
-    chdf = DataFrame(par=["ion","proxy","channel"],
-                     P=[ions.P,proxies.P,channels.P],
-                     D=[ions.D,proxies.D,channels.D],
-                     d=[ions.d,proxies.d,channels.d])
-    
-    return Gmethod(name,chdf,interferences,
-                   nblank,ndrift,ndown,PAcutoff,
-                   standards,glass)
+                 nbias::Int=1,
+                 PAcutoff::Union{Nothing,Float64}=nothing)
+    return Gmethod(name,fractionation,interference,
+                   nblank,ndrift,ndown,nbias,PAcutoff)
 end
 
 function default_ions(name)
@@ -25,114 +20,59 @@ function default_ions(name)
     return (P=String(m.P),D=String(m.D),d=String(m.d))
 end
 
-function channelAccessor(channels::AbstractDataFrame,
-                         rowname::AbstractString)
-    ch = channels[findfirst(==(rowname),channels.par),2:end]
-    return (P=ch.P,D=ch.D,d=ch.d)
+function channels2proxies(channels::NamedTuple{(:P,:D,:d)})
+    return (P=channel2proxy(channels.P),
+            D=channel2proxy(channels.D),
+            d=channel2proxy(channels.d))
 end
-
-function getIons(method::Gmethod)
-    return channelAccessor(method.channels,"ion")
-end
-export getIons
-
-function getProxies(method::Gmethod)
-    return channelAccessor(method.channels,"proxy")
-end
-export getProxies
-
-function channelAccessor!(channels::AbstractDataFrame,
-                          rowname::AbstractString;
-                          P,D,d)
-    row = findfirst(==(rowname),channels.par)
-    channels[row,2:end] = [P,D,d]
-end
-
-function setIons!(method::Gmethod;
-                  P=getIons(method).P,
-                  D=getIons(method).D,
-                  d=getIons(method).d)
-    channelAccessor!(method.channels,"ion";P,D,d)
-end
-export setIons!
-
-function setProxies!(method::Gmethod;
-                     P=getIons(method).P,
-                     D=getIons(method).D,
-                     d=getIons(method).d)
-    channelAccessor!(method.channels,"proxy";P,D,d)
-end
-export setProxies!
-
-function setChannels!(method::Gmethod;
-                      P=getProxies(method).P,
-                      D=getProxies(method).D,
-                      d=getProxies(method).d)
-    channelAccessor!(method.channels,"channel";P,D,d)
-end
-export setChannels!
-
-function channels2proxies!(method::Gmethod)
-    equivocal = false
+function channel2proxy(channel::AbstractString)
+    proxy = nothing
     all_elements = string.(keys(_KJ["nuclides"]))
-    for col in eachcol(method.channels)[2:end]
-        channel = col[3]
-        matching_elements = filter(x -> occursin(x, channel), all_elements)
-        if length(matching_elements) > 0
-            already_found = false
-            newly_found = false
-            for matching_element in matching_elements
-                newly_found = get_proxy_isotopes!(col,matching_element)
-                if already_found & newly_found
-                    equivocal = true
-                    break
+    matching_elements = filter(x -> occursin(x, channel), all_elements)
+    if length(matching_elements) > 0
+        already_found = false
+        for matching_element in matching_elements
+            proxy = get_proxy_isotope(channel,matching_element)
+            if !isnothing(proxy)
+                if already_found
+                    return nothing
                 else
-                    already_found = newly_found
+                    already_found = true
                 end
             end
-            if !already_found
-                equivocal = true
-            end
-        else
-            equivocal = true
         end
     end
-    return equivocal
-
+    return proxy
 end
-export channels2proxies!
 
-function get_proxy_isotopes!(col::AbstractVector,
-                             matching_element::AbstractString)
-    channel = col[3]
+function get_proxy_isotope(channel::AbstractString,
+                           matching_element::AbstractString)
     all_isotopes = string.(_KJ["nuclides"][matching_element])
     matching_isotope = filter(x -> occursin(x, channel), all_isotopes)
-    found = false
     if length(matching_isotope) == 1
-        col[2] = matching_element * matching_isotope[1]
-        found = true
+        return matching_element * matching_isotope[1]
+    else
+        return nothing
     end
-    return found
 end
 
-function Cmethod(run::Vector{Sample},
-                 standards::AbstractDict,
-                 internal::Tuple;
+function Cmethod(run::Vector{Sample};
+                 standards::AbstractVector=String[],
+                 internal::Tuple=(nothing,nothing),
                  nblank::Int=2)
     ch = getChannels(run)
     el = channel2element.(ch)
-    elements = DataFrame(reshape(el,1,:),ch)
-    return Cmethod(elements,standards,internal,nblank)
+    elements = NamedTuple{Tuple(Symbol.(ch))}(Tuple(el))
+    return Cmethod(elements,Set(standards),internal,nblank)
 end
 
 function getConcentrations(method::Cmethod,
                            refmat::AbstractString)
     all_concs = get(_KJ["glass"],refmat)
-    elements = method.elements
-    channels = names(elements)
+    channels = getChannels(method)
     out = DataFrame(zeros(1, length(channels)), channels)
-    for ch in channels
-        out[1,ch] = all_concs[elements[1,ch]]
+    for (ch,el) in pairs(method.elements)
+        out[1,ch] = all_concs[el]
     end
     return out
 end

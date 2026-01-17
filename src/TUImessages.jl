@@ -3,9 +3,9 @@ function TUIwelcomeMessage(ctrl::AbstractDict)
     "m: Specify the method"*TUIcheck(ctrl,"method")*"\n"*
     "t: Tabulate the samples\n"*
     "v: View and adjust each sample\n"*
-    "f: Fractionation"*TUIcheck(ctrl,"standards")*"\n"*
-    "b: Mass bias\n"*
     "i: Interferences\n"*
+    "f: Fractionation"*TUIcheck(ctrl,"fractionation")*"\n"*
+    "b: Mass bias\n"*
     "p: Process the data"*TUIcheck(ctrl,"process")*"\n"*
     "e: Export the results\n"*
     "l: Logs and templates\n"*
@@ -47,7 +47,7 @@ end
 
 function TUIlistIsotopes(ctrl::AbstractDict)
     msg = ""
-    ions = getIons(ctrl["method"])
+    ions = ctrl["method"].ions
     nuclidelist = ions2nuclidelist(ions)
     for i in eachindex(nuclidelist)
         msg *= string(i) * ". " * nuclidelist[i] * "\n"
@@ -109,7 +109,7 @@ function TUIsetProxiesMessage(ctrl::AbstractDict)
     msg *= TUIlistIsotopes(ctrl)
     msg *= "and select those corresponding to "*
     "the channels that you selected earlier:\n"
-    channels = getChannels(ctrl["method"];as_tuple=true)
+    channels = ctrl["method"].channels
     msg *= channels.P *", "* channels.D *", "* channels.d *"\n"
     msg *= "Specify your selection as a "*
     "comma-separated list of numbers:"

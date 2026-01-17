@@ -108,11 +108,23 @@ function outliertest_sample(show=true)
     end
 end
 
-function standardtest(verbose=false)
+function methodtest()
+    interferences = Interference(ions = Dict("Hf176" => ["Lu176","Yb176"]),
+                                 proxies = Dict("Lu176" => "Lu175","Yb176" => "Yb172"),
+                                 channels = Dict("Lu175" => "Lu175 -> 257","Yb172" => "Yb172 -> 254"),
+                                 bias = Dict("Lu175" => ["some_Lu_standard"], "Yb172" => ["some_REE_standard"]))
+    method = Gmethod("Lu-Hf";
+                     channels=(P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"),
+                     standards=["Hogsbo"],
+                     bias=Dict("Hf" => ["NIST612"]),
+                     interference=interferences)
+    @test method.fractionation.proxies.d == "Hf178"
+end
+
+function refmattest(verbose=false)
     myrun = loadtest()
-    standards = Dict("BP" => "BP")
-    method = Gmethod("Lu-Hf",standards)
-    setGroup!(myrun,method)
+    refmats = Dict("BP" => "BP")
+    setGroup!(myrun,refmats)
     if verbose
         summarise(myrun;verbose=true,n=5)
     end
@@ -120,9 +132,10 @@ function standardtest(verbose=false)
 end
 
 function getmethod(name::AbstractString,
-                   standards::AbstractDict)
+                   refmats::AbstractDict)
+    standards = collect(keys(refmats))
     if name == "U-Pb"
-        return Gmethod(name,standards)
+        return Gmethod(name;standards=standards)
     end
     ndrift = 2
     ndown = 1
@@ -140,38 +153,39 @@ function getmethod(name::AbstractString,
         ndrift = 1
         ndown = 0
     end
-    return Gmethod(name,standards;
-                   ndrift=ndrift,ndown=ndown,proxies=p,channels=c)
+    return Gmethod(name;
+                   standards=standards,
+                   proxies=p,channels=c,
+                   ndrift=ndrift,ndown=ndown)
 end
 
 function predictsettings(option::AbstractString="Lu-Hf")
     dname = nothing
-    standards = nothing
+    refmats = nothing
     drift = nothing
     down = nothing
     if option=="Lu-Hf"
         dname = "data/Lu-Hf"
-        standards = Dict("BP" => "BP")
+        refmats = Dict("BP" => "BP")
         drift = [4.22,0.0]
         down = [0.0,0.15]
     elseif option=="Rb-Sr"
         dname = "data/Rb-Sr"
-        standards = Dict("MDC" => "MDC -")
+        refmats = Dict("MDC" => "MDC -")
         drift = [1.0,0.0]
         down = [0.0,0.14]
     elseif option=="K-Ca"
         dname = "data/K-Ca"
-        standards = Dict("MDC" => "MDC_")
+        refmats = Dict("MDC" => "MDC_")
         drift = [100.0]
         down = [0.0]
     end
     myrun = loadtest(;dname=dname)
-    method = getmethod(option,standards)
-    setGroup!(myrun,method)
+    method = getmethod(option,refmats)
+    setGroup!(myrun,refmats)
+    detect_outliers!(myrun;channels=getChannels(method))
     method.PAcutoff = nothing
-    E = zeros(length(drift)+length(down),
-              length(drift)+length(down))
-    fit = Gfit(DataFrame(),drift,down,copy(drift),E)
+    fit = Gfit(method;drift=drift,down=down)
     return myrun, method, fit
 end
 
@@ -186,7 +200,7 @@ function predictest(option="Lu-Hf";
         return samp, method, fit
     else
         p, offset = KJ.plot(samp,method;fit=fit,
-                            den=getChannels(method;as_tuple=true).D,
+                            den=method.fractionation.channels.D,
                             transformation=transformation,
                             return_offset=true)
         @test display(p) != NaN
@@ -206,13 +220,12 @@ function partest(parname,paroffsetfact)
             drift = fit.drift[1]
             down = fit.down[2] + paroffset
         end
-        adjusted_fit = Gfit(fit.blank,      # blank
-                            [drift,0.0],    # drift
-                            [0.0,down],     # down
-                            [drift,0.0],    # adrift
-                            zeros(2,2))     # covariance matrix
+        adjusted_fit = Gfit(method;
+                            blank=fit.blank,
+                            drift=[drift,0.0],
+                            down=[0.0,down])
         plotFitted!(p,samp,method,adjusted_fit;
-                    den=getChannels(method;as_tuple=true).D,
+                    den=method.fractionation.channels.D,
                     transformation="log",
                     offset=offset,
                     linecolor="red")
@@ -231,32 +244,33 @@ end
 function processsettings(option="Lu-Hf")
     dname = joinpath("data",option)
     head2name = true
-    standards = nothing
+    refmats = nothing
     snum = 1
     if option == "Lu-Hf"
-        standards =  Dict("BP" => "BP")
+        refmats =  Dict("BP" => "BP")
     elseif option == "Rb-Sr"
-        standards = Dict("MDC" => "MDC -")
+        refmats = Dict("MDC" => "MDC -")
         snum = 4
     elseif option == "K-Ca"
-        standards = Dict("MDC" => "MDC_")
+        refmats = Dict("MDC" => "MDC_")
         snum = 1 # 1, 2, 5, 6
     elseif option == "U-Pb"
         head2name = false
-        standards = Dict("Plesovice" => "STDCZ",
-                         "91500" => "91500")
+        refmats = Dict("Plesovice" => "STDCZ",
+                       "91500" => "91500")
         snum = 3
     end
-    method = getmethod(option,standards)
-    return (dname, head2name, method, snum)
+    method = getmethod(option,refmats)
+    return (dname, head2name, method, refmats, snum)
 end
 
 function processtest(option="Lu-Hf";
                      show=true,
                      verbose=false,
                      transformation="log")
-    dname, head2name, method, snum = processsettings(option)
+    dname, head2name, method, refmats, snum = processsettings(option)
     myrun = load(dname;format="Agilent",head2name=head2name)
+    setGroup!(myrun,refmats)
     fit = process!(myrun,method;verbose=verbose)
     if verbose
         println("drift=",fit.drift,", down=",fit.down)
@@ -264,7 +278,7 @@ function processtest(option="Lu-Hf";
     if show
         p = KJ.plot(myrun[snum],method;fit=fit,
                     transformation=transformation,
-                    den=getChannels(method;as_tuple=true).D)
+                    den=method.fractionation.channels.D)
         @test display(p) != NaN
     end
     return myrun, method, fit
@@ -302,7 +316,7 @@ function histest(option="Lu-Hf";show=true)
     Pp = Float64[]; Dp = Float64[]; dp = Float64[]
     for samp in myrun
         if samp.group !== "sample"
-            c = Cruncher(samp,method,fit)
+            c = Cruncher(samp,method.fractionation,fit.blank)
             append!(Pm,c.pmb+c.bpt)
             append!(Dm,c.Dombi+c.bDot)
             append!(dm,c.bomb+c.bbot)
@@ -391,9 +405,10 @@ end
 
 function concentrationtest()
     myrun = load("data/Lu-Hf",format="Agilent")
-    internal =  ("Al27 -> 27",1.2e5)
-    standards = Dict("NIST612" => "NIST612p")
-    method = Cmethod(myrun,standards,internal)
+    method = Cmethod(myrun;
+                     standards=["NIST612"],
+                     internal=("Al27 -> 27",1.2e5))
+    setGroup!(myrun,Dict("NIST612" => "NIST612p"))
     fit = process!(myrun,method)
     conc = concentrations(myrun,method,fit)
     p = KJ.plot(myrun[4],method;fit=fit,
@@ -416,7 +431,8 @@ end
 
 function internochronUPbtest(show=true)
     myrun = load("data/carbonate",format="Agilent")
-    method = Gmethod("U-Pb",Dict("WC1"=>"WC1"))
+    setGroup!(myrun,Dict("WC1"=>"WC1"))
+    method = Gmethod("U-Pb";standards=["WC1"])
     fit = process!(myrun,method)
     isochron = internochron(myrun,method,fit)
     CSV.write("output/isochronUPb.csv",isochron)
@@ -430,9 +446,10 @@ function maptest()
     myrun = load("data/timestamp/NHM_cropped.csv",
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
-    method = Cmethod(myrun,
-                     Dict("NIST612" => "NIST612"),
-                     getInternal("zircon","Si29"))
+    method = Cmethod(myrun;
+                     standards=["NIST612"],
+                     internal=getInternal("zircon","Si29"))
+    setGroup!(myrun,Dict("NIST612" => "NIST612"))
     fit = process!(myrun,method)
     conc = concentrations(myrun[10],method,fit)
     p = plotMap(conc,"ppm[U] from U238";
@@ -446,7 +463,8 @@ function map_dating_test()
     myrun = load("data/timestamp/NHM_cropped.csv",
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
-    method = Gmethod("U-Pb",Dict("91500"=>"91500"))
+    method = Gmethod("U-Pb";standards=["91500"])
+    setGroup!(myrun,Dict("91500"=>"91500"))
     fit = process!(myrun,method)
     a = atomic(myrun[10],method,fit;add_xy=true)
     df = DataFrame(a)
@@ -467,9 +485,8 @@ end
 
 function glass_only_test()
     myrun = load("data/U-Pb",format="Agilent",head2name=false)
-    method = Gmethod("U-Pb",
-                     Dict("NIST610" => "610",
-                          "NIST612" => "612"))
+    method = Gmethod("U-Pb";standards=["NIST610","NIST612"])
+    setGroup!(myrun,Dict("NIST610" => "610", "NIST612" => "612"))
     fit = process!(myrun,method)
     export2IsoplotR(myrun,method,fit;
                     fname="output/UPb_with_glass.json")
@@ -499,12 +516,12 @@ function SS4test(run::Vector{Sample},
                  fit::Gfit)
     out = 0.0
     for samp in run
-        if samp.group in keys(method.standards)
+        if samp.group in method.fractionation.standards
             a = getAnchor(method.name,samp.group)
-            c = Cruncher(samp,method,fit)
+            c = Cruncher(samp,method.fractionation,fit.blank)
             ft = polyFac(fit.drift,c.t)
             FT = polyFac(fit.down,c.T)
-            out += SS(a,c,ft,FT)
+            out += SS(a,ft,FT;c...)
         end
     end
     return out
@@ -542,7 +559,7 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     uldown = fit.down[2] + 3*sqrt(fit.covmat[2,2])
     @test uldown > truefit.down[2] && lldown < truefit.down[2]
     if show
-        den = nothing # "Hf176 -> 258" #
+        den = "" # "Hf176 -> 258" #
         p1 = KJ.plot(myrun[1],method;fit=fit,
                      transformation="sqrt",den=den)
         p2 = KJ.plot(myrun[4],method;fit=fit,
@@ -552,15 +569,38 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     end
 end
 
-function channels2proxies_test()
-    method = getmethod("Lu-Hf",Dict())
-    proxies = getProxies(method)
-    setProxies!(method;P="foo",D="bar",d="foo")
-    equivocal = channels2proxies!(method)
-    @test proxies == getProxies(method)
-    setChannels!(method;d="Hf177 -> Hf178")
-    equivocal = channels2proxies!(method)
-    @test equivocal
+function biastest()
+    method = Gmethod("Re-Os";
+                     ions = (P="Re187",D="Os187",d="Os188"),
+                     proxies = (P="Re185",D="Os187",d="Os189"),
+                     channels = (P="Re185 -> 185",D="Os187 -> 251",d="Os189 -> 253"),
+                     standards = ["QMolyHill"],
+                     bias = Dict("Os" => ["NiS-3"]),
+                     nbias = 2)
+    method.interference = Interference(;ions = Dict("Os187" => ["Re187"]),
+                                        proxies = Dict("Re187" => "Re185"),
+                                        channels = Dict("Re185" => "Re185 -> 249"),
+                                        bias = Dict("Re" => ["NIST612"]))
+    myrun = load("data/Re-Os";format="Agilent")
+    refmats = Dict("QMolyHill" => "Qmoly",
+                   "NiS-3" => "Nis3",
+                   "NIST612" => "Nist_massbias")
+    setGroup!(myrun,refmats)
+    blanks = fitBlanks(myrun)
+    bias_interference = interference_bias(myrun,method,blanks)
+    bias_fractionation = fractionation_bias(myrun,method,blanks)
+    bias = hcat(bias_interference,bias_fractionation)
+    fit = Gfit(method;blank=blanks,bias=bias)
+    for i in [1,3]
+        p = plot(myrun[i],method;
+                 channels=getChannels(myrun),
+                 fit=fit,transformation="log")
+        display(p)
+    end
+end
+
+function interference_test()
+    
 end
 
 module test
@@ -594,12 +634,13 @@ Plots.closeall()
 @testset "moving median test" begin mmediantest() end
 @testset "outlier detection" begin outliertest_synthetic() end
 @testset "outlier detection" begin outliertest_sample() end
-@testset "assign standards" begin standardtest(true) end
+@testset "create method" begin methodtest() end
+@testset "assign refmats" begin refmattest(true) end
 @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
 @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
 @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
 @testset "predict drift" begin driftest() end
-@testset "predict down" begin downtest() end#
+@testset "predict down" begin downtest() end
 @testset "Lu-Hf" begin processtest("Lu-Hf") end
 @testset "Rb-Sr" begin processtest("Rb-Sr") end
 @testset "K-Ca" begin processtest("K-Ca") end
@@ -625,8 +666,9 @@ Plots.closeall()
 @testset "accuracy test 1" begin accuracytest() end
 @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
-@testset "channels2proxy test" begin channels2proxies_test() end
+@testset "bias test" begin biastest() end
+@testset "interference test" begin interference_test() end
 @testset "TUI test" begin TUItest() end
 @testset "dependency test" begin dependencytest() end
 
-TUI()
+# TUI()

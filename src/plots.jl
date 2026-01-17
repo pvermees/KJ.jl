@@ -1,23 +1,22 @@
 function plot(samp::Sample,
               method::KJmethod;
+              channels::AbstractVector=getChannels(method),
               fit::Union{Nothing,KJfit}=nothing,
-              num=nothing,
-              den=nothing,
-              transformation=nothing,
-              ms=2,ma=0.5,
+              num::AbstractString="",
+              den::AbstractString="",
+              transformation::AbstractString="",
+              ms::Number=2,ma::Number=0.5,
               xlim=:auto,ylim=:auto,
-              linecol="black",
+              linecol::AbstractString="black",
               linestyle=:solid,
-              title=samp.sname*" ["*samp.group*"]",
+              title::AbstractString=samp.sname*" ["*samp.group*"]",
               legend=:topleft,
               cpalette=:viridis,
-              titlefontsize=10,
+              titlefontsize::Number=10,
               return_offset::Bool=false)
 
-    channelvec = collect(values(getChannels(method)))
-    
     p, offset = plot(samp;
-                     channels=channelvec,
+                     channels=channels,
                      num=num,den=den,
                      transformation=transformation,
                      ms=ms,ma=ma,xlim=xlim,ylim=ylim,
@@ -32,9 +31,9 @@ function plot(samp::Sample,
                         offset=offset,linecolor=linecol,linestyle=linestyle)
         end
         plotFittedBlank!(p,samp,method,fit;
-                        num=num,den=den,
-                        transformation=transformation,offset=offset,
-                        linecolor=linecol,linestyle=linestyle)
+                         num=num,den=den,
+                         transformation=transformation,offset=offset,
+                         linecolor=linecol,linestyle=linestyle)
     end
 
     if return_offset
@@ -46,12 +45,12 @@ end
 
 function plot(samp::Sample;
               channels::AbstractVector=getChannels(samp),
-              num::Union{Nothing,AbstractString}=nothing,
-              den::Union{Nothing,AbstractString}=nothing,
-              transformation::Union{Nothing,AbstractString}=nothing,
+              num::AbstractString="",
+              den::AbstractString="",
+              transformation::AbstractString="",
               ms::Number=2,ma::Number=0.5,
               xlim=:auto,ylim=:auto,
-              title=samp.sname*" ["*samp.group*"]",
+              title::AbstractString=samp.sname*" ["*samp.group*"]",
               legend=:topleft,
               cpalette=:viridis,
               titlefontsize=10,
@@ -59,7 +58,7 @@ function plot(samp::Sample;
               return_offset::Bool=false)
 
     x, y, xlab, ylab, offset = prep_plot(samp,channels;
-                                         num=num,den=den,ylim=ylim,
+                                         num=num,den=den,
                                          transformation=transformation)
     if ylim == :auto
         ylim = get_ylim(y,samp.swin)
@@ -113,19 +112,16 @@ end
 
 function prep_plot(samp::Sample,
                    channels::AbstractVector;
-                   num::Union{Nothing,AbstractString}=nothing,
-                   den::Union{Nothing,AbstractString}=nothing,
-                   ylim=:auto,
-                   transformation::Union{Nothing,AbstractString}=nothing,
-                   padding::Number=0.1)
+                   num::AbstractString="",
+                   den::AbstractString="",
+                   transformation::AbstractString="")
     xlab = names(samp.dat)[1]
     x = samp.dat[:,xlab]
     meas = samp.dat[:,channels]
-    ratsig = isnothing(num) & isnothing(den) ? "signal" : "ratio"
-    y = (ratsig == "signal") ? meas : formRatios(meas,num,den)
-    arg = nothing
+    ratsig = (num=="" && den=="") ? "signal" : "ratio"
+    y = (ratsig == "signal") ? meas : formRatios(meas;num=num,den=den)
     min_val = minimum(Matrix(y))
-    if isnothing(transformation)
+    if transformation==""
         ylab = ratsig
     elseif (transformation == "log" && min_val <= 0) ||
         (transformation == "sqrt" && min_val < 0)
@@ -133,26 +129,39 @@ function prep_plot(samp::Sample,
     else
         ylab = transformation*"("*ratsig*")"
     end
-    ty, offset = transformeer(y,transformation)
+    offset = get_offset(y,transformation)
+    ty = transformeer(y,transformation)
     return x, ty, xlab, ylab, offset
 end
+export prep_plot
 
 function plotFitted!(p,
                      samp::Sample,
                      method::KJmethod,
                      fit::KJfit;
-                     num::Union{Nothing,AbstractString}=nothing,
-                     den::Union{Nothing,AbstractString}=nothing,
-                     transformation::Union{Nothing,AbstractString}=nothing,
-                     offset::Union{Nothing,Number}=nothing,
+                     num::AbstractString="",
+                     den::AbstractString="",
+                     transformation::AbstractString="",
+                     offset::Number=0.0,
                      linecolor="black",
                      linestyle=:solid)
     pred = predict(samp,method,fit)
-    rename!(pred,getChannels(method))
+    generic_to_specific_pred_names!(pred,method)
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,
                 linestyle=linestyle)
+end
+
+function generic_to_specific_pred_names!(pred::AbstractDataFrame,
+                                         method::Gmethod)
+    channels = method.fractionation.channels
+    rename!(pred, [k => channels[k] for k in propertynames(pred) if haskey(channels, k)])
+end
+function generic_to_specific_pred_names!(pred::AbstractDataFrame,
+                                         method::Cmethod)
+    channels = getChannels(method)
+    rename!(pred,channels)
 end
 
 # helper
@@ -160,16 +169,16 @@ function plotFitted!(p,
                      samp::Sample,
                      pred::AbstractDataFrame;
                      blank::Bool=false,
-                     num::Union{Nothing,AbstractString}=nothing,
-                     den::Union{Nothing,AbstractString}=nothing,
-                     transformation::Union{Nothing,AbstractString}=nothing,
-                     offset::Union{Nothing,Number}=nothing,
+                     num::AbstractString="",
+                     den::AbstractString="",
+                     transformation::AbstractString="",
+                     offset::Number=0.0,
                      linecolor="black",linestyle=:solid)
     dat = ifelse(blank,bwinData(samp),swinData(samp))
     good = .!dat.outlier
     x = dat[good,1]
-    y = formRatios(pred[good,:],num,den)
-    ty, offset = transformeer(y,transformation;offset=offset)
+    y = formRatios(pred[good,:];num=num,den=den)
+    ty = transformeer(y,transformation;offset=offset)
     for tyi in eachcol(ty)
         Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
     end
@@ -180,13 +189,13 @@ function plotFittedBlank!(p,
                           samp::Sample,
                           method::KJmethod,
                           fit::KJfit;
-                          num::Union{Nothing,AbstractString}=nothing,
-                          den::Union{Nothing,AbstractString}=nothing,
-                          transformation::Union{Nothing,AbstractString}=nothing,
-                          offset::Union{Nothing,Number}=0.0,
+                          num::AbstractString="",
+                          den::AbstractString="",
+                          transformation::AbstractString="",
+                          offset::Number=0.0,
                           linecolor="black",
                           linestyle::Symbol=:solid)
-    channels = collect(values(getChannels(method)))
+    channels = getChannels(method)
     pred = predict(samp,fit.blank[:,channels])
     plotFitted!(p,samp,pred;
                 blank=true,num=num,den=den,transformation=transformation,
@@ -196,7 +205,7 @@ export plotFittedBlank!
 
 function plotMap(df::AbstractDataFrame,
                  column::AbstractString;
-                 clims::Union{Nothing,Tuple}=nothing,
+                 clims::Tuple=(),
                  markersize::Number=2,
                  markershape::Symbol=:square,
                  colorbar_scale::Symbol=:log10,
@@ -212,7 +221,7 @@ function plotMap(df::AbstractDataFrame,
             selection = fill(true,size(df,1))
         end
         z = df[selection,column]
-        if isnothing(clims)
+        if length(clims) == 0
             clims = (minimum(z),maximum(z))
         end
         p = Plots.scatter(df.x[selection],

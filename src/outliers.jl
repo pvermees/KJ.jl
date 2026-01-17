@@ -1,9 +1,3 @@
-"""
-detect_outliers(vec::AbstractVector)
-
-Identifies outliers in a vector from the second order differences
-between its elements. It returns the indices of the outliers.
-"""
 function detect_outliers(vec::AbstractVector;
                          b::Int=2)
     n = length(vec)
@@ -18,9 +12,7 @@ function detect_outliers(vec::AbstractVector;
     outliers = @. d > ul || d < ll
     return findall(outliers)
 end
-"""
-detect_outliers(mat::Matrix)
-"""
+
 function detect_outliers(mat::Matrix;
                          b::Int=2)
     n = size(mat,1)
@@ -35,13 +27,6 @@ function detect_outliers(mat::Matrix;
 end
 export detect_outliers
 
-"""
-detect_outliers!(run::Vector{Sample};
-                 group::Union{Nothing,AbstractString}=nothing)
-
-Identifies outliers in a vector from the second order differences
-between its elements. Modifies run using detect_outliers().
-"""
 function detect_outliers!(run::Vector{Sample};
                           channels::AbstractVector=getChannels(run),
                           include_samples::Bool=false)

@@ -93,16 +93,18 @@ function init_glass!(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.cs
 end
 
 function init_referenceMaterials(;isochrons::AbstractString=joinpath(@__DIR__,"../settings/isochron_standards.csv"),
-                                  points::AbstractString=joinpath(@__DIR__,"../settings/point_standards.csv"))
+                                  points::AbstractString=joinpath(@__DIR__,"../settings/point_standards.csv"),
+                                  bias::AbstractString=joinpath(@__DIR__,"../settings/bias_standards.csv"))
     out = Dict()
     for (fname,fun) in Dict(isochrons => IsochronRefmat,
-                            points => PointRefmat)
+                            points => PointRefmat,
+                            bias => BiasRefmat)
         for row in eachrow(CSV.read(fname, DataFrame))
             method = row["method"]
             if !(method in keys(out))
                 out[method] = OrderedDict()
             end
-            val = fun(row[4],row[5],row[6],row[7],row[3])
+            val = fun(row[3],collect(row[4:end-1])...)
             add2od!(out[method],row["name"],val)
         end
     end
@@ -110,7 +112,9 @@ function init_referenceMaterials(;isochrons::AbstractString=joinpath(@__DIR__,".
 end
 
 function init_referenceMaterials!(;isochrons::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"),
-                                   points::AbstractString=joinpath(@__DIR__,"../settings/point_standards.csv"))
+                                   points::AbstractString=joinpath(@__DIR__,"../settings/point_standards.csv"),
+                                   bias::AbstractString=joinpath(@__DIR__,"../settings/bias_standards.csv"))
     _KJ["refmat"] = init_referenceMaterials(;isochrons=isochrons,
-                                             points=points)
+                                             points=points,
+                                             bias=bias)
 end

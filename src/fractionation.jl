@@ -5,15 +5,17 @@ function fractionation!(fit::Gfit,
 
     # extract the grouped data for the SS function from the run
     cruncher_groups = Dict()
-    for refmat in keys(method.standards)
-        anchor = getAnchor(method.name,refmat)
-        selection = group2selection(run,refmat)
+    for standard in method.fractionation.standards
+        anchor = getAnchor(method.name,standard)
+        selection = group2selection(run,standard)
         ns = length(selection)
-        crunchers = Vector{Cruncher}(undef,ns)
+        crunchers = Vector{NamedTuple}(undef,ns)
         for i in eachindex(selection)
-            crunchers[i] = Cruncher(run[selection[i]],method,fit)
+            crunchers[i] = Cruncher(run[selection[i]],
+                                    method.fractionation,
+                                    fit.blank)
         end
-        cruncher_groups[refmat] = (anchor=anchor,crunchers=crunchers)
+        cruncher_groups[standard] = (anchor=anchor,crunchers=crunchers)
     end
 
     # initialise the parameters
@@ -78,13 +80,13 @@ function fractionation!(fit::Cfit,
     num = fit.blank[1:1,:] .* 0.0
     den = copy(num)
     internal = method.internal[1]
-    for SRM in keys(method.standards)
-        selection = getIndicesInGroup(run,SRM)
+    for standard in method.standards
+        selection = getIndicesInGroup(run,standard)
         dats = [swinData(samp) for samp in run[selection]]
         for dat in dats
             bt = polyVal(fit.blank,dat.t)
             X = getSignals(dat) .- bt
-            C = getConcentrations(method,SRM)
+            C = getConcentrations(method,standard)
             num[1,:] = Vector(num[1,:]) + sum.(eachcol(C[1,internal].*X.*X[:,internal]))
             den[1,:] = Vector(den[1,:]) + sum.(eachcol(C.*(X[:,internal].^2)))
         end
@@ -106,3 +108,46 @@ function par2fit(par::AbstractVector,
     par2Gfit!(fit,method,par)
     return fit
 end
+
+function Cruncher(samp::Sample,
+                  fractionation::Fractionation,
+                  blank::AbstractDataFrame)
+
+    dat = swinData(samp)
+    
+    ch = fractionation.channels
+    pm = dat[:,ch.P]
+    Dom = dat[:,ch.D]
+    bom = dat[:,ch.d]
+
+    t = dat.t
+    bpt = polyVal(blank[:,ch.P],t)
+    bDot = polyVal(blank[:,ch.D],t)
+    bbot = polyVal(blank[:,ch.d],t)
+
+    pmb = pm - bpt
+    Domb = Dom - bDot
+    bomb = bom - bbot
+
+    sig = hcat(pmb,Domb,bomb)
+    covmat = df2cov(sig)
+    vP = covmat[1,1]
+    vD = covmat[2,2]
+    vd = covmat[3,3]
+    sPD = covmat[1,2]
+    sPd = covmat[1,3]
+    sDd = covmat[2,3]
+    
+    bd = iratio(fractionation.proxies.d,
+                fractionation.ions.d)
+
+    t = dat.t
+    T = dat.T
+
+    return (pmb=pmb,Dombi=Domb,bomb=bomb,
+            bpt=bpt,bDot=bDot,bbot=bbot,
+            vp=vP,vD=vD,vb=vd,spD=sPD,spb=sPd,sDb=sDd,
+            bd=bd,t=t,T=T)
+    
+end
+export Cruncher
