@@ -22,10 +22,10 @@ function TUIinit()
         "method" => nothing,
         "fit" => nothing,
         "i" => 1,
-        "den" => nothing,
+        "den" => "",
         "transformation" => "sqrt",
         "mapcolumn" => 2,
-        "clims" => nothing,
+        "clims" => (),
         "log" => false,
         "cache" => nothing
     )
@@ -429,7 +429,7 @@ end
 function TUIratios!(ctrl::AbstractDict,
                     response::AbstractString)
     if response=="n"
-        ctrl["den"] = nothing
+        ctrl["den"] = ""
     elseif response=="x"
         return "xx"
     else
