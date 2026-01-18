@@ -7,10 +7,15 @@ function KJfit(method::Cmethod)
 end
 
 function init_bias(method::Gmethod)
-    colnames = [collect(keys(method.fractionation.bias));
-                collect(keys(method.interference.bias))]
+    colnames = Set()
+    for proxy in values(method.fractionation.ions)
+        push!(colnames,channel2element(proxy))
+    end
+    for proxy in values(method.interference.proxies)
+        push!(colnames,channel2element(proxy))
+    end
     data = zeros(method.nbias,length(colnames))
-    return DataFrame(data,colnames)
+    return DataFrame(data,collect(colnames))
 end
 
 function Gfit(method::Gmethod;

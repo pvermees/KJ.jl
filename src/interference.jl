@@ -6,15 +6,17 @@ function Interference(;ions::Dict{String,Vector{String}}=Dict{String,Vector{Stri
 end
     
 function interference_correction!(run::Vector{Sample},
-                                  method::KJmethod)
+                                  method::KJmethod;
+                                  bias::AbstractDataFrame=init_bias(method))
     for samp in run
-        interference_correction!(samp,method)
+        interference_correction!(samp,method;bias=bias)
     end
 end
 export interference_correction!
 
 function interference_correction!(samp::Sample,
-                                  method::Gmethod)
+                                  method::Gmethod;
+                                  bias::AbstractDataFrame=init_bias(method))
     F = method.fractionation
     I = method.interference
     for (key,proxy) in pairs(F.proxies)
@@ -22,10 +24,11 @@ function interference_correction!(samp::Sample,
             target_channel = F.channels[key]
             interferences = I.ions[proxy]
             for interference_ion in interferences
+                interference_element = channel2element(interference_ion)
                 interference_proxy = I.proxies[interference_ion]
                 interference_channel = I.channels[interference_proxy]
-                bias = 1.0 # TODO
-                ratio = bias .* iratio(interference_ion,interference_proxy)
+                mf = polyFac(bias[:,interference_element],samp.dat.t)
+                ratio = mf .* iratio(interference_ion,interference_proxy)
                 correction = ratio .* samp.dat[:,interference_channel]
                 samp.dat[:,target_channel] .-= correction
             end

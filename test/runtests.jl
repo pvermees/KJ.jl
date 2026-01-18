@@ -569,43 +569,65 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     end
 end
 
-function ReOsData()
-    method = Gmethod("Re-Os";
-                     ions = (P="Re187",D="Os187",d="Os188"),
-                     proxies = (P="Re185",D="Os187",d="Os189"),
-                     channels = (P="Re185 -> 185",D="Os187 -> 251",d="Os189 -> 253"),
-                     standards = ["QMolyHill"],
-                     bias = Dict("Os" => ["NiS-3"]),
-                     nbias = 2)
-    method.interference = Interference(;ions = Dict("Os187" => ["Re187"]),
-                                        proxies = Dict("Re187" => "Re185"),
-                                        channels = Dict("Re185" => "Re185 -> 249"),
-                                        bias = Dict("Re" => ["NIST612"]))
-    myrun = load("data/Re-Os";format="Agilent")
-    refmats = Dict("QMolyHill" => "Qmoly",
-                   "NiS-3" => "Nis3",
-                   "NIST612" => "Nist_massbias")
+function getInterferenceData(;method="Lu-Hf")
+    if method=="Lu-Hf"
+        method = Gmethod("Lu-Hf";
+                         ions = (P="Lu176",D="Hf176",d="Hf177"),
+                         proxies = (P="Lu175",D="Hf176",d="Hf178"),
+                         channels = (P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"),
+                         standards = ["BP"],
+                         bias = Dict("Hf" => ["NIST610","NIST612"]),
+                         nbias = 2)
+        method.interference = Interference(;ions = Dict("Hf176" => ["Lu176"]),
+                                            proxies = Dict("Lu176" => "Lu175"),
+                                            channels = Dict("Lu175" => "Lu175 -> 257"))
+        myrun = load("data/Lu-Hf";format="Agilent")
+        refmats = Dict("BP" => "BP",
+                       "NIST610" => "NIST610",
+                       "NIST612" => "NIST612")
+    elseif method=="Re-Os"
+        method = Gmethod("Re-Os";
+                        ions = (P="Re187",D="Os187",d="Os188"),
+                        proxies = (P="Re185",D="Os187",d="Os189"),
+                        channels = (P="Re185 -> 185",D="Os187 -> 251",d="Os189 -> 253"),
+                        standards = ["QMolyHill"],
+                        bias = Dict("Os" => ["NiS-3"]),
+                        nbias = 2)
+        method.interference = Interference(;ions = Dict("Os187" => ["Re187"]),
+                                            proxies = Dict("Re187" => "Re185"),
+                                            channels = Dict("Re185" => "Re185 -> 249"),
+                                            bias = Dict("Re" => ["NIST612"]))
+        myrun = load("data/Re-Os";format="Agilent")
+        refmats = Dict("QMolyHill" => "Qmoly",
+                    "NiS-3" => "Nis3",
+                    "NIST612" => "Nist_massbias")
+    end
     setGroup!(myrun,refmats)
     myrun, method
 end
 
+function print_diff(original_samp,new_samp,channel,tail)
+    println(DataFrame(uncorrected=original_samp.dat[end-tail:end,channel],
+                      corrected=new_samp.dat[end-tail:end,channel]))
+end
+
 function interference_test()
-    myrun, method = ReOsData()
+    myrun, method = getInterferenceData(;method="Lu-Hf")
     myrun_copy = deepcopy(myrun)
     interference_correction!(myrun_copy,method)
-    snum = 5
-    ch = "Os187 -> 251"
-    println(DataFrame(uncorrected=myrun[snum].dat[:,ch],
-                      corrected=myrun_copy[snum].dat[:,ch]))
+    print_diff(myrun[1],myrun_copy[1],"Hf176 -> 258",5)
 end
 
 function biastest()
-    myrun, method = ReOsData()
+    myrun_uncorrected, method = getInterferenceData(;method="Re-Os")
+    myrun = deepcopy(myrun_uncorrected)
     blanks = fitBlanks(myrun)
+    bias = KJ.init_bias(method)
     bias_interference = interference_bias(myrun,method,blanks)
-    interference_correction!(myrun,method)
+    bias[:,names(bias_interference)] = bias_interference
+    interference_correction!(myrun,method;bias=bias)
     bias_fractionation = fractionation_bias(myrun,method,blanks)
-    bias = hcat(bias_interference,bias_fractionation)
+    bias[:,names(bias_fractionation)] = bias_fractionation
     fit = Gfit(method;blank=blanks,bias=bias)
     for i in [1,3]
         p = KJ.plot(myrun[i],method;
@@ -613,6 +635,7 @@ function biastest()
                     fit=fit,transformation="log")
         display(p)
     end
+    print_diff(myrun_uncorrected[1],myrun[1],"Os187 -> 251",5)
 end
 
 module test
@@ -678,8 +701,8 @@ Plots.closeall()
 # @testset "accuracy test 1" begin accuracytest() end
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 # @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
-@testset "interference test" begin interference_test() end
-# @testset "bias test" begin biastest() end
+# @testset "interference test" begin interference_test() end
+@testset "bias test" begin biastest() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 

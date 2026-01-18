@@ -96,10 +96,12 @@ function interference_cruncher_groups(run::Vector{Sample},
     for (target,interfering_ions) in I.ions
         target_channel = Fchannels[target]
         for interfering_ion in interfering_ions
-            standards, num, den = bias_prep(I,target_channel,interfering_ion)
-            cruncher_groups = bias_cruncher_groups_helper(run,method.name,blank,standards,num,den)
             interfering_element = channel2element(interfering_ion)
-            out[interfering_element] = cruncher_groups
+            if interfering_element in keys(I.bias)
+                standards, num, den = bias_prep(I,target_channel,interfering_ion)
+                cruncher_groups = bias_cruncher_groups_helper(run,method.name,blank,standards,num,den)
+                out[interfering_element] = cruncher_groups
+            end
         end
     end
     return out
