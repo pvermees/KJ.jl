@@ -14,14 +14,21 @@ end
 export interference_correction!
 
 function interference_correction!(samp::Sample,
-                                  method::KJmethod)
-    for (target,interferences) in method.interferences
-        i = findfirst(==(target),unpack(method.proxies))
-        target_channel = unpack(method.channels)[i]
-        for interference in interferences
-            ratio = iratio(interference.ion,interference.proxy)
-            correction = ratio .* samp.dat[:,interference.channel]
-            samp.dat[:,target_channel] .-= correction
+                                  method::Gmethod)
+    F = method.fractionation
+    I = method.interference
+    for (key,proxy) in pairs(F.proxies)
+        if proxy in keys(I.ions)
+            target_channel = F.channels[key]
+            interferences = I.ions[proxy]
+            for interference_ion in interferences
+                interference_proxy = I.proxies[interference_ion]
+                interference_channel = I.channels[interference_proxy]
+                bias = 1.0 # TODO
+                ratio = bias .* iratio(interference_ion,interference_proxy)
+                correction = ratio .* samp.dat[:,interference_channel]
+                samp.dat[:,target_channel] .-= correction
+            end
         end
     end
 end

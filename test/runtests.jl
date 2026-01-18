@@ -569,7 +569,7 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     end
 end
 
-function biastest()
+function ReOsData()
     method = Gmethod("Re-Os";
                      ions = (P="Re187",D="Os187",d="Os188"),
                      proxies = (P="Re185",D="Os187",d="Os189"),
@@ -586,8 +586,24 @@ function biastest()
                    "NiS-3" => "Nis3",
                    "NIST612" => "Nist_massbias")
     setGroup!(myrun,refmats)
+    myrun, method
+end
+
+function interference_test()
+    myrun, method = ReOsData()
+    myrun_copy = deepcopy(myrun)
+    interference_correction!(myrun_copy,method)
+    snum = 5
+    ch = "Os187 -> 251"
+    println(DataFrame(uncorrected=myrun[snum].dat[:,ch],
+                      corrected=myrun_copy[snum].dat[:,ch]))
+end
+
+function biastest()
+    myrun, method = ReOsData()
     blanks = fitBlanks(myrun)
     bias_interference = interference_bias(myrun,method,blanks)
+    interference_correction!(myrun,method)
     bias_fractionation = fractionation_bias(myrun,method,blanks)
     bias = hcat(bias_interference,bias_fractionation)
     fit = Gfit(method;blank=blanks,bias=bias)
@@ -597,10 +613,6 @@ function biastest()
                     fit=fit,transformation="log")
         display(p)
     end
-end
-
-function interference_test()
-    
 end
 
 module test
@@ -666,9 +678,9 @@ Plots.closeall()
 # @testset "accuracy test 1" begin accuracytest() end
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 # @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
+@testset "interference test" begin interference_test() end
 # @testset "bias test" begin biastest() end
-# @testset "interference test" begin interference_test() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 
-TUI()
+# TUI()
