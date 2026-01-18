@@ -581,7 +581,7 @@ end
 
 function TUIexport2csv(ctrl::AbstractDict,
                        response::AbstractString)
-    tab, out = TUIexportHelper(ctrl["run"],ctrl["method"],ctrl["fit"])
+    tab, out = TUIexportHelper(ctrl["run"], ctrl["method"], ctrl["fit"])
     fname = splitext(response)[1]*".csv"
     CSV.write(fname,tab)
     return out

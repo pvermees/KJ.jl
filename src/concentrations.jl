@@ -22,7 +22,8 @@ function concentrations(run::Vector{Sample},
                         method::Cmethod,
                         fit::Cfit)
     nr = length(run)
-    nc = 2*length(method.elements)
+    ne = length(method.elements)
+    nc = 2*ne
     mat = fill(0.0,nr,nc)
     conc = nothing
     for i in eachindex(run)
@@ -32,14 +33,15 @@ function concentrations(run::Vector{Sample},
             ich = method.internal[1] # ich = internal channel
             internal = (ich,refconcs[1,ich])
             conc = concentrations(samp,method,fit;
-                                  internal = internal)
+                                  internal = internal)[:,1:ne]
         else
-            conc = concentrations(samp,method,fit)
+            conc = concentrations(samp,method,fit)[:,1:ne]
         end
         mu = Statistics.mean.(eachcol(conc))
         sigma = Statistics.std.(eachcol(conc))
+        nt = size(conc,1)
         mat[i,1:2:nc-1] .= mu
-        mat[i,2:2:nc] .= sigma
+        mat[i,2:2:nc] .= sigma./sqrt(nt)
     end
     nms = fill("",nc)
     nms[1:2:nc-1] .= names(conc)
