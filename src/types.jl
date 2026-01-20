@@ -44,15 +44,15 @@ mutable struct Fractionation
     proxies::NamedTuple{(:P,:D,:d)}
     channels::NamedTuple{(:P,:D,:d)}
     standards::Set{String}
-    bias::Dict{String,Vector{String}}
+    bias::Dict{String,Set{String}}
 end
 export Fractionation
 
 mutable struct Interference
-    ions::Dict{String,Vector{String}}
+    ions::Dict{String,Set{String}}
     proxies::Dict{String,String}
     channels::Dict{String,String}
-    bias::Dict{String,Vector{String}}
+    bias::Dict{String,Set{String}}
 end
 export Interference
 
@@ -61,6 +61,7 @@ export KJmethod
 
 mutable struct Gmethod <: KJmethod
     name::String
+    groups::Dict{String,String}
     fractionation::Fractionation
     interference::Interference
     nblank::Int

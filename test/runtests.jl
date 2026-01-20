@@ -109,14 +109,19 @@ function outliertest_sample(show=true)
 end
 
 function methodtest()
-    interferences = Interference(ions = Dict("Hf176" => ["Lu176","Yb176"]),
+    interferences = Interference(ions = Dict("Hf176" => Set(["Lu176","Yb176"])),
                                  proxies = Dict("Lu176" => "Lu175","Yb176" => "Yb172"),
                                  channels = Dict("Lu175" => "Lu175 -> 257","Yb172" => "Yb172 -> 254"),
-                                 bias = Dict("Lu175" => ["some_Lu_standard"], "Yb172" => ["some_REE_standard"]))
+                                 bias = Dict("Lu175" => Set(["Lu_standard"]), 
+                                             "Yb172" => Set(["REE_standard"])))
     method = Gmethod("Lu-Hf";
+                     groups=Dict("Lu_standard" => "some_Lu_standard",
+                                 "REE_standard" => "some_REE_standard",
+                                 "GLASS" => "NIST612",
+                                 "Hog" => "Hogsbo"),
                      channels=(P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"),
-                     standards=["Hogsbo"],
-                     bias=Dict("Hf" => ["NIST612"]),
+                     standards=Set(["Hog"]),
+                     bias=Dict("Hf" => Set(["GLASS"])),
                      interference=interferences)
     @test method.fractionation.proxies.d == "Hf178"
 end
@@ -572,35 +577,34 @@ end
 function getInterferenceData(;method="Lu-Hf")
     if method=="Lu-Hf"
         method = Gmethod("Lu-Hf";
+                         groups = Dict("BP" => "BP", "NIST610" => "NIST610", "NIST612" => "NIST612"),
                          ions = (P="Lu176",D="Hf176",d="Hf177"),
                          proxies = (P="Lu175",D="Hf176",d="Hf178"),
                          channels = (P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"),
-                         standards = ["BP"],
-                         bias = Dict("Hf" => ["NIST610","NIST612"]),
+                         standards = Set(["BP"]),
+                         bias = Dict("Hf" => Set(["NIST610","NIST612"])),
                          nbias = 2)
-        method.interference = Interference(;ions = Dict("Hf176" => ["Lu176"]),
+        method.interference = Interference(;ions = Dict("Hf176" => Set(["Lu176"])),
                                             proxies = Dict("Lu176" => "Lu175"),
                                             channels = Dict("Lu175" => "Lu175 -> 257"))
         myrun = load("data/Lu-Hf";format="Agilent")
-        refmats = Dict("BP" => "BP",
-                       "NIST610" => "NIST610",
-                       "NIST612" => "NIST612")
     elseif method=="Re-Os"
         method = Gmethod("Re-Os";
+                        groups = Dict("Qmoly" => "QMolyHill",
+                                      "Nis3" => "NiS-3",
+                                      "Nist_massbias" => "NIST612", 
+                                      "Nist_REEint" => "NIST612"),
                         ions = (P="Re187",D="Os187",d="Os188"),
                         proxies = (P="Re185",D="Os187",d="Os189"),
                         channels = (P="Re185 -> 185",D="Os187 -> 251",d="Os189 -> 253"),
-                        standards = ["QMolyHill"],
-                        bias = Dict("Os" => ["NiS-3"]),
+                        standards = Set(["Qmoly"]),
+                        bias = Dict("Os" => Set(["Nis3"])),
                         nbias = 2)
-        method.interference = Interference(;ions = Dict("Os187" => ["Re187"]),
+        method.interference = Interference(;ions = Dict("Os187" => Set(["Re187"])),
                                             proxies = Dict("Re187" => "Re185"),
                                             channels = Dict("Re185" => "Re185 -> 249"),
-                                            bias = Dict("Re" => ["NIST612"]))
+                                            bias = Dict("Re" => Set(["Nist_massbias"])))
         myrun = load("data/Re-Os";format="Agilent")
-        refmats = Dict("QMolyHill" => "Qmoly",
-                    "NiS-3" => "Nis3",
-                    "NIST612" => "Nist_massbias")
     end
     setGroup!(myrun,refmats)
     myrun, method
@@ -669,7 +673,7 @@ Plots.closeall()
 # @testset "moving median test" begin mmediantest() end
 # @testset "outlier detection" begin outliertest_synthetic() end
 # @testset "outlier detection" begin outliertest_sample() end
-# @testset "create method" begin methodtest() end
+@testset "create method" begin methodtest() end
 # @testset "assign refmats" begin refmattest(true) end
 # @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
 # @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
@@ -702,7 +706,7 @@ Plots.closeall()
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 # @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 # @testset "interference test" begin interference_test() end
-@testset "bias test" begin biastest() end
+# @testset "bias test" begin biastest() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 

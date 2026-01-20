@@ -1,7 +1,7 @@
-function Interference(;ions::Dict{String,Vector{String}}=Dict{String,Vector{String}}(),
+function Interference(;ions::Dict{String,Set{String}}=Dict{String,Set{String}}(),
                        proxies::Dict{String,String}=Dict{String,String}(),
                        channels::Dict{String,String}=Dict{String,String}(),
-                       bias::Dict{String,Vector{String}}=Dict{String,Vector{String}}())
+                       bias::Dict{String,Set{String}}=Dict{String,Set{String}}())
     return Interference(ions,proxies,channels,bias)
 end
     
