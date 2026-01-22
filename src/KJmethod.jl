@@ -29,19 +29,8 @@ function channel2proxy(channel::AbstractString)
     proxy = nothing
     all_elements = string.(keys(_KJ["nuclides"]))
     matching_elements = filter(x -> occursin(x, channel), all_elements)
-    if length(matching_elements) > 0
-        already_found = false
-        for matching_element in matching_elements
-            proxy = get_proxy_isotope(channel,matching_element)
-            if !isnothing(proxy)
-                if already_found
-                    return nothing
-                else
-                    already_found = true
-                end
-            end
-        end
-    end
+    matching_element = argmax(length,matching_elements)
+    proxy = get_proxy_isotope(channel,matching_element)
     return proxy
 end
 
