@@ -1,18 +1,16 @@
 function Gmethod(name::String;
                  groups::AbstractDict=Dict{String,String}(),
-                 ions::NamedTuple{(:P,:D,:d)}=default_ions(name),
-                 channels::NamedTuple{(:P,:D,:d)}=ions,
-                 proxies::NamedTuple{(:P,:D,:d)}=channels2proxies(channels),
-                 standards::AbstractSet=Set(collect(keys(groups))),
-                 bias::AbstractDict=Dict{String,Set{String}}(),
-                 fractionation::Fractionation=Fractionation(ions,proxies,channels,standards,bias),
-                 interference::Interference=Interference(),
+                 P::Pairing=Pairing(ion=default_ions(name).P),
+                 D::Pairing=Pairing(ion=default_ions(name).D),
+                 d::Pairing=Pairing(ion=default_ions(name).d),
+                 bias::AbstractDict=Dict{String,Calibration}(),
+                 standards::AbstractSet=Set{String}(),
                  nblank::Int=2,
                  ndrift::Int=2,
                  ndown::Int=1,
                  nbias::Int=1,
-                 PAcutoff::Union{Nothing,Float64}=nothing)
-    return Gmethod(name,groups,fractionation,interference,
+                 PAcutoff::Float64=Inf)
+    return Gmethod(name,groups,P,D,d,bias,standards,
                    nblank,ndrift,ndown,nbias,PAcutoff)
 end
 
@@ -30,19 +28,8 @@ function channel2proxy(channel::AbstractString)
     proxy = nothing
     all_elements = string.(keys(_KJ["nuclides"]))
     matching_elements = filter(x -> occursin(x, channel), all_elements)
-    if length(matching_elements) > 0
-        already_found = false
-        for matching_element in matching_elements
-            proxy = get_proxy_isotope(channel,matching_element)
-            if !isnothing(proxy)
-                if already_found
-                    return nothing
-                else
-                    already_found = true
-                end
-            end
-        end
-    end
+    matching_element = argmax(length,matching_elements)
+    proxy = get_proxy_isotope(channel,matching_element)
     return proxy
 end
 

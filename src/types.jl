@@ -39,46 +39,36 @@ mutable struct BiasRefmat <: AbstractRefmat
     sy0::Float64
 end
 
-mutable struct Fractionation
-    ions::NamedTuple{(:P,:D,:d)}
-    proxies::NamedTuple{(:P,:D,:d)}
-    channels::NamedTuple{(:P,:D,:d)}
+abstract type AbstractInterference end
+export AbstractInterference
+
+mutable struct Interference <: AbstractInterference
+    ion::String
+    proxy::String
+    channel::String
     standards::Set{String}
-    bias::Dict{String,Set{String}}
 end
-export Fractionation
 
-mutable struct Interference
-    ions::Dict{String,Set{String}}
-    proxies::Dict{String,String}
-    channels::Dict{String,String}
-    bias::Dict{String,Set{String}}
+mutable struct REEInterference <: AbstractInterference
+    proxychannel::String
+    numchannel::String
+    denchannel::String
 end
-export Interference
 
-abstract type KJmethod end
-export KJmethod
-
-mutable struct Gmethod <: KJmethod
-    name::String
-    groups::Dict{String,String}
-    fractionation::Fractionation
-    interference::Interference
-    nblank::Int
-    ndrift::Int
-    ndown::Int
-    nbias::Int
-    PAcutoff::Union{Nothing,Float64}    
+mutable struct Pairing
+    ion::String
+    proxy::String
+    channel::String
+    interferences::Set{AbstractInterference}
 end
-export Gmethod
+export Pairing
 
-mutable struct Cmethod <: KJmethod
-    elements::NamedTuple
+mutable struct Calibration
+    num::NamedTuple{(:ion,:channel),Tuple{String,String}}
+    den::NamedTuple{(:ion,:channel),Tuple{String,String}}
     standards::Set{String}
-    internal::Tuple
-    nblank::Int
 end
-export Cmethod
+export Calibration
 
 abstract type AbstractAnchor end
 export AbstractAnchor
@@ -93,6 +83,33 @@ mutable struct PointAnchor <: AbstractAnchor
     x::Float64
     y::Float64
 end
+
+abstract type KJmethod end
+export KJmethod
+
+mutable struct Gmethod <: KJmethod
+    name::String
+    groups::Dict{String,String}
+    P::Pairing
+    D::Pairing
+    d::Pairing
+    bias::Dict{String,Calibration}
+    standards::Set{String}
+    nblank::Int
+    ndrift::Int
+    ndown::Int
+    nbias::Int
+    PAcutoff::Float64
+end
+export Gmethod
+
+mutable struct Cmethod <: KJmethod
+    elements::NamedTuple
+    standards::Set{String}
+    internal::Tuple
+    nblank::Int
+end
+export Cmethod
 
 abstract type KJfit end
 export KJfit
