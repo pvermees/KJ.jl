@@ -67,34 +67,20 @@ function getAttr(run::Vector{Sample},
     return out
 end
 
-function setGroup!(run::Vector{Sample},
-                   selection::Vector{Int},
-                   group::AbstractString)
+function setGroup!(run::Vector{Sample};
+                   selection=eachindex(run),
+                   group::AbstractString="sample")
     for i in selection
         run[i].group = group
     end
 end
 function setGroup!(run::Vector{Sample},
-                   prefix::AbstractString,
-                   group::AbstractString)
+                   prefixes::Vector{String})
     snames = getSnames(run)
-    selection = findall(contains(prefix),snames)
-    setGroup!(run,selection,group)
-end
-function setGroup!(run::Vector{Sample},
-                   refmats::AbstractDict)
-    if length(refmats)>0
-        for (group,prefix) in refmats
-            setGroup!(run,prefix,group)
-        end
-    else
-        setGroup!(run,"sample")
-    end
-end
-function setGroup!(run::Vector{Sample},
-                   group::AbstractString)
-    for sample in run
-        sample.group = group
+    for prefix in prefixes
+        setGroup!(run;
+                  selection=findall(s -> contains(s,prefix), snames),
+                  group=prefix)
     end
 end
 export setGroup!

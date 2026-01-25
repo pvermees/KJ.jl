@@ -3,7 +3,7 @@ function Gmethod(name::String;
                  P::Pairing=Pairing(ion=default_ions(name).P),
                  D::Pairing=Pairing(ion=default_ions(name).D),
                  d::Pairing=Pairing(ion=default_ions(name).d),
-                 bias::AbstractDict=Dict{String,Calibration}(),
+                 bias::AbstractDict=Dict(),
                  standards::AbstractSet=Set{String}(),
                  nblank::Int=2,
                  ndrift::Int=2,

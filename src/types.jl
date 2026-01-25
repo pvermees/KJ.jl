@@ -51,9 +51,8 @@ end
 export Interference
 
 mutable struct REEInterference <: AbstractInterference
-    proxychannel::String
-    numchannel::String
-    denchannel::String
+    proxy::String
+    bias_key::String
 end
 export REEInterference
 
@@ -65,12 +64,22 @@ mutable struct Pairing
 end
 export Pairing
 
+abstract type AbstractCalibration end
+export AbstractCalibration
+
 mutable struct Calibration
     num::NamedTuple{(:ion,:channel),Tuple{String,String}}
     den::NamedTuple{(:ion,:channel),Tuple{String,String}}
     standards::Set{String}
 end
 export Calibration
+
+mutable struct REECalibration
+    num::String
+    den::String
+    standards::Set{String}
+end
+export REECalibration
 
 abstract type AbstractAnchor end
 export AbstractAnchor
@@ -95,7 +104,7 @@ mutable struct Gmethod <: KJmethod
     P::Pairing
     D::Pairing
     d::Pairing
-    bias::Dict{String,Calibration}
+    bias::Dict
     standards::Set{String}
     nblank::Int
     ndrift::Int

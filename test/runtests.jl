@@ -119,16 +119,14 @@ function methodtest()
                      D=Pairing(ion="Hf176",channel="Hf176 -> 258"),
                      d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260"),
                      standards=Set(["Hog"]))
+
     Lu176_interference = Interference(ion="Lu176",proxy="Lu175",channel="Lu175 -> 257")
     Yb176_interference = Interference(ion="Yb176",proxy="Yb172",channel="Yb172 -> 254")
-    Lu_bias = Calibration(num=(ion="Lu176",channel="Lu176 -> 176"),
-                          den=(ion="Lu175",channel="Lu175 -> 175"),
-                          standards=Set(["Lu_standard"]))
     Hf_bias = Calibration(num=(ion="Hf177",channel="Hf177 -> 259"),
                           den=(ion="Hf178",channel="Hf178 -> 260"),
                           standards=Set(["NIST612p"]))
     method.D.interferences = Set([Lu176_interference, Yb176_interference])
-    method.bias = Dict("Lu" => Lu_bias, "Hf" => Hf_bias)
+    method.bias = Dict("Hf" => Hf_bias)
 
     @test method.D.proxy == "Hf176"
 
@@ -142,25 +140,29 @@ function methodtest()
                      d=Pairing(ion="Os188",proxy="Os189",channel="Os189 -> 253"),
                      standards=Set(["QMoly"]))
     Re187_interference = Interference(ion="Re187",proxy="Re185",channel="Re185 -> 249")
-    TmO_interference = REEInterference(proxychannel="Tm169 -> 185",
-                                       numchannel="Ir191 -> 191",
-                                       denchannel="Lu175 -> 191")
+    TmO_interference = REEInterference(proxy="Tm169 -> 185",bias_key="TmO")
     Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
                           den=(ion="Re185",channel="Re185 -> 249"),
                           standards=Set(["Nist_massbias"]))
     Os_bias = Calibration(num=(ion="Os188",channel="Os188 -> 252"),
                           den=(ion="Os189",channel="Os189 -> 253"),
-                          standards=Set(["Nist_REEint"]))
+                          standards=Set(["Nis3"]))
+    TmO_bias = REECalibration(num="Ir191 -> 191",
+                              den="Lu175 -> 191",
+                              standards=Set(["Nist_REEint"]))
     method.P.interferences = Set([TmO_interference])
     method.D.interferences = Set([Re187_interference])
-    method.bias = Dict("Re" => Re_bias, "Os" => Os_bias)
+    method.bias = Dict("Re" => Re_bias, "Os" => Os_bias, "TmO" => TmO_bias)
 
 end
 
-function refmattest(verbose=false)
-    myrun = loadtest()
-    refmats = Dict("BP" => "BP")
-    setGroup!(myrun,refmats)
+function grouptest(verbose=false)
+    myrun = loadtest(dname="data/Re-Os")
+    groups=Dict("Nis3" => "NiS-3",
+                "Nist_massbias" => "NIST610",
+                "Nist_REEint" => "NIST610",
+                "QMoly" => "QMolyHill")
+    setGroup!(myrun,collect(keys(groups)))
     if verbose
         summarise(myrun;verbose=true,n=5)
     end
@@ -705,7 +707,7 @@ Plots.closeall()
 @testset "outlier detection" begin outliertest_synthetic() end
 @testset "outlier detection" begin outliertest_sample() end
 @testset "create method" begin methodtest() end
-# @testset "assign refmats" begin refmattest(true) end
+@testset "assign groups" begin grouptest(true) end
 # @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
 # @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
 # @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end

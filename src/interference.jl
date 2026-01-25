@@ -5,10 +5,9 @@ function Interference(;ion::AbstractString="",
     return Interference(ion,proxy,channel,bias_key)
 end
 
-function REEInterference(;proxychannel::AbstractString="",
-                          numchannel::AbstractString="",
-                          denchannel::AbstractString="")
-    return REEInterference(proxychannel,numchannel,denchannel)
+function REEInterference(;proxy::AbstractString="",
+                          bias_key::AbstractString="")
+    return REEInterference(proxy,bias_key)
 end
     
 function interference_correction!(run::Vector{Sample},
