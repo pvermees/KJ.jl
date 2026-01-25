@@ -1,7 +1,8 @@
-using Test, KJ, Dates, DataFrames, Infiltrator
-import Plots, Distributions, CSV, Statistics,
-    Random, LinearAlgebra, Aqua
+using Test, KJ, Dates, DataFrames, Infiltrator, Plots, UnicodePlots
+import Distributions, CSV, Statistics, Random, LinearAlgebra, Aqua
 include("synthetic.jl")
+
+unicodeplots()
 
 function loadtest(;dname="data/Lu-Hf",
                   verbose=false)
@@ -667,13 +668,13 @@ end
 Plots.closeall()
 
 @testset "load" begin loadtest(;verbose=true) end
-# @testset "plot raw data" begin plottest(2) end
+@testset "plot raw data" begin plottest(2) end
 # @testset "set selection window" begin windowtest() end
 # @testset "set method and blanks" begin blanktest() end
 # @testset "moving median test" begin mmediantest() end
 # @testset "outlier detection" begin outliertest_synthetic() end
 # @testset "outlier detection" begin outliertest_sample() end
-@testset "create method" begin methodtest() end
+# @testset "create method" begin methodtest() end
 # @testset "assign refmats" begin refmattest(true) end
 # @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
 # @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end

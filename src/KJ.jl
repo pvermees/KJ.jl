@@ -5,9 +5,9 @@ A Julia package to process LA-ICP-MS data
 """
 module KJ
 
-using Infiltrator, DataFrames, Dates, LinearAlgebra, Printf
+using Infiltrator, DataFrames, Dates, LinearAlgebra, Printf, Plots
 
-import Plots, Statistics, Distributions, Optim, CSV, ForwardDiff, FiniteDiff
+import Statistics, Distributions, Optim, CSV, ForwardDiff, FiniteDiff
 
 include("init.jl")
 include("errors.jl")
@@ -20,11 +20,12 @@ include("KJfit.jl")
 include("io.jl")
 include("accessors.jl")
 include("toolbox.jl")
+include("windows.jl")
+include("plots.jl")
 # include("outliers.jl")
 # include("MCD.jl")
 # include("blocks.jl")
 # include("anchors.jl")
-# include("windows.jl")
 # include("parser.jl")
 # include("crunch.jl")
 # include("blank.jl")
@@ -35,7 +36,6 @@ include("toolbox.jl")
 # include("atomic.jl")
 # include("concentrations.jl")
 # include("averat.jl")
-# include("plots.jl")
 # include("internochron.jl")
 # include("internoplot.jl")
 include("TUImessages.jl")
