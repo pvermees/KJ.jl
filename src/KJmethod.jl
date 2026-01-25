@@ -1,17 +1,16 @@
 function Gmethod(name::String;
-                 ions::NamedTuple{(:P,:D,:d)}=default_ions(name),
-                 channels::NamedTuple{(:P,:D,:d)}=ions,
-                 proxies::NamedTuple{(:P,:D,:d)}=channels2proxies(channels),
-                 standards::AbstractVector=String[],
-                 bias::AbstractDict=Dict{String,Vector{String}}(),
-                 fractionation::Fractionation=Fractionation(ions,proxies,channels,Set(standards),bias),
-                 interference::Interference=Interference(),
+                 groups::AbstractDict=Dict{String,String}(),
+                 P::Pairing=Pairing(ion=default_ions(name).P),
+                 D::Pairing=Pairing(ion=default_ions(name).D),
+                 d::Pairing=Pairing(ion=default_ions(name).d),
+                 bias::AbstractDict=Dict{String,Calibration}(),
+                 standards::AbstractSet=Set{String}(),
                  nblank::Int=2,
                  ndrift::Int=2,
                  ndown::Int=1,
                  nbias::Int=1,
-                 PAcutoff::Union{Nothing,Float64}=nothing)
-    return Gmethod(name,fractionation,interference,
+                 PAcutoff::Float64=Inf)
+    return Gmethod(name,groups,P,D,d,bias,standards,
                    nblank,ndrift,ndown,nbias,PAcutoff)
 end
 

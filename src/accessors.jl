@@ -201,9 +201,6 @@ function getInternal(mineral::AbstractString,
 end
 export getInternal
 
-function getStandards(fractionation::Fractionation)
-    return fractionation.standards
-end
 function getStandards(bias::AbstractDict)
     out = String[]
     for standards in values(bias)

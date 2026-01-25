@@ -103,7 +103,6 @@ end
 
 function readAgilent(fname::AbstractString,
                      head2name::Bool=true)
-
     lines = split(readuntil(fname, "Time [Sec]"), "\n")
     snamestring = head2name ? lines[1] : fname
     sname = split(split(snamestring,r"[\\/]")[end],".")[1]
@@ -114,7 +113,6 @@ function readAgilent(fname::AbstractString,
     header = 4
     skipto = 5
     footerskip = 3
-    
     return sname, datetime, header, skipto, footerskip
     
 end
