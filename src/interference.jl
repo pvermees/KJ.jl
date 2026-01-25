@@ -1,27 +1,37 @@
-function Interference(;ions::Dict{String,Vector{String}}=Dict{String,Vector{String}}(),
+function Interference(;ions::Dict{String,Set{String}}=Dict{String,Set{String}}(),
                        proxies::Dict{String,String}=Dict{String,String}(),
                        channels::Dict{String,String}=Dict{String,String}(),
-                       bias::Dict{String,Vector{String}}=Dict{String,Vector{String}}())
+                       bias::Dict{String,Set{String}}=Dict{String,Set{String}}())
     return Interference(ions,proxies,channels,bias)
 end
     
 function interference_correction!(run::Vector{Sample},
-                                  method::KJmethod)
+                                  method::KJmethod;
+                                  bias::AbstractDataFrame=init_bias(method))
     for samp in run
-        interference_correction!(samp,method)
+        interference_correction!(samp,method;bias=bias)
     end
 end
 export interference_correction!
 
 function interference_correction!(samp::Sample,
-                                  method::KJmethod)
-    for (target,interferences) in method.interferences
-        i = findfirst(==(target),unpack(method.proxies))
-        target_channel = unpack(method.channels)[i]
-        for interference in interferences
-            ratio = iratio(interference.ion,interference.proxy)
-            correction = ratio .* samp.dat[:,interference.channel]
-            samp.dat[:,target_channel] .-= correction
+                                  method::Gmethod;
+                                  bias::AbstractDataFrame=init_bias(method))
+    F = method.fractionation
+    I = method.interference
+    for (key,proxy) in pairs(F.proxies)
+        if proxy in keys(I.ions)
+            target_channel = F.channels[key]
+            interferences = I.ions[proxy]
+            for interference_ion in interferences
+                interference_element = channel2element(interference_ion)
+                interference_proxy = I.proxies[interference_ion]
+                interference_channel = I.channels[interference_proxy]
+                mf = polyFac(bias[:,interference_element],samp.dat.t)
+                ratio = mf .* iratio(interference_ion,interference_proxy)
+                correction = ratio .* samp.dat[:,interference_channel]
+                samp.dat[:,target_channel] .-= correction
+            end
         end
     end
 end
