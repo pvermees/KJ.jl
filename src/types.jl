@@ -46,14 +46,16 @@ mutable struct Interference <: AbstractInterference
     ion::String
     proxy::String
     channel::String
-    standards::Set{String}
+    bias_key::String
 end
+export Interference
 
 mutable struct REEInterference <: AbstractInterference
     proxychannel::String
     numchannel::String
     denchannel::String
 end
+export REEInterference
 
 mutable struct Pairing
     ion::String

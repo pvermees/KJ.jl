@@ -1,8 +1,14 @@
-function Interference(;ions::Dict{String,Set{String}}=Dict{String,Set{String}}(),
-                       proxies::Dict{String,String}=Dict{String,String}(),
-                       channels::Dict{String,String}=Dict{String,String}(),
-                       bias::Dict{String,Set{String}}=Dict{String,Set{String}}())
-    return Interference(ions,proxies,channels,bias)
+function Interference(;ion::AbstractString="",
+                       proxy::AbstractString="",
+                       channel::AbstractString="",
+                       bias_key::AbstractString=channel2element(ion))
+    return Interference(ion,proxy,channel,bias_key)
+end
+
+function REEInterference(;proxychannel::AbstractString="",
+                          numchannel::AbstractString="",
+                          denchannel::AbstractString="")
+    return REEInterference(proxychannel,numchannel,denchannel)
 end
     
 function interference_correction!(run::Vector{Sample},

@@ -1,8 +1,9 @@
-using Test, KJ, Dates, DataFrames, Infiltrator, Plots, UnicodePlots
+using Test, KJ, Dates, DataFrames, Infiltrator, Plots
 import Distributions, CSV, Statistics, Random, LinearAlgebra, Aqua
-include("synthetic.jl")
 
-unicodeplots()
+using UnicodePlots; unicodeplots()
+
+include("synthetic.jl")
 
 function loadtest(;dname="data/Lu-Hf",
                   verbose=false)
@@ -110,21 +111,50 @@ function outliertest_sample(show=true)
 end
 
 function methodtest()
-    interferences = Interference(ions = Dict("Hf176" => Set(["Lu176","Yb176"])),
-                                 proxies = Dict("Lu176" => "Lu175","Yb176" => "Yb172"),
-                                 channels = Dict("Lu175" => "Lu175 -> 257","Yb172" => "Yb172 -> 254"),
-                                 bias = Dict("Lu175" => Set(["Lu_standard"]), 
-                                             "Yb172" => Set(["REE_standard"])))
+
     method = Gmethod("Lu-Hf";
-                     groups=Dict("Lu_standard" => "some_Lu_standard",
-                                 "REE_standard" => "some_REE_standard",
-                                 "GLASS" => "NIST612",
-                                 "Hog" => "Hogsbo"),
-                     channels=(P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260"),
-                     standards=Set(["Hog"]),
-                     bias=Dict("Hf" => Set(["GLASS"])),
-                     interference=interferences)
-    @test method.fractionation.proxies.d == "Hf178"
+                     groups=Dict("hogsbo" => "Hogsbo",
+                                 "NIST612p" => "NIST612"),
+                     P=Pairing(ion="Lu176",proxy="Lu175",channel="Lu175 -> 175"),
+                     D=Pairing(ion="Hf176",channel="Hf176 -> 258"),
+                     d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260"),
+                     standards=Set(["Hog"]))
+    Lu176_interference = Interference(ion="Lu176",proxy="Lu175",channel="Lu175 -> 257")
+    Yb176_interference = Interference(ion="Yb176",proxy="Yb172",channel="Yb172 -> 254")
+    Lu_bias = Calibration(num=(ion="Lu176",channel="Lu176 -> 176"),
+                          den=(ion="Lu175",channel="Lu175 -> 175"),
+                          standards=Set(["Lu_standard"]))
+    Hf_bias = Calibration(num=(ion="Hf177",channel="Hf177 -> 259"),
+                          den=(ion="Hf178",channel="Hf178 -> 260"),
+                          standards=Set(["NIST612p"]))
+    method.D.interferences = Set([Lu176_interference, Yb176_interference])
+    method.bias = Dict("Lu" => Lu_bias, "Hf" => Hf_bias)
+
+    @test method.D.proxy == "Hf176"
+
+    method = Gmethod("Re-Os";
+                     groups=Dict("Nis3" => "NiS-3",
+                                 "Nist_massbias" => "NIST610",
+                                 "Nist_REEint" => "NIST610",
+                                 "QMoly" => "QMolyHill"),
+                     P=Pairing(ion="Re187",proxy="Re185",channel="Re185 -> 185"),
+                     D=Pairing(ion="Os187",channel="Os187 -> 251"),
+                     d=Pairing(ion="Os188",proxy="Os189",channel="Os189 -> 253"),
+                     standards=Set(["QMoly"]))
+    Re187_interference = Interference(ion="Re187",proxy="Re185",channel="Re185 -> 249")
+    TmO_interference = REEInterference(proxychannel="Tm169 -> 185",
+                                       numchannel="Ir191 -> 191",
+                                       denchannel="Lu175 -> 191")
+    Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
+                          den=(ion="Re185",channel="Re185 -> 249"),
+                          standards=Set(["Nist_massbias"]))
+    Os_bias = Calibration(num=(ion="Os188",channel="Os188 -> 252"),
+                          den=(ion="Os189",channel="Os189 -> 253"),
+                          standards=Set(["Nist_REEint"]))
+    method.P.interferences = Set([TmO_interference])
+    method.D.interferences = Set([Re187_interference])
+    method.bias = Dict("Re" => Re_bias, "Os" => Os_bias)
+
 end
 
 function refmattest(verbose=false)
@@ -669,12 +699,12 @@ Plots.closeall()
 
 @testset "load" begin loadtest(;verbose=true) end
 @testset "plot raw data" begin plottest(2) end
-# @testset "set selection window" begin windowtest() end
-# @testset "set method and blanks" begin blanktest() end
-# @testset "moving median test" begin mmediantest() end
-# @testset "outlier detection" begin outliertest_synthetic() end
-# @testset "outlier detection" begin outliertest_sample() end
-# @testset "create method" begin methodtest() end
+@testset "set selection window" begin windowtest() end
+@testset "set method and blanks" begin blanktest() end
+@testset "moving median test" begin mmediantest() end
+@testset "outlier detection" begin outliertest_synthetic() end
+@testset "outlier detection" begin outliertest_sample() end
+@testset "create method" begin methodtest() end
 # @testset "assign refmats" begin refmattest(true) end
 # @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
 # @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
