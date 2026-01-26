@@ -5,15 +5,14 @@ function fractionation!(fit::Gfit,
 
     # extract the grouped data for the SS function from the run
     cruncher_groups = Dict()
-    for standard in method.fractionation.standards
+    for group in method.standards
+        standard = method.groups[group]
         anchor = getAnchor(method.name,standard)
-        selection = group2selection(run,standard)
+        selection = group2selection(run,group)
         ns = length(selection)
         crunchers = Vector{NamedTuple}(undef,ns)
         for i in eachindex(selection)
-            crunchers[i] = Cruncher(run[selection[i]],
-                                    method.fractionation,
-                                    fit.blank)
+            crunchers[i] = Cruncher(run[selection[i]],method,fit)
         end
         cruncher_groups[standard] = (anchor=anchor,crunchers=crunchers)
     end
@@ -23,7 +22,7 @@ function fractionation!(fit::Gfit,
     if (method.ndown>0)
         init = vcat(init,fill(0.0,method.ndown))
     end
-    if !isnothing(method.PAcutoff)
+    if isfinite(method.PAcutoff)
         init = vcat(init,fill(0.0,method.ndrift))
     end
 

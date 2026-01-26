@@ -3,6 +3,8 @@ import Distributions, CSV, Statistics, Random, LinearAlgebra, Aqua
 
 include("synthetic.jl")
 
+# using UnicodePlots; unicodeplots()
+
 function loadtest(;dname="data/Lu-Hf",
                   verbose=false)
     myrun = load(dname;format="Agilent")
@@ -175,9 +177,8 @@ end
 
 function getmethod(name::AbstractString,
                    groups::AbstractDict)
-    standards = Set(collect(keys(groups)))
     if name == "U-Pb"
-        return Gmethod(name;standards=standards)
+        return Gmethod(name=name,groups=groups)
     end
     ndrift = 2
     ndown = 1
@@ -186,7 +187,7 @@ function getmethod(name::AbstractString,
         D = Pairing(ion="Hf176",channel="Hf176 -> 258")
         d = Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260")
     elseif name=="Rb-Sr"
-        P = Pairing(ion="Rb87",proxy="Rb85",channel="Rb5 -> 85")
+        P = Pairing(ion="Rb87",proxy="Rb85",channel="Rb85 -> 85")
         D = Pairing(ion="Sr87",channel="Sr87 -> 103")
         d = Pairing(ion="Sr86",proxy="Sr88",channel="Sr88 -> 104")
     elseif name=="K-Ca"
@@ -271,12 +272,13 @@ function partest(parname,paroffsetfact)
                             drift=[drift,0.0],
                             down=[0.0,down])
         plotFitted!(p,samp,method,adjusted_fit;
-                    den=method.fractionation.channels.D,
+                    den=method.D.channel,
                     transformation="log",
                     offset=offset,
                     linecolor="red")
     end
     @test p isa Plots.Plot
+    display(p)
 end
 
 function driftest()
@@ -293,18 +295,18 @@ function processsettings(option="Lu-Hf")
     refmats = nothing
     snum = 1
     if option == "Lu-Hf"
-        refmats =  Dict("BP" => "BP")
+        refmats =  Dict("BP -" => "BP")
     elseif option == "Rb-Sr"
-        refmats = Dict("MDC" => "MDC -")
+        refmats = Dict("MDC -" => "MDC")
         snum = 4
     elseif option == "K-Ca"
-        refmats = Dict("MDC" => "MDC_")
+        refmats = Dict("MDC_" => "MDC")
         snum = 1 # 1, 2, 5, 6
     elseif option == "U-Pb"
         head2name = false
-        refmats = Dict("Plesovice" => "STDCZ",
+        refmats = Dict("STDCZ" => "Plesovice",
                        "91500" => "91500")
-        snum = 3
+        snum = 7
     end
     method = getmethod(option,refmats)
     return (dname, head2name, method, refmats, snum)
@@ -316,7 +318,7 @@ function processtest(option="Lu-Hf";
                      transformation="log")
     dname, head2name, method, refmats, snum = processsettings(option)
     myrun = load(dname;format="Agilent",head2name=head2name)
-    setGroup!(myrun,refmats)
+    setGroup!(myrun,collect(keys(refmats)))
     fit = process!(myrun,method;verbose=verbose)
     if verbose
         println("drift=",fit.drift,", down=",fit.down)
@@ -324,8 +326,9 @@ function processtest(option="Lu-Hf";
     if show
         p = KJ.plot(myrun[snum],method;fit=fit,
                     transformation=transformation,
-                    den=method.fractionation.channels.D)
-        @test display(p) != NaN
+                    den=method.D.channel)
+        @test p isa Plots.Plot
+        display(p)
     end
     return myrun, method, fit
 end
@@ -717,14 +720,14 @@ Plots.closeall()
 @testset "create method" begin methodtest() end
 @testset "assign groups" begin grouptest(true) end
 @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
-# @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
-# @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
-# @testset "predict drift" begin driftest() end
-# @testset "predict down" begin downtest() end
-# @testset "Lu-Hf" begin processtest("Lu-Hf") end
-# @testset "Rb-Sr" begin processtest("Rb-Sr") end
-# @testset "K-Ca" begin processtest("K-Ca") end
-# @testset "U-Pb" begin processtest("U-Pb") end
+@testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
+@testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
+@testset "predict drift" begin driftest() end
+@testset "predict down" begin downtest() end
+@testset "Lu-Hf" begin processtest("Lu-Hf") end
+@testset "Rb-Sr" begin processtest("Rb-Sr") end
+@testset "K-Ca" begin processtest("K-Ca") end
+@testset "U-Pb" begin processtest("U-Pb") end
 # @testset "hist" begin histest() end
 # @testset "PA test" begin PAtest() end
 # @testset "atomic test" begin atomictest("Rb-Sr") end

@@ -59,7 +59,7 @@ export REEInterference
 @kwdef mutable struct Pairing
     ion::String = ""
     proxy::String = ion
-    channel::String = channel
+    channel::String = proxy
     interferences::Set = Set{AbstractInterference}()
 end
 export Pairing
