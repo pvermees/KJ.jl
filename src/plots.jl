@@ -155,8 +155,13 @@ end
 
 function generic_to_specific_pred_names!(pred::AbstractDataFrame,
                                          method::Gmethod)
-    channels = method.fractionation.channels
-    rename!(pred, [k => channels[k] for k in propertynames(pred) if haskey(channels, k)])
+    renamer = Dict{Symbol,String}()
+    for field in (:P,:D,:d)
+        if field in propertynames(pred)
+            renamer[field] = getfield(method,field).channel
+        end
+    end
+    rename!(pred,renamer)
 end
 function generic_to_specific_pred_names!(pred::AbstractDataFrame,
                                          method::Cmethod)

@@ -105,7 +105,7 @@ export KJmethod
     D::Pairing = Pairing(ion=default_ions(name).D)
     d::Pairing = Pairing(ion=default_ions(name).d)
     bias::Dict = Dict{String,Calibration}()
-    standards::Set{String} = Set{String}()
+    standards::Set{String} = Set(collect(keys(groups)))
     nblank::Int = 2
     ndrift::Int = 2
     ndown::Int = 1

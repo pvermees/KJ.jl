@@ -171,7 +171,7 @@ end
 
 function getmethod(name::AbstractString,
                    groups::AbstractDict)
-    standards = Set(collect(values(groups)))
+    standards = Set(collect(keys(groups)))
     if name == "U-Pb"
         return Gmethod(name;standards=standards)
     end
@@ -196,7 +196,8 @@ function getmethod(name::AbstractString,
         D = Pairing()
         d = Pairing()
     end
-    return Gmethod(name=name,P=P,D=D,d=d,standards=standards,
+    return Gmethod(name=name,groups=groups,
+                   P=P,D=D,d=d,
                    ndrift=ndrift,ndown=ndown)
 end
 

@@ -1,19 +1,17 @@
 function predict(samp::Sample,
                  method::Gmethod,
                  fit::Gfit)
-    if samp.group in getStandards(method.fractionation)
-        a = getAnchor(method.name,samp.group)
-        c = Cruncher(samp,method.fractionation,fit.blank)
-        ft, FT = ft_FT(fit,method.PAcutoff;c...)
+    if samp.group in method.standards
+        standard = method.groups[samp.group]
+        a = getAnchor(method.name,standard)
+        c = Cruncher(samp,method,fit.blank)
+        ft, FT = ft_FT(fit;PAcutoff=method.PAcutoff,c...)
         return predict(a,ft,FT;c...)
     end
-    if samp.group in getStandards(method.fractionation.bias)
-        p = bias_prep(method.fractionation)
-    elseif samp.group in getStandards(method.interference.bias)
-        target_channel, interfering_ion = infer_interference(method,samp.group)
-        p = bias_prep(method.interference,target_channel,interfering_ion)
-    else
-        KJerror("notStandard")
+    for (element,calibration) in method.bias
+        if samp.group in calibration.standards
+            # TODO
+        end
     end
     cg = bias_cruncher_groups_helper([samp],method.name,
                                      fit.blank,[samp.group],
@@ -137,17 +135,15 @@ function predict(samp::Sample,
 end
 export predict
 
-function ft_FT(f::Gfit,
-               PAcutoff::Union{Nothing,AbstractFloat};
+function ft_FT(f::Gfit;
+               PAcutoff::AbstractFloat=Inf,
                pmb::AbstractVector,
                t::AbstractVector,
                T::AbstractVector,
                other...)
     ft = polyFac(f.drift,t)
-    if !isnothing(PAcutoff)
-        analog = pmb .> PAcutoff
-        ft[analog] = polyFac(f.adrift,t)[analog]
-    end
+    analog = pmb .> PAcutoff
+    ft[analog] = polyFac(f.adrift,t)[analog]
     FT = polyFac(f.down,T)
     return ft, FT
 end

@@ -110,20 +110,19 @@ function par2fit(par::AbstractVector,
 end
 
 function Cruncher(samp::Sample,
-                  fractionation::Fractionation,
+                  method::Gmethod,
                   blank::AbstractDataFrame)
 
     dat = swinData(samp)
     
-    ch = fractionation.channels
-    pm = dat[:,ch.P]
-    Dom = dat[:,ch.D]
-    bom = dat[:,ch.d]
+    pm = dat[:,method.P.channel]
+    Dom = dat[:,method.D.channel]
+    bom = dat[:,method.d.channel]
 
     t = dat.t
-    bpt = polyVal(blank[:,ch.P],t)
-    bDot = polyVal(blank[:,ch.D],t)
-    bbot = polyVal(blank[:,ch.d],t)
+    bpt = polyVal(blank[:,method.P.channel],t)
+    bDot = polyVal(blank[:,method.D.channel],t)
+    bbot = polyVal(blank[:,method.d.channel],t)
 
     pmb = pm - bpt
     Domb = Dom - bDot
@@ -138,8 +137,7 @@ function Cruncher(samp::Sample,
     sPd = covmat[1,3]
     sDd = covmat[2,3]
     
-    bd = iratio(fractionation.proxies.d,
-                fractionation.ions.d)
+    bd = iratio(method.d.proxy,method.d.ion)
 
     t = dat.t
     T = dat.T
