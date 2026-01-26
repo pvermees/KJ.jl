@@ -1,15 +1,3 @@
-function Interference(;ion::AbstractString="",
-                       proxy::AbstractString="",
-                       channel::AbstractString="",
-                       bias_key::AbstractString=channel2element(ion))
-    return Interference(ion,proxy,channel,bias_key)
-end
-
-function REEInterference(;proxy::AbstractString="",
-                          bias_key::AbstractString="")
-    return REEInterference(proxy,bias_key)
-end
-    
 function interference_correction!(run::Vector{Sample},
                                   method::KJmethod;
                                   bias::AbstractDataFrame=init_bias(method))

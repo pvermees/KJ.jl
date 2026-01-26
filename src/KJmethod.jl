@@ -1,19 +1,3 @@
-function Gmethod(name::String;
-                 groups::AbstractDict=Dict{String,String}(),
-                 P::Pairing=Pairing(ion=default_ions(name).P),
-                 D::Pairing=Pairing(ion=default_ions(name).D),
-                 d::Pairing=Pairing(ion=default_ions(name).d),
-                 bias::AbstractDict=Dict(),
-                 standards::AbstractSet=Set{String}(),
-                 nblank::Int=2,
-                 ndrift::Int=2,
-                 ndown::Int=1,
-                 nbias::Int=1,
-                 PAcutoff::Float64=Inf)
-    return Gmethod(name,groups,P,D,d,bias,standards,
-                   nblank,ndrift,ndown,nbias,PAcutoff)
-end
-
 function default_ions(name)
     m = get(_KJ["methods"],name)
     return (P=String(m.P),D=String(m.D),d=String(m.d))

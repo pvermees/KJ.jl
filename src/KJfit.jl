@@ -8,11 +8,12 @@ end
 
 function init_bias(method::Gmethod)
     colnames = Set()
-    for proxy in values(method.fractionation.ions)
-        push!(colnames,channel2element(proxy))
-    end
-    for proxy in values(method.interference.proxies)
-        push!(colnames,channel2element(proxy))
+    for isotope in (method.P,method.D,method.d)
+        for interference in isotope.interferences
+            if interference.bias_key in keys(method.bias)
+                push!(colnames,channel2element(isotope.proxy))
+            end
+        end
     end
     data = zeros(method.nbias,length(colnames))
     return DataFrame(data,collect(colnames))

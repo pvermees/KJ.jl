@@ -42,42 +42,42 @@ end
 abstract type AbstractInterference end
 export AbstractInterference
 
-mutable struct Interference <: AbstractInterference
-    ion::String
-    proxy::String
-    channel::String
-    bias_key::String
+@kwdef mutable struct Interference <: AbstractInterference
+    ion::String = ""
+    proxy::String = ""
+    channel::String = ""
+    bias_key::String = ""
 end
 export Interference
 
-mutable struct REEInterference <: AbstractInterference
-    proxy::String
-    bias_key::String
+@kwdef mutable struct REEInterference <: AbstractInterference
+    proxy::String = ""
+    bias_key::String = ""
 end
 export REEInterference
 
-mutable struct Pairing
-    ion::String
-    proxy::String
-    channel::String
-    interferences::Set{AbstractInterference}
+@kwdef mutable struct Pairing
+    ion::String = ""
+    proxy::String = ion
+    channel::String = channel
+    interferences::Set = Set{AbstractInterference}()
 end
 export Pairing
 
 abstract type AbstractCalibration end
 export AbstractCalibration
 
-mutable struct Calibration
-    num::NamedTuple{(:ion,:channel),Tuple{String,String}}
-    den::NamedTuple{(:ion,:channel),Tuple{String,String}}
-    standards::Set{String}
+@kwdef mutable struct Calibration
+    num::NamedTuple{(:ion,:channel),Tuple{String,String}} = (ion="",channel="")
+    den::NamedTuple{(:ion,:channel),Tuple{String,String}} = (ion="",channel="")
+    standards::Set{String} = Set{String}()
 end
 export Calibration
 
-mutable struct REECalibration
-    num::String
-    den::String
-    standards::Set{String}
+@kwdef mutable struct REECalibration
+    num::String = ""
+    den::String = ""
+    standards::Set{String} = Set{String}()
 end
 export REECalibration
 
@@ -98,19 +98,19 @@ end
 abstract type KJmethod end
 export KJmethod
 
-mutable struct Gmethod <: KJmethod
-    name::String
-    groups::Dict{String,String}
-    P::Pairing
-    D::Pairing
-    d::Pairing
-    bias::Dict
-    standards::Set{String}
-    nblank::Int
-    ndrift::Int
-    ndown::Int
-    nbias::Int
-    PAcutoff::Float64
+@kwdef mutable struct Gmethod <: KJmethod
+    name::String = "U-Pb"
+    groups::Dict{String,String} = Dict{String,String}()
+    P::Pairing = Pairing(ion=default_ions(name).P)
+    D::Pairing = Pairing(ion=default_ions(name).D)
+    d::Pairing = Pairing(ion=default_ions(name).d)
+    bias::Dict = Dict{String,Calibration}()
+    standards::Set{String} = Set{String}()
+    nblank::Int = 2
+    ndrift::Int = 2
+    ndown::Int = 1
+    nbias::Int = 1
+    PAcutoff::Float64 = Inf
 end
 export Gmethod
 

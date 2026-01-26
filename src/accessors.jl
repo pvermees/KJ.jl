@@ -33,7 +33,7 @@ function getChannels(samp::Sample) :: AbstractVector
     return names(getSignals(samp))
 end
 function getChannels(method::Gmethod) :: AbstractVector
-    return collect(unpack(method.fractionation.channels))
+    return [method.P.channel;method.D.channel;method.d.channel]
 end
 function getChannels(method::Cmethod) :: AbstractVector
     return collect(string.(keys(method.elements)))

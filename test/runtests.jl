@@ -112,7 +112,7 @@ end
 
 function methodtest()
 
-    method = Gmethod("Lu-Hf";
+    method = Gmethod(name="Lu-Hf",
                      groups=Dict("hogsbo" => "Hogsbo",
                                  "NIST612p" => "NIST612"),
                      P=Pairing(ion="Lu176",proxy="Lu175",channel="Lu175 -> 175"),
@@ -130,7 +130,7 @@ function methodtest()
 
     @test method.D.proxy == "Hf176"
 
-    method = Gmethod("Re-Os";
+    method = Gmethod(name="Re-Os",
                      groups=Dict("Nis3" => "NiS-3",
                                  "Nist_massbias" => "NIST610",
                                  "Nist_REEint" => "NIST610",
@@ -170,30 +170,33 @@ function grouptest(verbose=false)
 end
 
 function getmethod(name::AbstractString,
-                   refmats::AbstractDict)
-    standards = collect(keys(refmats))
+                   groups::AbstractDict)
+    standards = Set(collect(values(groups)))
     if name == "U-Pb"
         return Gmethod(name;standards=standards)
     end
     ndrift = 2
     ndown = 1
-    p = nothing
-    c = nothing
     if name=="Lu-Hf"
-        p = (P="Lu175",D="Hf176",d="Hf178")
-        c = (P="Lu175 -> 175",D="Hf176 -> 258",d="Hf178 -> 260")
+        P = Pairing(ion="Lu176",proxy="Lu175",channel="Lu175 -> 175")
+        D = Pairing(ion="Hf176",channel="Hf176 -> 258")
+        d = Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260")
     elseif name=="Rb-Sr"
-        p = (P="Rb85",D="Sr87",d="Sr88")
-        c = (P="Rb85 -> 85",D="Sr87 -> 103",d="Sr88 -> 104")
+        P = Pairing(ion="Rb87",proxy="Rb85",channel="Rb5 -> 85")
+        D = Pairing(ion="Sr87",channel="Sr87 -> 103")
+        d = Pairing(ion="Sr86",proxy="Sr88",channel="Sr88 -> 104")
     elseif name=="K-Ca"
-        p = (P="K39",D="Ca40",d="Ca44")
-        c = (P="K39 -> 39",D="Ca40 -> 59",d="Ca44 -> 63")
+        P = Pairing(ion="K40",proxy="K39",channel="K39 -> 39")
+        D = Pairing(ion="Ca40",channel="Ca40 -> 59")
+        d = Pairing(ion="Ca44",channel="Ca44 -> 63")
         ndrift = 1
         ndown = 0
+    else
+        P = Pairing()
+        D = Pairing()
+        d = Pairing()
     end
-    return Gmethod(name;
-                   standards=standards,
-                   proxies=p,channels=c,
+    return Gmethod(name=name,P=P,D=D,d=d,standards=standards,
                    ndrift=ndrift,ndown=ndown)
 end
 
@@ -204,25 +207,24 @@ function predictsettings(option::AbstractString="Lu-Hf")
     down = nothing
     if option=="Lu-Hf"
         dname = "data/Lu-Hf"
-        refmats = Dict("BP" => "BP")
+        groups = Dict("BP" => "BP")
         drift = [4.22,0.0]
         down = [0.0,0.15]
     elseif option=="Rb-Sr"
         dname = "data/Rb-Sr"
-        refmats = Dict("MDC" => "MDC -")
+        groups = Dict("MDC" => "MDC")
         drift = [1.0,0.0]
         down = [0.0,0.14]
     elseif option=="K-Ca"
         dname = "data/K-Ca"
-        refmats = Dict("MDC" => "MDC_")
+        groups = Dict("MDC" => "MDC")
         drift = [100.0]
         down = [0.0]
     end
     myrun = loadtest(;dname=dname)
-    method = getmethod(option,refmats)
-    setGroup!(myrun,refmats)
+    method = getmethod(option,groups)
+    setGroup!(myrun,collect(keys(groups)))
     detect_outliers!(myrun;channels=getChannels(method))
-    method.PAcutoff = nothing
     fit = Gfit(method;drift=drift,down=down)
     return myrun, method, fit
 end
@@ -238,7 +240,7 @@ function predictest(option="Lu-Hf";
         return samp, method, fit
     else
         p, offset = KJ.plot(samp,method;fit=fit,
-                            den=method.fractionation.channels.D,
+                            den=method.D.channel,
                             transformation=transformation,
                             return_offset=true)
         @test display(p) != NaN
@@ -708,7 +710,7 @@ Plots.closeall()
 @testset "outlier detection" begin outliertest_sample() end
 @testset "create method" begin methodtest() end
 @testset "assign groups" begin grouptest(true) end
-# @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
+@testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
 # @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
 # @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
 # @testset "predict drift" begin driftest() end
