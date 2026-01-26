@@ -1,56 +1,68 @@
 function getP(a::IsochronAnchor,
               ft::AbstractVector,
-              FT::AbstractVector;
+              hT::AbstractVector;
               pmb::AbstractVector,
-              Dombi::AbstractVector,
-              bomb::AbstractVector,
+              Dmb::AbstractVector,
+              bmb::AbstractVector,
               vp::AbstractFloat,
               vD::AbstractFloat,
               vb::AbstractFloat,
               spD::AbstractFloat,
               spb::AbstractFloat,
               sDb::AbstractFloat,
+              mf::AbstractVector,
               bd::AbstractFloat,
+              Ip::AbstractVector,
+              ID::AbstractVector,
+              Ib::AbstractVector,
               other...)
     x0,y0,y1 = unpack(a)
-    return @. -((((Dombi*bd^2*vp-bd^2*pmb*spD)*x0*y0+(bd*pmb*spb-bd*bomb*vp)*x0)*y1+((Dombi*FT*bd^2*ft*spD-FT*bd^2*ft*pmb*vD)*x0^2+(bd^2*pmb*spD-Dombi*bd^2*vp)*x0)*y0^2+((-(Dombi*FT*bd*ft*spb)-FT*bd*bomb*ft*spD+2*FT*bd*ft*pmb*sDb)*x0^2+(bd*bomb*vp-bd*pmb*spb)*x0)*y0+(FT*bomb*ft*spb-FT*ft*pmb*vb)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spD*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spb*x0)*y1+(FT^2*bd^2*ft^2*vD*x0^2-2*FT*bd^2*ft*spD*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spb*x0-2*FT^2*bd*ft^2*sDb*x0^2)*y0+FT^2*ft^2*vb*x0^2))
+    return @. ((((ID-Dmb)*bd^2*mf^2*vp+(bd^2*mf^2*pmb-Ip*bd^2*mf^2)*spD)*x0*y0+((bd*bmb-Ib*bd)*mf*vp+(Ip*bd*mf-bd*mf*pmb)*spb)*x0)*y1+(((bd^2*ft*hT*mf^2*pmb-Ip*bd^2*ft*hT*mf^2)*vD+(ID-Dmb)*bd^2*ft*hT*mf^2*spD)*x0^2+((Dmb-ID)*bd^2*mf^2*vp+(Ip*bd^2*mf^2-bd^2*mf^2*pmb)*spD)*x0)*y0^2+(((Dmb-ID)*bd*ft*hT*mf*spb+(bd*bmb-Ib*bd)*ft*hT*mf*spD+(2*Ip*bd*ft*hT*mf-2*bd*ft*hT*mf*pmb)*sDb)*x0^2+((Ib*bd-bd*bmb)*mf*vp+(bd*mf*pmb-Ip*bd*mf)*spb)*x0)*y0+((ft*hT*pmb-Ip*ft*hT)*vb+(Ib-bmb)*ft*hT*spb)*x0^2)/(bd^2*mf^2*vp*y1^2+((2*bd^2*ft*hT*mf^2*spD*x0-2*bd^2*mf^2*vp)*y0-2*bd*ft*hT*mf*spb*x0)*y1+(bd^2*ft^2*hT^2*mf^2*vD*x0^2-2*bd^2*ft*hT*mf^2*spD*x0+bd^2*mf^2*vp)*y0^2+(2*bd*ft*hT*mf*spb*x0-2*bd*ft^2*hT^2*mf*sDb*x0^2)*y0+ft^2*hT^2*vb*x0^2)
 end
 export getP
 
 function getD(a::IsochronAnchor,
               ft::AbstractVector,
-              FT::AbstractVector;
+              hT::AbstractVector;
               pmb::AbstractVector,
-              Dombi::AbstractVector,
-              bomb::AbstractVector,
+              Dmb::AbstractVector,
+              bmb::AbstractVector,
               vp::AbstractFloat,
               vD::AbstractFloat,
               vb::AbstractFloat,
               spD::AbstractFloat,
               spb::AbstractFloat,
               sDb::AbstractFloat,
+              mf::AbstractVector,
               bd::AbstractFloat,
+              Ip::AbstractVector,
+              ID::AbstractVector,
+              Ib::AbstractVector,
               other...)
     x0,y0,y1 = unpack(a)
-    return @. ((Dombi*bd^2*vp-bd^2*pmb*spD)*y1^2+(((Dombi*FT*bd^2*ft*spD-FT*bd^2*ft*pmb*vD)*x0-2*Dombi*bd^2*vp+2*bd^2*pmb*spD)*y0+(-(2*Dombi*FT*bd*ft*spb)+FT*bd*bomb*ft*spD+FT*bd*ft*pmb*sDb)*x0)*y1+((FT*bd^2*ft*pmb*vD-Dombi*FT*bd^2*ft*spD)*x0+Dombi*bd^2*vp-bd^2*pmb*spD)*y0^2+((FT^2*bd*bomb*ft^2*vD-Dombi*FT^2*bd*ft^2*sDb)*x0^2+(2*Dombi*FT*bd*ft*spb-FT*bd*bomb*ft*spD-FT*bd*ft*pmb*sDb)*x0)*y0+(Dombi*FT^2*ft^2*vb-FT^2*bomb*ft^2*sDb)*x0^2)/(bd^2*vp*y1^2+((2*FT*bd^2*ft*spD*x0-2*bd^2*vp)*y0-2*FT*bd*ft*spb*x0)*y1+(FT^2*bd^2*ft^2*vD*x0^2-2*FT*bd^2*ft*spD*x0+bd^2*vp)*y0^2+(2*FT*bd*ft*spb*x0-2*FT^2*bd*ft^2*sDb*x0^2)*y0+FT^2*ft^2*vb*x0^2)
+    return @. -((((ID-Dmb)*bd^2*mf^2*vp+(bd^2*mf^2*pmb-Ip*bd^2*mf^2)*spD)*y1^2+((((bd^2*ft*hT*mf^2*pmb-Ip*bd^2*ft*hT*mf^2)*vD+(ID-Dmb)*bd^2*ft*hT*mf^2*spD)*x0+(2*Dmb-2*ID)*bd^2*mf^2*vp+(2*Ip*bd^2*mf^2-2*bd^2*mf^2*pmb)*spD)*y0+((2*Dmb-2*ID)*bd*ft*hT*mf*spb+(Ib*bd-bd*bmb)*ft*hT*mf*spD+(Ip*bd*ft*hT*mf-bd*ft*hT*mf*pmb)*sDb)*x0)*y1+(((Ip*bd^2*ft*hT*mf^2-bd^2*ft*hT*mf^2*pmb)*vD+(Dmb-ID)*bd^2*ft*hT*mf^2*spD)*x0+(ID-Dmb)*bd^2*mf^2*vp+(bd^2*mf^2*pmb-Ip*bd^2*mf^2)*spD)*y0^2+(((Ib*bd-bd*bmb)*ft^2*hT^2*mf*vD+(Dmb-ID)*bd*ft^2*hT^2*mf*sDb)*x0^2+((2*ID-2*Dmb)*bd*ft*hT*mf*spb+(bd*bmb-Ib*bd)*ft*hT*mf*spD+(bd*ft*hT*mf*pmb-Ip*bd*ft*hT*mf)*sDb)*x0)*y0+((ID-Dmb)*ft^2*hT^2*vb+(bmb-Ib)*ft^2*hT^2*sDb)*x0^2)/(bd^2*mf^2*vp*y1^2+((2*bd^2*ft*hT*mf^2*spD*x0-2*bd^2*mf^2*vp)*y0-2*bd*ft*hT*mf*spb*x0)*y1+(bd^2*ft^2*hT^2*mf^2*vD*x0^2-2*bd^2*ft*hT*mf^2*spD*x0+bd^2*mf^2*vp)*y0^2+(2*bd*ft*hT*mf*spb*x0-2*bd*ft^2*hT^2*mf*sDb*x0^2)*y0+ft^2*hT^2*vb*x0^2))
 end
 
 function getD(a::PointAnchor,
               ft::AbstractVector,
-              FT::AbstractVector;
+              hT::AbstractVector;
               pmb::AbstractVector,
-              Dombi::AbstractVector,
-              bomb::AbstractVector,
+              Dmb::AbstractVector,
+              bmb::AbstractVector,
               vp::AbstractFloat,
               vD::AbstractFloat,
               vb::AbstractFloat,
               spD::AbstractFloat,
               spb::AbstractFloat,
               sDb::AbstractFloat,
+              mf::AbstractVector,
               bd::AbstractFloat,
+              Ip::AbstractVector,
+              ID::AbstractVector,
+              Ib::AbstractVector,
               other...)
     x,y = unpack(a)
-    return @. (((bd*bomb*vD-Dombi*bd*sDb)*vp-bd*pmb*spb*vD+Dombi*bd*spD*spb-bd*bomb*spD^2+bd*pmb*sDb*spD)*y+((FT*ft*pmb*vD-Dombi*FT*ft*spD)*vb-FT*bomb*ft*spb*vD+Dombi*FT*ft*sDb*spb+FT*bomb*ft*sDb*spD-FT*ft*pmb*sDb^2)*x+(Dombi*vb-bomb*sDb)*vp-pmb*spD*vb-Dombi*spb^2+(bomb*spD+pmb*sDb)*spb)/((bd^2*vD*vp-bd^2*spD^2)*y^2+((2*FT*bd*ft*sDb*spD-2*FT*bd*ft*spb*vD)*x-2*bd*sDb*vp+2*bd*spD*spb)*y+(FT^2*ft^2*vD*vb-FT^2*ft^2*sDb^2)*x^2+(2*FT*ft*sDb*spb-2*FT*ft*spD*vb)*x+vb*vp-spb^2)
+    return @. ((((bd*bmb-Ib*bd)*mf*vD+(ID-Dmb)*bd*mf*sDb)*vp+(Ip*bd*mf-bd*mf*pmb)*spb*vD+(Dmb-ID)*bd*mf*spD*spb+(Ib*bd-bd*bmb)*mf*spD^2+(bd*mf*pmb-Ip*bd*mf)*sDb*spD)*y+(((ft*hT*pmb-Ip*ft*hT)*vD+(ID-Dmb)*ft*hT*spD)*vb+(Ib-bmb)*ft*hT*spb*vD+(Dmb-ID)*ft*hT*sDb*spb+(bmb-Ib)*ft*hT*sDb*spD+(Ip*ft*hT-ft*hT*pmb)*sDb^2)*x+((Dmb-ID)*vb+(Ib-bmb)*sDb)*vp+(Ip-pmb)*spD*vb+(ID-Dmb)*spb^2+((bmb-Ib)*spD+(pmb-Ip)*sDb)*spb)/((bd^2*mf^2*vD*vp-bd^2*mf^2*spD^2)*y^2+((2*bd*ft*hT*mf*sDb*spD-2*bd*ft*hT*mf*spb*vD)*x-2*bd*mf*sDb*vp+2*bd*mf*spD*spb)*y+(ft^2*hT^2*vD*vb-ft^2*hT^2*sDb^2)*x^2+(2*ft*hT*sDb*spb-2*ft*hT*spD*vb)*x+vb*vp-spb^2)
 end
 
 function getD(mf::AbstractVector,
@@ -66,41 +78,49 @@ end
 
 function mahalanobis(a::IsochronAnchor,
                      ft::AbstractVector,
-                     FT::AbstractVector,
-                     Po::AbstractVector,
-                     Do::AbstractVector;
+                     hT::AbstractVector,
+                     P::AbstractVector,
+                     D::AbstractVector;
                      pmb::AbstractVector,
-                     Dombi::AbstractVector,
-                     bomb::AbstractVector,
+                     Dmb::AbstractVector,
+                     bmb::AbstractVector,
                      vp::AbstractFloat,
                      vD::AbstractFloat,
                      vb::AbstractFloat,
                      spD::AbstractFloat,
                      spb::AbstractFloat,
                      sDb::AbstractFloat,
+                     mf::AbstractVector,
                      bd::AbstractFloat,
+                     Ip::AbstractVector,
+                     ID::AbstractVector,
+                     Ib::AbstractVector,
                      other...)
     x0,y0,y1 = unpack(a)
-    return @. (bomb-bd*((Po*(y1-y0))/x0+Do*y0))*(((vD*vp-spD^2)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(sDb*spD-spb*vD))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(Dombi-Do)*(((spD*spb-sDb*vp)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(pmb-FT*Po*ft)*(((sDb*spD-spb*vD)*(bomb-bd*((Po*(y1-y0))/x0+Do*y0)))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-FT*Po*ft)*(vD*vb-sDb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
+    return @. (-(bd*mf*((P*(y1-y0))/x0+D*y0))+bmb-Ib)*(((vD*vp-spD^2)*(-(bd*mf*((P*(y1-y0))/x0+D*y0))+bmb-Ib))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((-ID+Dmb-D)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-P*ft*hT-Ip)*(sDb*spD-spb*vD))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(-ID+Dmb-D)*(((spD*spb-sDb*vp)*(-(bd*mf*((P*(y1-y0))/x0+D*y0))+bmb-Ib))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((-ID+Dmb-D)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-P*ft*hT-Ip)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(pmb-P*ft*hT-Ip)*(((sDb*spD-spb*vD)*(-(bd*mf*((P*(y1-y0))/x0+D*y0))+bmb-Ib))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((pmb-P*ft*hT-Ip)*(vD*vb-sDb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((-ID+Dmb-D)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
 end
 
 function mahalanobis(a::PointAnchor,
                      ft::AbstractVector,
-                     FT::AbstractVector,
-                     Do::AbstractVector;
+                     hT::AbstractVector,
+                     D::AbstractVector;
                      pmb::AbstractVector,
-                     Dombi::AbstractVector,
-                     bomb::AbstractVector,
+                     Dmb::AbstractVector,
+                     bmb::AbstractVector,
                      vp::AbstractFloat,
                      vD::AbstractFloat,
                      vb::AbstractFloat,
                      spD::AbstractFloat,
                      spb::AbstractFloat,
                      sDb::AbstractFloat,
+                     mf::AbstractVector,
                      bd::AbstractFloat,
+                     Ip::AbstractVector,
+                     ID::AbstractVector,
+                     Ib::AbstractVector,
                      other...)
     x,y= unpack(a)
-    return @. (bomb-Do*bd*y)*(((vD*vp-spD^2)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spD-spb*vD)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(Dombi-Do)*(((spD*spb-sDb*vp)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spb-spD*vb)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(pmb-Do*FT*ft*x)*(((sDb*spD-spb*vD)*(bomb-Do*bd*y))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((vD*vb-sDb^2)*(pmb-Do*FT*ft*x))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((Dombi-Do)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
+    return @. (-(D*bd*mf*y)+bmb-Ib)*(((vD*vp-spD^2)*(-(D*bd*mf*y)+bmb-Ib))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spD-spb*vD)*(-(D*ft*hT*x)+pmb-Ip))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((-ID+Dmb-D)*(spD*spb-sDb*vp))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(-ID+Dmb-D)*(((spD*spb-sDb*vp)*(-(D*bd*mf*y)+bmb-Ib))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((sDb*spb-spD*vb)*(-(D*ft*hT*x)+pmb-Ip))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((-ID+Dmb-D)*(vb*vp-spb^2))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))+(-(D*ft*hT*x)+pmb-Ip)*(((sDb*spD-spb*vD)*(-(D*bd*mf*y)+bmb-Ib))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((vD*vb-sDb^2)*(-(D*ft*hT*x)+pmb-Ip))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD))+((-ID+Dmb-D)*(sDb*spb-spD*vb))/((vD*vb-sDb^2)*vp+spD*(sDb*spb-spD*vb)+spb*(sDb*spD-spb*vD)))
 end
 
 function mahalanobis(mf::AbstractVector,
@@ -117,20 +137,20 @@ end
 
 function SS(a::IsochronAnchor,
             ft::AbstractVector,
-            FT::AbstractVector;
+            hT::AbstractVector;
             cruncher...)
-    Po = getP(a,ft,FT;cruncher...)
-    Do = getD(a,ft,FT;cruncher...)
-    maha = mahalanobis(a,ft,FT,Po,Do;cruncher...)
+    P = getP(a,ft,hT;cruncher...)
+    D = getD(a,ft,hT;cruncher...)
+    maha = mahalanobis(a,ft,hT,P,D;cruncher...)
     return sum(@. maha )
 end
 
 function SS(a::PointAnchor,
             ft::AbstractVector,
-            FT::AbstractVector;
+            hT::AbstractVector;
             cruncher...)
-    Do = getD(a,ft,FT;cruncher...)
-    maha = mahalanobis(a,ft,FT,Do;cruncher...)
+    D = getD(a,ft,hT;cruncher...)
+    maha = mahalanobis(a,ft,hT,D;cruncher...)
     return sum(@. maha )
 end
 
@@ -143,8 +163,8 @@ function SS(par::AbstractVector,
     for crunchers in values(cruncher_groups)
         a = crunchers.anchor
         for cruncher in crunchers.crunchers
-            ft, FT = ft_FT(fit,method.PAcutoff;cruncher...)
-            out += SS(a,ft,FT;cruncher...)
+            ft, hT = ft_hT(fit,method.PAcutoff;cruncher...)
+            out += SS(a,ft,hT;cruncher...)
         end
     end
     if verbose

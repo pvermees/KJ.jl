@@ -24,7 +24,7 @@ function random_sample(method::Gmethod,
     t = range((i-1)/n,i/n,length=nblk+nsig)
     T = (spot_time .- t0)./60
     ft = polyFac(fit.drift,t)
-    FT = polyFac(fit.down,T)
+    hT = polyFac(fit.down,T)
     bt = polyVal(fit.blank,t)
     for col in eachcol(bt)
         col .+= (sqrt(Distributions.median(col)) .* randn(nsig+nblk))
@@ -40,7 +40,7 @@ function random_sample(method::Gmethod,
     pm = bt[:,channels.P]
     Dom = bt[:,channels.D]
     bom = bt[:,channels.d]
-    pm[isig] .+= P.*ft[isig].*FT[isig]
+    pm[isig] .+= P.*ft[isig].*hT[isig]
     Dom[isig] .+= D
     bom[isig] .+= d*iratio(fractionation.proxies.d,fractionation.ions.d)
     ep = Distributions.median(pm[isig]).*relerr_P.*randn(nsig)

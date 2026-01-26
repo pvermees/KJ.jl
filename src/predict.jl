@@ -4,9 +4,9 @@ function predict(samp::Sample,
     if samp.group in method.standards
         standard = method.groups[samp.group]
         a = getAnchor(method.name,standard)
-        c = Cruncher(samp,method,fit.blank)
-        ft, FT = ft_FT(fit,method.PAcutoff;c...)
-        return predict(a,ft,FT;c...)
+        c = Cruncher(samp,method,fit)
+        ft, hT = ft_hT(fit,method.PAcutoff;c...)
+        return predict(a,ft,hT;c...)
     end
     for (element,calibration) in method.bias
         if samp.group in calibration.standards
@@ -41,33 +41,41 @@ end
 
 function predict(a::IsochronAnchor,
                  ft::AbstractVector,
-                 FT::AbstractVector,
-                 Po::AbstractVector,
-                 Do::AbstractVector;
+                 hT::AbstractVector,
+                 P::AbstractVector,
+                 D::AbstractVector;
                  bpt::AbstractVector,
-                 bDot::AbstractVector,
-                 bbot::AbstractVector,
+                 bDt::AbstractVector,
+                 bbt::AbstractVector,
+                 mf::AbstractVector,
                  bd::AbstractFloat,
+                 Ip::AbstractVector,
+                 ID::AbstractVector,
+                 Ib::AbstractVector,
                  other...)
-    pf = @. Po*ft*FT + bpt
-    Dof = @. Do + bDot
-    bof = @. (Do*a.y0 + Po*(a.y1-a.y0)/a.x0)*bd + bbot
-    return DataFrame(P=pf,D=Dof,d=bof)
+    pf = @. P*ft*hT + bpt + Ip
+    Df = @. D + bDt + ID
+    bf = @. (D*a.y0 + P*(a.y1-a.y0)/a.x0)*bd*mf + bbt + Ib
+    return DataFrame(P=pf,D=Df,d=bf)
 end
 
 function predict(a::PointAnchor,
                  ft::AbstractVector,
-                 FT::AbstractVector,
-                 Do::AbstractVector;
+                 hT::AbstractVector,
+                 D::AbstractVector;
                  bpt::AbstractVector,
-                 bDot::AbstractVector,
-                 bbot::AbstractVector,
+                 bDt::AbstractVector,
+                 bbt::AbstractVector,
                  bd::AbstractFloat,
+                 mf::AbstractVector,
+                 Ip::AbstractVector,
+                 ID::AbstractVector,
+                 Ib::AbstractVector,
                  other...)
-    pf = @. Do*a.x*ft*FT + bpt
-    Dof = @. Do + bDot
-    bof = @. Do*a.y*bd + bbot
-    return DataFrame(P=pf,D=Dof,d=bof)
+    pf = @. D*a.x*ft*hT + bpt + Ip
+    Df = @. D + bDt + ID
+    bf = @. D*a.y*bd*mf + bbt + Ib
+    return DataFrame(P=pf,D=Df,d=bf)
 end
 
 function predict(mf::AbstractVector,
@@ -83,19 +91,19 @@ end
 
 function predict(a::IsochronAnchor,
                  ft::AbstractVector,
-                 FT::AbstractVector;
+                 hT::AbstractVector;
                  cruncher...)
-    Po = getP(a,ft,FT;cruncher...)
-    Do = getD(a,ft,FT;cruncher...)
-    return predict(a,ft,FT,Po,Do;cruncher...)
+    P = getP(a,ft,hT;cruncher...)
+    D = getD(a,ft,hT;cruncher...)
+    return predict(a,ft,hT,P,D;cruncher...)
 end
 
 function predict(a::PointAnchor,
                  ft::AbstractVector,
-                 FT::AbstractVector;
+                 hT::AbstractVector;
                  cruncher...)
-    Do = getD(a,ft,FT;cruncher...)
-    return predict(a,ft,FT,Do;cruncher...)
+    D = getD(a,ft,hT;cruncher...)
+    return predict(a,ft,hT,D;cruncher...)
 end
 
 function predict(mf::AbstractVector,
@@ -135,7 +143,7 @@ function predict(samp::Sample,
 end
 export predict
 
-function ft_FT(f::Gfit,
+function ft_hT(f::Gfit,
                PAcutoff::AbstractFloat=Inf;
                pmb::AbstractVector,
                t::AbstractVector,
@@ -144,6 +152,6 @@ function ft_FT(f::Gfit,
     ft = polyFac(f.drift,t)
     analog = pmb .> PAcutoff
     ft[analog] = polyFac(f.adrift,t)[analog]
-    FT = polyFac(f.down,T)
-    return ft, FT
+    hT = polyFac(f.down,T)
+    return ft, hT
 end

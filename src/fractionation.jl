@@ -111,41 +111,48 @@ end
 
 function Cruncher(samp::Sample,
                   method::Gmethod,
-                  blank::AbstractDataFrame)
+                  fit::Gfit)
 
     dat = swinData(samp)
     
     pm = dat[:,method.P.channel]
-    Dom = dat[:,method.D.channel]
-    bom = dat[:,method.d.channel]
-
-    t = dat.t
-    bpt = polyVal(blank[:,method.P.channel],t)
-    bDot = polyVal(blank[:,method.D.channel],t)
-    bbot = polyVal(blank[:,method.d.channel],t)
-
-    pmb = pm - bpt
-    Domb = Dom - bDot
-    bomb = bom - bbot
-
-    sig = hcat(pmb,Domb,bomb)
-    covmat = df2cov(sig)
-    vP = covmat[1,1]
-    vD = covmat[2,2]
-    vd = covmat[3,3]
-    sPD = covmat[1,2]
-    sPd = covmat[1,3]
-    sDd = covmat[2,3]
-    
-    bd = iratio(method.d.proxy,method.d.ion)
+    Dm = dat[:,method.D.channel]
+    bm = dat[:,method.d.channel]
 
     t = dat.t
     T = dat.T
 
-    return (pmb=pmb,Dombi=Domb,bomb=bomb,
-            bpt=bpt,bDot=bDot,bbot=bbot,
-            vp=vP,vD=vD,vb=vd,spD=sPD,spb=sPd,sDb=sDd,
-            bd=bd,t=t,T=T)
+    bpt = polyVal(fit.blank[:,method.P.channel],t)
+    bDt = polyVal(fit.blank[:,method.D.channel],t)
+    bbt = polyVal(fit.blank[:,method.d.channel],t)
+
+    pmb = pm - bpt
+    Dmb = Dm - bDt
+    bmb = bm - bbt
+
+    Ip = interference_correction(dat,method.P.interferences,fit.bias)
+    ID = interference_correction(dat,method.D.interferences,fit.bias)
+    Ib = interference_correction(dat,method.d.interferences,fit.bias)
+
+    mf = bias_correction(t,fit.bias;num=method.d.proxy,den=method.D.proxy)
+
+    sig = hcat(pmb,Dmb,bmb)
+    covmat = df2cov(sig)
+    vp = covmat[1,1]
+    vD = covmat[2,2]
+    vb = covmat[3,3]
+    spD = covmat[1,2]
+    spb = covmat[1,3]
+    sDb = covmat[2,3]
+    
+    bd = iratio(method.d.proxy,method.d.ion)
+
+    return (pmb=pmb,Dmb=Dmb,bmb=bmb,
+            bpt=bpt,bDt=bDt,bbt=bbt,
+            vp=vp,vD=vD,vb=vb,
+            spD=spD,spb=spb,sDb=sDb,
+            Ip=Ip,ID=ID,Ib=Ib,
+            mf=mf,bd=bd,t=t,T=T)
     
 end
 export Cruncher

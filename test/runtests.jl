@@ -1,9 +1,6 @@
 using Test, KJ, Dates, DataFrames, Infiltrator, Plots
 import Distributions, CSV, Statistics, Random, LinearAlgebra, Aqua
 
-# using UnicodePlots; unicodeplots()
-# using PythonPlot; PythonPlot.matplotlib.use("TkAgg"); pythonplot();
-
 include("synthetic.jl")
 
 function loadtest(;dname="data/Lu-Hf",
@@ -569,8 +566,8 @@ function SS4test(run::Vector{Sample},
             a = getAnchor(method.name,samp.group)
             c = Cruncher(samp,method.fractionation,fit.blank)
             ft = polyFac(fit.drift,c.t)
-            FT = polyFac(fit.down,c.T)
-            out += SS(a,ft,FT;c...)
+            hT = polyFac(fit.down,c.T)
+            out += SS(a,ft,hT;c...)
         end
     end
     return out
