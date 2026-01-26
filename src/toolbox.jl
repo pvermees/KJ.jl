@@ -18,7 +18,7 @@ function formRatios(df::AbstractDataFrame;
     num = labels[n]
     den = labels[d]
     ratlabs = brackets ? "(".*num.*")/(".*den.*")" : num.*"/".*den
-    DataFrame(ratios,ratlabs)
+    return DataFrame(ratios,ratlabs)
 end
 
 function polyFit(t::AbstractVector,

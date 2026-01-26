@@ -1,7 +1,8 @@
 using Test, KJ, Dates, DataFrames, Infiltrator, Plots
 import Distributions, CSV, Statistics, Random, LinearAlgebra, Aqua
 
-using UnicodePlots; unicodeplots()
+# using UnicodePlots; unicodeplots()
+# using PythonPlot; PythonPlot.matplotlib.use("TkAgg"); pythonplot();
 
 include("synthetic.jl")
 
@@ -17,14 +18,16 @@ function plottest(option="all")
     if option in (1,"all")
         p = KJ.plot(myrun[1];
                     channels=["Hf176 -> 258","Hf178 -> 260"])
-        @test display(p) != NaN
+        @test p isa Plots.Plot
+        display(p)
     end
     if option in (2,"all")
         p = KJ.plot(myrun[1];
                     channels=["Lu175 -> 175","Hf176 -> 258","Hf178 -> 260"],
                     den="Hf178 -> 260",
                     transformation = "log")
-        @test display(p) != NaN
+        @test p isa Plots.Plot
+        display(p)
     end
 end
 
@@ -38,7 +41,8 @@ function windowtest(show=true)
     setSwin!(myrun[i],[(37,65)];seconds=true)
     if show
         p = KJ.plot(myrun[i];channels=["Hf176 -> 258","Hf178 -> 260"])
-        @test display(p) != NaN
+        display(p)
+        @test p isa Plots.Plot
     end
     return myrun
 end
@@ -51,7 +55,8 @@ function blanktest(;myrun=loadtest(),
     if doplot
         p = KJ.plot(myrun[1];ylim=ylim,transformation=transformation)
         plotFittedBlank!(p,myrun[1],blk,transformation=transformation)
-        @test display(p) != NaN
+        display(p)
+        @test p isa Plots.Plot
     end
     return blk
 end
@@ -92,7 +97,8 @@ function outliertest_synthetic()
                        marker_z=col,
                        legend=false)
     p = Plots.plot(p1,p2;layout=(1,2))
-    @test display(p) != NaN
+    display(p)
+    @test p isa Plots.Plot
 end
 
 function outliertest_sample(show=true)
@@ -106,7 +112,8 @@ function outliertest_sample(show=true)
                     channels=channels,
                     transformation="log",
                     den="Ca40 -> 59")
-        @test display(p) != NaN
+        display(p)
+        @test p isa Plots.Plot
     end
 end
 
@@ -244,7 +251,8 @@ function predictest(option="Lu-Hf";
                             den=method.D.channel,
                             transformation=transformation,
                             return_offset=true)
-        @test display(p) != NaN
+        @test p isa Plots.Plot
+        display(p)
         return samp, method, fit, p, offset
     end
 end
@@ -271,7 +279,7 @@ function partest(parname,paroffsetfact)
                     offset=offset,
                     linecolor="red")
     end
-    @test display(p) != NaN
+    @test p isa Plots.Plot
 end
 
 function driftest()

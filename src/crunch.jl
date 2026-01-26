@@ -143,7 +143,7 @@ function SS(par::AbstractVector,
     for crunchers in values(cruncher_groups)
         a = crunchers.anchor
         for cruncher in crunchers.crunchers
-            ft, FT = ft_FT(fit;PAcutoff=method.PAcutoff,cruncher...)
+            ft, FT = ft_FT(fit,method.PAcutoff;cruncher...)
             out += SS(a,ft,FT;cruncher...)
         end
     end

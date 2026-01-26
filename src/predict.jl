@@ -5,7 +5,7 @@ function predict(samp::Sample,
         standard = method.groups[samp.group]
         a = getAnchor(method.name,standard)
         c = Cruncher(samp,method,fit.blank)
-        ft, FT = ft_FT(fit;PAcutoff=method.PAcutoff,c...)
+        ft, FT = ft_FT(fit,method.PAcutoff;c...)
         return predict(a,ft,FT;c...)
     end
     for (element,calibration) in method.bias
@@ -135,8 +135,8 @@ function predict(samp::Sample,
 end
 export predict
 
-function ft_FT(f::Gfit;
-               PAcutoff::AbstractFloat=Inf,
+function ft_FT(f::Gfit,
+               PAcutoff::AbstractFloat=Inf;
                pmb::AbstractVector,
                t::AbstractVector,
                T::AbstractVector,
