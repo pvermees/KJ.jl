@@ -32,6 +32,7 @@ function fractionation!(fit::Gfit,
 
     # fit the model
     optimum = Optim.optimize(objective,init)
+
     if verbose
         println("Drift and downhole fractionation correction:\n")
         println(optimum)

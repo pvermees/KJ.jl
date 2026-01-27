@@ -29,13 +29,13 @@ function get_proxy_isotope(channel::AbstractString,
 end
 
 function Cmethod(run::Vector{Sample};
-                 standards::AbstractVector=String[],
+                 groups::AbstractDict=Dict{String,String}(),
                  internal::Tuple=(nothing,nothing),
                  nblank::Int=2)
     ch = getChannels(run)
     el = channel2element.(ch)
     elements = NamedTuple{Tuple(Symbol.(ch))}(Tuple(el))
-    return Cmethod(elements,Set(standards),internal,nblank)
+    return Cmethod(elements,groups,internal,nblank)
 end
 
 function getConcentrations(method::Cmethod,

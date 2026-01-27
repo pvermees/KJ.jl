@@ -116,7 +116,7 @@ export Gmethod
 
 mutable struct Cmethod <: KJmethod
     elements::NamedTuple
-    standards::Set{String}
+    groups::Dict{String,String}
     internal::Tuple
     nblank::Int
 end

@@ -229,7 +229,7 @@ function predictsettings(option::AbstractString="Lu-Hf")
     end
     myrun = loadtest(;dname=dname)
     method = getmethod(option,groups)
-    setGroup!(myrun,collect(keys(groups)))
+    setGroup!(myrun,collect(keys(method.groups)))
     detect_outliers!(myrun;channels=getChannels(method))
     fit = Gfit(method;drift=drift,down=down)
     return myrun, method, fit
@@ -309,16 +309,15 @@ function processsettings(option="Lu-Hf")
         snum = 7
     end
     method = getmethod(option,refmats)
-    return (dname, head2name, method, refmats, snum)
+    return (dname=dname, head2name=head2name, method=method, snum=snum)
 end
 
 function processtest(option="Lu-Hf";
                      show=true,
                      verbose=false,
                      transformation="log")
-    dname, head2name, method, refmats, snum = processsettings(option)
+    dname, head2name, method, snum = processsettings(option)
     myrun = load(dname;format="Agilent",head2name=head2name)
-    setGroup!(myrun,collect(keys(refmats)))
     fit = process!(myrun,method;verbose=verbose)
     if verbose
         println("drift=",fit.drift,", down=",fit.down)
@@ -359,16 +358,16 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
 end
 
 function histest(option="Lu-Hf";show=true)
-    myrun, method, fit = processtest(option)
+    myrun, method, fit = processtest(option;show=false)
 
     Pm = Float64[]; Dm = Float64[]; dm = Float64[]
     Pp = Float64[]; Dp = Float64[]; dp = Float64[]
     for samp in myrun
         if samp.group !== "sample"
-            c = Cruncher(samp,method.fractionation,fit.blank)
+            c = Cruncher(samp,method,fit)
             append!(Pm,c.pmb+c.bpt)
-            append!(Dm,c.Dombi+c.bDot)
-            append!(dm,c.bomb+c.bbot)
+            append!(Dm,c.Dmb+c.bDt)
+            append!(dm,c.bmb+c.bbt)
             p = predict(samp,method,fit)
             append!(Pp,p.P)
             append!(Dp,p.D)
@@ -383,11 +382,11 @@ function histest(option="Lu-Hf";show=true)
 end
 
 function PAtest()
-    dname, head2name, method, snum = processsettings("Lu-Hf")
-    myrun = load(dname)
-    method.PAcutoff = 1e7
-    fit = process!(myrun,method)
-    return myrun, method, fit
+    ps = processsettings("Lu-Hf")
+    myrun = load(ps.dname)
+    ps.method.PAcutoff = 1e7
+    fit = process!(myrun,ps.method)
+    return myrun, ps.method, fit
 end
 
 function atomictest(option="Lu-Hf")
@@ -455,9 +454,8 @@ end
 function concentrationtest()
     myrun = load("data/Lu-Hf",format="Agilent")
     method = Cmethod(myrun;
-                     standards=["NIST612"],
+                     groups=Dict("NIST612p" => "NIST612"),
                      internal=("Al27 -> 27",1.2e5))
-    setGroup!(myrun,Dict("NIST612" => "NIST612p"))
     fit = process!(myrun,method)
     conc = concentrations(myrun,method,fit)
     p = KJ.plot(myrun[4],method;fit=fit,
@@ -650,7 +648,6 @@ function getInterferenceData(;method="Lu-Hf")
                                             bias = Dict("Re" => Set(["Nist_massbias"])))
         myrun = load("data/Re-Os";format="Agilent")
     end
-    setGroup!(myrun,refmats)
     myrun, method
 end
 
@@ -728,8 +725,8 @@ Plots.closeall()
 @testset "Rb-Sr" begin processtest("Rb-Sr") end
 @testset "K-Ca" begin processtest("K-Ca") end
 @testset "U-Pb" begin processtest("U-Pb") end
-# @testset "hist" begin histest() end
-# @testset "PA test" begin PAtest() end
+@testset "hist" begin histest() end
+@testset "PA test" begin PAtest() end
 # @testset "atomic test" begin atomictest("Rb-Sr") end
 # @testset "averat test" begin averatest("K-Ca") end
 # @testset "export" begin exporttest() end
