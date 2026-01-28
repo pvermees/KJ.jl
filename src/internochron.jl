@@ -17,7 +17,7 @@ end
 function internochron(samp::Sample,
                       method::Gmethod,
                       fit::Gfit)
-    a = Cruncher(samp,method,fit)
+    a = ACruncher(samp,method,fit)
     init = init_internochron(;a...)
     objective = (par) -> LLinternochron(par[1],par[2];a...)
     fit = Optim.optimize(objective,init)

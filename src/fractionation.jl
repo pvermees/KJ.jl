@@ -12,7 +12,7 @@ function fractionation!(fit::Gfit,
         ns = length(selection)
         crunchers = Vector{NamedTuple}(undef,ns)
         for i in eachindex(selection)
-            crunchers[i] = Cruncher(run[selection[i]],method,fit)
+            crunchers[i] = FCruncher(run[selection[i]],method,fit)
         end
         cruncher_groups[standard] = (anchor=anchor,crunchers=crunchers)
     end
@@ -109,9 +109,9 @@ function par2fit(par::AbstractVector,
     return fit
 end
 
-function Cruncher(samp::Sample,
-                  method::Gmethod,
-                  fit::Gfit)
+function FCruncher(samp::Sample,
+                   method::Gmethod,
+                   fit::Gfit)
 
     dat = swinData(samp)
     
@@ -155,4 +155,4 @@ function Cruncher(samp::Sample,
             mf=mf,bd=bd,t=t,T=T)
     
 end
-export Cruncher
+export FCruncher

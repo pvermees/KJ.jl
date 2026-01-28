@@ -364,7 +364,7 @@ function histest(option="Lu-Hf";show=true)
     Pp = Float64[]; Dp = Float64[]; dp = Float64[]
     for samp in myrun
         if samp.group !== "sample"
-            c = Cruncher(samp,method,fit)
+            c = FCruncher(samp,method,fit)
             append!(Pm,c.pmb+c.bpt)
             append!(Dm,c.Dmb+c.bDt)
             append!(dm,c.bmb+c.bbt)
@@ -420,6 +420,13 @@ end
 
 function iCaptest(verbose=true)
     myrun = load("data/iCap",format="ThermoFisher")
+    method = Gmethod(name="Lu-Hf",
+                     groups = Dict("610" => "NIST610","MG" => "Mica-Mg"),
+                     P = Pairing(ion="Lu176",proxy="Lu175",channel="175Lu"),
+                     D = Pairing(ion="Hf176",proxy="Hf176",channel="177Hf"),
+                     d = Pairing(ion="Hf177",proxy="Hf178",channel="178Hf"),
+                     standards = Set(["MG"]))
+    fit = process!(myrun,method)
     if verbose summarise(myrun;verbose=true,n=5) end
 end
 
@@ -565,7 +572,7 @@ function SS4test(run::Vector{Sample},
     for samp in run
         if samp.group in method.fractionation.standards
             a = getAnchor(method.name,samp.group)
-            c = Cruncher(samp,method.fractionation,fit.blank)
+            c = FCruncher(samp,method.fractionation,fit.blank)
             ft = polyFac(fit.drift,c.t)
             hT = polyFac(fit.down,c.T)
             out += SS(a,ft,hT;c...)
@@ -727,7 +734,7 @@ Plots.closeall()
 @testset "U-Pb" begin processtest("U-Pb") end
 @testset "hist" begin histest() end
 @testset "PA test" begin PAtest() end
-# @testset "atomic test" begin atomictest("Rb-Sr") end
+@testset "atomic test" begin atomictest("Rb-Sr") end
 # @testset "averat test" begin averatest("K-Ca") end
 # @testset "export" begin exporttest() end
 # @testset "iCap" begin iCaptest() end

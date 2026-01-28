@@ -4,7 +4,7 @@ function predict(samp::Sample,
     if samp.group in method.standards
         standard = method.groups[samp.group]
         a = getAnchor(method.name,standard)
-        c = Cruncher(samp,method,fit)
+        c = FCruncher(samp,method,fit)
         ft, hT = ft_hT(fit,method.PAcutoff;c...)
         return predict(a,ft,hT;c...)
     end
