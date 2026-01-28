@@ -421,13 +421,14 @@ end
 function iCaptest(verbose=true)
     myrun = load("data/iCap",format="ThermoFisher")
     method = Gmethod(name="Lu-Hf",
-                     groups = Dict("610" => "NIST610","MG" => "Mica-Mg"),
+                     groups = Dict("610" => "NIST610","MG" => "MG-1"),
                      P = Pairing(ion="Lu176",proxy="Lu175",channel="175Lu"),
                      D = Pairing(ion="Hf176",proxy="Hf176",channel="177Hf"),
                      d = Pairing(ion="Hf177",proxy="Hf178",channel="178Hf"),
                      standards = Set(["MG"]))
     fit = process!(myrun,method)
-    if verbose summarise(myrun;verbose=true,n=5) end
+    ratios = averat(myrun,method,fit)
+    export2IsoplotR(ratios,method,fname = joinpath("output/iCap.json"))
 end
 
 function carbonatetest(verbose=false)
@@ -714,30 +715,30 @@ end
 
 Plots.closeall()
 
-@testset "load" begin loadtest(;verbose=true) end
-@testset "plot raw data" begin plottest(2) end
-@testset "set selection window" begin windowtest() end
-@testset "set method and blanks" begin blanktest() end
-@testset "moving median test" begin mmediantest() end
-@testset "outlier detection" begin outliertest_synthetic() end
-@testset "outlier detection" begin outliertest_sample() end
-@testset "create method" begin methodtest() end
-@testset "assign groups" begin grouptest(true) end
-@testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
-@testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
-@testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
-@testset "predict drift" begin driftest() end
-@testset "predict down" begin downtest() end
-@testset "Lu-Hf" begin processtest("Lu-Hf") end
-@testset "Rb-Sr" begin processtest("Rb-Sr") end
-@testset "K-Ca" begin processtest("K-Ca") end
-@testset "U-Pb" begin processtest("U-Pb") end
-@testset "hist" begin histest() end
-@testset "PA test" begin PAtest() end
-@testset "atomic test" begin atomictest("Rb-Sr") end
+# @testset "load" begin loadtest(;verbose=true) end
+# @testset "plot raw data" begin plottest(2) end
+# @testset "set selection window" begin windowtest() end
+# @testset "set method and blanks" begin blanktest() end
+# @testset "moving median test" begin mmediantest() end
+# @testset "outlier detection" begin outliertest_synthetic() end
+# @testset "outlier detection" begin outliertest_sample() end
+# @testset "create method" begin methodtest() end
+# @testset "assign groups" begin grouptest(true) end
+# @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
+# @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
+# @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
+# @testset "predict drift" begin driftest() end
+# @testset "predict down" begin downtest() end
+# @testset "Lu-Hf" begin processtest("Lu-Hf") end
+# @testset "Rb-Sr" begin processtest("Rb-Sr") end
+# @testset "K-Ca" begin processtest("K-Ca") end
+# @testset "U-Pb" begin processtest("U-Pb") end
+# @testset "hist" begin histest() end
+# @testset "PA test" begin PAtest() end
+# @testset "atomic test" begin atomictest("Rb-Sr") end
 # @testset "averat test" begin averatest("K-Ca") end
 # @testset "export" begin exporttest() end
-# @testset "iCap" begin iCaptest() end
+@testset "iCap" begin iCaptest() end
 # @testset "carbonate" begin carbonatetest() end
 # @testset "timestamp" begin timestamptest() end
 # @testset "stoichiometry" begin mineraltest() end

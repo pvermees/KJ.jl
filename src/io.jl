@@ -186,8 +186,6 @@ function export2IsoplotR(ratios::AbstractDataFrame,
                          fname::AbstractString="KJ.json")
     json = jsonTemplate()
 
-    P, D, d = unpack(method.fractionation.ions)
-
     snames = ratios[:,1]
     PD = replace(ratios[:,2], NaN => "\"NA\"")
     sPD = replace(ratios[:,3], NaN => "\"NA\"")
@@ -196,10 +194,10 @@ function export2IsoplotR(ratios::AbstractDataFrame,
     rho = replace(ratios[:,6], NaN => "\"NA\"")
 
     datastring = "\"ierr\":1,\"data\":{"*
-    "\""* P *"/"* D *"\":["*     join(PD,",")*"],"*
-    "\"err["* P *"/"* D *"]\":["*join(sPD,",")*"],"*
-    "\""* d *"/"* D *"\":["*     join(dD,",")*"],"*
-    "\"err["* d *"/"* D *"]\":["*join(sdD,",")*"],"*
+    "\""* method.P.ion *"/"* method.D.ion *"\":["*     join(PD,",")*"],"*
+    "\"err["* method.P.ion *"/"* method.D.ion *"]\":["*join(sPD,",")*"],"*
+    "\""* method.d.ion *"/"* method.D.ion *"\":["*     join(dD,",")*"],"*
+    "\"err["* method.d.ion *"/"* method.D.ion *"]\":["*join(sdD,",")*"],"*
     "\"(rho)\":["*join(rho,",")*"],"*
     "\"(C)\":[],\"(omit)\":[],"*
     "\"(comment)\":[\""*join(snames,"\",\"")*"\"]"
