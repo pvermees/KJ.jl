@@ -13,19 +13,19 @@ function channel2proxy(channel::AbstractString)
     all_elements = string.(keys(_KJ["nuclides"]))
     matching_elements = filter(x -> occursin(x, channel), all_elements)
     matching_element = argmax(length,matching_elements)
-    proxy = get_proxy_isotope(channel,matching_element)
-    return proxy
+    matching_isotope = get_proxy_isotope(channel,matching_element)
+    if length(matching_isotope) > 0
+        return matching_element * matching_isotope
+    else
+        return nothing
+    end
 end
 
 function get_proxy_isotope(channel::AbstractString,
                            matching_element::AbstractString)
-    all_isotopes = string.(_KJ["nuclides"][matching_element])
-    matching_isotope = filter(x -> occursin(x, channel), all_isotopes)
-    if length(matching_isotope) == 1
-        return matching_element * matching_isotope[1]
-    else
-        return nothing
-    end
+    all_isotopes = _KJ["nuclides"][matching_element]
+    matching_isotope = filter(x -> occursin(string(x), channel), all_isotopes)
+    return matching_isotope[1]
 end
 
 function Cmethod(run::Vector{Sample};
