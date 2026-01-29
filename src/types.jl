@@ -95,6 +95,10 @@ mutable struct PointAnchor <: AbstractAnchor
     y::Float64
 end
 
+mutable struct BiasAnchor <: AbstractAnchor
+    y::Float64
+end
+
 abstract type KJmethod end
 export KJmethod
 
