@@ -354,7 +354,8 @@ function plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
     p = Plots.plot(pP,pDP,pdP,
                    pPD,pD,pdD,
                    pPd,pDd,pd;legend=false)
-    @test display(p) != NaN    
+    @test p isa Plots.Plot
+    display(p)
 end
 
 function histest(option="Lu-Hf";show=true)
@@ -395,7 +396,8 @@ function atomictest(option="Lu-Hf")
     p1 = Plots.scatter(a.P,a.D,label="",xlabel="P",ylabel="D")
     p2 = Plots.scatter(a.D,a.d,label="",xlabel="D",ylabel="d")
     p = Plots.plot(p1,p2,layout=(1,2))
-    @test display(p) != NaN
+    @test p isa Plots.Plot
+    display(p)
 end
 
 function averatest(option="Lu-Hf",verbose=false)
@@ -441,7 +443,8 @@ function carbonatetest(verbose=false)
                     fname="output/Duff.json")
     p = KJ.plot(myrun[4],method;fit=fit,
                 transformation="log")
-    @test display(p) != NaN
+    @test p isa Plots.Plot
+    display(p)
 end
 
 function timestamptest(verbose=true)
@@ -451,7 +454,8 @@ function timestamptest(verbose=true)
     if verbose summarise(myrun;verbose=true,n=5) end
     p = KJ.plot(myrun[2];
                 transformation="sqrt")
-    @test display(p) != NaN
+    @test p isa Plots.Plot
+    display(p)
 end
 
 function mineraltest()
@@ -469,7 +473,8 @@ function concentrationtest()
     p = KJ.plot(myrun[4],method;fit=fit,
                 transformation="log",
                 den=method.internal[1])
-    @test display(p) != NaN
+    @test p isa Plots.Plot
+    display(p)
     CSV.write("output/concentrations.csv",conc)
     return conc
 end
@@ -480,20 +485,21 @@ function internochrontest(show=true)
     CSV.write("output/isochron.csv",isochron)
     if show
         p = internoplot(myrun[2],method,fit;xlim=[0,100])
-        @test display(p) != NaN
+        @test p isa Plots.Plot
+        display(p)
     end
 end
 
 function internochronUPbtest(show=true)
     myrun = load("data/carbonate",format="Agilent")
-    setGroup!(myrun,Dict("WC1"=>"WC1"))
-    method = Gmethod("U-Pb";standards=["WC1"])
+    method = Gmethod(name="U-Pb",groups=Dict("WC1" => "WC1"))
     fit = process!(myrun,method)
     isochron = internochron(myrun,method,fit)
     CSV.write("output/isochronUPb.csv",isochron)
     if show
         p = internoplot(myrun[5],method,fit)
-        @test display(p) != NaN
+        @test p isa Plots.Plot
+        display(p)
     end
 end
 
@@ -511,7 +517,8 @@ function maptest()
                 clims=(0,500),
                 colorbar_scale=:identity)
     CSV.write("output/Umap.csv",conc)
-    @test display(p) != NaN
+    @test p isa Plots.Plot
+    display(p)
 end
 
 function map_dating_test()
@@ -524,7 +531,8 @@ function map_dating_test()
     a = atomic(myrun[10],method,fit;add_xy=true)
     df = DataFrame(a)
     p = plotMap(df,"D";clims=(0,1e4))
-    @test display(p) != NaN
+    @test p isa Plots.Plot
+    display(p)
 end
 
 function map_fail_test()
@@ -535,7 +543,8 @@ function map_fail_test()
     @test display(p) != NaN
     conc = concentrationtest()
     p = plotMap(conc,"Lu175 -> Lu175")
-    @test display(p) != NaN
+    @test p isa Plots.Plot
+    display(p)
 end
 
 function glass_only_test()
@@ -547,6 +556,7 @@ function glass_only_test()
                     fname="output/UPb_with_glass.json")
     p = KJ.plot(myrun[9],method;fit=fit,
                 transformation="log",den="Pb206")
+    @test p isa Plots.Plot
     display(p)
 end
 
@@ -601,6 +611,7 @@ function SStest()
         downss[i] = SS4test(myrun,method,downfit)
     end
     Plots.plot!(p,dwn,downss,seriestype=:line,linecolor=:red,label="down")
+    @test p isa Plots.Plot
     display(p)
 end
 
@@ -620,7 +631,8 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
         p2 = KJ.plot(myrun[4],method;fit=fit,
                      transformation="sqrt",den=den)
         p = Plots.plot(p1,p2,layout=(1,2))
-        @test display(p) != NaN
+        @test p isa Plots.Plot
+        display(p)
     end
 end
 
@@ -686,6 +698,7 @@ function biastest()
         p = KJ.plot(myrun[i],method;
                     channels=getChannels(myrun),
                     fit=fit,transformation="log")
+        @test p isa Plots.plot
         display(p)
     end
     print_diff(myrun_uncorrected[1],myrun[1],"Os187 -> 251",5)
@@ -742,9 +755,9 @@ Plots.closeall()
 # @testset "carbonate" begin carbonatetest() end
 # @testset "timestamp" begin timestamptest() end
 # @testset "stoichiometry" begin mineraltest() end
-@testset "concentration" begin concentrationtest() end
+# @testset "concentration" begin concentrationtest() end
 # @testset "Lu-Hf internochron" begin internochrontest() end
-# @testset "UPb internochron" begin internochronUPbtest() end
+@testset "UPb internochron" begin internochronUPbtest() end
 # @testset "concentration map" begin maptest() end
 # @testset "isotope ratio map" begin map_dating_test() end
 # @testset "map fail test" begin map_fail_test() end
