@@ -738,11 +738,11 @@ Plots.closeall()
 # @testset "atomic test" begin atomictest("Rb-Sr") end
 # @testset "averat test" begin averatest("K-Ca") end
 # @testset "export" begin exporttest() end
-@testset "iCap" begin iCaptest() end
+# @testset "iCap" begin iCaptest() end
 # @testset "carbonate" begin carbonatetest() end
 # @testset "timestamp" begin timestamptest() end
 # @testset "stoichiometry" begin mineraltest() end
-# @testset "concentration" begin concentrationtest() end
+@testset "concentration" begin concentrationtest() end
 # @testset "Lu-Hf internochron" begin internochrontest() end
 # @testset "UPb internochron" begin internochronUPbtest() end
 # @testset "concentration map" begin maptest() end

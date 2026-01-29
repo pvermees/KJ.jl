@@ -80,8 +80,8 @@ function fractionation!(fit::Cfit,
     num = fit.blank[1:1,:] .* 0.0
     den = copy(num)
     internal = method.internal[1]
-    for standard in method.standards
-        selection = getIndicesInGroup(run,standard)
+    for (group,standard) in method.groups
+        selection = getIndicesInGroup(run,group)
         dats = [swinData(samp) for samp in run[selection]]
         for dat in dats
             bt = polyVal(fit.blank,dat.t)

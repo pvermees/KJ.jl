@@ -28,8 +28,9 @@ function concentrations(run::Vector{Sample},
     conc = nothing
     for i in eachindex(run)
         samp = run[i]
-        if samp.group in method.standards
-            refconcs = getConcentrations(method,samp.group)
+        if haskey(method.groups,samp.group)
+            standard = method.groups[samp.group]
+            refconcs = getConcentrations(method,standard)
             ich = method.internal[1] # ich = internal channel
             internal = (ich,refconcs[1,ich])
             conc = concentrations(samp,method,fit;

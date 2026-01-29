@@ -26,12 +26,13 @@ end
 function predict(samp::Sample,
                  method::Cmethod,
                  fit::Cfit)
-    if samp.group in method.standards
+    if haskey(method.groups,samp.group)
+        standard = method.groups[samp.group]
         internal = method.internal[1]
         dat = swinData(samp)
         bt = polyVal(fit.blank,dat.t)
         S = getSignals(dat)[:,internal] .- bt[:,internal]
-        C = getConcentrations(method,samp.group)
+        C = getConcentrations(method,standard)
         Cs = C[1,internal]
         return @. S * fit.par * C / Cs + bt
     else
