@@ -508,9 +508,8 @@ function maptest()
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
     method = Cmethod(myrun;
-                     standards=["NIST612"],
+                     groups=Dict("NIST612" => "NIST612"),
                      internal=getInternal("zircon","Si29"))
-    setGroup!(myrun,Dict("NIST612" => "NIST612"))
     fit = process!(myrun,method)
     conc = concentrations(myrun[10],method,fit)
     p = plotMap(conc,"ppm[U] from U238";
@@ -525,8 +524,7 @@ function map_dating_test()
     myrun = load("data/timestamp/NHM_cropped.csv",
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
-    method = Gmethod("U-Pb";standards=["91500"])
-    setGroup!(myrun,Dict("91500"=>"91500"))
+    method = Gmethod(name="U-Pb",groups=Dict("91500"=>"91500"))
     fit = process!(myrun,method)
     a = atomic(myrun[10],method,fit;add_xy=true)
     df = DataFrame(a)
@@ -540,17 +538,16 @@ function map_fail_test()
     P, D, d, x, y = atomic(myrun[2],method,fit)
     df = DataFrame(P=P,D=D,d=d,x=x,y=y)
     p = plotMap(df,"P")
-    @test display(p) != NaN
+    @test isnothing(p)
     conc = concentrationtest()
     p = plotMap(conc,"Lu175 -> Lu175")
-    @test p isa Plots.Plot
-    display(p)
+    @test isnothing(p)
 end
 
 function glass_only_test()
     myrun = load("data/U-Pb",format="Agilent",head2name=false)
-    method = Gmethod("U-Pb";standards=["NIST610","NIST612"])
-    setGroup!(myrun,Dict("NIST610" => "610", "NIST612" => "612"))
+    method = Gmethod(name="U-Pb",
+                     groups=Dict("610" => "NIST610", "612" => "NIST612"))
     fit = process!(myrun,method)
     export2IsoplotR(myrun,method,fit;
                     fname="output/UPb_with_glass.json")
@@ -581,9 +578,10 @@ function SS4test(run::Vector{Sample},
                  fit::Gfit)
     out = 0.0
     for samp in run
-        if samp.group in method.fractionation.standards
-            a = getAnchor(method.name,samp.group)
-            c = FCruncher(samp,method.fractionation,fit.blank)
+        if haskey(method.groups,samp.group)
+            standard = method.groups[samp.group]
+            a = getAnchor(method.name,standard)
+            c = FCruncher(samp,method,fit)
             ft = polyFac(fit.drift,c.t)
             hT = polyFac(fit.down,c.T)
             out += SS(a,ft,hT;c...)
@@ -728,45 +726,45 @@ end
 
 Plots.closeall()
 
-# @testset "load" begin loadtest(;verbose=true) end
-# @testset "plot raw data" begin plottest(2) end
-# @testset "set selection window" begin windowtest() end
-# @testset "set method and blanks" begin blanktest() end
-# @testset "moving median test" begin mmediantest() end
-# @testset "outlier detection" begin outliertest_synthetic() end
-# @testset "outlier detection" begin outliertest_sample() end
-# @testset "create method" begin methodtest() end
-# @testset "assign groups" begin grouptest(true) end
-# @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
-# @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
-# @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
-# @testset "predict drift" begin driftest() end
-# @testset "predict down" begin downtest() end
-# @testset "Lu-Hf" begin processtest("Lu-Hf") end
-# @testset "Rb-Sr" begin processtest("Rb-Sr") end
-# @testset "K-Ca" begin processtest("K-Ca") end
-# @testset "U-Pb" begin processtest("U-Pb") end
-# @testset "hist" begin histest() end
-# @testset "PA test" begin PAtest() end
-# @testset "atomic test" begin atomictest("Rb-Sr") end
-# @testset "averat test" begin averatest("K-Ca") end
-# @testset "export" begin exporttest() end
-# @testset "iCap" begin iCaptest() end
-# @testset "carbonate" begin carbonatetest() end
-# @testset "timestamp" begin timestamptest() end
-# @testset "stoichiometry" begin mineraltest() end
-# @testset "concentration" begin concentrationtest() end
-# @testset "Lu-Hf internochron" begin internochrontest() end
+@testset "load" begin loadtest(;verbose=true) end
+@testset "plot raw data" begin plottest(2) end
+@testset "set selection window" begin windowtest() end
+@testset "set method and blanks" begin blanktest() end
+@testset "moving median test" begin mmediantest() end
+@testset "outlier detection" begin outliertest_synthetic() end
+@testset "outlier detection" begin outliertest_sample() end
+@testset "create method" begin methodtest() end
+@testset "assign groups" begin grouptest(true) end
+@testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
+@testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
+@testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
+@testset "predict drift" begin driftest() end
+@testset "predict down" begin downtest() end
+@testset "Lu-Hf" begin processtest("Lu-Hf") end
+@testset "Rb-Sr" begin processtest("Rb-Sr") end
+@testset "K-Ca" begin processtest("K-Ca") end
+@testset "U-Pb" begin processtest("U-Pb") end
+@testset "hist" begin histest() end
+@testset "PA test" begin PAtest() end
+@testset "atomic test" begin atomictest("Rb-Sr") end
+@testset "averat test" begin averatest("K-Ca") end
+@testset "export" begin exporttest() end
+@testset "iCap" begin iCaptest() end
+@testset "carbonate" begin carbonatetest() end
+@testset "timestamp" begin timestamptest() end
+@testset "stoichiometry" begin mineraltest() end
+@testset "concentration" begin concentrationtest() end
+@testset "Lu-Hf internochron" begin internochrontest() end
 @testset "UPb internochron" begin internochronUPbtest() end
-# @testset "concentration map" begin maptest() end
-# @testset "isotope ratio map" begin map_dating_test() end
-# @testset "map fail test" begin map_fail_test() end
-# @testset "glass as age standard test" begin glass_only_test() end
-# @testset "extension test" begin extensiontest() end
-# @testset "synthetic data" begin SStest() end
-# @testset "accuracy test 1" begin accuracytest() end
-# @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
-# @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
+@testset "concentration map" begin maptest() end
+@testset "isotope ratio map" begin map_dating_test() end
+@testset "map fail test" begin map_fail_test() end
+@testset "glass as age standard test" begin glass_only_test() end
+@testset "extension test" begin extensiontest() end
+@testset "synthetic data" begin SStest() end
+@testset "accuracy test 1" begin accuracytest() end
+@testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
+@testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 # @testset "interference test" begin interference_test() end
 # @testset "bias test" begin biastest() end
 # @testset "TUI test" begin TUItest() end

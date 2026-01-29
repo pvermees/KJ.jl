@@ -35,24 +35,22 @@ function random_sample(method::Gmethod,
     isig = nblk.+(1:nsig)
     P = x.*D
     d = y.*D
-    fractionation = method.fractionation
-    channels = fractionation.channels
-    pm = bt[:,channels.P]
-    Dom = bt[:,channels.D]
-    bom = bt[:,channels.d]
+    pm = bt[:,method.P.channel]
+    Dm = bt[:,method.D.channel]
+    bm = bt[:,method.d.channel]
     pm[isig] .+= P.*ft[isig].*hT[isig]
-    Dom[isig] .+= D
-    bom[isig] .+= d*iratio(fractionation.proxies.d,fractionation.ions.d)
+    Dm[isig] .+= D
+    bm[isig] .+= d*iratio(method.d.proxy,method.d.ion)
     ep = Distributions.median(pm[isig]).*relerr_P.*randn(nsig)
-    eDo = Distributions.median(Dom[isig]).*relerr_D.*randn(nsig)
-    ebo = Distributions.median(bom[isig]).*relerr_d.*randn(nsig)
+    eD = Distributions.median(Dm[isig]).*relerr_D.*randn(nsig)
+    eb = Distributions.median(bm[isig]).*relerr_d.*randn(nsig)
     pm[isig] .+= ep
-    Dom[isig] .+= eDo
-    bom[isig] .+= ebo
+    Dm[isig] .+= eD
+    bm[isig] .+= eb
     dat = DataFrame("Time [sec]" => spot_time,
-                    channels.P => pm,
-                    channels.D => Dom,
-                    channels.d => bom,
+                    method.P.channel => pm,
+                    method.D.channel => Dm,
+                    method.d.channel => bm,
                     "outlier" => falses(nblk+nsig),
                     "t" => t)
     return Sample(sname,dtime,dat,t0,bwin,swin,group)
@@ -78,7 +76,7 @@ function synthetic!(method::Gmethod;
     swin = [(11,59)]
     x0_std = 1/(exp(lambda*t_std)-1)
     x0_smp = 1/(exp(lambda*t_smp)-1)
-    a = getAnchor(method.name,collect(method.fractionation.standards)[1])
+    a = getAnchor(method.name,collect(method.standards)[1])
     y0_std = a.y0
     fit = Gfit(method;drift=drift,down=down)
     fit.blank[:,:] .= D./1000
