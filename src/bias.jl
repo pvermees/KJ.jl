@@ -7,7 +7,10 @@ function fit_bias(run::Vector{Sample},
     cruncher_groups = Dict()
     for group in calibration.standards
         standard = method.groups[group]
-        y = getAnchor(method.name,standard).y
+        y = iratio(calibration.num.ion,calibration.den.ion)
+        if isnothing(y)
+            y = getAnchor(method.name,standard).y
+        end
         selection = group2selection(run,group)
         ns = length(selection)
         crunchers = Vector{NamedTuple}(undef,ns)
@@ -17,8 +20,8 @@ function fit_bias(run::Vector{Sample},
         cruncher_groups[standard] = (y=y,crunchers=crunchers)
     end
 
-    m1 = get_proxy_isotope(calibration.num.ion,element)
-    m2 = get_proxy_isotope(calibration.den.ion,element)
+    m1 = get_proxy_isotope(calibration.num.ion)
+    m2 = get_proxy_isotope(calibration.den.ion)
 
     init = fill(0.0,method.nbias)
     objective = (par) -> SS(par,m1,m2,cruncher_groups)

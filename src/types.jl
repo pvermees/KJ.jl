@@ -51,7 +51,7 @@ end
 export Interference
 
 @kwdef mutable struct REEInterference <: AbstractInterference
-    proxy::String = ""
+    channel::String = ""
     bias_key::String = ""
 end
 export REEInterference
@@ -64,22 +64,12 @@ export REEInterference
 end
 export Pairing
 
-abstract type AbstractCalibration end
-export AbstractCalibration
-
 @kwdef mutable struct Calibration
     num::NamedTuple{(:ion,:channel),Tuple{String,String}} = (ion="",channel="")
     den::NamedTuple{(:ion,:channel),Tuple{String,String}} = (ion="",channel="")
     standards::Set{String} = Set{String}()
 end
 export Calibration
-
-@kwdef mutable struct REECalibration
-    num::String = ""
-    den::String = ""
-    standards::Set{String} = Set{String}()
-end
-export REECalibration
 
 abstract type AbstractAnchor end
 export AbstractAnchor

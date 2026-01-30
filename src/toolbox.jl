@@ -454,10 +454,9 @@ function dataframe_sum(df::AbstractDataFrame)
     return total
 end
 
-function iratio(element::AbstractString,
-                nuclide1::AbstractString,
+function iratio(nuclide1::AbstractString,
                 nuclide2::AbstractString)
-    abundances = _KJ["iratio"][element]
+    abundances = merge(values(_KJ["iratio"])...)
     key1 = Symbol(nuclide1)
     key2 = Symbol(nuclide2)
     if haskey(abundances,key1) && haskey(abundances,key2)
@@ -465,13 +464,6 @@ function iratio(element::AbstractString,
     else
         return nothing
     end
-end
-function iratio(nuclide1::AbstractString,
-                nuclide2::AbstractString)
-    abundances = merge(values(_KJ["iratio"])...)
-    key1 = Symbol(nuclide1)
-    key2 = Symbol(nuclide2)
-    return abundances[key1]/abundances[key2]
 end
 export iratio
 

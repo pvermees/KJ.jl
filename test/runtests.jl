@@ -147,16 +147,16 @@ function methodtest(;option="none")
                      d=Pairing(ion="Os188",proxy="Os189",channel="Os189 -> 253"),
                      standards=Set(["QMoly"]))
     Re187_interference = Interference(ion="Re187",proxy="Re185",channel="Re185 -> 249")
-    TmO_interference = REEInterference(proxy="Tm169 -> 185",bias_key="TmO")
+    TmO_interference = REEInterference(channel="Tm169 -> 185",bias_key="TmO")
     Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
                           den=(ion="Re185",channel="Re185 -> 249"),
                           standards=Set(["Nist_massbias"]))
     Os_bias = Calibration(num=(ion="Os188",channel="Os188 -> 252"),
                           den=(ion="Os189",channel="Os189 -> 253"),
                           standards=Set(["Nis3"]))
-    TmO_bias = REECalibration(num="Ir191 -> 191",
-                              den="Lu175 -> 191",
-                              standards=Set(["Nist_REEint"]))
+    TmO_bias = Calibration(num=(ion="Lu176",channel="Ir191 -> 191"),
+                           den=(ion="Lu175",channel="Lu175 -> 191"),
+                           standards=Set(["Nist_REEint"]))
     method.P.interferences = Set([TmO_interference])
     method.D.interferences = Set([Re187_interference])
     method.bias = Dict("Re" => Re_bias, "Os" => Os_bias, "TmO" => TmO_bias)
@@ -642,7 +642,16 @@ function biastest()
     myrun = load(joinpath("data/Lu-Hf");format="Agilent")
     setGroup!(myrun,collect(keys(method.groups)))
     blank = fitBlanks(myrun)
-    bias = fit_bias(myrun,method,"Hf",blank)
+    Hf_bias = fit_bias(myrun,method,"Hf",blank)
+
+    method = methodtest(option="Re-Os")
+    myrun = load(joinpath("data/Re-Os");format="Agilent")
+    setGroup!(myrun,collect(keys(method.groups)))
+    blank = fitBlanks(myrun)
+    Re_bias = fit_bias(myrun,method,"Re",blank)
+    TmO_bias = fit_bias(myrun,method,"TmO",blank)
+
+    println(DataFrame("Hf" => Hf_bias,"Re" => Re_bias, "TmO" => TmO_bias))
 end
 
 function interference_test(;option="Lu-Hf")
