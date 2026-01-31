@@ -1,12 +1,17 @@
 function predict(samp::Sample,
                  method::Gmethod,
-                 fit::Gfit)
+                 fit::Gfit;
+                 generic_names::Bool=true)
     if samp.group in method.standards
         standard = method.groups[samp.group]
         a = getAnchor(method.name,standard)
         c = FCruncher(samp,method,fit)
         ft, hT = ft_hT(fit,method.PAcutoff;c...)
-        return predict(a,ft,hT;c...)
+        out = predict(a,ft,hT;c...)
+        if !generic_names
+            generic_to_specific_pred_names!(out,method)
+        end
+        return out
     end
     calibration = method.bias
     if samp.group in calibration.standards
@@ -19,22 +24,31 @@ function predict(samp::Sample,
                              cruncher.t)
         standard = method.groups[samp.group]
         y = getAnchor(method.name,standard).y
-        return predict(mf,y;cruncher...)
+        out = predict(mf,y;cruncher...)
+        if !generic_names
+            generic_to_specific_pred_names!(out,calibration)
+        end
+        return out
     end
-    pbias = method.P.interferences.bias
-    Dbias = method.D.interferences.bias
-    bbias = method.d.interferences.bias
-    for calibration in (pbias,Dbias,bbias)
+    interferences = union(method.P.interferences,
+                          method.D.interferences,
+                          method.d.interferences)
+    for interference in interferences
+        calibration = interference.bias
         if samp.group in calibration.standards
             cruncher = BCruncher(samp,method,calibration,fit.blank;
                                 interference_bias=fit.bias)
             element = channel2element(calibration.num.ion)
             mf = bias_correction(fit.bias[:,element],
-                                 calibration.num.ion,
-                                 calibration.den.ion,
-                                 cruncher.t)
+                                calibration.num.ion,
+                                calibration.den.ion,
+                                cruncher.t)
             y = iratio(calibration.num.ion,calibration.den.ion)
-            return predict(mf,y;cruncher...)
+            out = predict(mf,y;cruncher...)
+            if !generic_names
+                generic_to_specific_pred_names!(out,calibration)
+            end
+            return out
         end
     end
 end
@@ -172,4 +186,16 @@ function ft_hT(f::Gfit,
     ft[analog] = polyFac(f.adrift,t)[analog]
     hT = polyFac(f.down,T)
     return ft, hT
+end
+
+function generic_to_specific_pred_names!(df::AbstractDataFrame,
+                                         method::KJmethod)
+    rename!(df,:P => Symbol(method.P.channel),
+               :D => Symbol(method.D.channel),
+               :d => Symbol(method.D.channel))
+end
+function generic_to_specific_pred_names!(df::AbstractDataFrame,
+                                         calibration::Calibration)
+    rename!(df,:d => Symbol(calibration.num.channel),
+               :D => Symbol(calibration.den.channel))
 end

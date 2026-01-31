@@ -397,7 +397,7 @@ function atomictest(option="Lu-Hf")
     a = atomic(myrun[2],method,fit)
     p1 = Plots.scatter(a.P,a.D,label="",xlabel="P",ylabel="D")
     p2 = Plots.scatter(a.D,a.d,label="",xlabel="D",ylabel="d")
-    p = Plots.plot(p1,p2,layout=(1,2))
+    p = Plots.plot(p1,p2;layout=(1,2))
     @test p isa Plots.Plot
     display(p)
 end
@@ -630,7 +630,7 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
                      transformation="sqrt",den=den)
         p2 = KJ.plot(myrun[4],method;fit=fit,
                      transformation="sqrt",den=den)
-        p = Plots.plot(p1,p2,layout=(1,2))
+        p = Plots.plot(p1,p2;layout=(1,2))
         @test p isa Plots.Plot
         display(p)
     end
@@ -658,17 +658,26 @@ function biastest()
     blank = fitBlanks(myrun)
     Hf_bias = fit_bias(myrun,method,blank)
     fit = Gfit(method;blank=blank,bias=Hf_bias)
-    p = KJ.plot(myrun[4],method;fit=fit)
-    @test p isa Plots.Plot
-    display(p)
+    p1 = KJ.plot(myrun[4],method;fit=fit,
+                 channels=[method.D.channel;method.d.channel])
 
     method = methodtest(option="Re-Os")
     myrun = load(joinpath("data/Re-Os");format="Agilent")
     setGroup!(myrun,collect(keys(method.groups)))
     blank = fitBlanks(myrun)
     ReOs_bias = fit_bias(myrun,method,blank)
+    fit = Gfit(method;blank=blank,bias=ReOs_bias)
 
-    println(hcat(Hf_bias,ReOs_bias))
+    p2 = KJ.plot(myrun[1],method;fit=fit,transformation="log",
+                 channels=["Os187 -> 187","Os189 -> 189"])
+    p3 = KJ.plot(myrun[3],method;fit=fit,transformation="log",
+                 channels=["Os187 -> 251","Re185 -> 249"])
+    p4 = KJ.plot(myrun[23],method;fit=fit,transformation="log",
+                 channels=["Lu175 -> 191","Ir191 -> 191"])
+    p = Plots.plot(p1,p2,p3,p4;layout=(2,2))
+    @test p isa Plots.Plot
+    display(p)
+
 end
 
 module test

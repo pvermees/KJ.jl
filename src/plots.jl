@@ -145,28 +145,11 @@ function plotFitted!(p,
                      offset::Number=0.0,
                      linecolor="black",
                      linestyle=:solid)
-    pred = predict(samp,method,fit)
-    generic_to_specific_pred_names!(pred,method)
+    pred = predict(samp,method,fit;generic_names=false)
     plotFitted!(p,samp,pred;
                 num=num,den=den,transformation=transformation,
                 offset=offset,linecolor=linecolor,
                 linestyle=linestyle)
-end
-
-function generic_to_specific_pred_names!(pred::AbstractDataFrame,
-                                         method::Gmethod)
-    renamer = Dict{Symbol,String}()
-    for field in (:P,:D,:d)
-        if field in propertynames(pred)
-            renamer[field] = getfield(method,field).channel
-        end
-    end
-    rename!(pred,renamer)
-end
-function generic_to_specific_pred_names!(pred::AbstractDataFrame,
-                                         method::Cmethod)
-    channels = getChannels(method)
-    rename!(pred,channels)
 end
 
 # helper
