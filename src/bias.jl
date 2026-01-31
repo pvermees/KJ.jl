@@ -51,7 +51,7 @@ function fit_bias(run::Vector{Sample},
     optimum = Optim.optimize(objective,init)
 
     return Optim.minimizer(optimum)
-    
+
 end
 export fit_bias
 
@@ -62,6 +62,14 @@ function bias_correction(par::AbstractVector,
                          other...)
     beta = (1/mass1 - 1/(mass1+1))/(1/mass1 - 1/mass2)
     return polyFac(par,t).^beta
+end
+function bias_correction(par::AbstractVector, 
+                         num::AbstractString,
+                         den::AbstractString,
+                         t::AbstractVector)
+    m1 = get_proxy_isotope(num)
+    m2 = get_proxy_isotope(den)
+    return bias_correction(par,m1,m2;t=t)
 end
 
 function BCruncher(samp::Sample,
@@ -93,6 +101,9 @@ function BCruncher(samp::Sample,
     ID = interference_correction(dat,method.D.interferences;
                                  bias=interference_bias,blank=blank)
 
-    return (bmb=bmb,Dmb=Dmb,vb=vb,vD=vD,sDb=sDb,bd=bd,ID=ID,Ib=Ib,t=t)
+    return (bmb=bmb,Dmb=Dmb,
+            bbt=bbt,bDt=bDt,
+            vb=vb,vD=vD,sDb=sDb,
+            bd=bd,ID=ID,Ib=Ib,t=t)
 
 end

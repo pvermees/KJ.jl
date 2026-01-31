@@ -196,7 +196,6 @@ function SS(par::AbstractVector,
             cruncher_groups::AbstractDict;
             verbose::Bool=false)
     out = 0.0
-    # loop through standards:
     for cruncher_group in values(cruncher_groups)
         for cruncher in cruncher_group.crunchers
             out += SS(par,mass1,mass2,cruncher_group.y;cruncher...)

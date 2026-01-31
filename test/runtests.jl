@@ -177,7 +177,7 @@ function grouptest(verbose=false)
     return myrun
 end
 
-function getmethod(name::AbstractString,
+function simple_method(name::AbstractString,
                    groups::AbstractDict)
     if name == "U-Pb"
         return Gmethod(name=name,groups=groups)
@@ -230,7 +230,7 @@ function predictsettings(option::AbstractString="Lu-Hf")
         down = [0.0]
     end
     myrun = loadtest(;dname=dname)
-    method = getmethod(option,groups)
+    method = simple_method(option,groups)
     setGroup!(myrun,collect(keys(method.groups)))
     detect_outliers!(myrun;channels=getChannels(method))
     fit = Gfit(method;drift=drift,down=down)
@@ -310,7 +310,7 @@ function processsettings(option="Lu-Hf")
                        "91500" => "91500")
         snum = 7
     end
-    method = getmethod(option,refmats)
+    method = simple_method(option,refmats)
     return (dname=dname, head2name=head2name, method=method, snum=snum)
 end
 
@@ -438,7 +438,7 @@ end
 function carbonatetest(verbose=false)
     myrun = load("data/carbonate",format="Agilent")
     standards = Dict("WC1"=>"WC1")
-    method = getmethod("U-Pb",standards)
+    method = simple_method("U-Pb",standards)
     fit = process!(myrun,method)
     export2IsoplotR(myrun,method,fit;
                     prefix="Duff",
@@ -560,7 +560,7 @@ function glass_only_test()
 end
 
 function synthetictest(;drift=[0.0],down=[0.0,0.0],kw...)
-    method = getmethod("Lu-Hf",Dict("BP" => "BP"))
+    method = simple_method("Lu-Hf",Dict("BP" => "BP"))
     method.ndrift = length(drift)
     method.ndown = length(down)-1
     myrun, fit = synthetic!(method;
@@ -636,22 +636,6 @@ function accuracytest(;drift=[0.0],down=[0.0,0.0],show=true,kw...)
     end
 end
 
-function biastest()
-    method = methodtest(option="Lu-Hf")
-    myrun = load(joinpath("data/Lu-Hf");format="Agilent")
-    setGroup!(myrun,collect(keys(method.groups)))
-    blank = fitBlanks(myrun)
-    Hf_bias = fit_bias(myrun,method,blank)
-
-    method = methodtest(option="Re-Os")
-    myrun = load(joinpath("data/Re-Os");format="Agilent")
-    setGroup!(myrun,collect(keys(method.groups)))
-    blank = fitBlanks(myrun)
-    ReOs_bias = fit_bias(myrun,method,blank)
-
-    println(hcat(Hf_bias,ReOs_bias))
-end
-
 function interference_test()
     method = methodtest(option="Lu-Hf")
     myrun = load("data/Lu-Hf";format="Agilent")
@@ -665,6 +649,26 @@ function interference_test()
                    ylabel="interference (P, cps)")
     @test p isa Plots.Plot
     display(p)
+end
+
+function biastest()
+    method = methodtest(option="Lu-Hf")
+    myrun = load(joinpath("data/Lu-Hf");format="Agilent")
+    setGroup!(myrun,collect(keys(method.groups)))
+    blank = fitBlanks(myrun)
+    Hf_bias = fit_bias(myrun,method,blank)
+    fit = Gfit(method;blank=blank,bias=Hf_bias)
+    p = KJ.plot(myrun[4],method;fit=fit)
+    @test p isa Plots.Plot
+    display(p)
+
+    method = methodtest(option="Re-Os")
+    myrun = load(joinpath("data/Re-Os");format="Agilent")
+    setGroup!(myrun,collect(keys(method.groups)))
+    blank = fitBlanks(myrun)
+    ReOs_bias = fit_bias(myrun,method,blank)
+
+    println(hcat(Hf_bias,ReOs_bias))
 end
 
 module test
@@ -730,8 +734,8 @@ Plots.closeall()
 # @testset "accuracy test 1" begin accuracytest() end
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 # @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
+# @testset "interference test" begin interference_test() end
 @testset "bias test" begin biastest() end
-@testset "interference test" begin interference_test() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 

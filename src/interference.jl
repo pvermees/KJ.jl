@@ -26,9 +26,8 @@ function bias4interference(dat::AbstractDataFrame,
                            bias::AbstractDataFrame)
     element = channel2element(interference.ion)
     if element in names(bias)
-        m1 = get_proxy_isotope(interference.ion)
-        m2 = get_proxy_isotope(interference.proxy)
-        mf = bias_correction(bias[:,element],m1,m2;dat.t)
+        mf = bias_correction(bias[:,element],interference.ion,
+                             interference.proxy,dat.t)
     else
         mf = fill(1.0,size(dat,1))
     end

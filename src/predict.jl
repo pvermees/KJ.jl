@@ -8,19 +8,35 @@ function predict(samp::Sample,
         ft, hT = ft_hT(fit,method.PAcutoff;c...)
         return predict(a,ft,hT;c...)
     end
-    for (element,calibration) in method.bias
+    calibration = method.bias
+    if samp.group in calibration.standards
+        cruncher = BCruncher(samp,method,calibration,fit.blank;
+                             interference_bias=fit.bias)
+        element = channel2element(method.D.ion)
+        mf = bias_correction(fit.bias[:,element],
+                             method.d.ion,
+                             method.D.ion,
+                             cruncher.t)
+        standard = method.groups[samp.group]
+        y = getAnchor(method.name,standard).y
+        return predict(mf,y;cruncher...)
+    end
+    pbias = method.P.interferences.bias
+    Dbias = method.D.interferences.bias
+    bbias = method.d.interferences.bias
+    for calibration in (pbias,Dbias,bbias)
         if samp.group in calibration.standards
-            # TODO
+            cruncher = BCruncher(samp,method,calibration,fit.blank;
+                                interference_bias=fit.bias)
+            element = channel2element(calibration.num.ion)
+            mf = bias_correction(fit.bias[:,element],
+                                 calibration.num.ion,
+                                 calibration.den.ion,
+                                 cruncher.t)
+            y = iratio(calibration.num.ion,calibration.den.ion)
+            return predict(mf,y;cruncher...)
         end
     end
-    cg = bias_cruncher_groups_helper([samp],method.name,
-                                     fit.blank,[samp.group],
-                                     p.num,p.den)
-    cruncher = cg[samp.group].crunchers[1]
-    element = channel2element(p.num.channel)
-    mf = polyFac(fit.bias[:,element],cruncher.t)
-    y = cg[samp.group].anchor
-    return predict(mf,y;cruncher...)
 end
 
 function predict(samp::Sample,
@@ -83,11 +99,12 @@ function predict(mf::AbstractVector,
                  y::AbstractFloat,
                  D::AbstractVector;
                  bDt::AbstractVector,
-                 bdt::AbstractVector,
+                 bbt::AbstractVector,
+                 bd::AbstractFloat,
                  other...)
     Df = @. D + bDt
-    df = @. D*y*mf + bdt
-    return DataFrame(D=Df,d=df)
+    bf = @. D*y*bd*mf + bbt
+    return DataFrame(D=Df,d=bf)
 end
 
 function predict(a::IsochronAnchor,
