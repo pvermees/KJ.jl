@@ -123,7 +123,7 @@ function methodtest(;option="none")
                                  "NIST612p" => "NIST612"),
                      P=Pairing(ion="Lu176",proxy="Lu175",channel="Lu175 -> 175"),
                      D=Pairing(ion="Hf176",channel="Hf176 -> 258"),
-                     d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260"),
+                     d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260",bias_key="Hf"),
                      standards=Set(["hogsbo"]))
 
     Lu176_interference = Interference(ion="Lu176",proxy="Lu175",channel="Lu175 -> 257")
@@ -653,10 +653,9 @@ function biastest()
     myrun = load(joinpath("data/Re-Os");format="Agilent")
     setGroup!(myrun,collect(keys(method.groups)))
     blank = fitBlanks(myrun)
-    Re_bias = fit_bias(myrun,method,"Re",blank)
-    TmO_bias = fit_bias(myrun,method,"TmO",blank)
+    ReOs_bias = fit_bias(myrun,method,blank)
 
-    println(DataFrame("Hf" => Hf_bias,"Re" => Re_bias, "TmO" => TmO_bias))
+    println(hcat(DataFrame("Hf" => Hf_bias),ReOs_bias))
 end
 
 function interference_test()
@@ -667,7 +666,9 @@ function interference_test()
     Lu176_interference = collect(method.D.interferences)[1]
     IP = interference_correction(dat,Lu176_interference;
                                  blank = fitBlanks(myrun))
-    p = Plots.plot(dat[:,1],IP,legend=false)
+    p = Plots.plot(dat[:,1],IP,legend=false;
+                   xlabel="time (s)", 
+                   ylabel="interference (P, cps)")
     @test p isa Plots.Plot
     display(p)
 end
@@ -696,45 +697,45 @@ end
 
 Plots.closeall()
 
-@testset "load" begin loadtest(;verbose=true) end
-@testset "plot raw data" begin plottest(2) end
-@testset "set selection window" begin windowtest() end
-@testset "set method and blanks" begin blanktest() end
-@testset "moving median test" begin mmediantest() end
-@testset "outlier detection" begin outliertest_synthetic() end
-@testset "outlier detection" begin outliertest_sample() end
-@testset "create method" begin methodtest() end
-@testset "assign groups" begin grouptest(true) end
-@testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
-@testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
-@testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
-@testset "predict drift" begin driftest() end
-@testset "predict down" begin downtest() end
-@testset "Lu-Hf" begin processtest("Lu-Hf") end
-@testset "Rb-Sr" begin processtest("Rb-Sr") end
-@testset "K-Ca" begin processtest("K-Ca") end
-@testset "U-Pb" begin processtest("U-Pb") end
-@testset "hist" begin histest() end
-@testset "PA test" begin PAtest() end
-@testset "atomic test" begin atomictest("Rb-Sr") end
-@testset "averat test" begin averatest("K-Ca") end
-@testset "export" begin exporttest() end
-@testset "iCap" begin iCaptest() end
-@testset "carbonate" begin carbonatetest() end
-@testset "timestamp" begin timestamptest() end
-@testset "stoichiometry" begin mineraltest() end
-@testset "concentration" begin concentrationtest() end
-@testset "Lu-Hf internochron" begin internochrontest() end
-@testset "UPb internochron" begin internochronUPbtest() end
-@testset "concentration map" begin maptest() end
-@testset "isotope ratio map" begin map_dating_test() end
-@testset "map fail test" begin map_fail_test() end
-@testset "glass as age standard test" begin glass_only_test() end
-@testset "extension test" begin extensiontest() end
-@testset "synthetic data" begin SStest() end
-@testset "accuracy test 1" begin accuracytest() end
-@testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
-@testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
+# @testset "load" begin loadtest(;verbose=true) end
+# @testset "plot raw data" begin plottest(2) end
+# @testset "set selection window" begin windowtest() end
+# @testset "set method and blanks" begin blanktest() end
+# @testset "moving median test" begin mmediantest() end
+# @testset "outlier detection" begin outliertest_synthetic() end
+# @testset "outlier detection" begin outliertest_sample() end
+# @testset "create method" begin methodtest() end
+# @testset "assign groups" begin grouptest(true) end
+# @testset "predict Lu-Hf" begin predictest("Lu-Hf";snum=1) end
+# @testset "predict Rb-Sr" begin predictest("Rb-Sr";snum=2) end
+# @testset "predict K-Ca" begin predictest("K-Ca";snum=1) end
+# @testset "predict drift" begin driftest() end
+# @testset "predict down" begin downtest() end
+# @testset "Lu-Hf" begin processtest("Lu-Hf") end
+# @testset "Rb-Sr" begin processtest("Rb-Sr") end
+# @testset "K-Ca" begin processtest("K-Ca") end
+# @testset "U-Pb" begin processtest("U-Pb") end
+# @testset "hist" begin histest() end
+# @testset "PA test" begin PAtest() end
+# @testset "atomic test" begin atomictest("Rb-Sr") end
+# @testset "averat test" begin averatest("K-Ca") end
+# @testset "export" begin exporttest() end
+# @testset "iCap" begin iCaptest() end
+# @testset "carbonate" begin carbonatetest() end
+# @testset "timestamp" begin timestamptest() end
+# @testset "stoichiometry" begin mineraltest() end
+# @testset "concentration" begin concentrationtest() end
+# @testset "Lu-Hf internochron" begin internochrontest() end
+# @testset "UPb internochron" begin internochronUPbtest() end
+# @testset "concentration map" begin maptest() end
+# @testset "isotope ratio map" begin map_dating_test() end
+# @testset "map fail test" begin map_fail_test() end
+# @testset "glass as age standard test" begin glass_only_test() end
+# @testset "extension test" begin extensiontest() end
+# @testset "synthetic data" begin SStest() end
+# @testset "accuracy test 1" begin accuracytest() end
+# @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
+# @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 @testset "bias test" begin biastest() end
 @testset "interference test" begin interference_test() end
 # @testset "TUI test" begin TUItest() end

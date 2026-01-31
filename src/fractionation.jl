@@ -131,11 +131,11 @@ function FCruncher(samp::Sample,
     bmb = bm - bbt
 
     Ip = interference_correction(dat,method.P.interferences;
-                                 blank=fit.blank,bias=fit.bias)
+                                 bias=fit.bias,blank=fit.blank)
     ID = interference_correction(dat,method.D.interferences;
-                                 blank=fit.blank,bias=fit.bias)
+                                 bias=fit.bias,blank=fit.blank)
     Ib = interference_correction(dat,method.d.interferences,
-                                 blank=fit.blank,bias=fit.bias)
+                                 bias=fit.bias,blank=fit.blank)
 
     mf = fill(1.0,length(t))
 

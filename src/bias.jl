@@ -1,3 +1,18 @@
+# fits bias parameters for interferences
+function fit_bias(run::Vector{Sample},
+                  method::Gmethod,
+                  blank::AbstractDataFrame)
+    out = DataFrame()
+    for pairing in (method.P,method.D,method.d)
+        for interference in pairing.interferences
+            bias_key = interference.bias_key
+            if haskey(method.bias,bias_key)
+                out[!,bias_key] = fit_bias(run,method,bias_key,blank)
+            end
+        end
+    end
+    return out
+end
 function fit_bias(run::Vector{Sample},
                   method::Gmethod,
                   bias_key::AbstractString,
