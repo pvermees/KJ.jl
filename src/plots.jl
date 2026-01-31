@@ -26,9 +26,15 @@ function plot(samp::Sample,
 
     if !isnothing(fit)
         if samp.group !== "sample"
-            plotFitted!(p,samp,method,fit;
-                        num=num,den=den,transformation=transformation,
-                        offset=offset,linecolor=linecol,linestyle=linestyle)
+            pred = predict(samp,method,fit;generic_names=false)
+            fitted_channels = intersect(channels,names(pred))
+            if length(fitted_channels) > 0
+                plotFitted!(p,samp,pred[:,fitted_channels];
+                            num=num,den=den,
+                            transformation=transformation,
+                            offset=offset,linecolor=linecol,
+                            linestyle=linestyle)
+            end
         end
         plotFittedBlank!(p,samp,method,fit;
                          num=num,den=den,
@@ -135,23 +141,6 @@ function prep_plot(samp::Sample,
 end
 export prep_plot
 
-function plotFitted!(p,
-                     samp::Sample,
-                     method::KJmethod,
-                     fit::KJfit;
-                     num::AbstractString="",
-                     den::AbstractString="",
-                     transformation::AbstractString="",
-                     offset::Number=0.0,
-                     linecolor="black",
-                     linestyle=:solid)
-    pred = predict(samp,method,fit;generic_names=false)
-    plotFitted!(p,samp,pred;
-                num=num,den=den,transformation=transformation,
-                offset=offset,linecolor=linecolor,
-                linestyle=linestyle)
-end
-
 # helper
 function plotFitted!(p,
                      samp::Sample,
@@ -186,8 +175,9 @@ function plotFittedBlank!(p,
     channels = getChannels(method)
     pred = predict(samp,fit.blank[:,channels])
     plotFitted!(p,samp,pred;
-                blank=true,num=num,den=den,transformation=transformation,
-                offset=offset,linecolor=linecolor,linestyle=linestyle)
+                blank=true,num=num,den=den,
+                transformation=transformation,offset=offset,
+                linecolor=linecolor,linestyle=linestyle)
 end
 export plotFittedBlank!
 
