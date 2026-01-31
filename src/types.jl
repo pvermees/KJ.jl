@@ -39,6 +39,13 @@ mutable struct BiasRefmat <: AbstractRefmat
     sy0::Float64
 end
 
+@kwdef mutable struct Calibration
+    num::NamedTuple{(:ion,:channel),Tuple{String,String}} = (ion="",channel="")
+    den::NamedTuple{(:ion,:channel),Tuple{String,String}} = (ion="",channel="")
+    standards::Set{String} = Set{String}()
+end
+export Calibration
+
 abstract type AbstractInterference end
 export AbstractInterference
 
@@ -46,13 +53,13 @@ export AbstractInterference
     ion::String = ""
     proxy::String = ""
     channel::String = ""
-    bias_key::String = ""
+    bias::Calibration = Calibration()
 end
 export Interference
 
 @kwdef mutable struct REEInterference <: AbstractInterference
     channel::String = ""
-    bias_key::String = ""
+    bias::Calibration = Calibration()
 end
 export REEInterference
 
@@ -60,17 +67,9 @@ export REEInterference
     ion::String = ""
     proxy::String = ion
     channel::String = proxy
-    interferences::Set = Set{AbstractInterference}()
-    bias_key::String = ""
+    interferences::Set{AbstractInterference} = Set{Interference}()
 end
 export Pairing
-
-@kwdef mutable struct Calibration
-    num::NamedTuple{(:ion,:channel),Tuple{String,String}} = (ion="",channel="")
-    den::NamedTuple{(:ion,:channel),Tuple{String,String}} = (ion="",channel="")
-    standards::Set{String} = Set{String}()
-end
-export Calibration
 
 abstract type AbstractAnchor end
 export AbstractAnchor
@@ -99,7 +98,7 @@ export KJmethod
     P::Pairing = Pairing(ion=default_ions(name).P)
     D::Pairing = Pairing(ion=default_ions(name).D)
     d::Pairing = Pairing(ion=default_ions(name).d)
-    bias::Dict = Dict{String,Calibration}()
+    bias::Calibration = Calibration()
     standards::Set{String} = Set(collect(keys(groups)))
     nblank::Int = 2
     ndrift::Int = 2

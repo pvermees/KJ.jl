@@ -3,8 +3,6 @@ import Distributions, CSV, Statistics, Random, LinearAlgebra, Aqua
 
 include("synthetic.jl")
 
-# using UnicodePlots; unicodeplots()
-
 function loadtest(;dname="data/Lu-Hf",
                   verbose=false)
     myrun = load(dname;format="Agilent")
@@ -123,15 +121,13 @@ function methodtest(;option="none")
                                  "NIST612p" => "NIST612"),
                      P=Pairing(ion="Lu176",proxy="Lu175",channel="Lu175 -> 175"),
                      D=Pairing(ion="Hf176",channel="Hf176 -> 258"),
-                     d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260",bias_key="Hf"),
+                     d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260"),
                      standards=Set(["hogsbo"]))
-
+    method.bias = Calibration(num=(ion="Hf176",channel="Hf176 -> 258"),
+                              den=(ion="Hf178",channel="Hf178 -> 260"),
+                              standards=Set(["NIST612p"]))
     Lu176_interference = Interference(ion="Lu176",proxy="Lu175",channel="Lu175 -> 257")
-    Hf_bias = Calibration(num=(ion="Hf176",channel="Hf176 -> 258"),
-                          den=(ion="Hf178",channel="Hf178 -> 260"),
-                          standards=Set(["NIST612p"]))
     method.D.interferences = Set([Lu176_interference])
-    method.bias = Dict("Hf" => Hf_bias)
 
     @test method.D.proxy == "Hf176"
 
@@ -144,27 +140,25 @@ function methodtest(;option="none")
                                  "QMoly" => "QMolyHill"),
                      P=Pairing(ion="Re187",proxy="Re185",channel="Re185 -> 185"),
                      D=Pairing(ion="Os187",channel="Os187 -> 251"),
-                     d=Pairing(ion="Os188",proxy="Os189",
-                               channel="Os189 -> 253",bias_key="Os"),
+                     d=Pairing(ion="Os188",proxy="Os189",channel="Os189 -> 253"),
                      standards=Set(["QMoly"]))
-    Re187_interference = Interference(ion="Re187",
-                                      proxy="Re185",
-                                      channel="Re185 -> 249",
-                                      bias_key="Re")
-    TmO_interference = REEInterference(channel="Tm169 -> 185",
-                                       bias_key="TmO")
+    method.bias = Calibration(num=(ion="Os187",channel="Os187 -> 251"),
+                              den=(ion="Os189",channel="Os189 -> 253"),
+                              standards=Set(["Nis3"]))
     Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
                           den=(ion="Re185",channel="Re185 -> 249"),
                           standards=Set(["Nist_massbias"]))
-    Os_bias = Calibration(num=(ion="Os188",channel="Os188 -> 252"),
-                          den=(ion="Os189",channel="Os189 -> 253"),
-                          standards=Set(["Nis3"]))
     TmO_bias = Calibration(num=(ion="Lu176",channel="Ir191 -> 191"),
                            den=(ion="Lu175",channel="Lu175 -> 191"),
                            standards=Set(["Nist_REEint"]))
+    Re187_interference = Interference(ion="Re187",
+                                      proxy="Re185",
+                                      channel="Re185 -> 249",
+                                      bias=Re_bias)
+    TmO_interference = REEInterference(channel="Tm169 -> 185",
+                                       bias=TmO_bias)
     method.P.interferences = Set([TmO_interference])
     method.D.interferences = Set([Re187_interference])
-    method.bias = Dict("Re" => Re_bias, "Os" => Os_bias, "TmO" => TmO_bias)
 
     if option == "Re-Os" return method end
 
@@ -647,7 +641,7 @@ function biastest()
     myrun = load(joinpath("data/Lu-Hf");format="Agilent")
     setGroup!(myrun,collect(keys(method.groups)))
     blank = fitBlanks(myrun)
-    Hf_bias = fit_bias(myrun,method,"Hf",blank)
+    Hf_bias = fit_bias(myrun,method,blank)
 
     method = methodtest(option="Re-Os")
     myrun = load(joinpath("data/Re-Os");format="Agilent")
@@ -655,7 +649,7 @@ function biastest()
     blank = fitBlanks(myrun)
     ReOs_bias = fit_bias(myrun,method,blank)
 
-    println(hcat(DataFrame("Hf" => Hf_bias),ReOs_bias))
+    println(hcat(Hf_bias,ReOs_bias))
 end
 
 function interference_test()

@@ -2,7 +2,7 @@ function interference_correction(dat::AbstractDataFrame,
                                  interferences::Set{AbstractInterference};
                                  bias::AbstractDataFrame=DataFrame(),
                                  blank::AbstractDataFrame=DataFrame())
-    out = fill(1.0,size(dat,1))
+    out = fill(0.0,size(dat,1))
     for interference in interferences
         out .+= interference_correction(dat,interference;
                                         bias=bias,blank=blank)
