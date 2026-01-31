@@ -1,9 +1,9 @@
 function fit_bias(run::Vector{Sample},
                   method::Gmethod,
-                  element::AbstractString,
+                  bias_key::AbstractString,
                   blank::AbstractDataFrame)
 
-    calibration = method.bias[element]
+    calibration = method.bias[bias_key]
     cruncher_groups = Dict()
     for group in calibration.standards
         standard = method.groups[group]
@@ -15,7 +15,7 @@ function fit_bias(run::Vector{Sample},
         ns = length(selection)
         crunchers = Vector{NamedTuple}(undef,ns)
         for i in eachindex(selection)
-            crunchers[i] = BCruncher(run[i],method,element,blank)
+            crunchers[i] = BCruncher(run[i],method,bias_key,blank)
         end
         cruncher_groups[standard] = (y=y,crunchers=crunchers)
     end
@@ -43,11 +43,11 @@ end
 
 function BCruncher(samp::Sample,
                    method::Gmethod,
-                   element::AbstractString,
+                   bias_key::AbstractString,
                    blank::AbstractDataFrame)
 
     dat = swinData(samp)
-    calibration = method.bias[element]
+    calibration = method.bias[bias_key]
     bm = dat[:,calibration.num.channel]
     Dm = dat[:,calibration.den.channel]
 

@@ -61,6 +61,7 @@ export REEInterference
     proxy::String = ion
     channel::String = proxy
     interferences::Set = Set{AbstractInterference}()
+    bias_key::String = ""
 end
 export Pairing
 

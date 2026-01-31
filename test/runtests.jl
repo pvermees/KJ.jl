@@ -144,10 +144,15 @@ function methodtest(;option="none")
                                  "QMoly" => "QMolyHill"),
                      P=Pairing(ion="Re187",proxy="Re185",channel="Re185 -> 185"),
                      D=Pairing(ion="Os187",channel="Os187 -> 251"),
-                     d=Pairing(ion="Os188",proxy="Os189",channel="Os189 -> 253"),
+                     d=Pairing(ion="Os188",proxy="Os189",
+                               channel="Os189 -> 253",bias_key="Os"),
                      standards=Set(["QMoly"]))
-    Re187_interference = Interference(ion="Re187",proxy="Re185",channel="Re185 -> 249")
-    TmO_interference = REEInterference(channel="Tm169 -> 185",bias_key="TmO")
+    Re187_interference = Interference(ion="Re187",
+                                      proxy="Re185",
+                                      channel="Re185 -> 249",
+                                      bias_key="Re")
+    TmO_interference = REEInterference(channel="Tm169 -> 185",
+                                       bias_key="TmO")
     Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
                           den=(ion="Re185",channel="Re185 -> 249"),
                           standards=Set(["Nist_massbias"]))
@@ -654,10 +659,17 @@ function biastest()
     println(DataFrame("Hf" => Hf_bias,"Re" => Re_bias, "TmO" => TmO_bias))
 end
 
-function interference_test(;option="Lu-Hf")
-    method = methodtest(option=option)
-    myrun = load(joinpath("data",option);format="Agilent")
-    interference_correction(myrun,method)
+function interference_test()
+    method = methodtest(option="Lu-Hf")
+    myrun = load("data/Lu-Hf";format="Agilent")
+    setGroup!(myrun,collect(keys(method.groups)))
+    dat = swinData(myrun[1])
+    Lu176_interference = collect(method.D.interferences)[1]
+    IP = interference_correction(dat,Lu176_interference;
+                                 blank = fitBlanks(myrun))
+    p = Plots.plot(dat[:,1],IP,legend=false)
+    @test p isa Plots.Plot
+    display(p)
 end
 
 module test
@@ -724,7 +736,7 @@ Plots.closeall()
 @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 @testset "bias test" begin biastest() end
-# @testset "interference test" begin interference_test() end
+@testset "interference test" begin interference_test() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 
