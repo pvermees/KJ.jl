@@ -116,6 +116,12 @@ mutable struct Cmethod <: KJmethod
 end
 export Cmethod
 
+mutable struct Bias
+    m1::Int
+    m2::Int
+    par::Vector{Float64}
+end
+
 abstract type KJfit end
 export KJfit
 
@@ -125,7 +131,7 @@ mutable struct Gfit <: KJfit
     down::Vector{Float64}
     adrift::Vector{Float64}
     covmat::Matrix
-    bias::DataFrame
+    bias::Dict{String,Bias}
 end
 export Gfit
 

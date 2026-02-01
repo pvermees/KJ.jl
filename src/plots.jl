@@ -26,15 +26,12 @@ function plot(samp::Sample,
 
     if !isnothing(fit)
         if samp.group !== "sample"
-            pred = predict(samp,method,fit;generic_names=false)
-            fitted_channels = intersect(channels,names(pred))
-            if length(fitted_channels) > 0
-                plotFitted!(p,samp,pred[:,fitted_channels];
-                            num=num,den=den,
-                            transformation=transformation,
-                            offset=offset,linecolor=linecol,
-                            linestyle=linestyle)
-            end
+            plotFitted!(p,samp,method,fit;
+                        channels=channels,
+                        num=num,den=den,
+                        transformation=transformation,
+                        offset=offset,linecolor=linecol,
+                        linestyle=linestyle)
         end
         plotFittedBlank!(p,samp,method,fit;
                          num=num,den=den,
@@ -141,7 +138,27 @@ function prep_plot(samp::Sample,
 end
 export prep_plot
 
-# helper
+function plotFitted!(p,
+                     samp::Sample,
+                     method::KJmethod,
+                     fit::KJfit;
+                     channels::AbstractVector=getChannels(method),
+                     num::AbstractString="",
+                     den::AbstractString="",
+                     transformation::AbstractString="",
+                     offset::Number=0.0,
+                     linecolor="black",
+                     linestyle=:solid)
+    pred = predict(samp,method,fit;generic_names=false)
+    fitted_channels = intersect(channels,names(pred))
+    if length(fitted_channels) > 0
+        plotFitted!(p,samp,pred[:,fitted_channels];
+                    num=num,den=den,
+                    transformation=transformation,
+                    offset=offset,linecolor=linecolor,
+                    linestyle=linestyle)
+    end
+end
 function plotFitted!(p,
                      samp::Sample,
                      pred::AbstractDataFrame;
@@ -150,7 +167,8 @@ function plotFitted!(p,
                      den::AbstractString="",
                      transformation::AbstractString="",
                      offset::Number=0.0,
-                     linecolor="black",linestyle=:solid)
+                     linecolor="black",
+                     linestyle=:solid)
     dat = ifelse(blank,bwinData(samp),swinData(samp))
     good = .!dat.outlier
     x = dat[good,1]

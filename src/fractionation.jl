@@ -137,7 +137,13 @@ function FCruncher(samp::Sample,
     Ib = interference_correction(dat,method.d.interferences,
                                  bias=fit.bias,blank=fit.blank)
 
-    mf = fill(1.0,length(t))
+    Delement = channel2element(method.D.ion)
+    if haskey(fit.bias,Delement)
+        mf = bias_correction(fit.bias[Delement],
+                             method.D.ion,method.d.ion,t)
+    else
+        mf = fill(1.0,length(t))
+    end
 
     sig = hcat(pmb,Dmb,bmb)
     covmat = df2cov(sig)

@@ -1,6 +1,6 @@
 function interference_correction(dat::AbstractDataFrame,
                                  interferences::Set{AbstractInterference};
-                                 bias::AbstractDataFrame=DataFrame(),
+                                 bias::AbstractDict=Dict{String,Bias}(),
                                  blank::AbstractDataFrame=DataFrame())
     out = fill(0.0,size(dat,1))
     for interference in interferences
@@ -11,7 +11,7 @@ function interference_correction(dat::AbstractDataFrame,
 end
 function interference_correction(dat::AbstractDataFrame,
                                  interference::AbstractInterference;
-                                 bias::AbstractDataFrame=DataFrame(),
+                                 bias::AbstractDict=Dict{String,Bias}(),
                                  blank::AbstractDataFrame=DataFrame())
     meas = dat[:,interference.channel]
     blk = polyVal(blank[:,interference.channel],dat.t)
@@ -23,10 +23,10 @@ export interference_correction
 
 function bias4interference(dat::AbstractDataFrame,
                            interference::Interference,
-                           bias::AbstractDataFrame)
+                           bias::Dict{String,Bias})
     element = channel2element(interference.ion)
-    if element in names(bias)
-        mf = bias_correction(bias[:,element],interference.ion,
+    if haskey(bias,element)
+        mf = bias_correction(bias[element],interference.ion,
                              interference.proxy,dat.t)
     else
         mf = fill(1.0,size(dat,1))

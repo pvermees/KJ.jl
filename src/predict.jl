@@ -18,7 +18,7 @@ function predict(samp::Sample,
         cruncher = BCruncher(samp,method,calibration,fit.blank;
                              interference_bias=fit.bias)
         element = channel2element(method.D.ion)
-        mf = bias_correction(fit.bias[:,element],
+        mf = bias_correction(fit.bias[element],
                              method.d.ion,
                              method.D.ion,
                              cruncher.t)
@@ -39,10 +39,10 @@ function predict(samp::Sample,
             cruncher = BCruncher(samp,method,calibration,fit.blank;
                                 interference_bias=fit.bias)
             element = channel2element(calibration.num.ion)
-            mf = bias_correction(fit.bias[:,element],
-                                calibration.num.ion,
-                                calibration.den.ion,
-                                cruncher.t)
+            mf = bias_correction(fit.bias[element],
+                                 calibration.num.ion,
+                                 calibration.den.ion,
+                                 cruncher.t)
             y = iratio(calibration.num.ion,calibration.den.ion)
             out = predict(mf,y;cruncher...)
             if !generic_names
@@ -55,7 +55,8 @@ end
 
 function predict(samp::Sample,
                  method::Cmethod,
-                 fit::Cfit)
+                 fit::Cfit;
+                 other...)
     if haskey(method.groups,samp.group)
         standard = method.groups[samp.group]
         internal = method.internal[1]
@@ -192,7 +193,7 @@ function generic_to_specific_pred_names!(df::AbstractDataFrame,
                                          method::KJmethod)
     rename!(df,:P => Symbol(method.P.channel),
                :D => Symbol(method.D.channel),
-               :d => Symbol(method.D.channel))
+               :d => Symbol(method.d.channel))
 end
 function generic_to_specific_pred_names!(df::AbstractDataFrame,
                                          calibration::Calibration)

@@ -179,12 +179,12 @@ function SS(par::AbstractVector,
     return out
 end
 
-function SS(par::AbstractVector,
+function SS(bias::Bias,
             mass1::Int,
             mass2::Int,
             y::AbstractFloat;
             cruncher...)
-    mf = bias_correction(par,mass1,mass2;cruncher...)
+    mf = bias_correction(bias,mass1,mass2;cruncher...)
     D = getD(mf,y;cruncher...)
     maha = mahalanobis(mf,y,D;cruncher...)
     return sum(@. maha )
@@ -196,9 +196,10 @@ function SS(par::AbstractVector,
             cruncher_groups::AbstractDict;
             verbose::Bool=false)
     out = 0.0
-    for cruncher_group in values(cruncher_groups)
-        for cruncher in cruncher_group.crunchers
-            out += SS(par,mass1,mass2,cruncher_group.y;cruncher...)
+    for cg in values(cruncher_groups)
+        for cruncher in cg.crunchers
+            bias = Bias(cg.m1,cg.m2,par)
+            out += SS(bias,mass1,mass2,cg.y;cruncher...)
         end
     end
     if verbose
