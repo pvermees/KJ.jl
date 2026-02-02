@@ -123,9 +123,7 @@ function methodtest(;option="none")
                      D=Pairing(ion="Hf176",channel="Hf176 -> 258"),
                      d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260"),
                      standards=Set(["hogsbo"]))
-    method.bias = Calibration(num=(ion="Hf176",channel="Hf176 -> 258"),
-                              den=(ion="Hf178",channel="Hf178 -> 260"),
-                              standards=Set(["NIST612p"]))
+    Calibration!(method;standards=Set(["NIST612p"]))
     Lu176_interference = Interference(ion="Lu176",proxy="Lu175",channel="Lu175 -> 257")
     method.D.interferences = Set([Lu176_interference])
 
@@ -142,9 +140,7 @@ function methodtest(;option="none")
                      D=Pairing(ion="Os187",channel="Os187 -> 251"),
                      d=Pairing(ion="Os188",proxy="Os189",channel="Os189 -> 253"),
                      standards=Set(["QMoly"]))
-    method.bias = Calibration(num=(ion="Os187",channel="Os187 -> 251"),
-                              den=(ion="Os189",channel="Os189 -> 253"),
-                              standards=Set(["Nis3"]))
+    Calibration!(method;standards=Set(["Nis3"]))
     Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
                           den=(ion="Re185",channel="Re185 -> 249"),
                           standards=Set(["Nist_massbias"]))
@@ -754,7 +750,7 @@ Plots.closeall()
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 # @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 # @testset "interference test" begin interference_test() end
-@testset "bias test" begin biastest("Lu-Hf") end
+@testset "bias test" begin biastest() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 

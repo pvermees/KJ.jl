@@ -192,9 +192,9 @@ function SS(par::AbstractVector,
             cruncher_groups::AbstractDict;
             verbose::Bool=false)
     out = 0.0
+    bias = Bias(mass_num,mass_den,par)
     for cg in values(cruncher_groups)
         for cruncher in cg.crunchers
-            bias = Bias(mass_num,mass_den,par)
             out += SS(bias,cg.y,bd;cruncher...)
         end
     end

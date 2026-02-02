@@ -18,8 +18,8 @@ function predict(samp::Sample,
         cruncher = BCruncher(samp,calibration,fit.blank)
         element = channel2element(method.D.ion)
         mf = bias_correction(fit.bias[element],
-                             method.d.ion,
-                             method.D.ion,
+                             method.d.proxy,
+                             method.D.proxy,
                              cruncher.t)
         standard = method.groups[samp.group]
         y = getAnchor(method.name,standard).y

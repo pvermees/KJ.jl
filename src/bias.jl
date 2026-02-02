@@ -36,7 +36,8 @@ function fit_bias(run::Vector{Sample},
         ns = length(selection)
         crunchers = Vector{NamedTuple}(undef,ns)
         for i in eachindex(selection)
-            crunchers[i] = BCruncher(run[i],c,blank)
+            samp = run[selection[i]]
+            crunchers[i] = BCruncher(samp,c,blank)
         end
         cruncher_groups[standard] = (y=y,crunchers=crunchers)
     end
@@ -52,7 +53,7 @@ export fit_bias
 
 function calibration2bd(m::Gmethod,
                         c::Calibration)
-    if m.D.ion == c.den.ion && m.d.ion !== c.num.ion
+    if c.den.ion == m.D.ion && c.num.ion != m.d.ion
         return iratio(c.num.ion,m.d.ion)
     else
         return 1.0
