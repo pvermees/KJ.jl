@@ -144,15 +144,14 @@ function methodtest(;option="none")
     Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
                           den=(ion="Re185",channel="Re185 -> 249"),
                           standards=Set(["Nist_massbias"]))
-    TmO_bias = Calibration(num=(ion="Lu176",channel="Ir191 -> 191"),
-                           den=(ion="Lu175",channel="Lu175 -> 191"),
-                           standards=Set(["Nist_REEint"]))
     Re187_interference = Interference(ion="Re187",
                                       proxy="Re185",
                                       channel="Re185 -> 249",
                                       bias=Re_bias)
-    TmO_interference = REEInterference(channel="Tm169 -> 185",
-                                       bias=TmO_bias)
+    TmO_interference = REEInterference(proxy="Tm169 -> 185",
+                                       REE="Lu175 -> 191",
+                                       REEO="Ir191 -> 191",
+                                       standards=Set(["Nist_REEint"]))
     method.P.interferences = Set([TmO_interference])
     method.D.interferences = Set([Re187_interference])
 
@@ -668,12 +667,13 @@ function biastest(option="all")
         blank = fitBlanks(myrun)
         ReOs_bias = fit_bias(myrun,method,blank)
         fit = Gfit(method;blank=blank,bias=ReOs_bias)
+        @infiltrate
         p2 = KJ.plot(myrun[1],method;fit=fit,transformation="log",
-                    channels=["Os187 -> 187","Os189 -> 189"])
+                     channels=["Os187 -> 251","Os189 -> 253"])
         p3 = KJ.plot(myrun[3],method;fit=fit,transformation="log",
-                    channels=["Os187 -> 251","Re185 -> 249"])
+                     channels=["Os187 -> 251","Re185 -> 249"])
         p4 = KJ.plot(myrun[23],method;fit=fit,transformation="log",
-                    channels=["Lu175 -> 191","Ir191 -> 191"])
+                     channels=["Lu175 -> 191","Ir191 -> 191"])
         if option == "Re-Os"
             p = Plots.plot(p2,p3,p4;layout=(1,3))
         end

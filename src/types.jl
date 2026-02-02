@@ -58,8 +58,10 @@ end
 export Interference
 
 @kwdef mutable struct REEInterference <: AbstractInterference
-    channel::String = ""
-    bias::Calibration = Calibration()
+    proxy::String = ""
+    REE::String = ""
+    REEO::String = ""
+    standards::Set{String} = Set{String}()
 end
 export REEInterference
 
@@ -116,9 +118,16 @@ mutable struct Cmethod <: KJmethod
 end
 export Cmethod
 
-mutable struct Bias
+abstract type AbstractBias end
+export AbstractBias
+
+mutable struct Bias <: AbstractBias
     mass_num::Int
     mass_den::Int
+    par::Vector{Float64}
+end
+
+mutable struct REEBias <: AbstractBias
     par::Vector{Float64}
 end
 
@@ -131,7 +140,7 @@ mutable struct Gfit <: KJfit
     down::Vector{Float64}
     adrift::Vector{Float64}
     covmat::Matrix
-    bias::Dict{String,Bias}
+    bias::Dict{String,AbstractBias}
 end
 export Gfit
 

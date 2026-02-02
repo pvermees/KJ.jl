@@ -34,22 +34,51 @@ function predict(samp::Sample,
                           method.D.interferences,
                           method.d.interferences)
     for interference in interferences
-        calibration = interference.bias
-        if samp.group in calibration.standards
-            cruncher = BCruncher(samp,calibration,fit.blank)
-            element = channel2element(calibration.num.ion)
-            mf = bias_correction(fit.bias[element],
-                                 calibration.num.ion,
-                                 calibration.den.ion,
-                                 cruncher.t)
-            y = iratio(calibration.num.ion,calibration.den.ion)
-            out = predict(mf,y,1.0;cruncher...)
-            if !generic_names
-                generic_to_specific_pred_names!(out,calibration)
-            end
-            return out
+        pred = predict(samp,interference,fit;
+                       generic_names=generic_names)
+        if !isnothing(pred)
+            return pred
         end
     end
+end
+
+function predict(samp::Sample,
+                 interference::Interference,
+                 fit::Gfit;
+                 generic_names::Bool=true)
+    calibration = interference.bias
+    if samp.group in calibration.standards
+        cruncher = BCruncher(samp,calibration,fit.blank)
+        element = channel2element(calibration.num.ion)
+        mf = bias_correction(fit.bias[element],
+                                calibration.num.ion,
+                                calibration.den.ion,
+                                cruncher.t)
+        y = iratio(calibration.num.ion,calibration.den.ion)
+        out = predict(mf,y,1.0;cruncher...)
+        if !generic_names
+            generic_to_specific_pred_names!(out,calibration)
+        end
+        return out
+    end
+    return nothing
+end
+function predict(samp::Sample,
+                 interference::REEInterference,
+                 fit::Gfit;
+                 generic_names::Bool=true)
+    if samp.group in interference.standards
+        cruncher = BCruncher(samp,interference,fit.blank)
+        bias_key = interference.proxy
+        mf = bias_correction(fit.bias[bias_key];
+                             t=cruncher.t)
+        out = predict(mf,1.0,1.0;cruncher...)
+        if !generic_names
+            generic_to_specific_pred_names!(out,interference)
+        end
+        return out
+    end
+    return nothing
 end
 
 function predict(samp::Sample,
@@ -199,4 +228,9 @@ function generic_to_specific_pred_names!(df::AbstractDataFrame,
                                          calibration::Calibration)
     rename!(df,:d => Symbol(calibration.num.channel),
                :D => Symbol(calibration.den.channel))
+end
+function generic_to_specific_pred_names!(df::AbstractDataFrame,
+                                         interference::REEInterference)
+    rename!(df,:d => Symbol(interference.REEO),
+               :D => Symbol(interference.REE))
 end

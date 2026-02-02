@@ -184,6 +184,13 @@ function SS(bias::Bias,
     maha = mahalanobis(mf,y,bd,D;cruncher...)
     return sum(@. maha )
 end
+function SS(bias::REEBias;
+            cruncher...)
+    mf = bias_correction(bias;cruncher...)
+    D = getD(mf,1.0,1.0;cruncher...)
+    maha = mahalanobis(mf,1.0,1.0,D;cruncher...)
+    return sum(@. maha )
+end
 
 function SS(par::AbstractVector,
             mass_num::Int,
@@ -196,6 +203,21 @@ function SS(par::AbstractVector,
     for cg in values(cruncher_groups)
         for cruncher in cg.crunchers
             out += SS(bias,cg.y,bd;cruncher...)
+        end
+    end
+    if verbose
+        println(par,": ",out)
+    end
+    return out
+end
+function SS(par::AbstractVector,
+            cruncher_groups::AbstractDict;
+            verbose::Bool=false)
+    out = 0.0
+    bias = REEBias(par)
+    for cruncher_group in values(cruncher_groups)
+        for cruncher in cruncher_group
+            out += SS(bias;cruncher...)
         end
     end
     if verbose
