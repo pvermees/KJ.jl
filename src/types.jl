@@ -117,8 +117,8 @@ end
 export Cmethod
 
 mutable struct Bias
-    m1::Int
-    m2::Int
+    mass_num::Int
+    mass_den::Int
     par::Vector{Float64}
 end
 

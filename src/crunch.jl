@@ -66,17 +66,15 @@ function getD(a::PointAnchor,
 end
 
 function getD(mf::AbstractVector,
-              y::AbstractFloat;
+              y::AbstractFloat,
+              bd::AbstractFloat;
               Dmb::AbstractVector,
               bmb::AbstractVector,
               vD::AbstractFloat,
               vb::AbstractFloat,
               sDb::AbstractFloat,
-              Ib::AbstractVector,
-              ID::AbstractVector,
-              bd::AbstractFloat,
               other...)
-    return @. (((bd*bmb-Ib*bd)*mf*vD+(ID-Dmb)*bd*mf*sDb)*y+(Dmb-ID)*vb+(Ib-bmb)*sDb)/(bd^2*mf^2*vD*y^2-2*bd*mf*sDb*y+vb)
+    return @. ((bd*bmb*mf*vD-Dmb*bd*mf*sDb)*y+Dmb*vb-bmb*sDb)/(bd^2*mf^2*vD*y^2-2*bd*mf*sDb*y+vb)
 end
 
 function mahalanobis(a::IsochronAnchor,
@@ -128,17 +126,15 @@ end
 
 function mahalanobis(mf::AbstractVector,
                      y::AbstractFloat,
+                     bd::AbstractFloat,
                      D::AbstractVector;
                      Dmb::AbstractVector,
                      bmb::AbstractVector,
                      vD::AbstractFloat,
                      vb::AbstractFloat,
                      sDb::AbstractFloat,
-                     Ib::AbstractVector,
-                     ID::AbstractVector,
-                     bd::AbstractFloat,
                      other...)
-    return @. (-(D*bd*mf*y)+bmb-Ib)*((vD*(-(D*bd*mf*y)+bmb-Ib))/(vD*vb-sDb^2)-((-ID+Dmb-D)*sDb)/(vD*vb-sDb^2))+(-ID+Dmb-D)*(((-ID+Dmb-D)*vb)/(vD*vb-sDb^2)-(sDb*(-(D*bd*mf*y)+bmb-Ib))/(vD*vb-sDb^2))
+    return @. (bmb-D*bd*mf*y)*((vD*(bmb-D*bd*mf*y))/(vD*vb-sDb^2)-((Dmb-D)*sDb)/(vD*vb-sDb^2))+(Dmb-D)*(((Dmb-D)*vb)/(vD*vb-sDb^2)-(sDb*(bmb-D*bd*mf*y))/(vD*vb-sDb^2))
 end
 
 function SS(a::IsochronAnchor,
@@ -180,26 +176,26 @@ function SS(par::AbstractVector,
 end
 
 function SS(bias::Bias,
-            mass1::Int,
-            mass2::Int,
-            y::AbstractFloat;
+            y::AbstractFloat,
+            bd::AbstractFloat;
             cruncher...)
-    mf = bias_correction(bias,mass1,mass2;cruncher...)
-    D = getD(mf,y;cruncher...)
-    maha = mahalanobis(mf,y,D;cruncher...)
+    mf = bias_correction(bias,bias.mass_num,bias.mass_den;cruncher...)
+    D = getD(mf,y,bd;cruncher...)
+    maha = mahalanobis(mf,y,bd,D;cruncher...)
     return sum(@. maha )
 end
 
 function SS(par::AbstractVector,
-            mass1::Int,
-            mass2::Int,
+            mass_num::Int,
+            mass_den::Int,
+            bd::AbstractFloat,
             cruncher_groups::AbstractDict;
             verbose::Bool=false)
     out = 0.0
     for cg in values(cruncher_groups)
         for cruncher in cg.crunchers
-            bias = Bias(cg.m1,cg.m2,par)
-            out += SS(bias,mass1,mass2,cg.y;cruncher...)
+            bias = Bias(mass_num,mass_den,par)
+            out += SS(bias,cg.y,bd;cruncher...)
         end
     end
     if verbose

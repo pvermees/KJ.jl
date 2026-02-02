@@ -15,8 +15,7 @@ function predict(samp::Sample,
     end
     calibration = method.bias
     if samp.group in calibration.standards
-        cruncher = BCruncher(samp,method,calibration,fit.blank;
-                             interference_bias=fit.bias)
+        cruncher = BCruncher(samp,calibration,fit.blank)
         element = channel2element(method.D.ion)
         mf = bias_correction(fit.bias[element],
                              method.d.ion,
@@ -24,7 +23,8 @@ function predict(samp::Sample,
                              cruncher.t)
         standard = method.groups[samp.group]
         y = getAnchor(method.name,standard).y
-        out = predict(mf,y;cruncher...)
+        bd = calibration2bd(method,calibration)
+        out = predict(mf,y,bd;cruncher...)
         if !generic_names
             generic_to_specific_pred_names!(out,calibration)
         end
@@ -36,15 +36,14 @@ function predict(samp::Sample,
     for interference in interferences
         calibration = interference.bias
         if samp.group in calibration.standards
-            cruncher = BCruncher(samp,method,calibration,fit.blank;
-                                interference_bias=fit.bias)
+            cruncher = BCruncher(samp,calibration,fit.blank)
             element = channel2element(calibration.num.ion)
             mf = bias_correction(fit.bias[element],
                                  calibration.num.ion,
                                  calibration.den.ion,
                                  cruncher.t)
             y = iratio(calibration.num.ion,calibration.den.ion)
-            out = predict(mf,y;cruncher...)
+            out = predict(mf,y,1.0;cruncher...)
             if !generic_names
                 generic_to_specific_pred_names!(out,calibration)
             end
@@ -112,10 +111,10 @@ end
 
 function predict(mf::AbstractVector,
                  y::AbstractFloat,
+                 bd::AbstractFloat,
                  D::AbstractVector;
                  bDt::AbstractVector,
                  bbt::AbstractVector,
-                 bd::AbstractFloat,
                  other...)
     Df = @. D + bDt
     bf = @. D*y*bd*mf + bbt
@@ -140,10 +139,11 @@ function predict(a::PointAnchor,
 end
 
 function predict(mf::AbstractVector,
-                 y::AbstractFloat;
+                 y::AbstractFloat,
+                 bd::AbstractFloat=1.0;
                  cruncher...)
-    D = getD(mf,y;cruncher...)
-    return predict(mf,y,D;cruncher...)
+    D = getD(mf,y,bd;cruncher...)
+    return predict(mf,y,bd,D;cruncher...)
 end
 
 function predict(samp::Sample,

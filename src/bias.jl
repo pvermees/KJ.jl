@@ -15,107 +15,100 @@ function fit_bias(run::Vector{Sample},
     calibration = method.bias
     if length(calibration.standards) > 0
         bias_key = channel2element(calibration.num.ion)
-        out[bias_key] = fit_bias(run,method,calibration,blank;
-                                 interference_bias=out)
+        out[bias_key] = fit_bias(run,method,calibration,blank)
     end
     return out
 end
 function fit_bias(run::Vector{Sample},
-                  method::Gmethod,
-                  calibration::Calibration,
-                  blank::AbstractDataFrame;
-                  interference_bias::AbstractDict=Dict{String,Bias}())
+                  m::Gmethod,
+                  c::Calibration,
+                  blank::AbstractDataFrame)
+
+    mass_num = get_proxy_isotope(c.num.ion)
+    mass_den = get_proxy_isotope(c.den.ion)
+    bd = calibration2bd(m,c)
 
     cruncher_groups = Dict()
-    for group in calibration.standards
-        standard = method.groups[group]
-        y, m1, m2 = get_bias_truth(method,calibration,standard)
+    for group in c.standards
+        standard = m.groups[group]
+        y = get_bias_truth(m,c,standard)
         selection = group2selection(run,group)
         ns = length(selection)
         crunchers = Vector{NamedTuple}(undef,ns)
         for i in eachindex(selection)
-            crunchers[i] = BCruncher(run[i],method,calibration,blank;
-                                     interference_bias=interference_bias)
+            crunchers[i] = BCruncher(run[i],c,blank)
         end
-        cruncher_groups[standard] = (y=y,m1=m1,m2=m2,crunchers=crunchers)
+        cruncher_groups[standard] = (y=y,crunchers=crunchers)
     end
 
-    m1 = get_proxy_isotope(calibration.den.ion)
-    m2 = get_proxy_isotope(calibration.num.ion)
-
-    init = fill(0.0,method.nbias)
-    objective = (par) -> SS(par,m1,m2,cruncher_groups)
+    init = fill(0.0,m.nbias)
+    objective = (par) -> SS(par,mass_num,mass_den,bd,cruncher_groups)
     optimum = Optim.optimize(objective,init)
-
     fit = Optim.minimizer(optimum)
-    return Bias(m1,m2,fit)
+
+    return Bias(mass_num,mass_den,fit)
 end
 export fit_bias
 
-function get_bias_truth(method::Gmethod,
-                        calibration::Calibration,
-                        standard::AbstractString)
-    y = iratio(calibration.num.ion,calibration.den.ion)
-    if isnothing(y)
-        y = getAnchor(method.name,standard).y
-        m1 = get_proxy_isotope(method.D.ion)
-        m2 = get_proxy_isotope(method.d.ion)
+function calibration2bd(m::Gmethod,
+                        c::Calibration)
+    if m.D.ion == c.den.ion && m.d.ion !== c.num.ion
+        return iratio(c.num.ion,m.d.ion)
     else
-        m1 = get_proxy_isotope(calibration.den.ion)
-        m2 = get_proxy_isotope(calibration.num.ion)
+        return 1.0
     end
-    return y, m1, m2
+end
+
+function get_bias_truth(m::Gmethod,
+                        c::Calibration,
+                        standard::AbstractString)
+    y = iratio(c.num.ion,c.den.ion)
+    if isnothing(y)
+        y = getAnchor(m.name,standard).y
+    end
+    return y
 end
 
 function bias_correction(bias::Bias,
-                         m1::Int,
-                         m2::Int;
+                         mass_num::Int,
+                         mass_den::Int;
                          t::AbstractVector,
                          other...)
-    beta = log(m2/m1)/log(bias.m2/bias.m1)
+    beta = log(mass_num/mass_den)/log(bias.mass_num/bias.mass_den)
     return polyFac(bias.par,t).^beta
 end
 function bias_correction(bias::Bias,
                          num::AbstractString,
                          den::AbstractString,
                          t::AbstractVector)
-    m1 = get_proxy_isotope(num)
-    m2 = get_proxy_isotope(den)
-    return bias_correction(bias,m1,m2;t=t)
+    mass_num = get_proxy_isotope(num)
+    mass_den = get_proxy_isotope(den)
+    return bias_correction(bias,mass_num,mass_den;t=t)
 end
 
 function BCruncher(samp::Sample,
-                   method::Gmethod,
                    calibration::Calibration,
-                   blank::AbstractDataFrame;
-                   interference_bias::AbstractDict=Dict{String,Bias}())
+                   blank::AbstractDataFrame)
 
     dat = swinData(samp)
-    bm = dat[:,calibration.num.channel]
-    Dm = dat[:,calibration.den.channel]
-
     t = dat.T
-    bbt = polyVal(blank[:,method.d.channel],t)
-    bDt = polyVal(blank[:,method.D.channel],t)
+    Dch = calibration.den.channel
+    bch = calibration.num.channel
 
+    Dm = dat[:,Dch]
+    bm = dat[:,bch]
+    bDt = polyVal(blank[:,Dch],t)
+    bbt = polyVal(blank[:,bch],t)
     Dmb = Dm - bDt
     bmb = bm - bbt
-
     b_vs_D = hcat(Dmb,bmb)
     covmat = df2cov(b_vs_D)
     vD = covmat[1,1]
     vb = covmat[2,2]
     sDb = covmat[1,2]
 
-    bd = iratio(method.d.proxy,method.d.ion)
-    Ib = interference_correction(dat,method.d.interferences;
-                                 bias=interference_bias,blank=blank)
-    ID = interference_correction(dat,method.D.interferences;
-                                 bias=interference_bias,blank=blank)
-
-    return (bmb=bmb,Dmb=Dmb,
-            bbt=bbt,bDt=bDt,
-            vb=vb,vD=vD,sDb=sDb,
-            bd=bd,ID=ID,Ib=Ib,t=t)
+    return (Dmb=Dmb,bmb=bmb,
+            bDt=bDt,bbt=bbt,
+            vD=vD,vb=vb,sDb=sDb,t=t)
 
 end
