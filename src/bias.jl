@@ -44,29 +44,6 @@ function fit_bias(run::Vector{Sample},
     fit = Optim.minimizer(optimum)
     return Bias(mass_num,mass_den,fit)
 end
-function fit_bias(run::Vector{Sample},
-                  method::Gmethod,
-                  interference::REEInterference,
-                  blank::AbstractDataFrame)
-    cruncher_groups = Dict()
-    for group in interference.standards
-        standard = method.groups[group]
-        selection = group2selection(run,group)
-        ns = length(selection)
-        crunchers = Vector{NamedTuple}(undef,ns)
-        for i in eachindex(selection)
-            samp = run[selection[i]]
-            crunchers[i] = BCruncher(samp,interference,blank)
-        end
-        cruncher_groups[standard] = crunchers
-    end
-
-    init = fill(0.0,method.nbias)
-    objective = (par) -> SS(par,cruncher_groups)
-    optimum = Optim.optimize(objective,init)
-    fit = Optim.minimizer(optimum)
-    return REEBias(fit)
-end
 export fit_bias
 
 function add_bias!(bias::AbstractDict,
@@ -79,14 +56,6 @@ function add_bias!(bias::AbstractDict,
         bias_key = channel2element(calibration.num.ion)
         bias[bias_key] = fit_bias(run,method,calibration,blank)
     end
-end
-function add_bias!(bias::AbstractDict,
-                   run::Vector{Sample},
-                   method::Gmethod,
-                   blank::AbstractDataFrame,
-                   interference::REEInterference)
-    bias_key = interference.proxy
-    bias[bias_key] = fit_bias(run,method,interference,blank)
 end
 
 function calibration2bd(m::Gmethod,
@@ -124,11 +93,6 @@ function bias_correction(bias::Bias,
     mass_den = get_proxy_isotope(den)
     return bias_correction(bias,mass_num,mass_den;t=t)
 end
-function bias_correction(bias::REEBias;
-                         t::AbstractVector,
-                         other...)
-    return polyFac(bias.par,t)
-end
 
 function BCruncher(samp::Sample,
                    calibration::Calibration,
@@ -137,13 +101,7 @@ function BCruncher(samp::Sample,
     bch = calibration.num.channel
     return BCruncher(samp,Dch,bch,blank)
 end
-function BCruncher(samp::Sample,
-                   interference::REEInterference,
-                   blank::AbstractDataFrame)
-    Dch = interference.REE
-    bch = interference.REEO
-    return BCruncher(samp,Dch,bch,blank)
-end
+
 function BCruncher(samp::Sample,
                    Dch::AbstractString,
                    bch::AbstractString,
