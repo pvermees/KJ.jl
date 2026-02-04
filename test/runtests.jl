@@ -114,49 +114,49 @@ function outliertest_sample(show=true)
     end
 end
 
-function methodtest(;option="none")
+function methodtest(;option="all")
+    if option in ("all","Lu-Hf")
+        method = Gmethod(name="Lu-Hf",
+                        groups=Dict("hogsbo" => "Hogsbo",
+                                    "NIST612p" => "NIST612"),
+                        P=Pairing(ion="Lu176",proxy="Lu175",channel="Lu175 -> 175"),
+                        D=Pairing(ion="Hf176",channel="Hf176 -> 258"),
+                        d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260"),
+                        standards=Set(["hogsbo"]))
+        Calibration!(method;standards=Set(["NIST612p"]))
+        Lu176_interference = Interference(ion="Lu176",proxy="Lu175",channel="Lu175 -> 257")
+        method.D.interferences = Set([Lu176_interference])
 
-    method = Gmethod(name="Lu-Hf",
-                     groups=Dict("hogsbo" => "Hogsbo",
-                                 "NIST612p" => "NIST612"),
-                     P=Pairing(ion="Lu176",proxy="Lu175",channel="Lu175 -> 175"),
-                     D=Pairing(ion="Hf176",channel="Hf176 -> 258"),
-                     d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260"),
-                     standards=Set(["hogsbo"]))
-    Calibration!(method;standards=Set(["NIST612p"]))
-    Lu176_interference = Interference(ion="Lu176",proxy="Lu175",channel="Lu175 -> 257")
-    method.D.interferences = Set([Lu176_interference])
-
-    @test method.D.proxy == "Hf176"
-
-    if option == "Lu-Hf" return method end
-
-    method = Gmethod(name="Re-Os",
-                     groups=Dict("Nis3" => "NiS-3",
-                                 "Nist_massbias" => "NIST610",
-                                 "Nist_REEint" => "NIST610",
-                                 "QMoly" => "QMolyHill"),
-                     P=Pairing(ion="Re187",proxy="Re185",channel="Re185 -> 185"),
-                     D=Pairing(ion="Os187",channel="Os187 -> 251"),
-                     d=Pairing(ion="Os188",proxy="Os189",channel="Os189 -> 253"),
-                     standards=Set(["QMoly"]))
-    Calibration!(method;standards=Set(["Nis3"]))
-    Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
-                          den=(ion="Re185",channel="Re185 -> 249"),
-                          standards=Set(["Nist_massbias"]))
-    Re187_interference = Interference(ion="Re187",
-                                      proxy="Re185",
-                                      channel="Re185 -> 249",
-                                      bias=Re_bias)
-    TmO_interference = REEInterference(proxy="Tm169 -> 185",
-                                       REE="Lu175 -> 191",
-                                       REEO="Ir191 -> 191",
-                                       standards=Set(["Nist_REEint"]))
-    method.P.interferences = Set([TmO_interference])
-    method.D.interferences = Set([Re187_interference])
-
-    if option == "Re-Os" return method end
-
+        @test method.D.proxy == "Hf176"
+        if option == "Lu-Hf" return method end
+    end
+    if option in ("all","Re-Os")
+        method = Gmethod(name="Re-Os",
+                        groups=Dict("Nis3" => "NiS-3",
+                                    "Nist_massbias" => "NIST610",
+                                    "Nist_REEint" => "NIST610",
+                                    "QMoly" => "QMolyHill"),
+                        P=Pairing(ion="Re187",proxy="Re185",channel="Re185 -> 185"),
+                        D=Pairing(ion="Os187",channel="Os187 -> 251"),
+                        d=Pairing(ion="Os188",proxy="Os189",channel="Os189 -> 253"),
+                        standards=Set(["QMoly"]))
+        Calibration!(method;standards=Set(["Nis3"]))
+        Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
+                            den=(ion="Re185",channel="Re185 -> 249"),
+                            standards=Set(["Nist_massbias"]))
+        Re187_interference = Interference(ion="Re187",
+                                        proxy="Re185",
+                                        channel="Re185 -> 249",
+                                        bias=Re_bias)
+        TmO_interference = REEInterference(proxy="Tm169 -> 185",
+                                        REE="Lu175 -> 191",
+                                        REEO="Ir191 -> 191",
+                                        standards=Set(["Nist_REEint"]))
+        method.P.interferences = Set([TmO_interference])
+        method.D.interferences = Set([Re187_interference])
+        if option == "Re-Os" return method end
+    end
+    return nothing
 end
 
 function grouptest(verbose=false)
@@ -685,6 +685,14 @@ function biastest(option="all")
 
 end
 
+function ReOs_test()
+    myrun = load("data/Re-Os";format="Agilent")
+    method = methodtest(;option="Re-Os")
+    fit = process!(myrun,method)
+    ratios = averat(myrun,method,fit)
+    export2IsoplotR(ratios,method,fname = joinpath("output","ReOs.json"))
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -750,6 +758,7 @@ Plots.closeall()
 @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 @testset "interference test" begin interference_test() end
 @testset "bias test" begin biastest() end
+# @testset "ReOs test" begin ReOs_test() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 

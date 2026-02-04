@@ -1,3 +1,11 @@
+function blank!(fit::KJfit,
+                method::KJmethod,
+                run::Vector{Sample})
+    fit.blank = fitBlanks(run;
+                          nblank=method.nblank)
+end
+export blank!
+
 function fitBlanks(run::Vector{Sample};
                    nblank=2)
     blk = reduce(vcat, bwinData(samp) for samp in run)
@@ -11,11 +19,3 @@ function fitBlanks(run::Vector{Sample};
     return bpar
 end
 export fitBlanks
-
-function fitBlanks!(fit::KJfit,
-                    method::KJmethod,
-                    run::Vector{Sample})
-    fit.blank = fitBlanks(run;
-                          nblank=method.nblank)
-end
-export fitBlanks!

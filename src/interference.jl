@@ -1,3 +1,8 @@
+function interference!(fit::KJfit,
+                       method::KJmethod,
+                       run::Vector{Sample})
+    # TODO
+end
 function interference_correction(dat::AbstractDataFrame,
                                  interferences::Set{AbstractInterference};
                                  bias::AbstractDict=Dict{String,Bias}(),
@@ -10,14 +15,25 @@ function interference_correction(dat::AbstractDataFrame,
     return out
 end
 function interference_correction(dat::AbstractDataFrame,
-                                 interference::AbstractInterference;
+                                 interference::Interference;
                                  bias::AbstractDict=Dict{String,Bias}(),
                                  blank::AbstractDataFrame=DataFrame())
-    meas = dat[:,interference.channel]
-    blk = polyVal(blank[:,interference.channel],dat.t)
+    ch = interference.channel
+    meas = dat[:,ch]
+    blk = polyVal(blank[:,ch],dat.t)
     y = iratio(interference.ion,interference.proxy)
     mf = bias4interference(dat,interference,bias)
     return @. (meas - blk) * y * mf
+end
+function interference_correction(dat::AbstractDataFrame,
+                                 interference::REEInterference;
+                                 bias::AbstractDict=Dict{String,Bias}(),
+                                 blank::AbstractDataFrame=DataFrame())
+    ch = interference.proxy
+    meas = dat[:,ch]
+    blk = polyVal(blank[:,ch],dat.t)
+    mf = polyFac(bias[ch],dat.t)
+    return @. (meas - blk) * mf
 end
 export interference_correction
 

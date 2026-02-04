@@ -1,3 +1,9 @@
+function bias!(fit::KJfit,
+               method::KJmethod,
+               run::Vector{Sample})
+    # TODO
+end
+
 function fit_bias(run::Vector{Sample},
                   method::Gmethod,
                   blank::AbstractDataFrame)

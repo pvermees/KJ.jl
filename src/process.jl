@@ -8,7 +8,9 @@ function process!(run::Vector{Sample},
         detect_outliers!(run;channels=ch)
     end
     fit = KJfit(method)
-    fitBlanks!(fit,method,run)
+    blank!(fit,method,run)
+    interference!(fit,method,run)
+    bias!(fit,method,run)
     fractionation!(fit,method,run;verbose=verbose)
     return fit
 end
