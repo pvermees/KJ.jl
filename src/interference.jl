@@ -1,8 +1,3 @@
-function interference!(fit::KJfit,
-                       method::KJmethod,
-                       run::Vector{Sample})
-    # TODO
-end
 function interference_correction(dat::AbstractDataFrame,
                                  interferences::Set{AbstractInterference};
                                  bias::AbstractDict=Dict{String,Bias}(),
@@ -27,19 +22,19 @@ function interference_correction(dat::AbstractDataFrame,
 end
 function interference_correction(dat::AbstractDataFrame,
                                  interference::REEInterference;
-                                 bias::AbstractDict=Dict{String,Bias}(),
+                                 bias::AbstractDict=Dict{String,REEBias}(),
                                  blank::AbstractDataFrame=DataFrame())
     ch = interference.proxy
     meas = dat[:,ch]
     blk = polyVal(blank[:,ch],dat.t)
-    mf = polyFac(bias[ch],dat.t)
+    mf = polyFac(bias[ch].par,dat.t)
     return @. (meas - blk) * mf
 end
 export interference_correction
 
 function bias4interference(dat::AbstractDataFrame,
                            interference::Interference,
-                           bias::Dict{String,Bias})
+                           bias::Dict{String,AbstractBias})
     element = channel2element(interference.ion)
     if haskey(bias,element)
         mf = bias_correction(bias[element],interference.ion,
@@ -51,7 +46,7 @@ function bias4interference(dat::AbstractDataFrame,
 end
 function bias4interference(dat::AbstractDataFrame,
                            interference::REEInterference,
-                           bias::AbstractDataFrame)
+                           bias::Dict{String,AbstractBias})
     key = interference.bias_key
     if key in names(bias)
         return polyFac(bias[:,key],dat.t)

@@ -9,8 +9,9 @@ function process!(run::Vector{Sample},
     end
     fit = KJfit(method)
     blank!(fit,method,run)
-    interference!(fit,method,run)
-    bias!(fit,method,run)
+    if method isa Gmethod
+        fit.bias = fit_bias(run,method,fit.blank)
+    end
     fractionation!(fit,method,run;verbose=verbose)
     return fit
 end
