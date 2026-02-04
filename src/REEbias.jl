@@ -2,34 +2,29 @@ function fit_bias(run::Vector{Sample},
                   method::Gmethod,
                   interference::REEInterference,
                   blank::AbstractDataFrame)
-    cruncher_groups = Dict()
+    crunchers = NamedTuple[]
     for group in interference.standards
-        standard = method.groups[group]
         selection = group2selection(run,group)
-        ns = length(selection)
-        crunchers = Vector{NamedTuple}(undef,ns)
         for i in eachindex(selection)
             samp = run[selection[i]]
-            crunchers[i] = BCruncher(samp,interference,blank)
+            cruncher = BCruncher(samp,interference,blank)
+            push!(crunchers,cruncher)
         end
-        cruncher_groups[standard] = crunchers
     end
 
-    init = [init_bias(cruncher_groups);fill(0.0,method.nbias-1)]
-    objective = (par) -> SS(par,cruncher_groups)
+    init = [init_bias(crunchers);fill(0.0,method.nbias-1)]
+    objective = (par) -> SS(par,crunchers)
     optimum = Optim.optimize(objective,init)
     fit = Optim.minimizer(optimum)
     return REEBias(fit)
 end
 
-function init_bias(cruncher_groups::AbstractDict)
+function init_bias(crunchers::AbstractVector)
     Dsum = 0.0
     bsum = 0.0
-    for cruncher_group in values(cruncher_groups)
-        for cruncher in cruncher_group
-            Dsum += sum(cruncher[:Dmb])
-            bsum += sum(cruncher[:bmb])
-        end
+    for cruncher in crunchers
+        Dsum += sum(cruncher[:Dmb])
+        bsum += sum(cruncher[:bmb])
     end
     return log(bsum) - log(Dsum)
 end

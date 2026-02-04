@@ -211,14 +211,12 @@ function SS(par::AbstractVector,
     return out
 end
 function SS(par::AbstractVector,
-            cruncher_groups::AbstractDict;
+            crunchers::AbstractVector;
             verbose::Bool=false)
     out = 0.0
     bias = REEBias(par)
-    for cruncher_group in values(cruncher_groups)
-        for cruncher in cruncher_group
-            out += SS(bias;cruncher...)
-        end
+    for cruncher in crunchers
+        out += SS(bias;cruncher...)
     end
     if verbose
         println(par,": ",out)
