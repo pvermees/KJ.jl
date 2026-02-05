@@ -86,8 +86,7 @@ end
 
 function TUIsetGroups!(ctrl::AbstractDict)
     if !isnothing(ctrl["method"])
-        prefixes = collect(keys(ctrl["method"].groups))
-        setGroup!(ctrl["run"],prefixes)
+        setGroup!(ctrl["run"],ctrl["method"])
     end
 end
 
@@ -240,21 +239,17 @@ function TUIgetRefmatName(method::Cmethod,i::Int)
     return _KJ["glass"].names[i]
 end
 
-function TUIaddStandard!(method::Gmethod,
+function TUIsetStandard!(ctrl::AbstractDict,
+                         group::AbstractString,
                          standard::AbstractString)
-    push!(method.fractionation.standards,standard)
-end
-function TUIaddStandard!(method::Cmethod,
-                         standard::AbstractString)
-    push!(method.standards,standard)
+    push!(ctrl["method"].standards,group)
+    ctrl["method"].groups[group] = standard
 end
 
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
                                   response::AbstractString)
-    standard = ctrl["cache"]
-    ctrl["refmats"][standard] = response
-    TUIaddStandard!(ctrl["method"],standard)
-    setGroup!(ctrl["run"],response,standard)
+    TUIsetStandard!(ctrl,response,ctrl["cache"])
+    setGroup!(ctrl["run"],ctrl["method"])
     ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
@@ -262,19 +257,19 @@ end
 function TUIaddStandardsByNumber!(ctrl::AbstractDict,
                                   response::AbstractString)
     selection = parse.(Int,split(response,","))
-    standard = ctrl["cache"]
-    TUIaddStandard!(ctrl["method"],standard)
-    setGroup!(ctrl["run"],selection,standard)
+    TUIsetStandard!(ctrl,ctrl["cache"],ctrl["cache"])
+    setGroup!(ctrl["run"],selection,response)
     ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
 
 function TUIremoveAllStandards!(ctrl::AbstractDict)
-    for standard in ctrl["method"].fractionation.standards
-        delete!(ctrl["refmats"],standard)
+    for group in ctrl["method"].standards
+        delete!(ctrl["method"].groups,group)
     end
-    setGroup!(ctrl["run"],"sample")
-    ctrl["method"].fractionation.standards = Set{String}()
+    setGroup!(ctrl["run"])
+    setGroup!(ctrl["run"],ctrl["method"])
+    ctrl["method"].standards = Set{String}()
     ctrl["priority"]["fractionation"] = true
     return "x"
 end

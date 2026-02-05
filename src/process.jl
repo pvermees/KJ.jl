@@ -2,7 +2,7 @@ function process!(run::Vector{Sample},
                   method::KJmethod;
                   reject_outliers::Bool=true,
                   verbose::Bool=false)
-    setGroup!(run,collect(keys(method.groups)))
+    setGroup!(run,method)
     if reject_outliers
         ch = getChannels(method)
         detect_outliers!(run;channels=ch)

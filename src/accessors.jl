@@ -67,7 +67,12 @@ function getAttr(run::Vector{Sample},
     return out
 end
 
-function setGroup!(run::Vector{Sample};
+function setGroup!(run::Vector{Sample},
+                   method::KJmethod)
+    groups = collect(keys(method.groups))
+    setGroup!(run,groups)
+end
+function setGroup!(run::Vector{Sample},
                    selection=eachindex(run),
                    group::AbstractString="sample")
     for i in selection
@@ -78,9 +83,9 @@ function setGroup!(run::Vector{Sample},
                    prefixes::Vector{String})
     snames = getSnames(run)
     for prefix in prefixes
-        setGroup!(run;
-                  selection=findall(s -> contains(s,prefix), snames),
-                  group=prefix)
+        setGroup!(run,
+                  findall(s -> contains(s,prefix), snames),
+                  prefix)
     end
 end
 export setGroup!
