@@ -10,7 +10,6 @@ function TUIinit()
                            "fractionation" => true,
                            "process" => true),
         "history" => DataFrame(task=String[],action=String[]),
-        "refmats" => Dict{String,String}(),
         "chain" => ["top"],
         "template" => false,
         "multifile" => true,
@@ -77,11 +76,18 @@ function TUIloadICPdir!(ctrl::AbstractDict,
     ctrl["priority"]["load"] = false
     ctrl["multifile"] = true
     ctrl["ICPpath"] = response
-    setGroup!(ctrl["run"],ctrl["refmats"])
+    TUIsetGroups!(ctrl)
     if ctrl["template"]
         return "x"
     else
         return "xxx"
+    end
+end
+
+function TUIsetGroups!(ctrl::AbstractDict)
+    if !isnothing(ctrl["method"])
+        prefixes = collect(keys(ctrl["method"].groups))
+        setGroup!(ctrl["run"],prefixes)
     end
 end
 
