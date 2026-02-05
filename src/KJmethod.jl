@@ -3,19 +3,13 @@ function default_ions(name)
     return (P=String(m.P),D=String(m.D),d=String(m.d))
 end
 
-function channels2proxies(channels::NamedTuple{(:P,:D,:d)})
-    return (P=channel2proxy(channels.P),
-            D=channel2proxy(channels.D),
-            d=channel2proxy(channels.d))
-end
 function channel2proxy(channel::AbstractString)
-    proxy = nothing
     all_elements = string.(keys(_KJ["nuclides"]))
     matching_elements = filter(x -> occursin(x, channel), all_elements)
     matching_element = argmax(length,matching_elements)
     matching_isotope = get_proxy_isotope(channel;element=matching_element)
     if length(matching_isotope) > 0
-        return matching_element * matching_isotope
+        return matching_element * string(matching_isotope)
     else
         return nothing
     end
