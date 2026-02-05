@@ -135,11 +135,11 @@ function methodtest(;option="all")
                         groups=Dict("Nis3" => "NiS-3",
                                     "Nist_massbias" => "NIST610",
                                     "Nist_REEint" => "NIST610",
-                                    "QMoly" => "QMolyHill"),
+                                    "Qmoly" => "QMolyHill"),
                         P=Pairing(ion="Re187",proxy="Re185",channel="Re185 -> 185"),
                         D=Pairing(ion="Os187",channel="Os187 -> 251"),
                         d=Pairing(ion="Os188",proxy="Os189",channel="Os189 -> 253"),
-                        standards=Set(["QMoly"]))
+                        standards=Set(["Qmoly"]))
         Calibration!(method;standards=Set(["Nis3"]))
         Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
                               den=(ion="Re185",channel="Re185 -> 249"),
@@ -689,9 +689,13 @@ function ReOs_test()
     myrun = load("data/Re-Os";format="Agilent")
     method = methodtest(;option="Re-Os")
     fit = process!(myrun,method)
+    p = KJ.plot(myrun[7],method;fit=fit,transformation="log")
+    atomic(myrun[7],method,fit)
     ratios = averat(myrun,method,fit)
     CSV.write(joinpath("output","ReOs.csv"),ratios)
     export2IsoplotR(ratios,method,fname = joinpath("output","ReOs.json"))
+    @test p isa Plots.Plot
+    display(p)
 end
 
 module test

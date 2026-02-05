@@ -203,12 +203,12 @@ function export2IsoplotR(ratios::AbstractDataFrame,
     "\"(comment)\":[\""*join(snames,"\",\"")*"\"]"
 
     chronometer = method.name
-    
+
     json = replace(json,"\""*chronometer*"\":{}" =>
                    "\""*chronometer*"\":{"*datastring*"}}")
 
     
-    if chronometer in ["Lu-Hf","Rb-Sr","K-Ca"]
+    if chronometer in ["Lu-Hf","Rb-Sr","K-Ca","Re-Os"]
                         
         old = "\"geochronometer\":\"U-Pb\",\"plotdevice\":\"concordia\""
         new = "\"geochronometer\":\""*chronometer*"\",\"plotdevice\":\"isochron\""
