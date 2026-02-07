@@ -258,7 +258,7 @@ function TUIaddStandardsByNumber!(ctrl::AbstractDict,
                                   response::AbstractString)
     selection = parse.(Int,split(response,","))
     TUIsetStandard!(ctrl,ctrl["cache"],ctrl["cache"])
-    setGroup!(ctrl["run"],selection,response)
+    setGroup!(ctrl["run"],selection,ctrl["cache"])
     ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
@@ -277,12 +277,12 @@ end
 function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
                                      response::AbstractString)
     selection = parse.(Int,split(response,","))
-    setGroup!(ctrl["run"],selection,"sample")
+    setGroup!(ctrl["run"],selection)
     groups = unique(getGroups(ctrl["run"]))
-    standards = ctrl["method"].fractionation.standards
+    standards = ctrl["method"].standards
     for standard in standards
         if !in(standard,groups)
-            delete!(method["refmats"],standard)
+            delete!(ctrl["method"].groups,standard)
             pop!(standards,standard)
         end
     end
