@@ -290,18 +290,18 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
     return "xx"
 end
 
-function TUIrefmatTab(ctrl::AbstractDict)
-    return TUIrefmatTab(ctrl["method"])
+function TUIstandardsTab(ctrl::AbstractDict)
+    return TUIstandardsTab(ctrl["method"])
 end
-function TUIrefmatTab(method::Cmethod)
-    refmats = TUIgetRefmats(method)
+function TUIstandardsTab(method::Cmethod)
+    refmats = TUIgetStandards(method)
     for name in refmats.names
         print(name * "\n")
     end
     return nothing
 end
-function TUIrefmatTab(method::Gmethod)
-    refmats = TUIgetRefmats(method)
+function TUIstandardsTab(method::Gmethod)
+    refmats = TUIgetStandards(method)
     for name in refmats.names
         refmat = get(refmats,name)
         print(name)

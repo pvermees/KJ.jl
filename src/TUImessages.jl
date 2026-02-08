@@ -118,7 +118,7 @@ end
 
 function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg = "Choose one of the following reference materials:\n"
-    refmats = TUIgetRefmats(ctrl["method"])
+    refmats = TUIgetStandards(ctrl["method"])
     for i in eachindex(refmats.names)
         refmat = get(refmats,i)
         msg *= string(i)*": "*refmats.names[i]*TUIprintRefmatInfo(refmat)*"\n"
@@ -133,6 +133,18 @@ end
 
 function TUIprintRefmatInfo(refmat::DataFrameRow)
     return ""
+end
+
+function TUIgetStandards(method::Gmethod)
+    refmats = TUIgetRefmats(method)
+    out = OrderedDict()
+    for i in eachindex(refmats.names)
+        refmat = get(refmats,i)
+        if !(refmat isa BiasRefmat)            
+            add2od!(out,refmats.names[i],refmat)
+        end
+    end
+    return out
 end
 
 function TUIgetRefmats(method::Gmethod)

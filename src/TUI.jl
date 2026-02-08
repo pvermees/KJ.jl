@@ -282,7 +282,7 @@ function init_KJtree()
             action = Dict(
                 "a" => "chooseStandard",
                 "r" => "removeStandard",
-                "l" => TUIrefmatTab,
+                "l" => TUIstandardsTab,
                 "t" => TUItabulate
             )
         ),
@@ -792,7 +792,7 @@ function init_KJtree()
                 "d" => "setNdrift",
                 "h" => "setNdown",
                 "p" => "PA",
-                "l" => TUIrefmatTab,
+                "l" => TUIstandardsTab,
                 "a" => "addStandard",
                 "r" => TUIglassTab,
                 "g" => "addGlass",
