@@ -292,6 +292,35 @@ function TUIchooseInterferenceStandard(ctrl::AbstractDict,
     
 end
 
+function TUIlistInterferences(ctrl::AbstractDict)
+    msg = "Current interferences:\n"
+    m = ctrl["method"]
+    i = 0
+    for target in (m.P, m.D, m.d)
+        for interference in target.interferences
+            msg *= string(i+=1) *
+                   ". target=" * target.proxy * 
+                   "; interference=" * interference.ion * 
+                   "; proxy=" * interference.proxy *
+                   "; channel=\"" * interference.channel*"\""
+        end
+    end
+    if i>0
+        println(msg)
+    else
+        println("No interferences added yet.")
+    end
+    return nothing
+end
+
+function TUIremoveInterferences!(ctrl::AbstractDict)
+    m = ctrl["method"]
+    for target in (m.P, m.D, m.d)
+        target.interferences = Set{Interference}()
+    end
+    return "x"
+end
+
 function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)

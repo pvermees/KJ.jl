@@ -269,8 +269,9 @@ function init_KJtree()
         ),
         "interferences" => (
             message =
-            "a: Add an interference\n" * 
-            "r: Remove interferences\n" * 
+            "a: Add an interference\n" *
+            "l: List the interferences\n" *
+            "r: Remove the interferences\n" * 
             "x: Exit\n" * 
             "?: Help",
             help =
@@ -278,7 +279,8 @@ function init_KJtree()
             "correct for isobaric interferences on the isotopic ratios. ",
             action = Dict(
                 "a" => "addInterference",
-                "r" => "deleteInterferences"
+                "l" => TUIlistInterferences,
+                "r" => TUIremoveInterferences!
             )
         ),
         "addInterference" => (
