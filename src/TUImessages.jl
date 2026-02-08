@@ -116,6 +116,40 @@ function TUIsetProxiesMessage(ctrl::AbstractDict)
     return msg
 end
 
+function TUIlistIsotopesMessage(ctrl::AbstractDict)
+    msg = "Choose the isotope that requires an interference correction:\n"
+    targets = TUIgetInterferenceTargets(ctrl)
+    for i in eachindex(targets)
+        msg *= string(i)*". "*targets[i]*"\n"
+    end
+    msg *= "x: Exit\n"*"?: Help"
+    return msg
+end
+
+function TUIchooseInterferenceIonMessage(ctrl::AbstractDict)
+    msg = 
+    "Choose the isotope that interferes with " *
+    ctrl["cache"]["target"].proxy * 
+    " from the following list:\n"
+    interferences = TUIgetInterferences(ctrl)
+    for i in eachindex(interferences)
+        msg *= string(i)*". "*interferences[i]*"\n"
+    end
+    msg *= "x: Exit\n"*"?: Help"
+    return msg
+end
+
+function TUIchooseInterferenceProxyChannelMessage(ctrl::AbstractDict)
+    msg = "Choose an interference-free proxy channel for the " *
+    ctrl["cache"]["interference"].ion * 
+    "-interference on " *
+    ctrl["cache"]["target"].channel *
+    " from the following list:\n"
+    msg *= TUIlistChannels(ctrl)
+    msg *= "x: Exit\n"*"?: Help"
+    return msg
+end
+
 function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg = "Choose one of the following reference materials:\n"
     refmats = TUIgetStandards(ctrl["method"])

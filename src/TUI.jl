@@ -142,7 +142,7 @@ function init_KJtree()
                 "m" => "method",
                 "t" => TUItabulate,
                 "v" => TUIviewer,
-                "i" => TUItodo!, # "interferences",
+                "i" => "interferences",
                 "f" => "fractionation",
                 "b" => TUItodo!, # "bias",
                 "p" => TUIprocess!,
@@ -266,6 +266,63 @@ function init_KJtree()
             message = TUIstoichiometryMessage,
             help = nothing,
             action = TUIstoichiometry!
+        ),
+        "interferences" => (
+            message =
+            "a: Add an interference\n" * 
+            "r: Remove interferences\n" * 
+            "x: Exit\n" * 
+            "?: Help",
+            help =
+            "Choose one or more interferences. These are used to " * 
+            "correct for isobaric interferences on the isotopic ratios. ",
+            action = Dict(
+                "a" => "addInterference",
+                "r" => "deleteInterferences"
+            )
+        ),
+        "addInterference" => (
+            message = TUIlistIsotopesMessage,
+            help =
+            "For example, choose Re185 for the TmO interference on Re185, " * 
+            "or choose Os187 for the Re187 interference on Os187.",
+            action = TUIchooseInterferenceTarget!
+        ),
+        "interferenceType" => (
+            message = 
+            "Choose the type of interference:\n" *
+            "n: normal interference\n" *
+            "r: molecular rare earth interference\n" *
+            "x: Exit\n" *
+            "?: Help",
+            help = 
+            "A 'normal' interference is an isobaric interference from " * 
+            "another element (e.g., Re185 on Os185), whereas a molecular " * 
+            "rare earth interference is a molecule (e.g., TmO on Re185).",
+            action = Dict(
+                "n" => "interferenceIon",
+                "m" => TUItodo!
+            )
+        ),
+        "interferenceIon" => (
+            message = TUIchooseInterferenceIonMessage,
+            help =
+            "Here you choose the actual ion that interferes with " * 
+            "the chosen target isotope.",
+            action = TUIchooseInterferenceIon!
+        ),
+        "interferenceProxyChannel" => (
+            message = TUIchooseInterferenceProxyChannelMessage,
+            help =
+            "To correct the interference, you must identify a " *
+            "proxy isotope with known isotopic abundance relative " *
+            "to the interference target.",
+            action = TUIchooseInterferenceProxyChannel!
+        ),
+        "setInterferenceProxy" => (
+            message = "TODO",
+            help = "TODO",
+            action = TUItodo!
         ),
         "fractionation" => (
             message =

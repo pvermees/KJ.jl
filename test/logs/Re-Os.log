@@ -1,0 +1,8 @@
+task,action
+top,r
+format,a
+dir|file,d
+loadICPdir,/home/pvermees/git/KJ.jl/test/data/Re-Os
+top,m
+method,5
+columns,"7,10,12"

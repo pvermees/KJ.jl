@@ -224,6 +224,74 @@ function TUIsetProxies!(ctrl::AbstractDict,
     return "xxx"
 end
 
+function TUIgetInterferenceTargets(ctrl::AbstractDict)
+    m = ctrl["method"]
+    targets = [m.P.proxy, m.D.proxy, m.d.proxy]
+    return targets
+end
+
+function TUIchooseInterferenceTarget!(ctrl::AbstractDict,
+                                      response::AbstractString)
+    m = ctrl["method"]
+    i = parse(Int,response)
+    targets = TUIgetInterferenceTargets(ctrl)
+    ctrl["cache"] = Dict("target" => [m.P;m.D;m.d][i], 
+                         "interference" => Interference())
+    return "interferenceType"
+end
+
+function TUIgetInterferences(ctrl::AbstractDict)
+    target = ctrl["cache"]["target"].proxy
+    isotope = parse(Int, match(r"\d+", target).match)
+    nuclides = _KJ["nuclides"]
+    out = String[]
+    for (element, isotopes) in pairs(nuclides)
+        if isotope in isotopes
+            interference = element * string(isotope)
+            if interference != target
+                push!(out,interference)
+            end
+        end
+    end
+    return out
+end
+
+function TUIchooseInterferenceIon!(ctrl::AbstractDict,
+                                  response::AbstractString)
+    i = parse(Int,response)
+    interferences = TUIgetInterferences(ctrl)
+    ctrl["cache"]["interference"].ion = interferences[i]
+    return "interferenceProxyChannel"
+end
+
+function TUIchooseInterferenceProxyChannel!(ctrl::AbstractDict,
+                                            response::AbstractString)
+    selection = parse(Int,response)
+    channels = getChannels(ctrl["run"])
+    channel = channels[selection]
+    proxy = channel2proxy(channel)
+    interference = ctrl["cache"]["interference"]
+    interference.channel = channel
+    if isnothing(proxy)
+        return "setInterferenceProxy"
+    else
+        interference.proxy = proxy
+        interferences = ctrl["cache"]["target"].interferences
+        push!(interferences,interference)
+        return "xxxx"
+    end
+end
+
+function TUIchooseInterferenceStandard(ctrl::AbstractDict,
+                                       response::AbstractString)
+    i = parse(Int,response)
+    standards = _KJ["refmat"][ctrl["method"].name].names
+    standard = standards[i]
+    ctrl["cache"].standards = Set([standard])
+    return "addInterference"
+    
+end
+
 function TUIchooseStandard!(ctrl::AbstractDict,
                             response::AbstractString)
     i = parse(Int,response)
