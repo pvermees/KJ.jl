@@ -660,28 +660,26 @@ function TUIsaveTemplate(ctrl::AbstractDict,
         write(file,"multifile = " * string(ctrl["multifile"]) * "\n")
         write(file,"head2name = " * string(ctrl["head2name"]) * "\n")
         write(file,"transformation = \"" * ctrl["transformation"] * "\"\n")
-        write(file,"refmats = " * TUIrefmats2text(ctrl["refmats"]) * "\n") 
         write(file,TUImethod2text(ctrl["method"]))
     end
     return "xx"
 end
 
-function TUImethod2text(method::Gmethod)
-    F = method.fractionation
-    i = F.ions
-    p = F.proxies
-    c = F.channels
-    s = collect(F.standards)
-    PA = method.PAcutoff
-    out = "method = Gmethod(\"" * method.name * "\";\n"
-    out *= "                 ions = (P=\"" * i.P * "\", D=\"" * i.D * "\", d=\"" * i.d * "\"),\n"
-    out *= "                 proxies = (P=\"" * p.P * "\", D=\"" * p.D * "\", d=\"" * p.d * "\"),\n"
-    out *= "                 channels = (P=\"" * c.P * "\", D=\"" * c.D * "\", d=\"" * c.d * "\"),\n"
-    out *= "                 standards = [" * join("\"" .* s .* "\"", ", ") * "],\n"
-    out *= "                 nblank = " * string(method.nblank) * ",\n"
-    out *= "                 ndrift = " * string(method.ndrift) * ",\n"
-    out *= "                 ndown = " * string(method.ndown) * ",\n"
-    out *= "                 PAcutoff = " * ifelse(isnothing(PA),"nothing",PA) * ")\n"
+function TUImethod2text(m::Gmethod)
+    out = "method = Gmethod(name=\"" * m.name * "\",\n"
+    out *= "                 P=Pairing(ion=\"" * m.P.ion * "\",proxy=\"" * m.P.proxy * "\",channel=\"" * m.P.channel * "\"),\n"
+    out *= "                 D=Pairing(ion=\"" * m.D.ion * "\",proxy=\"" * m.D.proxy * "\",channel=\"" * m.D.channel * "\"),\n"
+    out *= "                 d=Pairing(ion=\"" * m.d.ion * "\",proxy=\"" * m.d.proxy * "\",channel=\"" * m.d.channel * "\"),\n"
+    out *= "                 nblank = " * string(m.nblank) * ",\n"
+    out *= "                 ndrift = " * string(m.ndrift) * ",\n"
+    out *= "                 ndown = " * string(m.ndown) * ",\n"
+    out *= "                 PAcutoff = " * ifelse(isnothing(m.PAcutoff),"nothing",string(m.PAcutoff)) * ")\n"
+    if length(m.bias.standards) > 0
+        out *= "method.bias = Calibration(num=(ion=\"" * m.bias.num.ion * "\", channel=\"" * m.bias.num.channel * "\"),\n"
+        out *= "                          den=(ion=\"" * m.bias.den.ion * "\", channel=\"" * m.bias.den.channel * "\"),\n"
+        out *= "                          standards = [" * join("\"" .* m.bias.standards .* "\"", ", ") * "])\n"
+    end
+    out *= "method.standards = Set([" * join("\"" .* m.standards .* "\"", ",") * "])\n"
     return out
 end
 
