@@ -150,6 +150,18 @@ function TUIchooseInterferenceProxyChannelMessage(ctrl::AbstractDict)
     return msg
 end
 
+function TUIchooseREEInterferenceProxyChannelMessage(ctrl::AbstractDict)
+    msg = 
+    "Suppose that X is a REE whose oxide (XO, say) interferes with " *
+    ctrl["cache"]["target"].proxy *
+    ", then the interference correction is given by X x YO / Y, where Y is " * 
+    "a non-interfering REE with known isotopic abundance relative to X and YO is its oxide. " *
+    "Select the channels correponding to X, Y, and YO as a comma-separated list of numbers:\n"
+    msg *= TUIlistChannels(ctrl)
+    msg *= "x: Exit\n" * "?: Help"
+    return msg
+end
+
 function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg = "Choose one of the following reference materials:\n"
     refmats = TUIgetStandards(ctrl["method"])
@@ -160,6 +172,16 @@ function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg *= "x: Exit\n"*"?: Help"
     return msg
 end
+
+function TUIchooseGlassMessage(ctrl::AbstractDict)
+    msg = "Choose one of the following reference glasses:\n"
+    refmats = _KJ["glass"].names
+    for i in eachindex(refmats)
+        msg *= string(i)*": " * refmats[i] * "\n"
+    end
+    msg *= "x: Exit\n"*"?: Help"
+    return msg
+end 
 
 function TUIprintRefmatInfo(refmat::AbstractRefmat)
     return " ("*refmat.material*")"
@@ -187,10 +209,6 @@ end
 
 function TUIgetRefmats(method::Cmethod)
     return _KJ["glass"]
-end
-
-function TUIchooseGlassMessage(ctrl::AbstractDict)
-    error("TODO")
 end
 
 function TUIaddByPrefixMessage(ctrl::AbstractDict)

@@ -293,17 +293,17 @@ function init_KJtree()
         "interferenceType" => (
             message = 
             "Choose the type of interference:\n" *
-            "n: normal interference\n" *
+            "o: ordinary isobaric interference\n" *
             "r: molecular rare earth interference\n" *
             "x: Exit\n" *
             "?: Help",
             help = 
-            "A 'normal' interference is an isobaric interference from " * 
+            "An 'ordinary' interference is an isobaric interference from " * 
             "another element (e.g., Re185 on Os185), whereas a molecular " * 
             "rare earth interference is a molecule (e.g., TmO on Re185).",
             action = Dict(
-                "n" => "interferenceIon",
-                "m" => TUItodo!
+                "o" => "interferenceIon",
+                "r" => "REEinterferenceProxy"
             )
         ),
         "interferenceIon" => (
@@ -320,6 +320,14 @@ function init_KJtree()
             "proxy isotope with known isotopic abundance relative " *
             "to the interference target.",
             action = TUIchooseInterferenceProxyChannel!
+        ),
+        "REEinterferenceProxy" => (
+             message = TUIchooseREEInterferenceProxyChannelMessage,
+            help =
+            "To correct the interference, you must identify a " *
+            "proxy isotope with known isotopic abundance relative " *
+            "to the interference target.",
+            action = TUIchooseREEInterferenceProxyChannels!
         ),
         "setInterferenceProxy" => (
             message = "TODO",

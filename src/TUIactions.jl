@@ -282,14 +282,16 @@ function TUIchooseInterferenceProxyChannel!(ctrl::AbstractDict,
     end
 end
 
-function TUIchooseInterferenceStandard(ctrl::AbstractDict,
-                                       response::AbstractString)
-    i = parse(Int,response)
-    standards = _KJ["refmat"][ctrl["method"].name].names
-    standard = standards[i]
-    ctrl["cache"].standards = Set([standard])
-    return "addInterference"
-    
+function TUIchooseREEInterferenceProxyChannels!(ctrl::AbstractDict,
+                                                response::AbstractString)
+    selection = parse.(Int,split(response,","))
+    channels = getChannels(ctrl["run"])
+    interference = REEInterference(;proxy=channels[selection[1]],
+                                    REE=channels[selection[2]],
+                                    REEO=channels[selection[3]])
+    interferences = ctrl["cache"]["target"].interferences
+    push!(interferences,interference)
+    return "glass"
 end
 
 function TUIlistInterferences(ctrl::AbstractDict)
@@ -298,11 +300,7 @@ function TUIlistInterferences(ctrl::AbstractDict)
     i = 0
     for target in (m.P, m.D, m.d)
         for interference in target.interferences
-            msg *= string(i+=1) *
-                   ". target=" * target.proxy * 
-                   "; interference=" * interference.ion * 
-                   "; proxy=" * interference.proxy *
-                   "; channel=\"" * interference.channel*"\""
+            msg *= string(i+=1) * TUIprintInterference(target,interference) * "\n"
         end
     end
     if i>0
@@ -311,6 +309,21 @@ function TUIlistInterferences(ctrl::AbstractDict)
         println("No interferences added yet.")
     end
     return nothing
+end
+
+function TUIprintInterference(target::Pairing, 
+                              interference::Interference)
+    return ". target=" * target.proxy * 
+           "; interference=" * interference.ion * 
+           "; proxy=" * interference.proxy *
+           "; channel=\"" * interference.channel * "\""
+end
+function TUIprintInterference(target::Pairing, 
+                              interference::REEInterference)
+    return ". target=" * target.proxy * 
+           "; proxy=\"" * interference.proxy * "\"" * 
+           "; REE=\"" * interference.REE * "\"" *
+           "; REEO=\"" * interference.REEO * "\""
 end
 
 function TUIremoveInterferences!(ctrl::AbstractDict)
