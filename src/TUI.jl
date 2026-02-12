@@ -141,7 +141,7 @@ function init_KJtree()
                 "v" => TUIviewer,
                 "i" => "interferences",
                 "f" => "fractionation",
-                "b" => TUItodo!, # "bias",
+                "b" => "bias",
                 "p" => TUIprocess!,
                 "e" => "export",
                 "l" => "log",
@@ -419,6 +419,14 @@ function init_KJtree()
             "standards by providing a list of comma separated numbers " * 
             "(e.g., 1,2,8,9,15,16,...).",
             action = TUIremoveStandardsByNumber!
+        ),
+        "bias" => (
+            message = TUIchooseBiasElementMessage,
+            help = 
+            "Choose the element for which you want to correct the mass bias." *
+            "After this step, you will be asked to select two isotopes of this element " *
+            "and a reference material to determine the mass bias correction factor.",
+            action = TUItodo!
         ),
         "glass" => (
             message =

@@ -26,3 +26,10 @@ addGlassByPrefix,Nist_REEint
 addInterference,x
 interferences,l
 interferences,x
+log,x
+top,f
+fractionation,a
+chooseStandard,1
+addStandardGroup,p
+addStandardsByPrefix,Qmoly
+fractionation,x

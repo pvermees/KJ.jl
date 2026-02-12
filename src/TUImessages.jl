@@ -249,6 +249,30 @@ function TUIratioMessage(ctrl::AbstractDict)
     return msg
 end
 
+function TUIchooseBiasElementMessage(ctrl::AbstractDict) 
+    m = ctrl["method"]
+    elements = TUIgetBiasElements(m)
+    msg = "Choose the element for which you want to fit a mass bias correction :\n"
+    for i in eachindex(elements)
+        msg *= string(i)*". "*elements[i]*"\n"
+    end
+    msg *= "x: Exit\n"*"?: Help"
+    return msg
+end
+
+function TUIgetBiasElements(m::Gmethod)
+    elements = [channel2element(m.D.proxy)]
+    for pairing in (m.P,m.D,m.d)
+        for (key,interference) in pairing.interferences
+            if interference isa Interference
+                element = channel2element(key)
+                push!(elements,element)
+            end
+        end
+    end
+    return elements
+end
+
 function TUIexportFormatMessage(ctrl::AbstractDict)
     return TUIexportFormatMessage(ctrl["method"])
 end
