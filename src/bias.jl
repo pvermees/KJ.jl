@@ -4,8 +4,8 @@ function fit_bias(run::Vector{Sample},
     out = Dict{String,AbstractBias}()
     pairings = (method.P,method.D,method.d)
     for pairing in pairings
-        for interference in pairing.interferences
-            add_bias!(out,run,method,blank,interference)
+        for (key,interference) in pairing.interferences
+            add_bias!(out,run,method,blank,key,interference)
         end
     end
     calibration = method.bias
@@ -50,6 +50,7 @@ function add_bias!(bias::AbstractDict,
                    run::Vector{Sample},
                    method::Gmethod,
                    blank::AbstractDataFrame,
+                   ion::AbstractString,
                    interference::Interference)
     calibration = interference.bias
     if length(calibration.standards) > 0

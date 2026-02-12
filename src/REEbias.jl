@@ -33,8 +33,8 @@ function add_bias!(bias::AbstractDict,
                    run::Vector{Sample},
                    method::Gmethod,
                    blank::AbstractDataFrame,
+                   bias_key::AbstractString,
                    interference::REEInterference)
-    bias_key = interference.proxy
     bias[bias_key] = fit_bias(run,method,interference,blank)
 end
 

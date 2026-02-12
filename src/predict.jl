@@ -30,11 +30,11 @@ function predict(samp::Sample,
         end
         return out
     end
-    interferences = union(method.P.interferences,
+    interferences = merge(method.P.interferences,
                           method.D.interferences,
                           method.d.interferences)
-    for interference in interferences
-        pred = predict(samp,interference,fit;
+    for (key,interference) in interferences
+        pred = predict(samp,key,interference,fit;
                        generic_names=generic_names)
         if !isnothing(pred)
             return pred
@@ -43,6 +43,7 @@ function predict(samp::Sample,
 end
 
 function predict(samp::Sample,
+                 ion::AbstractString,
                  interference::Interference,
                  fit::Gfit;
                  generic_names::Bool=true)
@@ -51,9 +52,9 @@ function predict(samp::Sample,
         cruncher = BCruncher(samp,calibration,fit.blank)
         element = channel2element(calibration.num.ion)
         mf = bias_correction(fit.bias[element],
-                                calibration.num.ion,
-                                calibration.den.ion,
-                                cruncher.t)
+                             calibration.num.ion,
+                             calibration.den.ion,
+                             cruncher.t)
         y = iratio(calibration.num.ion,calibration.den.ion)
         out = predict(mf,y,1.0;cruncher...)
         if !generic_names
@@ -64,13 +65,13 @@ function predict(samp::Sample,
     return nothing
 end
 function predict(samp::Sample,
+                 proxy_channel::AbstractString,
                  interference::REEInterference,
                  fit::Gfit;
                  generic_names::Bool=true)
     if samp.group in interference.standards
         cruncher = BCruncher(samp,interference,fit.blank)
-        bias_key = interference.proxy
-        mf = bias_correction(fit.bias[bias_key];
+        mf = bias_correction(fit.bias[proxy_channel];
                              t=cruncher.t)
         out = predict(mf,1.0,1.0;cruncher...)
         if !generic_names

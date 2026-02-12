@@ -1,56 +1,48 @@
 function interference_correction(dat::AbstractDataFrame,
-                                 interferences::Set{AbstractInterference};
+                                 interferences::AbstractDict;
                                  bias::AbstractDict=Dict{String,AbstractBias}(),
                                  blank::AbstractDataFrame=DataFrame())
     out = fill(0.0,size(dat,1))
-    for interference in interferences
-        out .+= interference_correction(dat,interference;
+    for (key,interference) in interferences
+        out .+= interference_correction(dat,key,interference;
                                         bias=bias,blank=blank)
     end
     return out
 end
 function interference_correction(dat::AbstractDataFrame,
+                                 ion::AbstractString,
                                  interference::Interference;
                                  bias::AbstractDict=Dict{String,AbstractBias}(),
                                  blank::AbstractDataFrame=DataFrame())
     ch = interference.channel
     meas = dat[:,ch]
     blk = polyVal(blank[:,ch],dat.t)
-    y = iratio(interference.ion,interference.proxy)
-    mf = bias4interference(dat,interference,bias)
+    y = iratio(ion,interference.proxy)
+    mf = bias4interference(dat,ion,interference,bias)
     return @. (meas - blk) * y * mf
 end
 function interference_correction(dat::AbstractDataFrame,
+                                 proxy_channel::AbstractString,
                                  interference::REEInterference;
                                  bias::AbstractDict=Dict{String,AbstractBias}(),
                                  blank::AbstractDataFrame=DataFrame())
-    ch = interference.proxy
-    meas = dat[:,ch]
-    blk = polyVal(blank[:,ch],dat.t)
-    mf = polyFac(bias[ch].par,dat.t)
+    meas = dat[:,proxy_channel]
+    blk = polyVal(blank[:,proxy_channel],dat.t)
+    mf = polyFac(bias[proxy_channel].par,dat.t)
     return @. (meas - blk) * mf
 end
 export interference_correction
 
 function bias4interference(dat::AbstractDataFrame,
+                           ion::AbstractString,
                            interference::Interference,
                            bias::Dict{String,AbstractBias})
-    element = channel2element(interference.ion)
+    element = channel2element(ion)
     if haskey(bias,element)
-        mf = bias_correction(bias[element],interference.ion,
+        mf = bias_correction(bias[element],ion,
                              interference.proxy,dat.t)
     else
         mf = fill(1.0,size(dat,1))
     end
     return mf
-end
-function bias4interference(dat::AbstractDataFrame,
-                           interference::REEInterference,
-                           bias::Dict{String,AbstractBias})
-    key = interference.bias_key
-    if key in names(bias)
-        return polyFac(bias[:,key],dat.t)
-    else
-        error("No bias correction supplied to REEInterference.")
-    end
 end

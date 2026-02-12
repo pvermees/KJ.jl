@@ -50,7 +50,6 @@ abstract type AbstractInterference end
 export AbstractInterference
 
 @kwdef mutable struct Interference <: AbstractInterference
-    ion::String = ""
     proxy::String = ""
     channel::String = ""
     bias::Calibration = Calibration()
@@ -58,7 +57,6 @@ end
 export Interference
 
 @kwdef mutable struct REEInterference <: AbstractInterference
-    proxy::String = ""
     REE::String = ""
     REEO::String = ""
     standards::Set{String} = Set{String}()
@@ -69,7 +67,7 @@ export REEInterference
     ion::String = ""
     proxy::String = ion
     channel::String = proxy
-    interferences::Set{AbstractInterference} = Set{Interference}()
+    interferences::Dict{String,AbstractInterference} = Dict{String,Interference}()
 end
 export Pairing
 
