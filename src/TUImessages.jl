@@ -127,11 +127,10 @@ function TUIlistIsotopesMessage(ctrl::AbstractDict)
 end
 
 function TUIchooseInterferenceIonMessage(ctrl::AbstractDict)
-    msg = 
-    "Choose the isotope that interferes with " *
-    ctrl["cache"]["target"].proxy * 
-    " from the following list:\n"
-    interferences = TUIgetInterferences(ctrl)
+    proxy = ctrl["cache"]["target"].proxy
+    msg = "Choose the isotope that interferes with " *
+          proxy * " from the following list:\n"
+    interferences = TUIgetInterferences(proxy)
     for i in eachindex(interferences)
         msg *= string(i)*". "*interferences[i]*"\n"
     end
@@ -141,10 +140,8 @@ end
 
 function TUIchooseInterferenceProxyChannelMessage(ctrl::AbstractDict)
     msg = "Choose an interference-free proxy channel for the " *
-    ctrl["cache"]["interference"].ion * 
-    "-interference on " *
-    ctrl["cache"]["target"].channel *
-    " from the following list:\n"
+          ctrl["cache"]["key"] * "-interference on " *
+          ctrl["cache"]["target"].channel * " from the following list:\n"
     msg *= TUIlistChannels(ctrl)
     msg *= "x: Exit\n"*"?: Help"
     return msg

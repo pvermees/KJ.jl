@@ -234,21 +234,18 @@ function TUIchooseInterferenceTarget!(ctrl::AbstractDict,
                                       response::AbstractString)
     m = ctrl["method"]
     i = parse(Int,response)
-    targets = TUIgetInterferenceTargets(ctrl)
-    ctrl["cache"] = Dict("target" => [m.P;m.D;m.d][i], 
-                         "interference" => Interference())
+    ctrl["cache"] = Dict{String,Any}("target" => [m.P;m.D;m.d][i])
     return "interferenceType"
 end
 
-function TUIgetInterferences(ctrl::AbstractDict)
-    target = ctrl["cache"]["target"].proxy
-    isotope = parse(Int, match(r"\d+", target).match)
+function TUIgetInterferences(proxy::AbstractString)
+    isotope = parse(Int, match(r"\d+", proxy).match)
     nuclides = _KJ["nuclides"]
     out = String[]
     for (element, isotopes) in pairs(nuclides)
         if isotope in isotopes
             interference = element * string(isotope)
-            if interference != target
+            if interference != proxy
                 push!(out,interference)
             end
         end
@@ -257,10 +254,17 @@ function TUIgetInterferences(ctrl::AbstractDict)
 end
 
 function TUIchooseInterferenceIon!(ctrl::AbstractDict,
-                                  response::AbstractString)
+                                   response::AbstractString)
     i = parse(Int,response)
-    interferences = TUIgetInterferences(ctrl)
-    ctrl["cache"]["interference"].ion = interferences[i]
+    interferences = TUIgetInterferences(ctrl["cache"]["target"].proxy)
+    key = interferences[i]
+    ctrl["cache"]["key"] = key
+    if haskey(ctrl["cache"]["target"].interferences,key)
+        interference = ctrl["cache"]["target"].interferences[key]
+    else
+        interference = Interference()
+    end
+    ctrl["cache"]["interference"] = interference
     return "interferenceProxyChannel"
 end
 
@@ -275,9 +279,10 @@ function TUIchooseInterferenceProxyChannel!(ctrl::AbstractDict,
     if isnothing(proxy)
         return "setInterferenceProxy"
     else
-        interference.proxy = proxy
         interferences = ctrl["cache"]["target"].interferences
-        push!(interferences,interference)
+        interference.proxy = proxy
+        key = ctrl["cache"]["key"]
+        interferences[key] = interference
         return "xxxx"
     end
 end
@@ -286,10 +291,15 @@ function TUIchooseREEInterferenceProxyChannels!(ctrl::AbstractDict,
                                                 response::AbstractString)
     selection = parse.(Int,split(response,","))
     channels = getChannels(ctrl["run"])
+    key = channels[selection[1]]
     interferences = ctrl["cache"]["target"].interferences
-    interference = REEInterference(;proxy=channels[selection[1]],
-                                    REE=channels[selection[2]],
-                                    REEO=channels[selection[3]])
+    if haskey(interferences,key)
+        interference = interferences[key]
+    else
+        interference = REEInterference(;REE=channels[selection[2]],
+                                        REEO=channels[selection[3]])
+    end
+    ctrl["cache"]["key"] = key
     ctrl["cache"]["interference"] = interference
     return "glass"
 end
@@ -298,9 +308,9 @@ function TUIlistInterferences(ctrl::AbstractDict)
     msg = "Current interferences:\n"
     m = ctrl["method"]
     i = 0
-    for target in (m.P, m.D, m.d)
-        for interference in target.interferences
-            msg *= string(i+=1) * TUIprintInterference(target,interference) * "\n"
+    for pairing in (m.P, m.D, m.d)
+        for (key,interference) in pairing.interferences
+            msg *= string(i+=1) * TUIprintInterference(pairing,key,interference) * "\n"
         end
     end
     if i>0
@@ -311,17 +321,19 @@ function TUIlistInterferences(ctrl::AbstractDict)
     return nothing
 end
 
-function TUIprintInterference(target::Pairing, 
+function TUIprintInterference(pairing::Pairing, 
+                              ion::AbstractString,
                               interference::Interference)
-    return ". target=" * target.proxy * 
-           "; interference=" * interference.ion * 
+    return ". target=" * pairing.proxy * 
+           "; interference=" * ion * 
            "; proxy=" * interference.proxy *
            "; channel=\"" * interference.channel * "\""
 end
-function TUIprintInterference(target::Pairing, 
+function TUIprintInterference(pairing::Pairing,
+                              proxy_channel::AbstractString,
                               interference::REEInterference)
-    return ". target=" * target.proxy * 
-           "; proxy=\"" * interference.proxy * "\"" * 
+    return ". target=" * pairing.proxy * 
+           "; proxy=\"" * proxy_channel * "\"" * 
            "; REE=\"" * interference.REE * "\"" *
            "; REEO=\"" * interference.REEO * "\"" *
            "; standards=[" * join(interference.standards,",") * "]"
@@ -329,8 +341,8 @@ end
 
 function TUIremoveInterferences!(ctrl::AbstractDict)
     m = ctrl["method"]
-    for target in (m.P, m.D, m.d)
-        target.interferences = Set{Interference}()
+    for pairing in (m.P, m.D, m.d)
+        pairing.interferences = Dict{String,AbstractInterference}()
     end
     return "x"
 end
@@ -458,8 +470,9 @@ function TUIaddGlassByPrefix!(ctrl::AbstractDict,
     if haskey(ctrl["cache"],"interference")
         interference = ctrl["cache"]["interference"]
         push!(interference.standards,response)
+        key = ctrl["cache"]["key"]
         interferences = ctrl["cache"]["target"].interferences
-        push!(interferences,interference)
+        interferences[key] = interference
     end
     return "xxxxxx"
 end
