@@ -156,7 +156,7 @@ function TUIchooseREEInterferenceProxyChannelMessage(ctrl::AbstractDict)
     ctrl["cache"]["target"].proxy *
     ", then the interference correction is given by X x YO / Y, where Y is " * 
     "a non-interfering REE with known isotopic abundance relative to X and YO is its oxide. " *
-    "Select the channels correponding to X, Y, and YO as a comma-separated list of numbers:\n"
+    "Select the channels corresponding to X, Y, and YO as a comma-separated list of numbers:\n"
     msg *= TUIlistChannels(ctrl)
     msg *= "x: Exit\n" * "?: Help"
     return msg
@@ -211,15 +211,31 @@ function TUIgetRefmats(method::Cmethod)
     return _KJ["glass"]
 end
 
-function TUIaddByPrefixMessage(ctrl::AbstractDict)
-    msg = "Specify the prefix of the " * ctrl["cache"] *
-        " measurements (? for help, x to exit):"
-    return msg
+function TUIaddByPrefixMessage(ctrl::AbstractDict) 
+    msg = "Specify the prefix of the " * 
+    TUIaddPrefixMessageHelper(ctrl["cache"]) * 
+    " measurements (? for help, x to exit):" 
+    return msg 
+end 
+
+function TUIaddPrefixMessageHelper(cache::Any)
+    return cache
+end
+
+function TUIaddPrefixMessageHelper(cache::AbstractDict)
+    if haskey(cache,"glass")
+        return cache["glass"]
+    else 
+        @warn "Cache does not contain a reference material. " *
+        "returning an empty string instead." 
+        return ""
+    end
 end
 
 function TUIaddByNumberMessage(ctrl::AbstractDict)
-    msg = "Select the " * ctrl["cache"] * " measurements " *
-        "with a comma-separated list of numbers " *
+    msg = "Select the " * 
+        TUIaddPrefixMessageHelper(ctrl["cache"]) * 
+        " measurements with a comma-separated list of numbers " *
         "(? for help, x to exit):"
     return msg
 end

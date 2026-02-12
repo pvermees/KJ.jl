@@ -72,7 +72,7 @@ function dispatch!(ctrl::AbstractDict;
     if response == "?"
         println(help)
         next = nothing
-    elseif response in ["x","xx","xxx","xxxx"]
+    elseif count_xs(response)>0
         next = response
     elseif isa(action,Function)
         next = action(ctrl,response)
@@ -84,24 +84,12 @@ function dispatch!(ctrl::AbstractDict;
     else
         final = next
     end
-    if final == "x"
-        if length(ctrl["chain"])<1 return end
-        pop!(ctrl["chain"])
-    elseif final == "xx"
-        if length(ctrl["chain"])<2 return end
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
-    elseif final == "xxx"
-        if length(ctrl["chain"])<3 return end
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
-    elseif final == "xxxx"
-        if length(ctrl["chain"])<4 return end
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
+    nx = count_xs(final)
+    if nx > 0
+        if length(ctrl["chain"]) < nx return end
+        for i in 1:nx
+            pop!(ctrl["chain"])
+        end
     elseif isnothing(final)
         if length(ctrl["chain"])<1 return end
     else
@@ -118,6 +106,15 @@ function dispatch!(ctrl::AbstractDict;
         print(", final: "); println(final)
         println(ctrl["history"])
     end
+end
+
+function count_xs(response::Any)
+    return 0
+end
+function count_xs(response::AbstractString)
+    nx = count('x',response)
+    nc = length(response)
+    if nx == nc return nx else return 0 end
 end
 
 function KJtree!(tree::AbstractDict)
@@ -322,11 +319,11 @@ function init_KJtree()
             action = TUIchooseInterferenceProxyChannel!
         ),
         "REEinterferenceProxy" => (
-             message = TUIchooseREEInterferenceProxyChannelMessage,
+            message = TUIchooseREEInterferenceProxyChannelMessage,
             help =
-            "To correct the interference, you must identify a " *
-            "proxy isotope with known isotopic abundance relative " *
-            "to the interference target.",
+            "Suppose that the channels corresponding to X, Y and YO " * 
+            "appear as items 3, 8 and 13 of the list, then enter" * 
+            "3,8,13 here as a comma-separated list of numbers:\n",
             action = TUIchooseREEInterferenceProxyChannels!
         ),
         "setInterferenceProxy" => (

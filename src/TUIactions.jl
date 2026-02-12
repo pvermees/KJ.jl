@@ -286,11 +286,11 @@ function TUIchooseREEInterferenceProxyChannels!(ctrl::AbstractDict,
                                                 response::AbstractString)
     selection = parse.(Int,split(response,","))
     channels = getChannels(ctrl["run"])
+    interferences = ctrl["cache"]["target"].interferences
     interference = REEInterference(;proxy=channels[selection[1]],
                                     REE=channels[selection[2]],
                                     REEO=channels[selection[3]])
-    interferences = ctrl["cache"]["target"].interferences
-    push!(interferences,interference)
+    ctrl["cache"]["interference"] = interference
     return "glass"
 end
 
@@ -323,7 +323,8 @@ function TUIprintInterference(target::Pairing,
     return ". target=" * target.proxy * 
            "; proxy=\"" * interference.proxy * "\"" * 
            "; REE=\"" * interference.REE * "\"" *
-           "; REEO=\"" * interference.REEO * "\""
+           "; REEO=\"" * interference.REEO * "\"" *
+           "; standards=[" * join(interference.standards,",") * "]"
 end
 
 function TUIremoveInterferences!(ctrl::AbstractDict)
@@ -442,16 +443,25 @@ function TUIchooseGlass!(ctrl::AbstractDict,
                          response::AbstractString)
     i = parse(Int,response)
     glass = _KJ["glass"].names[i]
-    ctrl["cache"] = glass
-    ctrl["method"].glass = Dict()
+    if ctrl["cache"] isa AbstractDict
+        ctrl["cache"]["glass"] = glass
+    else
+        ctrl["cache"] = Dict("glass" => glass)
+    end
     return "addGlassGroup"
 end
 
 function TUIaddGlassByPrefix!(ctrl::AbstractDict,
                               response::AbstractString)
-    setGroup!(ctrl["run"],response,ctrl["cache"])
-    ctrl["glass"][ctrl["cache"]] = response
-    return "xxx"
+    setGroup!(ctrl["run"],[response])
+    ctrl["method"].groups[response] = ctrl["cache"]["glass"]
+    if haskey(ctrl["cache"],"interference")
+        interference = ctrl["cache"]["interference"]
+        push!(interference.standards,response)
+        interferences = ctrl["cache"]["target"].interferences
+        push!(interferences,interference)
+    end
+    return "xxxxxx"
 end
 
 function TUIaddGlassByNumber!(ctrl::AbstractDict,
