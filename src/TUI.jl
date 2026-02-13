@@ -426,7 +426,19 @@ function init_KJtree()
             "Choose the element for which you want to correct the mass bias." *
             "After this step, you will be asked to select two isotopes of this element " *
             "and a reference material to determine the mass bias correction factor.",
-            action = TUItodo!
+            action = TUIchooseBiasElement!
+        ),
+        "calibration" => (
+            message = TUIcalibrationMessage,
+            help = 
+            "To determine the mass bias correction factor, you need to select " *
+            "two isotopes of the chosen element and a reference material with known " *
+            "isotopic composition. For example, if you choose Re as the bias element, " *
+            "then you can choose Re185 and Re187 as the two isotopes and indicate their " *
+            "channels in the format (1,2),(3,4) where 1 and 3 are the isotopes and 2 and 4 " * 
+            "are their corresponding channels. In the next step, you will be asked to select " *
+            "a reference material in which the ratio of the two selected isotopes is known.",
+            action = TUIcalibration!
         ),
         "glass" => (
             message =

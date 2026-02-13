@@ -329,6 +329,7 @@ function TUIprintInterference(pairing::Pairing,
            "; proxy=" * interference.proxy *
            "; channel=\"" * interference.channel * "\""
 end
+
 function TUIprintInterference(pairing::Pairing,
                               proxy_channel::AbstractString,
                               interference::REEInterference)
@@ -513,6 +514,35 @@ function TUIglassTab(ctrl::AbstractDict)
         println(name)
     end
     return nothing
+end
+
+function TUIchooseBiasElement!(ctrl::AbstractDict,
+                               response::AbstractString)
+    i = parse(Int,response)
+    m = ctrl["method"]
+    elements = TUIgetBiasElements(m)
+    ctrl["cache"] = Dict{String,Any}("element" => elements[i])
+    return "calibration"
+end
+
+function TUIcalibration!(ctrl::AbstractDict,
+                         response::AbstractString)
+    parts = split(response,['(',')',','])
+    if length(parts) < 8
+        @warn "Invalid input format. Expected format: (1,2),(3,4)"
+        return nothing
+    end
+    element = ctrl["cache"]["element"]
+    isotopes = element .* string.(_KJ["nuclides"][element])
+    channels = getChannels(ctrl["run"])
+    i1 = parse(Int,parts[2])
+    i2 = parse(Int,parts[3])
+    i3 = parse(Int,parts[6])
+    i4 = parse(Int,parts[7])
+    bias = Calibration(num=(ion=isotopes[i1],channel=channels[i2]),
+                       den=(ion=isotopes[i3],channel=channels[i4]))
+    ctrl["cache"]["bias"] = bias
+    return "x"
 end
 
 function TUIviewer(ctrl::AbstractDict)

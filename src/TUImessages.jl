@@ -273,6 +273,34 @@ function TUIgetBiasElements(m::Gmethod)
     return elements
 end
 
+function TUIcalibrationMessage(ctrl::AbstractDict)
+    element = ctrl["cache"]["element"]
+    isotopes = element .* string.(_KJ["nuclides"][element])
+    channels = getChannels(ctrl["run"])
+    ni = length(isotopes)
+    nc = length(channels)
+    n = max(ni,nc)
+    msg = 
+    "Pair the isotope with the channel for the " *
+    "numerator and denominator of your bias correction:\n"
+    for i in 1:n
+        if i <= ni
+            msg *= string(i) * ". " * isotopes[i] *", "
+        else
+            msg *= repeat(" ",5 + maximum(length.(isotopes)))
+        end
+        if i <= nc
+            msg *= string(i) * ". " * channels[i]
+        end
+        msg *= "\n"
+    end
+    msg *= 
+    "For example (1,1),(2,3) would mean that " * 
+    isotopes[1] * " is paired with channel " * channels[1] * " and " *
+    isotopes[2] * " is paired with channel " * channels[3] * "."
+    return msg
+end
+
 function TUIexportFormatMessage(ctrl::AbstractDict)
     return TUIexportFormatMessage(ctrl["method"])
 end
