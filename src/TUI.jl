@@ -421,8 +421,24 @@ function init_KJtree()
             action = TUIremoveStandardsByNumber!
         ),
         "bias" => (
-            message = TUIchooseBiasElementMessage,
+            message = 
+            "a. Add a bias correction\n" *
+            "l. List the bias corrections\n" *
+            "d. Delete the bias corrections\n" *
+            "x. Exit\n" *
+            "?: Help",
             help = 
+            "Correct the mass bias by choosing one or more " *
+            "reference materials with known isotopic composition. ",
+            action = Dict(
+                "a" => "chooseBiasElement",
+                "l" => TUIlistBiases,
+                "d" => TUItodo!
+            )
+        ),
+        "chooseBiasElement" => (
+            message = TUIchooseBiasElementMessage,
+            help =
             "Choose the element for which you want to correct the mass bias." *
             "After this step, you will be asked to select two isotopes of this element " *
             "and a reference material to determine the mass bias correction factor.",

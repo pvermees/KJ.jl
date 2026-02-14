@@ -224,9 +224,9 @@ function TUIsetProxies!(ctrl::AbstractDict,
     return "xxx"
 end
 
-function TUIgetInterferenceTargets(ctrl::AbstractDict)
+function TUIgetPairings(ctrl::AbstractDict)
     m = ctrl["method"]
-    targets = [m.P.proxy, m.D.proxy, m.d.proxy]
+    targets = [m.P, m.D, m.d]
     return targets
 end
 
@@ -307,7 +307,7 @@ end
 function TUIlistInterferences(ctrl::AbstractDict)
     msg = "Current interferences:\n"
     i = 0
-    for pairing in TUIgetInterferenceTargets(ctrl)
+    for pairing in TUIgetPairings(ctrl)
         for (key,interference) in pairing.interferences
             msg *= string(i+=1) * TUIprintInterference(pairing,key,interference) * "\n"
         end
@@ -340,7 +340,7 @@ function TUIprintInterference(pairing::Pairing,
 end
 
 function TUIremoveInterferences!(ctrl::AbstractDict)
-    for pairing in TUIgetInterferenceTargets(ctrl)
+    for pairing in TUIgetPairings(ctrl)
         pairing.interferences = Dict{String,AbstractInterference}()
     end
     return "x"
@@ -361,12 +361,12 @@ function TUIgetRefmatName(method::Cmethod,i::Int)
     return _KJ["glass"].names[i]
 end
 
-function TUIaddBias2interferences!(method::Gmethod,
+function TUIaddBias2interferences!(ctrl::AbstractDict,
                                    bias::Calibration,
                                    element::AbstractString)
-    for pairing in TUIgetInterferenceTargets(ctrl["method"])
+    for pairing in TUIgetPairings(ctrl)
         for interference in values(pairing.interferences)
-            if interference isa Interference && proxy2element(interference.proxy) == element
+            if interference isa Interference && channel2element(interference.proxy) == element
                 interference.bias = bias
             end
         end
@@ -380,7 +380,7 @@ function TUIaddBias2method!(ctrl::AbstractDict)
     if element == channel2element(method.D.proxy)
         method.bias = bias
     else
-        TUIaddBias2interferences!(method,bias,element)
+        TUIaddBias2interferences!(ctrl,bias,element)
     end
     return "xxxx"
 end
@@ -500,6 +500,7 @@ function TUIaddGlassByPrefix!(ctrl::AbstractDict,
     elseif haskey(ctrl["cache"],"bias")
         bias = ctrl["cache"]["bias"]
         push!(bias.standards,response)
+        TUIaddBias2method!(ctrl)
     end
     return "xxxxxx"
 end
@@ -538,6 +539,40 @@ end
 function TUIglassTab(ctrl::AbstractDict)
     for name in _KJ["glass"].names
         println(name)
+    end
+    return nothing
+end
+
+function TUIprintBias(ctrl::AbstractDict, 
+                      calibration::Calibration)
+    msg = "num = " * calibration.num.ion * " (" * calibration.num.channel * ")"
+    msg *= "; den = " * calibration.den.ion * " (" * calibration.den.channel * ")"
+    for standard in calibration.standards
+        msg *= "; prefix = " * standard
+        msg *= "; standard = " * ctrl["method"].groups[standard] * "\n"
+    end
+    return msg
+end
+
+function TUIlistBiases(ctrl::AbstractDict)
+    msg = "Current bias corrections:\n"
+    i = 0
+    for pairing in TUIgetPairings(ctrl)
+        for interference in values(pairing.interferences)
+            if interference isa Interference && length(interference.bias.standards)>0
+                msg *= string(i+=1) * ". "
+                msg *= TUIprintBias(ctrl,interference.bias)
+            end
+        end
+    end
+    if length(ctrl["method"].bias.standards) > 0
+        msg *= string(i+=1) * ". "
+        msg *= TUIprintBias(ctrl,ctrl["method"].bias) * "\n"
+    end
+    if i>0
+        println(msg)
+    else
+        println("No bias corrections fitted yet.")
     end
     return nothing
 end

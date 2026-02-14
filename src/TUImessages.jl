@@ -118,11 +118,11 @@ end
 
 function TUIlistIsotopesMessage(ctrl::AbstractDict)
     msg = "Choose the isotope that requires an interference correction:\n"
-    targets = TUIgetInterferenceTargets(ctrl)
-    for i in eachindex(targets)
-        msg *= string(i)*". "*targets[i]*"\n"
+    pairings = TUIgetPairings(ctrl)
+    for i in eachindex(pairings)
+        msg *= string(i) * ". " * pairings[i].proxy[i] * "\n"
     end
-    msg *= "x: Exit\n"*"?: Help"
+    msg *= "x: Exit\n" * "?: Help"
     return msg
 end
 
@@ -267,9 +267,9 @@ function TUIchooseBiasElementMessage(ctrl::AbstractDict)
     elements = TUIgetBiasElements(m)
     msg = "Choose the element for which you want to fit a mass bias correction :\n"
     for i in eachindex(elements)
-        msg *= string(i)*". "*elements[i]*"\n"
+        msg *= string(i) * ". " * elements[i] * "\n"
     end
-    msg *= "x: Exit\n"*"?: Help"
+    msg *= "x: Exit\n" * "?: Help"
     return msg
 end
 
