@@ -306,9 +306,8 @@ end
 
 function TUIlistInterferences(ctrl::AbstractDict)
     msg = "Current interferences:\n"
-    m = ctrl["method"]
     i = 0
-    for pairing in (m.P, m.D, m.d)
+    for pairing in TUIgetInterferenceTargets(ctrl)
         for (key,interference) in pairing.interferences
             msg *= string(i+=1) * TUIprintInterference(pairing,key,interference) * "\n"
         end
@@ -341,8 +340,7 @@ function TUIprintInterference(pairing::Pairing,
 end
 
 function TUIremoveInterferences!(ctrl::AbstractDict)
-    m = ctrl["method"]
-    for pairing in (m.P, m.D, m.d)
+    for pairing in TUIgetInterferenceTargets(ctrl)
         pairing.interferences = Dict{String,AbstractInterference}()
     end
     return "x"
@@ -363,19 +361,44 @@ function TUIgetRefmatName(method::Cmethod,i::Int)
     return _KJ["glass"].names[i]
 end
 
-function TUIsetStandard!(ctrl::AbstractDict,
-                         group::AbstractString,
-                         standard::AbstractString)
-    push!(ctrl["method"].standards,group)
-    ctrl["method"].groups[group] = standard
+function TUIaddBias2interferences!(method::Gmethod,
+                                   bias::Calibration,
+                                   element::AbstractString)
+    for pairing in TUIgetInterferenceTargets(ctrl["method"])
+        for interference in values(pairing.interferences)
+            if interference isa Interference && proxy2element(interference.proxy) == element
+                interference.bias = bias
+            end
+        end
+    end
+end
+
+function TUIaddBias2method!(ctrl::AbstractDict)
+    method = ctrl["method"]
+    bias = ctrl["cache"]["bias"]
+    element = ctrl["cache"]["element"]
+    if element == channel2element(method.D.proxy)
+        method.bias = bias
+    else
+        TUIaddBias2interferences!(method,bias,element)
+    end
+    return "xxxx"
 end
 
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
                                   response::AbstractString)
-    TUIsetStandard!(ctrl,response,ctrl["cache"])
-    setGroup!(ctrl["run"],ctrl["method"])
-    ctrl["priority"]["fractionation"] = false
-    return "xxx"
+    if ctrl["cache"] isa AbstractDict
+        standard = ctrl["cache"]["standard"]
+        push!(ctrl["cache"]["bias"].standards,response)
+        ctrl["method"].groups[response] = standard
+        return TUIaddBias2method!(ctrl)
+    else
+        push!(ctrl["method"].standards,response)
+        ctrl["method"].groups[response] = ctrl["cache"]
+        setGroup!(ctrl["run"],ctrl["method"])
+        ctrl["priority"]["fractionation"] = false
+        return "xxx"
+    end
 end
 
 function TUIaddStandardsByNumber!(ctrl::AbstractDict,
@@ -474,6 +497,9 @@ function TUIaddGlassByPrefix!(ctrl::AbstractDict,
         key = ctrl["cache"]["key"]
         interferences = ctrl["cache"]["target"].interferences
         interferences[key] = interference
+    elseif haskey(ctrl["cache"],"bias")
+        bias = ctrl["cache"]["bias"]
+        push!(bias.standards,response)
     end
     return "xxxxxx"
 end
@@ -542,7 +568,27 @@ function TUIcalibration!(ctrl::AbstractDict,
     bias = Calibration(num=(ion=isotopes[i1],channel=channels[i2]),
                        den=(ion=isotopes[i3],channel=channels[i4]))
     ctrl["cache"]["bias"] = bias
-    return "x"
+    return TUIbiasStandardDispatch(ctrl)
+end
+
+function TUIbiasStandardDispatch(ctrl::AbstractDict)
+    bias = ctrl["cache"]["bias"]
+    ratio = iratio(bias.num.ion,bias.den.ion)
+    if isnothing(ratio)
+        return "biasStandards"
+    else
+        return "glass"
+    end
+end
+
+function TUIchooseBiasStandard!(ctrl::AbstractDict,
+                                response::AbstractString)
+    i = parse(Int,response)
+    m = ctrl["method"]
+    refmats = TUIgetBiasStandards(m)
+    standard = get(refmats,i)
+    ctrl["cache"]["standard"] = standard.material
+    return "addStandardGroup"
 end
 
 function TUIviewer(ctrl::AbstractDict)

@@ -188,24 +188,35 @@ function TUIprintRefmatInfo(refmat::DataFrameRow)
     return ""
 end
 
-function TUIgetStandards(method::Gmethod)
-    refmats = TUIgetRefmats(method)
-    out = OrderedDict()
-    for i in eachindex(refmats.names)
-        refmat = get(refmats,i)
-        if !(refmat isa BiasRefmat)            
-            add2od!(out,refmats.names[i],refmat)
-        end
-    end
-    return out
-end
-
 function TUIgetRefmats(method::Gmethod)
     return _KJ["refmat"][method.name]
 end
 
 function TUIgetRefmats(method::Cmethod)
     return _KJ["glass"]
+end
+
+function TUIgetStandardsHelper(method::Gmethod;
+                               condition::Function= refmat -> return true)
+    refmats = TUIgetRefmats(method)
+    out = OrderedDict()
+    for i in eachindex(refmats.names)
+        refmat = get(refmats,i)
+        if condition(refmat)
+            add2od!(out,refmats.names[i],refmat)
+        end
+    end
+    return out
+end
+
+function TUIgetStandards(method::Gmethod)
+    condition = refmat -> !(refmat isa BiasRefmat)
+    return TUIgetStandardsHelper(method; condition = condition)
+end
+
+function TUIgetBiasStandards(method::Gmethod)
+    condition = refmat -> refmat isa BiasRefmat || refmat.material == "glass"
+    return TUIgetStandardsHelper(method; condition = condition)
 end
 
 function TUIaddByPrefixMessage(ctrl::AbstractDict) 
@@ -222,7 +233,9 @@ end
 function TUIaddPrefixMessageHelper(cache::AbstractDict)
     if haskey(cache,"glass")
         return cache["glass"]
-    else 
+    elseif haskey(cache,"standard")
+        return cache["standard"]
+    else
         @warn "Cache does not contain a reference material. " *
         "returning an empty string instead." 
         return ""
@@ -298,6 +311,17 @@ function TUIcalibrationMessage(ctrl::AbstractDict)
     "For example (1,1),(2,3) would mean that " * 
     isotopes[1] * " is paired with channel " * channels[1] * " and " *
     isotopes[2] * " is paired with channel " * channels[3] * "."
+    return msg
+end
+
+function TUIchooseBiasStandardMessage(ctrl::AbstractDict)
+    msg = "Choose the reference material for the bias correction from the following list:\n"
+    refmats = TUIgetBiasStandards(ctrl["method"])
+    for i in eachindex(refmats.names)
+        refmat = get(refmats,i)
+        msg *= string(i)*": " * refmats.names[i] * TUIprintRefmatInfo(refmat) * "\n"
+    end
+    msg *= "x: Exit\n"*"?: Help"
     return msg
 end
 

@@ -440,6 +440,15 @@ function init_KJtree()
             "a reference material in which the ratio of the two selected isotopes is known.",
             action = TUIcalibration!
         ),
+        "biasStandards" => (
+            message = TUIchooseBiasStandardMessage,
+            help =
+            "Choose a reference material with known isotopic composition for the bias correction. " * 
+            "If you do not find your reference material in this list, then you can either specify " * 
+            "your own reference material under 'options' in the top menu, or you can email us to add " * 
+            "the material to the software.",
+            action = TUIchooseBiasStandard!
+        ),
         "glass" => (
             message =
             "a: Add a reference glass\n" * 
