@@ -649,8 +649,9 @@ function biastest(option="all")
         blank = fitBlanks(myrun)
         Hf_bias = fit_bias(myrun,method,blank)
         fit = Gfit(method;blank=blank,bias=Hf_bias)
-        p1 = KJ.plot(myrun[4],method;fit=fit,
-                    channels=[method.D.channel;method.d.channel])
+        p1 = KJ.plot(myrun[4],method;fit=fit,transformation="log",
+                     channels=[method.D.channel;method.d.channel],
+                     den=method.D.channel,)
         if option == "Lu-Hf"
             p = p1 
         end
@@ -659,15 +660,20 @@ function biastest(option="all")
         method = methodtest(option="Re-Os")
         myrun = load(joinpath("data/Re-Os");format="Agilent")
         setGroup!(myrun,method)
+        detect_outliers!(myrun,method)
         blank = fitBlanks(myrun)
+        method.nbias = 2
         ReOs_bias = fit_bias(myrun,method,blank)
         fit = Gfit(method;blank=blank,bias=ReOs_bias)
         p2 = KJ.plot(myrun[1],method;fit=fit,transformation="log",
-                     channels=["Os187 -> 251","Os189 -> 253"])
+                     channels=["Os187 -> 251","Os189 -> 253"],
+                     den="Os189 -> 253")
         p3 = KJ.plot(myrun[3],method;fit=fit,transformation="log",
-                     channels=["Os187 -> 251","Re185 -> 249"])
+                     channels=["Os187 -> 251","Re185 -> 249"],
+                     den="Re185 -> 249")
         p4 = KJ.plot(myrun[23],method;fit=fit,transformation="log",
-                     channels=["Lu175 -> 191","Ir191 -> 191"])
+                     channels=["Lu175 -> 191","Ir191 -> 191"],
+                     den="Ir191 -> 191")
         if option == "Re-Os"
             p = Plots.plot(p2,p3,p4;layout=(1,3))
         end
@@ -683,12 +689,19 @@ end
 function ReOs_test()
     myrun = load("data/Re-Os";format="Agilent")
     method = methodtest(;option="Re-Os")
-    fit = process!(myrun,method)
-    p = KJ.plot(myrun[7],method;fit=fit,transformation="log")
-    atomic(myrun[7],method,fit)
+    method.nbias = 2
+    fit = process!(myrun,method;reject_outliers=true)
+    pvec = []
+    for i in [7,8,17,18]
+        push!(pvec,KJ.plot(myrun[i],method;
+                           fit=fit,transformation="sqrt",
+                           den=method.D.channel,
+                           legend=:none))
+    end
     ratios = averat(myrun,method,fit)
     CSV.write(joinpath("output","ReOs.csv"),ratios)
     export2IsoplotR(ratios,method,fname = joinpath("output","ReOs.json"))
+    p = Plots.plot(pvec...;layout=(2,2))
     @test p isa Plots.Plot
     display(p)
 end
@@ -757,9 +770,9 @@ Plots.closeall()
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 # @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 # @testset "interference test" begin interference_test() end
-# @testset "bias test" begin biastest() end
-# @testset "ReOs test" begin ReOs_test() end
+@testset "bias test" begin biastest() end
+@testset "ReOs test" begin ReOs_test() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 
-TUI(;debug=true)
+# TUI(;debug=true)

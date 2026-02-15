@@ -19,3 +19,9 @@ function fitBlanks(run::Vector{Sample};
     return bpar
 end
 export fitBlanks
+
+function init_blank(method::KJmethod)
+    channels = getChannels(method)
+    nc = length(channels)
+    return DataFrame(fill(0.0,method.nblank,nc), channels)
+end

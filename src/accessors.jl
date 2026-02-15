@@ -12,7 +12,6 @@ export setKJctrl!
 setKJctrl!(ctrl::AbstractDict)
 
 Set the control parameters of a TUI session
-```
 """
 function setKJctrl!(ctrl::AbstractDict)
     _KJ["ctrl"] = ctrl
@@ -32,8 +31,26 @@ end
 function getChannels(samp::Sample) :: AbstractVector
     return names(getSignals(samp))
 end
+function getChannels(interference::Interference) :: AbstractVector
+    out = [interference.channel]
+    bias = interference.bias
+    if length(bias.standards) > 0
+        push!(out,bias.num.channel,bias.den.channel)
+    end
+    return unique(out)
+end
+function getChannels(interference::REEInterference) :: AbstractVector
+    return [interference.REE,interference.REEO]
+end
 function getChannels(method::Gmethod) :: AbstractVector
-    return [method.P.channel;method.D.channel;method.d.channel]
+    out = String[]
+    for pairing in [method.P, method.D, method.d]
+        push!(out,pairing.channel)
+        for interference in values(pairing.interferences)
+            append!(out,getChannels(interference))
+        end
+    end
+    return unique(out)
 end
 function getChannels(method::Cmethod) :: AbstractVector
     return collect(string.(keys(method.elements)))

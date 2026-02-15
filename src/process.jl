@@ -4,8 +4,7 @@ function process!(run::Vector{Sample},
                   verbose::Bool=false)
     setGroup!(run,method)
     if reject_outliers
-        ch = getChannels(method)
-        detect_outliers!(run;channels=ch)
+        detect_outliers!(run,method)
     end
     fit = KJfit(method)
     blank!(fit,method,run)

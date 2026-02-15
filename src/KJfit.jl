@@ -7,8 +7,7 @@ function KJfit(method::Cmethod)
 end
 
 function Gfit(method::Gmethod;
-              blank::AbstractDataFrame = DataFrame(fill(0.0,method.nblank,3),
-                                                   getChannels(method)),
+              blank::AbstractDataFrame = init_blank(method),
               drift::AbstractVector = fill(0.0,method.ndrift),
               down::AbstractVector = fill(0.0,method.ndown),
               adrift::AbstractVector = drift,
