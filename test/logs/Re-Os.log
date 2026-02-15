@@ -42,7 +42,7 @@ biasStandards,1
 addStandardGroup,p
 addStandardsByPrefix,Nis3
 chooseBiasElement,2
-calibration,"(2,10),(1,8)"
+calibration,"(1,8),(2,10)"
 glass,a
 chooseGlass,1
 addGlassGroup,p

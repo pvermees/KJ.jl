@@ -22,3 +22,17 @@ function Cfit()
     par = DataFrame()
     return Cfit(blank,par)
 end
+
+function summarise(fit::Gfit)
+    println("Drift: ", fit.drift)
+    println("Down: ", fit.down)
+    println("Adrift: ", fit.adrift)
+    print("Covariance matrix: ")
+    display(fit.covmat)
+    for (key, bias) in fit.bias
+        println("Bias for ", key, ": ", bias.par)
+    end
+end
+function summarize(fit::Gfit)
+    summarise(fit)
+end

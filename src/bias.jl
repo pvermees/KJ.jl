@@ -38,7 +38,7 @@ function fit_bias(run::Vector{Sample},
         cruncher_groups[standard] = (y=y,crunchers=crunchers)
     end
 
-    init = fill(0.0,m.nbias)
+    init = [init_bias(cruncher_groups);fill(0.0,m.ndrift-1)]
     objective = (par) -> SS(par,mass_num,mass_den,bd,cruncher_groups)
     optimum = Optim.optimize(objective,init)
     fit = Optim.minimizer(optimum)
@@ -46,6 +46,23 @@ function fit_bias(run::Vector{Sample},
     return Bias(mass_num,mass_den,fit)
 end
 export fit_bias
+
+function init_bias(cruncher_groups::AbstractDict)
+    bias = 0.0
+    ncg = length(cruncher_groups)
+    for group in values(cruncher_groups)
+        ytrue = group.y
+        bmb = 0.0
+        Dmb = 0.0
+        for c in group.crunchers
+            bmb += sum(c.bmb)
+            Dmb += sum(c.Dmb)
+        end
+        ymeas = bmb/Dmb
+        bias += log(ymeas/ytrue)/ncg
+    end
+    return bias
+end
 
 function add_bias!(bias::AbstractDict,
                    run::Vector{Sample},

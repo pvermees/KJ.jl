@@ -1,10 +1,3 @@
-"""
-load(dname::AbstractString;
-     format::AbstractString="Agilent",
-     head2name::Bool=true)
-
-Load MS data files
-"""
 function load(dname::AbstractString;
               format::AbstractString="Agilent",
               head2name::Bool=true,
@@ -48,13 +41,7 @@ function load(dname::AbstractString;
         return sortedsamples
     end
 end
-"""
-load(dfile::AbstractString,
-     tfile::AbstractString;
-     format::AbstractString="Agilent")
 
-Load and parse an ICP-MS file using time stamps
-"""
 function load(dfile::AbstractString,
               tfile::AbstractString;
               format::AbstractString="Agilent")
@@ -235,3 +222,23 @@ function export2IsoplotR(ratios::AbstractDataFrame,
     
 end
 export export2IsoplotR
+
+function summarise(run::Vector{Sample};
+                   verbose=false,n=length(run))
+    ns = length(run)
+    snames = getSnames(run)
+    groups = fill("sample",ns)
+    dates = fill(run[1].datetime,ns)
+    for i in eachindex(run)
+        groups[i] = run[i].group
+        dates[i] = run[i].datetime
+    end
+    out = DataFrame(name=snames,date=dates,group=groups)
+    if verbose println(first(out,n)) end
+    return out
+end
+function summarize(run::Vector{Sample};
+                   verbose=true,n=length(run))
+    summarise(run;verbose,n)
+end
+export summarise, summarize

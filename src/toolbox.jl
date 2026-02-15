@@ -79,34 +79,6 @@ function polyFac(p::AbstractVector,
 end
 export polyFac
 
-"""
-summarise(run::Vector{Sample};verbose=false,n=length(run))
-
-Prints a table with the sample names in run.
-"""
-function summarise(run::Vector{Sample};
-                   verbose=false,n=length(run))
-    ns = length(run)
-    snames = getSnames(run)
-    groups = fill("sample",ns)
-    dates = fill(run[1].datetime,ns)
-    for i in eachindex(run)
-        groups[i] = run[i].group
-        dates[i] = run[i].datetime
-    end
-    out = DataFrame(name=snames,date=dates,group=groups)
-    if verbose println(first(out,n)) end
-    return out
-end
-"""
-summarize(run::Vector{Sample};verbose=false,n=length(run))
-"""
-function summarize(run::Vector{Sample};
-                   verbose=true,n=length(run))
-    summarise(run;verbose,n)
-end
-export summarise, summarize
-
 function autoBwin(t::AbstractVector,
                   on::AbstractFloat;
                   start::AbstractFloat=t[1],

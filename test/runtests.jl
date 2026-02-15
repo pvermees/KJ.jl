@@ -708,8 +708,17 @@ end
 function multicollector_test()
     myrun = load("data/FIN2";
                  format="FIN2",blocksize=3)
+    method = Gmethod(name="U-Pb",
+                     groups=Dict("91500" => "91500"),
+                     P=Pairing(ion="U238",channel="238U"),
+                     D=Pairing(ion="Pb206",channel="206Pb"),
+                     d=Pairing(ion="Pb207",channel="207Pb"))
+    Calibration!(method;standards=Set(["91500"]))
+    fit = process!(myrun,method)
     summarise(myrun,verbose=true)
-    p = KJ.plot(myrun[1];
+    summarise(fit)
+    p = KJ.plot(myrun[1],method;
+                fit=fit,
                 channels=["206Pb","207Pb","238U"],
                 transformation="log")
     @test p isa Plots.Plot
@@ -782,8 +791,8 @@ Plots.closeall()
 # @testset "interference test" begin interference_test() end
 # @testset "bias test" begin biastest("Re-Os") end
 # @testset "ReOs test" begin ReOs_test() end
-# @testset "MC-ICP-MS test" begin multicollector_test() end
+@testset "MC-ICP-MS test" begin multicollector_test() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 
-TUI(;debug=true)
+# TUI(;debug=true)

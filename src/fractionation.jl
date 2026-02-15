@@ -100,7 +100,7 @@ function par2Gfit!(fit::Gfit,
                    par::AbstractVector)
     fit.drift = par[1:method.ndrift]
     fit.down = vcat(0.0,par[method.ndrift+1:method.ndrift+method.ndown])
-    fit.adrift = isnothing(method.PAcutoff) ? fit.drift : par[end-method.ndrift+1:end]
+    fit.adrift = isfinite(method.PAcutoff) ? par[end-method.ndrift+1:end] : fit.drift
 end
 function par2fit(par::AbstractVector,
                  method::Gmethod)
