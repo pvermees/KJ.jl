@@ -190,16 +190,25 @@ function TUIsetChannels!(ctrl::AbstractDict,
     labels = getChannels(ctrl["run"])
     selected = parse.(Int,split(response,","))
     channels = labels[selected[1:3]]
-    ctrl["method"].P.channel = channels[1]
-    ctrl["method"].D.channel = channels[2]
-    ctrl["method"].d.channel = channels[3]
+    m = ctrl["method"]
+    m.P.channel = channels[1]
+    m.D.channel = channels[2]
+    m.d.channel = channels[3]
     proxies = channel2proxy.(channels)
     if any(isnothing(proxies))
+        ions = [m.P.ion,m.D.ion,m.d.ion]
+        if ctrl["cache"] isa AbstractDict
+            ctrl["cache"]["ions"] = ions
+            ctrl["cache"]["channels"] = channels
+        else
+            ctrl["cache"] = Dict("ions" => ions,
+                                 "channels" => channels)
+        end
         return "setProxies"
     else
-        ctrl["method"].P.proxy = proxies[1]
-        ctrl["method"].D.proxy = proxies[2]
-        ctrl["method"].d.proxy = proxies[3]
+        m.P.proxy = proxies[1]
+        m.D.proxy = proxies[2]
+        m.d.proxy = proxies[3]
         ctrl["priority"]["method"] = false
         return "xx"
     end
@@ -216,12 +225,37 @@ end
 
 function TUIsetProxies!(ctrl::AbstractDict,
                         response::AbstractString)
-    selection = parse.(Int,split(response,","))
-    ions = ctrl["method"].ions
-    nuclides = ions2nuclidelist(ions)
-    pr = ctrl["method"].proxies
-    pr.P, pr.D, pr.d = nuclides[selection[1:3]]
+    parts = split(response,['(',')',','])
+    channels = ctrl["cache"]["channels"]
+    isotopes = TUIions2isotopes(ctrl["cache"]["ions"])
+    if length(parts) < 12
+        @warn "Invalid input format. Expected format: (1,2),(2,1),(3,3)"
+        return nothing
+    end
+    c1, p1, c2, p2, c3, p3 = parse.(Int,parts[[2,3,6,7,10,11]])
+    channel2proxy = Dict{String,String}(
+        channels[c1] => isotopes[p1],
+        channels[c2] => isotopes[p2],
+        channels[c3] => isotopes[p3]
+    )
+    m = ctrl["method"]
+    m.P.proxy = channel2proxy[m.P.channel]
+    m.D.proxy = channel2proxy[m.D.channel]
+    m.d.proxy = channel2proxy[m.d.channel]
+    ctrl["priority"]["method"] = false
     return "xxx"
+end
+
+function TUIsetInterferenceProxy!(ctrl::AbstractDict,
+                                  response::AbstractString)
+    i = parse(Int,response)
+    isotopes = TUIions2isotopes([ctrl["cache"]["key"]])
+    proxy = isotopes[i]
+    interference = ctrl["cache"]["interference"]
+    interference.proxy = proxy
+    key = ctrl["cache"]["key"]
+    ctrl["cache"]["target"].interferences[key] = interference
+    return "xxxxx"
 end
 
 function TUIgetPairings(ctrl::AbstractDict)
@@ -567,12 +601,26 @@ function TUIlistBiases(ctrl::AbstractDict)
     end
     if length(ctrl["method"].bias.standards) > 0
         msg *= string(i+=1) * ". "
-        msg *= TUIprintBias(ctrl,ctrl["method"].bias) * "\n"
+        msg *= TUIprintBias(ctrl,ctrl["method"].bias)
     end
     if i>0
         println(msg)
     else
         println("No bias corrections fitted yet.")
+    end
+    return nothing
+end
+
+function TUIremoveBiases!(ctrl::AbstractDict)
+    for pairing in TUIgetPairings(ctrl)
+        for interference in values(pairing.interferences)
+            if interference isa Interference
+                interference.bias = Calibration()
+            end
+        end
+    end
+    if ctrl["method"] isa Gmethod
+        ctrl["method"].bias = Calibration()
     end
     return nothing
 end
@@ -621,8 +669,7 @@ function TUIchooseBiasStandard!(ctrl::AbstractDict,
     i = parse(Int,response)
     m = ctrl["method"]
     refmats = TUIgetBiasStandards(m)
-    standard = get(refmats,i)
-    ctrl["cache"]["standard"] = standard.material
+    ctrl["cache"]["standard"] = refmats.names[i]
     return "addStandardGroup"
 end
 

@@ -254,6 +254,14 @@ function init_KJtree()
             "them as a comma-separated list of numbers.",
             action = TUIsetProxies!
         ),
+        "setInterferenceProxy" => (
+            message = TUIsetInterferenceProxyMessage,
+            help = "KJ is having trouble mapping the mass spectrometer " *
+            "channels to isotopic proxies. Please help it by identifying " *
+            "the isotopes measured by the different channels by listing " *
+            "them as a comma-separated list of numbers.",
+            action = TUIsetInterferenceProxy!
+        ),        
         "mineral" => (
             message = TUImineralMessage,
             help = nothing,
@@ -327,9 +335,15 @@ function init_KJtree()
             action = TUIchooseREEInterferenceProxyChannels!
         ),
         "setInterferenceProxy" => (
-            message = "TODO",
-            help = "TODO",
-            action = TUItodo!
+            message = TUIsetInterferenceProxyMessage,
+            help = 
+            "KJ was unable to automatically identify the " * 
+            "isotope corresponding to the channel you selected " * 
+            "for the interference correction. Please help it by " * 
+            "identifying the isotope measured by this channel " * 
+            "by listing it as a number corresponding to the list " * 
+            "of isotopes that you see on the screen.",
+            action = TUIsetInterferenceProxy!
         ),
         "fractionation" => (
             message =
@@ -433,7 +447,7 @@ function init_KJtree()
             action = Dict(
                 "a" => "chooseBiasElement",
                 "l" => TUIlistBiases,
-                "d" => TUItodo!
+                "d" => TUIremoveBiases!
             )
         ),
         "chooseBiasElement" => (

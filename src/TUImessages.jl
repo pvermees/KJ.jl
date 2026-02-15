@@ -45,35 +45,6 @@ function TUIlistChannels(ctrl::AbstractDict)
     return msg
 end
 
-function TUIlistIsotopes(ctrl::AbstractDict)
-    msg = ""
-    ions = ctrl["method"].ions
-    nuclidelist = ions2nuclidelist(ions)
-    for i in eachindex(nuclidelist)
-        msg *= string(i) * ". " * nuclidelist[i] * "\n"
-    end
-    return msg
-end
-
-function ions2nuclidelist(ions::NamedTuple)
-    out = []
-    all_elements = string.(keys(_KJ["nuclides"]))
-    for ion in ions
-        matching_elements = filter(x -> occursin(x, ion), all_elements)
-        for matching_element in matching_elements
-            all_isotopes = string.(_KJ["nuclides"][matching_element])
-            matching_isotopes = filter(x -> occursin(x, ion), all_isotopes)
-            if length(matching_isotopes) > 0
-                for isotope in all_isotopes
-                    nuclide = matching_element * isotope
-                    push!(out,nuclide)
-                end
-            end
-        end
-    end
-    return unique(out)
-end
-
 function TUImineralMessage(ctrl::AbstractDict)
     msg = "Automatically set the concentration of the internal standard " *
         "by selecting one of the following minerals, or specify a value manually:\n"
@@ -103,16 +74,56 @@ function TUIcolumnMessage(ctrl::AbstractDict)
     return msg
 end
 
+function TUIions2isotopes(ions::AbstractVector)
+    out = String[]
+    for ion in ions
+        element = channel2element(ion)
+        isotopes = _KJ["nuclides"][element]
+        for isotope in isotopes
+            push!(out,element*string(isotope))
+        end
+    end
+    return unique(out)
+end
+
+function TUIlistIsotopes(cache::AbstractDict)
+    msg = ""
+    channels = cache["channels"]
+    isotopes = TUIions2isotopes(cache["ions"])
+    nc = length(channels)
+    ni = length(isotopes)
+    n = max(nc,ni)
+    for i in 1:n
+        if i <= nc
+            msg *= string(i) * ". " * channels[i] * ", "
+        else            
+            msg *= repeat(" ",5 + maximum(length.(channels)))
+        end
+        if i <= ni
+            msg *= string(i) * ". " * isotopes[i]
+        end
+        msg *= "\n"
+    end
+    return msg
+end
+
 function TUIsetProxiesMessage(ctrl::AbstractDict)
     msg = "KJ is having trouble mapping channels to isotopes. " *
-          "Choose from the following list of isotopes:\n"
-    msg *= TUIlistIsotopes(ctrl)
-    msg *= "and select those corresponding to "*
-    "the channels that you selected earlier:\n"
-    channels = ctrl["method"].channels
-    msg *= channels.P *", "* channels.D *", "* channels.d *"\n"
-    msg *= "Specify your selection as a "*
-    "comma-separated list of numbers:"
+          "Inspect the following two lists:\n"
+    msg *= TUIlistIsotopes(ctrl["cache"])
+    msg *= "Specify your selection as a " *
+           "bracketed list of paired numbers, e.g. " *
+           "(1,2),(3,1),(2,3)"
+    return msg
+end
+
+function TUIsetInterferenceProxyMessage(ctrl::AbstractDict)
+    msg = "Choose the isotope that matches channel " *
+          ctrl["cache"]["interference"].channel * " :\n"
+    isotopes = TUIions2isotopes([ctrl["cache"]["key"]])
+    for i in eachindex(isotopes)
+        msg *= string(i) * ". " * isotopes[i] * "\n"
+    end
     return msg
 end
 
@@ -120,7 +131,7 @@ function TUIlistIsotopesMessage(ctrl::AbstractDict)
     msg = "Choose the isotope that requires an interference correction:\n"
     pairings = TUIgetPairings(ctrl)
     for i in eachindex(pairings)
-        msg *= string(i) * ". " * pairings[i].proxy[i] * "\n"
+        msg *= string(i) * ". " * pairings[i].proxy * "\n"
     end
     msg *= "x: Exit\n" * "?: Help"
     return msg
