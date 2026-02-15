@@ -42,6 +42,7 @@ function fit_bias(run::Vector{Sample},
     objective = (par) -> SS(par,mass_num,mass_den,bd,cruncher_groups)
     optimum = Optim.optimize(objective,init)
     fit = Optim.minimizer(optimum)
+
     return Bias(mass_num,mass_den,fit)
 end
 export fit_bias
@@ -63,6 +64,8 @@ function calibration2bd(m::Gmethod,
                         c::Calibration)
     if c.den.ion == m.D.ion && c.num.ion != m.d.ion
         return iratio(c.num.ion,m.d.ion)
+    elseif c.num.ion == m.D.ion && c.den.ion != m.d.ion
+        return iratio(m.d.ion,c.den.ion) # flipped
     else
         return 1.0
     end
@@ -73,7 +76,15 @@ function get_bias_truth(m::Gmethod,
                         standard::AbstractString)
     y = iratio(c.num.ion,c.den.ion)
     if isnothing(y)
-        y = getAnchor(m.name,standard).y
+        a = getAnchor(m.name,standard)
+        if m.D.proxy == c.den.ion
+            y = a.y
+        elseif m.D.proxy == c.num.ion
+            y = 1/a.y
+        else
+            @warn "The calibration isotope is not part of the method."
+            y = 1.0
+        end
     end
     return y
 end

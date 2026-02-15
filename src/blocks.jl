@@ -1,12 +1,3 @@
-"""
-blocks(run::Vector{Sample},
-       blocksize::Integer;
-       absolute_buffer::AbstractFloat=2.0,
-       relative_buffer::AbstractFloat=0.1)
-
-Group groups of files (e.g. corresponding to blank,
-signal and washout) into samples.
-"""
 function blocks(run::Vector{Sample},
                 blocksize::Integer;
                 absolute_buffer::AbstractFloat=2.0,

@@ -37,7 +37,7 @@ top,b
 top,b
 bias,a
 chooseBiasElement,1
-calibration,"(3,10),(5,12)"
+calibration,"(5,12),(3,10)"
 biasStandards,1
 addStandardGroup,p
 addStandardsByPrefix,Nis3

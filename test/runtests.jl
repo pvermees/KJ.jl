@@ -662,7 +662,6 @@ function biastest(option="all")
         setGroup!(myrun,method)
         detect_outliers!(myrun,method)
         blank = fitBlanks(myrun)
-        method.nbias = 2
         ReOs_bias = fit_bias(myrun,method,blank)
         fit = Gfit(method;blank=blank,bias=ReOs_bias)
         p2 = KJ.plot(myrun[1],method;fit=fit,transformation="log",
@@ -692,7 +691,7 @@ function ReOs_test()
     method.nbias = 2
     fit = process!(myrun,method;reject_outliers=true)
     pvec = []
-    for i in [7,8,17,18]
+    for i in [1,2,13,14]#[7,8,17,18]
         push!(pvec,KJ.plot(myrun[i],method;
                            fit=fit,transformation="sqrt",
                            den=method.D.channel,
@@ -781,10 +780,10 @@ Plots.closeall()
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 # @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 # @testset "interference test" begin interference_test() end
-# @testset "bias test" begin biastest() end
+# @testset "bias test" begin biastest("Re-Os") end
 # @testset "ReOs test" begin ReOs_test() end
-@testset "MC-ICP-MS test" begin multicollector_test() end
+# @testset "MC-ICP-MS test" begin multicollector_test() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 
-# TUI(;debug=true)
+TUI(;debug=true)

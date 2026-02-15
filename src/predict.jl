@@ -18,11 +18,11 @@ function predict(samp::Sample,
         cruncher = BCruncher(samp,calibration,fit.blank)
         element = channel2element(method.D.ion)
         mf = bias_correction(fit.bias[element],
-                             method.d.proxy,
-                             method.D.proxy,
+                             calibration.num.ion,
+                             calibration.den.ion,
                              cruncher.t)
         standard = method.groups[samp.group]
-        y = getAnchor(method.name,standard).y
+        y = get_bias_truth(method,calibration,standard)
         bd = calibration2bd(method,calibration)
         out = predict(mf,y,bd;cruncher...)
         if !generic_names
