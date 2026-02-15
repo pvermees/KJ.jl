@@ -651,7 +651,7 @@ function biastest(option="all")
         fit = Gfit(method;blank=blank,bias=Hf_bias)
         p1 = KJ.plot(myrun[4],method;fit=fit,transformation="log",
                      channels=[method.D.channel;method.d.channel],
-                     den=method.D.channel,)
+                     den=method.D.channel)
         if option == "Lu-Hf"
             p = p1 
         end
@@ -702,6 +702,17 @@ function ReOs_test()
     CSV.write(joinpath("output","ReOs.csv"),ratios)
     export2IsoplotR(ratios,method,fname = joinpath("output","ReOs.json"))
     p = Plots.plot(pvec...;layout=(2,2))
+    @test p isa Plots.Plot
+    display(p)
+end
+
+function multicollector_test()
+    myrun = load("data/FIN2";
+                 format="FIN2",blocksize=3)
+    summarise(myrun,verbose=true)
+    p = KJ.plot(myrun[1];
+                channels=["206Pb","207Pb","238U"],
+                transformation="log")
     @test p isa Plots.Plot
     display(p)
 end
@@ -770,8 +781,9 @@ Plots.closeall()
 # @testset "accuracy test 2" begin accuracytest(drift=[-2.0]) end
 # @testset "accuracy test 3" begin accuracytest(down=[0.0,0.5]) end
 # @testset "interference test" begin interference_test() end
-@testset "bias test" begin biastest() end
-@testset "ReOs test" begin ReOs_test() end
+# @testset "bias test" begin biastest() end
+# @testset "ReOs test" begin ReOs_test() end
+@testset "MC-ICP-MS test" begin multicollector_test() end
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 

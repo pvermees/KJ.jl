@@ -7,7 +7,10 @@ Load MS data files
 """
 function load(dname::AbstractString;
               format::AbstractString="Agilent",
-              head2name::Bool=true)
+              head2name::Bool=true,
+              blocksize::Int=1,
+              absolute_buffer::AbstractFloat=2.0,
+              relative_buffer::AbstractFloat=0.1)
     fnames = readdir(dname)
     samples = Vector{Sample}(undef,0)
     datetimes = Vector{DateTime}(undef,0)
@@ -37,7 +40,13 @@ function load(dname::AbstractString;
         samp.dat.outlier = falses(size(samp.dat,1))
         samp.dat.t = (samp.dat[:,1] .+ runtime[i])./duration
     end
-    return sortedsamples
+    if blocksize > 1
+        return blocks(sortedsamples,blocksize;
+                      absolute_buffer=absolute_buffer,
+                      relative_buffer=relative_buffer)
+    else
+        return sortedsamples
+    end
 end
 """
 load(dfile::AbstractString,

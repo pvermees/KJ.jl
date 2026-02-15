@@ -1,11 +1,3 @@
-"""
-setBwin!(run::Vector{Sample},
-         bwin::AbstractVector;
-         seconds::Bool=false)
-
-Set the blank windows of the entire run.
-bwin is a vector of tuples
-"""
 function setBwin!(run::Vector{Sample},
                   bwin::AbstractVector;
                   seconds::Bool=false)
@@ -14,47 +6,24 @@ function setBwin!(run::Vector{Sample},
     end
 end
 
-"""
-setBwin!(samp::Sample,
-         bwin::AbstractVector;
-         seconds::Bool=false)
-"""
 function setBwin!(samp::Sample,
                   bwin::AbstractVector;
                   seconds::Bool=false)
     samp.bwin = seconds ? time2window(samp,bwin) : bwin
 end
 
-"""
-setBwin!(run::Vector{Sample})
-
-Automatically set the blank windows for an entire run.
-"""
 function setBwin!(run::Vector{Sample})
     for i in eachindex(run)
         setBwin!(run[i])
     end
 end
 
-"""
-setBwin!(samp::Sample)
-
-Automatically set the blank window for a single sample.
-"""
 function setBwin!(samp::Sample)
     bwin = autoWindow(samp,blank=true)
     setBwin!(samp,bwin)
 end
 export setBwin!
 
-"""
-setSwin!(run::Vector{Sample},
-         swin::AbstractVector;
-         seconds::Bool=false)
-
-Set the signal windows of an entire run.
-swin is a vector of tuples
-"""
 function setSwin!(run::Vector{Sample},
                   swin::AbstractVector;
                   seconds::Bool=false)
@@ -63,46 +32,24 @@ function setSwin!(run::Vector{Sample},
     end
 end
 
-"""
-setSwin!(samp::Sample,
-         swin::AbstractVector;
-         seconds::Bool=false)
-"""
 function setSwin!(samp::Sample,
                   swin::AbstractVector;
                   seconds::Bool=false)
     samp.swin = seconds ? time2window(samp,swin) : swin
 end
 
-"""
-setSwin!(run::Vector{Sample})
-
-Automatically set the signal windows for an entire run.
-"""
 function setSwin!(run::Vector{Sample})
     for samp in run
         setSwin!(samp)
     end
 end
 
-"""
-setSwin!(samp::Sample)
-
-Automatically set the signal window for a single sample.
-"""
 function setSwin!(samp::Sample)
     swin = autoWindow(samp,blank=false)
     setSwin!(samp,swin)
 end
 export setSwin!
 
-"""
-shift_windows!(run::Vector{Sample},
-               shift::Number=0.0)
-
-Shift the blank and signal windows to the left or the right
-by a specified number of integrations.
-"""
 function shift_windows!(run::Vector{Sample},
                         shift::Number=0.0)
     for samp in run
@@ -127,12 +74,6 @@ function shift_windows!(run::Vector{Sample},
 end
 export shift_windows!
 
-"""
-bwinData(samp::Sample;
-         add_xy::Bool=false)
-
-Return the blank data from samp.
-"""
 function bwinData(samp::Sample;
                   add_xy::Bool=false)
     windows = samp.bwin
@@ -142,12 +83,6 @@ function bwinData(samp::Sample;
 end
 export bwinData
 
-"""
-swinData(samp::Sample;
-         add_xy::Bool=false)
-
-Return the signal data from samp.
-"""
 function swinData(samp::Sample;
                   add_xy::Bool=false)
     windows = samp.swin
