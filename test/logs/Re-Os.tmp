@@ -1,4 +1,0 @@
-format = "Agilent"
-multifile = true
-head2name = true
-transformation = "sqrt"

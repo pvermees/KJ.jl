@@ -690,7 +690,7 @@ function TUIplotter(ctrl::AbstractDict)
              den=ctrl["den"],
              transformation=ctrl["transformation"],
              title=TUItitle(ctrl))
-    if ctrl["method"] isa Gmethod && !isnothing(ctrl["method"].PAcutoff)
+    if ctrl["method"] isa Gmethod && isfinite(ctrl["method"].PAcutoff)
         TUIaddPAline!(p,ctrl["method"].PAcutoff)
     end
     display(p)
@@ -964,7 +964,7 @@ function TUImethod2text(m::Gmethod)
     out *= "                 nblank = " * string(m.nblank) * ",\n"
     out *= "                 ndrift = " * string(m.ndrift) * ",\n"
     out *= "                 ndown = " * string(m.ndown) * ",\n"
-    out *= "                 PAcutoff = " * ifelse(isnothing(m.PAcutoff),"nothing",string(m.PAcutoff)) * ")\n"
+    out *= "                 PAcutoff = " * ifelse(isfinite(m.PAcutoff),string(m.PAcutoff),"Inf") * ")\n"
     if length(m.bias.standards) > 0
         out *= "method.bias = Calibration(num=(ion=\"" * m.bias.num.ion * "\", channel=\"" * m.bias.num.channel * "\"),\n"
         out *= "                          den=(ion=\"" * m.bias.den.ion * "\", channel=\"" * m.bias.den.channel * "\"),\n"
@@ -1028,12 +1028,12 @@ end
 function TUIsetPAcutoff!(ctrl::AbstractDict,
                          response::AbstractString)
     cutoff = tryparse(Float64,response)
-    ctrl["method"].PAcutoff = cutoff
+    ctrl["method"].PAcutoff = ifelse(isnothing(cutoff),Inf,cutoff)
     return "xx"
 end
 
 function TUIclearPAcutoff!(ctrl::AbstractDict)
-    ctrl["method"].PAcutoff = nothing
+    ctrl["method"].PAcutoff = Inf
     return "xx"
 end
 

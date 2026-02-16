@@ -140,7 +140,7 @@ function FCruncher(samp::Sample,
     Delement = channel2element(method.D.ion)
     if haskey(fit.bias,Delement)
         mf = bias_correction(fit.bias[Delement],
-                             method.D.ion,method.d.ion,t)
+                             method.d.ion,method.D.ion,t)
     else
         mf = fill(1.0,length(t))
     end

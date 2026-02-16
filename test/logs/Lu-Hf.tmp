@@ -10,4 +10,4 @@ method = Gmethod("Lu-Hf", standards;
                  nblank = 2,
                  ndrift = 2,
                  ndown = 1,
-                 PAcutoff = nothing)
+                 PAcutoff = Inf)
