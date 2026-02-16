@@ -7,8 +7,8 @@ function plot(samp::Sample,
               transformation::AbstractString="",
               ms::Number=2,ma::Number=0.5,
               xlim=:auto,ylim=:auto,
-              linecol::AbstractString="black",
-              linestyle=:solid,
+              linecolor::Symbol=:black,
+              linestyle::Symbol=:solid,
               title::AbstractString=samp.sname*" ["*samp.group*"]",
               legend=:topleft,
               cpalette=:viridis,
@@ -30,13 +30,13 @@ function plot(samp::Sample,
                         channels=channels,
                         num=num,den=den,
                         transformation=transformation,
-                        offset=offset,linecolor=linecol,
+                        offset=offset,linecolor=linecolor,
                         linestyle=linestyle)
         end
         plotFittedBlank!(p,samp,method,fit;
                          num=num,den=den,
                          transformation=transformation,offset=offset,
-                         linecolor=linecol,linestyle=linestyle)
+                         linecolor=linecolor,linestyle=linestyle)
     end
 
     if return_offset
@@ -84,7 +84,7 @@ function plot(samp::Sample;
     dy_win = (ylim[1] + buffer, ylim[2] - buffer)
     # plot t0:
     Plots.plot!(p,[samp.t0,samp.t0],collect(dy_win[[1,2]]);
-                linecolor="grey",linestyle=:dot,label="")
+                linecolor=:grey,linestyle=:dot,label="")
     # plot selection windows:
     for win in [samp.bwin,samp.swin]
         for w in win
@@ -92,7 +92,7 @@ function plot(samp::Sample;
             to = x[w[2]]
             Plots.plot!(p,[from,from,to,to,from],
                         collect(dy_win[[1,2,2,1,1]]);
-                        linecolor="black",linestyle=:dot,label="")
+                        linecolor=:black,linestyle=:dot,label="")
         end
     end
     
@@ -121,20 +121,20 @@ function prep_plot(samp::Sample,
     xlab = names(samp.dat)[1]
     x = samp.dat[:,xlab]
     meas = samp.dat[:,channels]
+    offset = get_offset(meas;
+                        transformation=transformation,
+                        num=num,den=den)
+    y = transformeer(meas,transformation;
+                     num=num,den=den,offset=offset)
     ratsig = (num=="" && den=="") ? "signal" : "ratio"
-    y = (ratsig == "signal") ? meas : formRatios(meas;num=num,den=den)
-    min_val = minimum(Matrix(y))
-    if transformation==""
+    if transformation == ""
         ylab = ratsig
-    elseif (transformation == "log" && min_val <= 0) ||
-        (transformation == "sqrt" && min_val < 0)
+    elseif offset > 0.0
         ylab = transformation * "(" * ratsig * "+offset)"
     else
-        ylab = transformation*"("*ratsig*")"
+        ylab = transformation * "(" * ratsig * ")"
     end
-    offset = get_offset(y,transformation)
-    ty = transformeer(y,transformation)
-    return x, ty, xlab, ylab, offset
+    return x, y, xlab, ylab, offset
 end
 export prep_plot
 
@@ -147,7 +147,7 @@ function plotFitted!(p,
                      den::AbstractString="",
                      transformation::AbstractString="",
                      offset::Number=0.0,
-                     linecolor="black",
+                     linecolor::Symbol=:black,
                      linestyle=:solid)
     pred = predict(samp,method,fit;generic_names=false)
     fitted_channels = intersect(channels,names(pred))
@@ -167,15 +167,15 @@ function plotFitted!(p,
                      den::AbstractString="",
                      transformation::AbstractString="",
                      offset::Number=0.0,
-                     linecolor="black",
+                     linecolor::Symbol=:black,
                      linestyle=:solid)
     dat = ifelse(blank,bwinData(samp),swinData(samp))
     good = .!dat.outlier
     x = dat[good,1]
-    y = formRatios(pred[good,:];num=num,den=den)
-    ty = transformeer(y,transformation;offset=offset)
-    for tyi in eachcol(ty)
-        Plots.plot!(p,x,tyi;linecolor=linecolor,linestyle=linestyle,label="")
+    y = transformeer(pred[good,:],transformation;
+                num=num,den=den,offset=offset)
+    for yi in eachcol(y)
+        Plots.plot!(p,x,yi;linecolor=linecolor,linestyle=linestyle,label="")
     end
 end
 export plotFitted!
@@ -188,7 +188,7 @@ function plotFittedBlank!(p,
                           den::AbstractString="",
                           transformation::AbstractString="",
                           offset::Number=0.0,
-                          linecolor="black",
+                          linecolor::Symbol=:black,
                           linestyle::Symbol=:solid)
     channels = getChannels(method)
     pred = predict(samp,fit.blank[:,channels])

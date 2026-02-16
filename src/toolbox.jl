@@ -317,32 +317,39 @@ end
     
 function transformeer(df::AbstractDataFrame,
                       transformation::AbstractString;
+                      num::AbstractString="",
+                      den::AbstractString="",
                       offset::Number=0.0)
-    if transformation==""
-        out = df
+    if (num=="" && den=="")
+        out = df .+ offset
     else
-        out = copy(df)
-        if transformation=="log"
-            out .= ifelse.(df .<= 0, NaN, df)
-        elseif transformation=="sqrt"
-            out .= ifelse.(df .< 0, NaN, df)
-        end
-        for key in names(out)
-            out[:,key] = eval(Symbol(transformation)).(out[:,key] .+ offset)
-        end
+        out = formRatios(df .+ offset;num=num,den=den)
     end
-    return out
+    if transformation == ""
+        return out
+    else
+        return eval(Symbol(transformation)).(out)
+    end
 end
 
-function get_offset(df::AbstractDataFrame,
-                    transformation::AbstractString)
-    min_val = minimum(Matrix(df))
-    if (transformation == "log" && min_val <= 0) ||
-        (transformation == "sqrt" && min_val < 0)
-        return 10.0 - min_val
+function get_offset(df::AbstractDataFrame;
+                    transformation::AbstractString="",
+                    num::AbstractString="",
+                    den::AbstractString="")
+    smallest_two = partialsort(unique(vec(Matrix(df))),1:2)
+    ratio = (num!="" || den!="")
+    logarithmic = transformation == "log"
+    vierkantswortel = transformation == "sqrt"
+    zeromin = smallest_two[1] == 0
+    negative = smallest_two[1] < 0
+    positive = smallest_two[1] > 0
+    if (logarithmic && !positive) || (ratio && !positive) || (vierkantswortel && negative)
+        return sum(abs.(smallest_two))
+    elseif vierkantswortel && zeromin
+        return abs(smallest_two[1])
     else
         return 0.0
-    end
+     end
 end
 
 function dict2string(dict::AbstractDict)
