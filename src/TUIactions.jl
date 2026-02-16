@@ -427,7 +427,9 @@ function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
         ctrl["method"].groups[response] = standard
         return TUIaddBias2method!(ctrl)
     else
-        push!(ctrl["method"].standards,response)
+        if ctrl["method"] isa Gmethod
+            push!(ctrl["method"].standards,response)
+        end
         ctrl["method"].groups[response] = ctrl["cache"]
         setGroup!(ctrl["run"],ctrl["method"])
         ctrl["priority"]["fractionation"] = false

@@ -199,17 +199,9 @@ function TUIprintRefmatInfo(refmat::DataFrameRow)
     return ""
 end
 
-function TUIgetRefmats(method::Gmethod)
-    return _KJ["refmat"][method.name]
-end
-
-function TUIgetRefmats(method::Cmethod)
-    return _KJ["glass"]
-end
-
 function TUIgetStandardsHelper(method::Gmethod;
                                condition::Function= refmat -> return true)
-    refmats = TUIgetRefmats(method)
+    refmats = _KJ["refmat"][method.name]
     out = OrderedDict()
     for i in eachindex(refmats.names)
         refmat = get(refmats,i)
@@ -218,6 +210,10 @@ function TUIgetStandardsHelper(method::Gmethod;
         end
     end
     return out
+end
+
+function TUIgetStandards(method::Cmethod)
+    return _KJ["glass"]
 end
 
 function TUIgetStandards(method::Gmethod)

@@ -366,7 +366,9 @@ function get_offset(samp::Sample;
         pred = predict(samp,method,fit;generic_names=false)
         keep = intersect(channels,names(pred))
         offset2 = get_offset(pred[:,keep];transformation=transformation,num=num,den=den)
-        return max(offset1,offset2)
+        pred = predict(samp,fit.blank)
+        offset3 = get_offset(pred[:,keep];transformation=transformation,num=num,den=den)
+        return max(offset1,offset2,offset3)
     end
 end
 
