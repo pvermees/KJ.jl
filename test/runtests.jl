@@ -719,8 +719,9 @@ function multicollector_test()
     summarise(fit)
     pvec = []
     for i in [1,2,7,8]
-        push!(pvec,KJ.plot(myrun[i],method;fit=fit,transformation="log",
-                           channels=["238U","206Pb","207Pb"]))
+        push!(pvec,KJ.plot(myrun[i],method;fit=fit,#transformation="log",
+                           den=method.D.channel,
+                           channels=["238U","206Pb"]))#,"207Pb"]))
     end
     p = Plots.plot(pvec...;layout=(2,2))
     @test p isa Plots.Plot

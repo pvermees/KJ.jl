@@ -42,7 +42,6 @@ function fit_bias(run::Vector{Sample},
     objective = (par) -> SS(par,mass_num,mass_den,bd,cruncher_groups)
     optimum = Optim.optimize(objective,init)
     fit = Optim.minimizer(optimum)
-
     return Bias(mass_num,mass_den,fit)
 end
 export fit_bias

@@ -14,7 +14,7 @@ function formRatios(df::AbstractDataFrame;
         n = fill(findfirst(==(num),labels),length(d))
     end
     mat = Matrix(df)
-    ratios = @. (mat[:,n]+0.5)/(mat[:,d]+0.5)
+    ratios = @. mat[:,n]/mat[:,d]
     num = labels[n]
     den = labels[d]
     ratlabs = brackets ? "(".*num.*")/(".*den.*")" : num.*"/".*den
@@ -58,11 +58,6 @@ function vandermonde(x,degree)
     return [x[i]^p for i in eachindex(x), p in 0:degree]
 end
 
-"""
-polyFac(p::AbstractVector,t::AbstractVector)
-
-Returns the exponent of the sum of p[i].*t.^(i-1) for all values of p
-"""
 function polyFac(p::AbstractVector,
                  t::AbstractVector)
     np = length(p)

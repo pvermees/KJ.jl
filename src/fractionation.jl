@@ -144,7 +144,6 @@ function FCruncher(samp::Sample,
     else
         mf = fill(1.0,length(t))
     end
-
     sig = hcat(pmb,Dmb,bmb)
     covmat = df2cov(sig)
     vp = covmat[1,1]
@@ -155,6 +154,9 @@ function FCruncher(samp::Sample,
     sDb = covmat[2,3]
     
     bd = iratio(method.d.proxy,method.d.ion)
+    if isnothing(bd)
+        bd = 1.0
+    end
 
     return (pmb=pmb,Dmb=Dmb,bmb=bmb,
             bpt=bpt,bDt=bDt,bbt=bbt,
