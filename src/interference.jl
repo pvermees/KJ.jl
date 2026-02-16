@@ -1,6 +1,6 @@
 function interference_correction(dat::AbstractDataFrame,
                                  interferences::AbstractDict;
-                                 bias::AbstractDict=Dict{String,AbstractBias}(),
+                                 bias::AbstractDict=Dict(),
                                  blank::AbstractDataFrame=DataFrame())
     out = fill(0.0,size(dat,1))
     for (key,interference) in interferences
@@ -12,7 +12,7 @@ end
 function interference_correction(dat::AbstractDataFrame,
                                  ion::AbstractString,
                                  interference::Interference;
-                                 bias::AbstractDict=Dict{String,AbstractBias}(),
+                                 bias::AbstractDict=Dict(),
                                  blank::AbstractDataFrame=DataFrame())
     ch = interference.channel
     meas = dat[:,ch]
@@ -24,7 +24,7 @@ end
 function interference_correction(dat::AbstractDataFrame,
                                  proxy_channel::AbstractString,
                                  interference::REEInterference;
-                                 bias::AbstractDict=Dict{String,AbstractBias}(),
+                                 bias::AbstractDict=Dict(),
                                  blank::AbstractDataFrame=DataFrame())
     meas = dat[:,proxy_channel]
     blk = polyVal(blank[:,proxy_channel],dat.t)

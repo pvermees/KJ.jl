@@ -351,6 +351,24 @@ function get_offset(df::AbstractDataFrame;
         return 0.0
      end
 end
+function get_offset(samp::Sample;
+                    method::KJmethod,
+                    fit::Union{Nothing,KJfit}=nothing,
+                    channels::AbstractVector=getChannels(samp),
+                    transformation::AbstractString="",
+                    num::AbstractString="",
+                    den::AbstractString="")
+    meas = samp.dat[:,channels]
+    offset1 = get_offset(meas;transformation=transformation,num=num,den=den)
+    if isnothing(fit) || samp.group == "sample"
+        return offset1
+    else
+        pred = predict(samp,method,fit;generic_names=false)
+        keep = intersect(channels,names(pred))
+        offset2 = get_offset(pred[:,keep];transformation=transformation,num=num,den=den)
+        return max(offset1,offset2)
+    end
+end
 
 function dict2string(dict::AbstractDict)
     k = collect(keys(dict))

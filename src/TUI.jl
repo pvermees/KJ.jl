@@ -442,7 +442,7 @@ function init_KJtree()
             "x. Exit\n" *
             "?: Help",
             help = 
-            "Correct the mass bias by choosing one or more " *
+            "Correct the mass by choosing one or more " *
             "reference materials with known isotopic composition. ",
             action = Dict(
                 "a" => "chooseBiasElement",

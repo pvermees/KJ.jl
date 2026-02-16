@@ -15,26 +15,30 @@ function plot(samp::Sample,
               titlefontsize::Number=10,
               return_offset::Bool=false)
 
-    p, offset = plot(samp;
-                     channels=channels,
-                     num=num,den=den,
-                     transformation=transformation,
-                     ms=ms,ma=ma,xlim=xlim,ylim=ylim,
-                     title=title,legend=legend,cpalette=cpalette,
-                     titlefontsize=titlefontsize,
-                     return_offset=true)
+    offset = get_offset(samp;method=method,fit=fit,
+                        channels=channels,
+                        transformation=transformation,
+                        num=num,den=den)
+
+    p = plot(samp;
+             channels=channels,
+             num=num,den=den,
+             transformation=transformation,
+             offset=offset,
+             ms=ms,ma=ma,xlim=xlim,ylim=ylim,
+             title=title,legend=legend,cpalette=cpalette,
+             titlefontsize=titlefontsize)
 
     if !isnothing(fit)
         if samp.group !== "sample"
             plotFitted!(p,samp,method,fit;
-                        channels=channels,
-                        num=num,den=den,
+                        channels=channels,num=num,den=den,
                         transformation=transformation,
                         offset=offset,linecolor=linecolor,
                         linestyle=linestyle)
         end
         plotFittedBlank!(p,samp,method,fit;
-                         num=num,den=den,
+                         channels=channels,num,den=den,
                          transformation=transformation,offset=offset,
                          linecolor=linecolor,linestyle=linestyle)
     end
@@ -51,6 +55,7 @@ function plot(samp::Sample;
               num::AbstractString="",
               den::AbstractString="",
               transformation::AbstractString="",
+              offset::Number=get_offset(samp;transformation=transformation,num=num,den=den),
               ms::Number=2,ma::Number=0.5,
               xlim=:auto,ylim=:auto,
               title::AbstractString=samp.sname*" ["*samp.group*"]",
@@ -60,9 +65,9 @@ function plot(samp::Sample;
               padding::Number=0.1,
               return_offset::Bool=false)
 
-    x, y, xlab, ylab, offset = prep_plot(samp,channels;
-                                         num=num,den=den,
-                                         transformation=transformation)
+    x, y, xlab, ylab = prep_plot(samp,channels;
+                                 num=num,den=den,
+                                 transformation=transformation)
     if ylim == :auto
         ylim = get_ylim(y,samp.swin)
     end
@@ -115,15 +120,13 @@ end
 
 function prep_plot(samp::Sample,
                    channels::AbstractVector;
+                   offset::Number=0.0,
                    num::AbstractString="",
                    den::AbstractString="",
                    transformation::AbstractString="")
     xlab = names(samp.dat)[1]
     x = samp.dat[:,xlab]
     meas = samp.dat[:,channels]
-    offset = get_offset(meas;
-                        transformation=transformation,
-                        num=num,den=den)
     y = transformeer(meas,transformation;
                      num=num,den=den,offset=offset)
     ratsig = (num=="" && den=="") ? "signal" : "ratio"
@@ -134,7 +137,7 @@ function prep_plot(samp::Sample,
     else
         ylab = transformation * "(" * ratsig * ")"
     end
-    return x, y, xlab, ylab, offset
+    return x, y, xlab, ylab
 end
 export prep_plot
 
@@ -173,7 +176,7 @@ function plotFitted!(p,
     good = .!dat.outlier
     x = dat[good,1]
     y = transformeer(pred[good,:],transformation;
-                num=num,den=den,offset=offset)
+                     num=num,den=den,offset=offset)
     for yi in eachcol(y)
         Plots.plot!(p,x,yi;linecolor=linecolor,linestyle=linestyle,label="")
     end
@@ -184,15 +187,15 @@ function plotFittedBlank!(p,
                           samp::Sample,
                           method::KJmethod,
                           fit::KJfit;
+                          channels::AbstractVector=getChannels(method),
                           num::AbstractString="",
                           den::AbstractString="",
                           transformation::AbstractString="",
                           offset::Number=0.0,
                           linecolor::Symbol=:black,
                           linestyle::Symbol=:solid)
-    channels = getChannels(method)
-    pred = predict(samp,fit.blank[:,channels])
-    plotFitted!(p,samp,pred;
+    pred = predict(samp,fit.blank)
+    plotFitted!(p,samp,pred[:,channels];
                 blank=true,num=num,den=den,
                 transformation=transformation,offset=offset,
                 linecolor=linecolor,linestyle=linestyle)

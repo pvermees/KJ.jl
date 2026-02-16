@@ -347,7 +347,7 @@ function TUIlistInterferences(ctrl::AbstractDict)
         end
     end
     if i>0
-        println(msg)
+        print(msg)
     else
         println("No interferences added yet.")
     end
@@ -604,7 +604,7 @@ function TUIlistBiases(ctrl::AbstractDict)
         msg *= TUIprintBias(ctrl,ctrl["method"].bias)
     end
     if i>0
-        println(msg)
+        print(msg)
     else
         println("No bias corrections fitted yet.")
     end
@@ -861,7 +861,7 @@ function TUItransformation!(ctrl::AbstractDict,
     elseif response=="s"
         ctrl["transformation"] = "sqrt"
     else
-        ctrl["transformation"] = nothing
+        ctrl["transformation"] = ""
     end
     TUIplotter(ctrl)
     return "x"

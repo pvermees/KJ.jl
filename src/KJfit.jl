@@ -13,7 +13,7 @@ function Gfit(method::Gmethod;
               adrift::AbstractVector = drift,
               covmat::AbstractMatrix = zeros(length([drift,down]),
                                              length([drift,down])),
-              bias::AbstractDict = Dict{String,AbstractBias}())
+              bias::AbstractDict = Dict())
     return Gfit(blank,drift,down,adrift,covmat,bias)
 end
 
