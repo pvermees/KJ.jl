@@ -66,7 +66,7 @@ function plot(samp::Sample;
               return_offset::Bool=false)
 
     x, y, xlab, ylab = prep_plot(samp,channels;
-                                 num=num,den=den,
+                                 offset=offset,num=num,den=den,
                                  transformation=transformation)
     if ylim == :auto
         ylim = get_ylim(y,samp.swin)

@@ -36,7 +36,7 @@ export interference_correction
 function bias4interference(dat::AbstractDataFrame,
                            ion::AbstractString,
                            interference::Interference,
-                           bias::Dict{String,AbstractBias})
+                           bias::AbstractDict)
     element = channel2element(ion)
     if haskey(bias,element)
         mf = bias_correction(bias[element],ion,

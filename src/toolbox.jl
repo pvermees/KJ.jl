@@ -352,7 +352,7 @@ function get_offset(df::AbstractDataFrame;
      end
 end
 function get_offset(samp::Sample;
-                    method::KJmethod,
+                    method::Union{Nothing,KJmethod}=nothing,
                     fit::Union{Nothing,KJfit}=nothing,
                     channels::AbstractVector=getChannels(samp),
                     transformation::AbstractString="",
@@ -360,7 +360,7 @@ function get_offset(samp::Sample;
                     den::AbstractString="")
     meas = samp.dat[:,channels]
     offset1 = get_offset(meas;transformation=transformation,num=num,den=den)
-    if isnothing(fit) || samp.group == "sample"
+    if isnothing(method) || isnothing(fit) || samp.group == "sample"
         return offset1
     else
         pred = predict(samp,method,fit;generic_names=false)
