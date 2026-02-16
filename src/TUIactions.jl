@@ -1128,8 +1128,9 @@ function CSVhelper(samp::Sample,
                    method::Gmethod,
                    fit::Gfit)
     a = atomic(samp,method,fit;add_xy=true)
-    i = method.ions
-    out = DataFrame(i.P => a.P, i.D => a.D, i.d => a.d)
+    out = DataFrame(method.P.ion => a.P, 
+                    method.D.ion => a.D, 
+                    method.d.ion => a.d)
     if !isnothing(a.x) out.x = x end
     if !isnothing(a.y) out.y = y end
     return out

@@ -472,11 +472,20 @@ function concentrationtest()
 end
 
 function internochrontest(show=true)
-    myrun, method, fit = processtest("Lu-Hf";show=false)
+    myrun = load("data/lines",format="Agilent")
+    method = Gmethod(name="Lu-Hf",
+                     groups=Dict("Hog" => "Hogsbo"),
+                     P=Pairing(ion="Lu176",proxy="Lu175",channel="Lu175 -> 175"),
+                     D=Pairing(ion="Hf176",proxy="Hf176",channel="Hf176 -> 258"),
+                     d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260"),
+                     standards=Set(["Hog"]),
+                     ndown=0,
+                     ndrift=1)
+    fit = process!(myrun,method)
     isochron = internochron(myrun,method,fit)
-    CSV.write("output/isochron.csv",isochron)
+    CSV.write(joinpath("output","isochron.csv"),isochron)
     if show
-        p = internoplot(myrun[2],method,fit;xlim=[0,100])
+        p = internoplot(myrun[7],method,fit)
         @test p isa Plots.Plot
         display(p)
     end
@@ -783,7 +792,7 @@ Plots.closeall()
 # @testset "timestamp" begin timestamptest() end
 # @testset "stoichiometry" begin mineraltest() end
 # @testset "concentration" begin concentrationtest() end
-# @testset "Lu-Hf internochron" begin internochrontest() end
+@testset "Lu-Hf internochron" begin internochrontest() end
 # @testset "UPb internochron" begin internochronUPbtest() end
 # @testset "concentration map" begin maptest() end
 # @testset "isotope ratio map" begin map_dating_test() end
@@ -801,4 +810,4 @@ Plots.closeall()
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 
-TUI(;debug=true)
+# TUI(;debug=true)
