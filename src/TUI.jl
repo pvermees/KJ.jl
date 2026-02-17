@@ -163,18 +163,15 @@ function init_KJtree()
             action = TUIformat!
         ),
         "dir|file" => (
-            message =
-            "d: Read a directory in which analysis is stored in a different file\n" *
-            "b: Set the number of blocks per analysis (current value =" * string(_KJ["ctrl"]["nblocks"]) * ")\n" *
-            "p: Parse the data from a single file using a laser log (provide paths)\n" *
-            "P: Parse the data from a single file using a laser log (choose from list)\n" *
-            "(? for help, x to exit):",
+            message = TUIdirfileMessage,
             help =
-            "There are two ways to store mass spectrometer data. Each analysis " * 
-            "(spot or raster) can be saved into its own file, or all analyses can be " * 
-            "stored together in a single file. In the latter case, a laser log file is " * 
-            "needed to parse the data into individual samples. Option p requires " *
-            "the full paths of the data and log files. Option P requires the name of the " *
+            "There are three ways to store mass spectrometer data:\n" * 
+            "1. Each analysis (spot or raster) can be saved into its own file;\n" * 
+            "2. each analysis can be divided into several files (corresponding to a " * 
+            "background, signal and washout block, respectively), or\n" * 
+            "3. all analyses can be stored together in a single file, which is parsed " * 
+            "into individual samples using a laser log file. Option p requires the full " * 
+            "paths of the data and log files. Option P requires the name of the " * 
             "directory in which the data and laser log are stored.",
             action = Dict(
                 "d" => "loadICPdir",

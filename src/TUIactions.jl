@@ -86,8 +86,7 @@ function TUIloadICPdir!(ctrl::AbstractDict,
     end
 end
 
-function TUItoggleBlocks!(ctrl::AbstractDict,
-                          response::AbstractString)
+function TUItoggleBlocks!(ctrl::AbstractDict)
     if ctrl["nblocks"] == 1
         ctrl["nblocks"] = 3
     else

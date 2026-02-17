@@ -29,6 +29,17 @@ function TUIshowMethods(ctrl::AbstractDict)
     return msg
 end
 
+function TUIdirfileMessage(ctrl::AbstractDict)
+    msg = 
+    "d: Read a directory in which analysis is stored in a different file\n" *
+    "b: Set the number of blocks per analysis (current value = " * string(ctrl["nblocks"]) * ")\n" *
+    "p: Parse the data from a single file using a laser log (provide paths)\n" *
+    "P: Parse the data from a single file using a laser log (choose from list)\n" *
+    "x: Exit\n" *
+    "?: Help\n"
+    return msg
+end
+
 function TUIinternalMessage(ctrl::AbstractDict)
     msg = "Choose an internal standard from the following list of channels:\n"
     msg *= TUIlistChannels(ctrl)
