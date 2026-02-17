@@ -40,6 +40,12 @@ function detect_outliers!(run::Vector{Sample};
         end
     end
 end
+function detect_outliers!(run::Vector{Sample}, 
+                          method::KJmethod;
+                          include_samples::Bool=false)
+    ch = getChannels(method)
+    detect_outliers!(run;channels=ch,include_samples=include_samples)
+end
 export detect_outliers!
 
 function win2outliers!(samp::Sample,

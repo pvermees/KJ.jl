@@ -10,10 +10,10 @@ function TUIinit()
                            "fractionation" => true,
                            "process" => true),
         "history" => DataFrame(task=String[],action=String[]),
-        "refmats" => Dict{String,String}(),
         "chain" => ["top"],
         "template" => false,
         "multifile" => true,
+        "nblocks" => 1,
         "head2name" => true,
         "format" => "",
         "ICPpath" => "",
@@ -73,15 +73,31 @@ function TUIloadICPdir!(ctrl::AbstractDict,
                         response::AbstractString)
     ctrl["run"] = load(response;
                        format=ctrl["format"],
-                       head2name=ctrl["head2name"])
+                       head2name=ctrl["head2name"],
+                       nblocks=ctrl["nblocks"])
     ctrl["priority"]["load"] = false
     ctrl["multifile"] = true
     ctrl["ICPpath"] = response
-    setGroup!(ctrl["run"],ctrl["refmats"])
+    TUIsetGroups!(ctrl)
     if ctrl["template"]
         return "x"
     else
         return "xxx"
+    end
+end
+
+function TUItoggleBlocks!(ctrl::AbstractDict)
+    if ctrl["nblocks"] == 1
+        ctrl["nblocks"] = 3
+    else
+        ctrl["nblocks"] = 1
+    end
+    return nothing
+end
+
+function TUIsetGroups!(ctrl::AbstractDict)
+    if !isnothing(ctrl["method"])
+        setGroup!(ctrl["run"],ctrl["method"])
     end
 end
 
@@ -140,7 +156,7 @@ function TUImethod!(ctrl::AbstractDict,
     else
         i = parse(Int,response)
         methodname = _KJ["methods"].names[i]
-        ctrl["method"] = Gmethod(methodname)
+        ctrl["method"] = Gmethod(name=methodname)
         return "columns"
     end
 end
@@ -184,13 +200,26 @@ function TUIsetChannels!(ctrl::AbstractDict,
                          response::AbstractString)
     labels = getChannels(ctrl["run"])
     selected = parse.(Int,split(response,","))
-    channels = NamedTuple{(:P,:D,:d)}(labels[selected[1:3]])
-    ctrl["method"].fractionation.channels = channels
-    proxies = channels2proxies(channels)
-    if any(isnothing,proxies)
+    channels = labels[selected[1:3]]
+    m = ctrl["method"]
+    m.P.channel = channels[1]
+    m.D.channel = channels[2]
+    m.d.channel = channels[3]
+    proxies = channel2proxy.(channels)
+    if any(isnothing(proxies))
+        ions = [m.P.ion,m.D.ion,m.d.ion]
+        if ctrl["cache"] isa AbstractDict
+            ctrl["cache"]["ions"] = ions
+            ctrl["cache"]["channels"] = channels
+        else
+            ctrl["cache"] = Dict("ions" => ions,
+                                 "channels" => channels)
+        end
         return "setProxies"
     else
-        ctrl["method"].fractionation.proxies = proxies
+        m.P.proxy = proxies[1]
+        m.D.proxy = proxies[2]
+        m.d.proxy = proxies[3]
         ctrl["priority"]["method"] = false
         return "xx"
     end
@@ -207,12 +236,159 @@ end
 
 function TUIsetProxies!(ctrl::AbstractDict,
                         response::AbstractString)
-    selection = parse.(Int,split(response,","))
-    ions = ctrl["method"].ions
-    nuclides = ions2nuclidelist(ions)
-    pr = ctrl["method"].proxies
-    pr.P, pr.D, pr.d = nuclides[selection[1:3]]
+    parts = split(response,['(',')',','])
+    channels = ctrl["cache"]["channels"]
+    isotopes = TUIions2isotopes(ctrl["cache"]["ions"])
+    if length(parts) < 12
+        @warn "Invalid input format. Expected format: (1,2),(2,1),(3,3)"
+        return nothing
+    end
+    c1, p1, c2, p2, c3, p3 = parse.(Int,parts[[2,3,6,7,10,11]])
+    channel2proxy = Dict{String,String}(
+        channels[c1] => isotopes[p1],
+        channels[c2] => isotopes[p2],
+        channels[c3] => isotopes[p3]
+    )
+    m = ctrl["method"]
+    m.P.proxy = channel2proxy[m.P.channel]
+    m.D.proxy = channel2proxy[m.D.channel]
+    m.d.proxy = channel2proxy[m.d.channel]
+    ctrl["priority"]["method"] = false
     return "xxx"
+end
+
+function TUIsetInterferenceProxy!(ctrl::AbstractDict,
+                                  response::AbstractString)
+    i = parse(Int,response)
+    isotopes = TUIions2isotopes([ctrl["cache"]["key"]])
+    proxy = isotopes[i]
+    interference = ctrl["cache"]["interference"]
+    interference.proxy = proxy
+    key = ctrl["cache"]["key"]
+    ctrl["cache"]["target"].interferences[key] = interference
+    return "xxxxx"
+end
+
+function TUIgetPairings(ctrl::AbstractDict)
+    m = ctrl["method"]
+    targets = [m.P, m.D, m.d]
+    return targets
+end
+
+function TUIchooseInterferenceTarget!(ctrl::AbstractDict,
+                                      response::AbstractString)
+    m = ctrl["method"]
+    i = parse(Int,response)
+    ctrl["cache"] = Dict{String,Any}("target" => [m.P;m.D;m.d][i])
+    return "interferenceType"
+end
+
+function TUIgetInterferences(proxy::AbstractString)
+    isotope = parse(Int, match(r"\d+", proxy).match)
+    nuclides = _KJ["nuclides"]
+    out = String[]
+    for (element, isotopes) in pairs(nuclides)
+        if isotope in isotopes
+            interference = element * string(isotope)
+            if interference != proxy
+                push!(out,interference)
+            end
+        end
+    end
+    return out
+end
+
+function TUIchooseInterferenceIon!(ctrl::AbstractDict,
+                                   response::AbstractString)
+    i = parse(Int,response)
+    interferences = TUIgetInterferences(ctrl["cache"]["target"].proxy)
+    key = interferences[i]
+    ctrl["cache"]["key"] = key
+    if haskey(ctrl["cache"]["target"].interferences,key)
+        interference = ctrl["cache"]["target"].interferences[key]
+    else
+        interference = Interference()
+    end
+    ctrl["cache"]["interference"] = interference
+    return "interferenceProxyChannel"
+end
+
+function TUIchooseInterferenceProxyChannel!(ctrl::AbstractDict,
+                                            response::AbstractString)
+    selection = parse(Int,response)
+    channels = getChannels(ctrl["run"])
+    channel = channels[selection]
+    proxy = channel2proxy(channel)
+    interference = ctrl["cache"]["interference"]
+    interference.channel = channel
+    if isnothing(proxy)
+        return "setInterferenceProxy"
+    else
+        interferences = ctrl["cache"]["target"].interferences
+        interference.proxy = proxy
+        key = ctrl["cache"]["key"]
+        interferences[key] = interference
+        return "xxxx"
+    end
+end
+
+function TUIchooseREEInterferenceProxyChannels!(ctrl::AbstractDict,
+                                                response::AbstractString)
+    selection = parse.(Int,split(response,","))
+    channels = getChannels(ctrl["run"])
+    key = channels[selection[1]]
+    interferences = ctrl["cache"]["target"].interferences
+    if haskey(interferences,key)
+        interference = interferences[key]
+    else
+        interference = REEInterference(;REE=channels[selection[2]],
+                                        REEO=channels[selection[3]])
+    end
+    ctrl["cache"]["key"] = key
+    ctrl["cache"]["interference"] = interference
+    return "glass"
+end
+
+function TUIlistInterferences(ctrl::AbstractDict)
+    msg = "Current interferences:\n"
+    i = 0
+    for pairing in TUIgetPairings(ctrl)
+        for (key,interference) in pairing.interferences
+            msg *= string(i+=1) * TUIprintInterference(pairing,key,interference) * "\n"
+        end
+    end
+    if i>0
+        print(msg)
+    else
+        println("No interferences added yet.")
+    end
+    return nothing
+end
+
+function TUIprintInterference(pairing::Pairing, 
+                              ion::AbstractString,
+                              interference::Interference)
+    return ". target=" * pairing.proxy * 
+           "; interference=" * ion * 
+           "; proxy=" * interference.proxy *
+           "; channel=\"" * interference.channel * "\""
+end
+
+function TUIprintInterference(pairing::Pairing,
+                              proxy_channel::AbstractString,
+                              interference::REEInterference)
+    return ". target=" * pairing.proxy * 
+           "; proxy=\"" * proxy_channel * "\"" * 
+           "; REE=\"" * interference.REE * "\"" *
+           "; REEO=\"" * interference.REEO * "\"" *
+           "; standards=[" * join(interference.standards,",") * "]"
+end
+
+function TUIremoveInterferences!(ctrl::AbstractDict)
+    for pairing in TUIgetPairings(ctrl)
+        pairing.interferences = Dict{String,AbstractInterference}()
+    end
+    return "x"
 end
 
 function TUIchooseStandard!(ctrl::AbstractDict,
@@ -230,41 +406,64 @@ function TUIgetRefmatName(method::Cmethod,i::Int)
     return _KJ["glass"].names[i]
 end
 
-function TUIaddStandard!(method::Gmethod,
-                         standard::AbstractString)
-    push!(method.fractionation.standards,standard)
+function TUIaddBias2interferences!(ctrl::AbstractDict,
+                                   bias::Calibration,
+                                   element::AbstractString)
+    for pairing in TUIgetPairings(ctrl)
+        for interference in values(pairing.interferences)
+            if interference isa Interference && channel2element(interference.proxy) == element
+                interference.bias = bias
+            end
+        end
+    end
 end
-function TUIaddStandard!(method::Cmethod,
-                         standard::AbstractString)
-    push!(method.standards,standard)
+
+function TUIaddBias2method!(ctrl::AbstractDict)
+    method = ctrl["method"]
+    bias = ctrl["cache"]["bias"]
+    element = ctrl["cache"]["element"]
+    if element == channel2element(method.D.proxy)
+        method.bias = bias
+    else
+        TUIaddBias2interferences!(ctrl,bias,element)
+    end
+    return "xxxx"
 end
 
 function TUIaddStandardsByPrefix!(ctrl::AbstractDict,
                                   response::AbstractString)
-    standard = ctrl["cache"]
-    ctrl["refmats"][standard] = response
-    TUIaddStandard!(ctrl["method"],standard)
-    setGroup!(ctrl["run"],response,standard)
-    ctrl["priority"]["fractionation"] = false
-    return "xxx"
+    if ctrl["cache"] isa AbstractDict
+        standard = ctrl["cache"]["standard"]
+        push!(ctrl["cache"]["bias"].standards,response)
+        ctrl["method"].groups[response] = standard
+        return TUIaddBias2method!(ctrl)
+    else
+        if ctrl["method"] isa Gmethod
+            push!(ctrl["method"].standards,response)
+        end
+        ctrl["method"].groups[response] = ctrl["cache"]
+        setGroup!(ctrl["run"],ctrl["method"])
+        ctrl["priority"]["fractionation"] = false
+        return "xxx"
+    end
 end
 
 function TUIaddStandardsByNumber!(ctrl::AbstractDict,
                                   response::AbstractString)
     selection = parse.(Int,split(response,","))
-    standard = ctrl["cache"]
-    TUIaddStandard!(ctrl["method"],standard)
-    setGroup!(ctrl["run"],selection,standard)
+    TUIsetStandard!(ctrl,ctrl["cache"],ctrl["cache"])
+    setGroup!(ctrl["run"],selection,ctrl["cache"])
     ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
 
 function TUIremoveAllStandards!(ctrl::AbstractDict)
-    for standard in ctrl["method"].fractionation.standards
-        delete!(ctrl["refmats"],standard)
+    for group in ctrl["method"].standards
+        delete!(ctrl["method"].groups,group)
     end
-    setGroup!(ctrl["run"],"sample")
-    ctrl["method"].fractionation.standards = Set{String}()
+    setGroup!(ctrl["run"])
+    setGroup!(ctrl["run"],ctrl["method"])
+    ctrl["method"].standards = Set{String}()
     ctrl["priority"]["fractionation"] = true
     return "x"
 end
@@ -272,12 +471,12 @@ end
 function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
                                      response::AbstractString)
     selection = parse.(Int,split(response,","))
-    setGroup!(ctrl["run"],selection,"sample")
+    setGroup!(ctrl["run"],selection)
     groups = unique(getGroups(ctrl["run"]))
-    standards = ctrl["method"].fractionation.standards
+    standards = ctrl["method"].standards
     for standard in standards
         if !in(standard,groups)
-            delete!(method["refmats"],standard)
+            delete!(ctrl["method"].groups,standard)
             pop!(standards,standard)
         end
     end
@@ -285,18 +484,18 @@ function TUIremoveStandardsByNumber!(ctrl::AbstractDict,
     return "xx"
 end
 
-function TUIrefmatTab(ctrl::AbstractDict)
-    return TUIrefmatTab(ctrl["method"])
+function TUIstandardsTab(ctrl::AbstractDict)
+    return TUIstandardsTab(ctrl["method"])
 end
-function TUIrefmatTab(method::Cmethod)
-    refmats = TUIgetRefmats(method)
+function TUIstandardsTab(method::Cmethod)
+    refmats = TUIgetStandards(method)
     for name in refmats.names
         print(name * "\n")
     end
     return nothing
 end
-function TUIrefmatTab(method::Gmethod)
-    refmats = TUIgetRefmats(method)
+function TUIstandardsTab(method::Gmethod)
+    refmats = TUIgetStandards(method)
     for name in refmats.names
         refmat = get(refmats,name)
         print(name)
@@ -327,16 +526,30 @@ function TUIchooseGlass!(ctrl::AbstractDict,
                          response::AbstractString)
     i = parse(Int,response)
     glass = _KJ["glass"].names[i]
-    ctrl["cache"] = glass
-    ctrl["method"].glass = Dict()
+    if ctrl["cache"] isa AbstractDict
+        ctrl["cache"]["glass"] = glass
+    else
+        ctrl["cache"] = Dict("glass" => glass)
+    end
     return "addGlassGroup"
 end
 
 function TUIaddGlassByPrefix!(ctrl::AbstractDict,
                               response::AbstractString)
-    setGroup!(ctrl["run"],response,ctrl["cache"])
-    ctrl["glass"][ctrl["cache"]] = response
-    return "xxx"
+    setGroup!(ctrl["run"],[response])
+    ctrl["method"].groups[response] = ctrl["cache"]["glass"]
+    if haskey(ctrl["cache"],"interference")
+        interference = ctrl["cache"]["interference"]
+        push!(interference.standards,response)
+        key = ctrl["cache"]["key"]
+        interferences = ctrl["cache"]["target"].interferences
+        interferences[key] = interference
+    elseif haskey(ctrl["cache"],"bias")
+        bias = ctrl["cache"]["bias"]
+        push!(bias.standards,response)
+        TUIaddBias2method!(ctrl)
+    end
+    return "xxxxxx"
 end
 
 function TUIaddGlassByNumber!(ctrl::AbstractDict,
@@ -377,6 +590,102 @@ function TUIglassTab(ctrl::AbstractDict)
     return nothing
 end
 
+function TUIprintBias(ctrl::AbstractDict, 
+                      calibration::Calibration)
+    msg = "num = " * calibration.num.ion * " (" * calibration.num.channel * ")"
+    msg *= "; den = " * calibration.den.ion * " (" * calibration.den.channel * ")"
+    for standard in calibration.standards
+        msg *= "; prefix = " * standard
+        msg *= "; standard = " * ctrl["method"].groups[standard] * "\n"
+    end
+    return msg
+end
+
+function TUIlistBiases(ctrl::AbstractDict)
+    msg = "Current bias corrections:\n"
+    i = 0
+    for pairing in TUIgetPairings(ctrl)
+        for interference in values(pairing.interferences)
+            if interference isa Interference && length(interference.bias.standards)>0
+                msg *= string(i+=1) * ". "
+                msg *= TUIprintBias(ctrl,interference.bias)
+            end
+        end
+    end
+    if length(ctrl["method"].bias.standards) > 0
+        msg *= string(i+=1) * ". "
+        msg *= TUIprintBias(ctrl,ctrl["method"].bias)
+    end
+    if i>0
+        print(msg)
+    else
+        println("No bias corrections fitted yet.")
+    end
+    return nothing
+end
+
+function TUIremoveBiases!(ctrl::AbstractDict)
+    for pairing in TUIgetPairings(ctrl)
+        for interference in values(pairing.interferences)
+            if interference isa Interference
+                interference.bias = Calibration()
+            end
+        end
+    end
+    if ctrl["method"] isa Gmethod
+        ctrl["method"].bias = Calibration()
+    end
+    return nothing
+end
+
+function TUIchooseBiasElement!(ctrl::AbstractDict,
+                               response::AbstractString)
+    i = parse(Int,response)
+    m = ctrl["method"]
+    elements = TUIgetBiasElements(m)
+    ctrl["cache"] = Dict{String,Any}("element" => elements[i])
+    return "calibration"
+end
+
+function TUIcalibration!(ctrl::AbstractDict,
+                         response::AbstractString)
+    parts = split(response,['(',')',','])
+    if length(parts) < 8
+        @warn "Invalid input format. Expected format: (1,2),(3,4)"
+        return nothing
+    end
+    element = ctrl["cache"]["element"]
+    isotopes = element .* string.(_KJ["nuclides"][element])
+    channels = getChannels(ctrl["run"])
+    i1 = parse(Int,parts[2])
+    i2 = parse(Int,parts[3])
+    i3 = parse(Int,parts[6])
+    i4 = parse(Int,parts[7])
+    bias = Calibration(num=(ion=isotopes[i1],channel=channels[i2]),
+                       den=(ion=isotopes[i3],channel=channels[i4]))
+    ctrl["cache"]["bias"] = bias
+    return TUIbiasStandardDispatch(ctrl)
+end
+
+function TUIbiasStandardDispatch(ctrl::AbstractDict)
+    bias = ctrl["cache"]["bias"]
+    ratio = iratio(bias.num.ion,bias.den.ion)
+    if isnothing(ratio)
+        return "biasStandards"
+    else
+        return "glass"
+    end
+end
+
+function TUIchooseBiasStandard!(ctrl::AbstractDict,
+                                response::AbstractString)
+    i = parse(Int,response)
+    m = ctrl["method"]
+    refmats = TUIgetBiasStandards(m)
+    ctrl["cache"]["standard"] = refmats.names[i]
+    return "addStandardGroup"
+end
+
 function TUIviewer(ctrl::AbstractDict)
     TUIplotter(ctrl)
     return "view"
@@ -394,7 +703,7 @@ function TUIplotter(ctrl::AbstractDict)
              den=ctrl["den"],
              transformation=ctrl["transformation"],
              title=TUItitle(ctrl))
-    if ctrl["method"] isa Gmethod && !isnothing(ctrl["method"].PAcutoff)
+    if ctrl["method"] isa Gmethod && isfinite(ctrl["method"].PAcutoff)
         TUIaddPAline!(p,ctrl["method"].PAcutoff)
     end
     display(p)
@@ -565,7 +874,7 @@ function TUItransformation!(ctrl::AbstractDict,
     elseif response=="s"
         ctrl["transformation"] = "sqrt"
     else
-        ctrl["transformation"] = nothing
+        ctrl["transformation"] = ""
     end
     TUIplotter(ctrl)
     return "x"
@@ -635,17 +944,24 @@ function TUIopenTemplate!(ctrl::AbstractDict,
                           response::AbstractString)
     include(response)
     Base.invokelatest() do
-        ctrl["refmats"] = refmats
         ctrl["format"] = format
         ctrl["head2name"] = head2name
         ctrl["multifile"] = multifile
+        ctrl["nblocks"] = nblocks
         ctrl["method"] = method
         ctrl["transformation"] = transformation
-        ctrl["priority"]["fractionation"] = (length(method.fractionation.standards) == 0)
+        ctrl["priority"]["fractionation"] = TUIfractionationChecked(method)
         ctrl["priority"]["method"] = false
         ctrl["template"] = true
     end
     return "xx"
+end
+
+function TUIfractionationChecked(method::Gmethod)
+    return length(method.standards) == 0
+end
+function TUIfractionationChecked(method::Cmethod)
+    return length(method.groups) == 0
 end
 
 function TUIsaveTemplate(ctrl::AbstractDict,
@@ -655,40 +971,69 @@ function TUIsaveTemplate(ctrl::AbstractDict,
         write(file,"multifile = " * string(ctrl["multifile"]) * "\n")
         write(file,"head2name = " * string(ctrl["head2name"]) * "\n")
         write(file,"transformation = \"" * ctrl["transformation"] * "\"\n")
-        write(file,"refmats = " * TUIrefmats2text(ctrl["refmats"]) * "\n") 
+        write(file,"nblocks = " * string(ctrl["nblocks"]) * "\n")
         write(file,TUImethod2text(ctrl["method"]))
     end
     return "xx"
 end
 
-function TUImethod2text(method::Gmethod)
-    F = method.fractionation
-    i = F.ions
-    p = F.proxies
-    c = F.channels
-    s = collect(F.standards)
-    PA = method.PAcutoff
-    out = "method = Gmethod(\"" * method.name * "\";\n"
-    out *= "                 ions = (P=\"" * i.P * "\", D=\"" * i.D * "\", d=\"" * i.d * "\"),\n"
-    out *= "                 proxies = (P=\"" * p.P * "\", D=\"" * p.D * "\", d=\"" * p.d * "\"),\n"
-    out *= "                 channels = (P=\"" * c.P * "\", D=\"" * c.D * "\", d=\"" * c.d * "\"),\n"
-    out *= "                 standards = [" * join("\"" .* s .* "\"", ", ") * "],\n"
-    out *= "                 nblank = " * string(method.nblank) * ",\n"
-    out *= "                 ndrift = " * string(method.ndrift) * ",\n"
-    out *= "                 ndown = " * string(method.ndown) * ",\n"
-    out *= "                 PAcutoff = " * ifelse(isnothing(PA),"nothing",PA) * ")\n"
+function TUImethod2text(m::Gmethod)
+    out  = "method = Gmethod(name=\"" * m.name * "\",\n"
+    out *= "                 P=Pairing(ion=\"" * m.P.ion * "\",proxy=\"" * m.P.proxy * "\",channel=\"" * m.P.channel * "\"),\n"
+    out *= "                 D=Pairing(ion=\"" * m.D.ion * "\",proxy=\"" * m.D.proxy * "\",channel=\"" * m.D.channel * "\"),\n"
+    out *= "                 d=Pairing(ion=\"" * m.d.ion * "\",proxy=\"" * m.d.proxy * "\",channel=\"" * m.d.channel * "\"),\n"
+    out *= "                 nblank = " * string(m.nblank) * ",\n"
+    out *= "                 ndrift = " * string(m.ndrift) * ",\n"
+    out *= "                 ndown = " * string(m.ndown) * ",\n"
+    out *= "                 PAcutoff = " * string(m.PAcutoff) * ")\n"
+    out *= "method.groups = " * string(m.groups) * "\n"
+    out *= "method.bias = " * TUIcalibration2template(m.bias) * "\n"
+    out *= "method.standards = " * string(m.standards) * "\n"
+    pairings = Dict("method.P" => m.P, "method.D" => m.D, "method.d" => m.d)
+    for (pairing_key,pairing) in pairings
+        for (interference_key, interference) in pairing.interferences
+            out *= pairing_key * ".interferences[\"" * interference_key * "\"] = "
+            out *= TUIinterference2template(interference) * "\n"
+        end
+    end
+    return out
+end
+
+function TUIcalibration2template(calibration::Calibration)
+    out  = "Calibration(num=" * string(calibration.num)
+    out *= ", den=" * string(calibration.den) 
+    out *= ", standards=" * string(calibration.standards) * ")"
+    return out
+end
+
+function TUIinterference2template(interference::Interference)
+    out  = "Interference(proxy=\"" * string(interference.proxy) * "\""
+    out *= ",channel=\"" * string(interference.channel) * "\")"
+    return out
+end
+
+function TUIinterference2template(interference::REEInterference)
+    out  = "REEInterference(REE=\"" * string(interference.REE) * "\""
+    out *= ", REEO=\"" * string(interference.REEO) * "\""
+    out *= ", standards=" * string(interference.standards) * ")"
+    return out
+end
+
+function TUImethod2text(m::Cmethod)
+    out  = "elements = (" * join(["\"" * channel * "\" => \"" * m.elements[channel] * "\"" for channel in keys(m.elements)], ",\n") * ")\n"
+    out *= "groups = Dict(" * join(["\"" * group * "\" => \"" * m.groups[group] * "\"" for group in keys(m.groups)], ",") * ")\n"
+    out *= "internal = (\"" * m.internal[1] * "\"," * string(m.internal[2]) * ")\n"
+    out *= "nblank = " * string(m.nblank) * "\n"
+    out *= "method = Cmethod(elements,groups,internal,nblank)\n"
     return out
 end
 
 function TUImethod2text(method::Cmethod)
-    chunks = String[]
-    for (channel,element) in pairs(method.elements)
-        push!(chunks,"\"" * channel * "\" => " * "\"" * element * "\"")
-    end
-    out  = "elements = DataFrame(" * join(chunks,",\n                     ") * ")\n"
-    out *= "standards = [" * join("\"" .* collect(method.standards) .* "\"", ", ") * "],\n"
-    out *= "internal = (\"" * method.internal[1] * "\"," * string(method.internal[2]) * ")\n"
-    out *= "method = Cmethod(elements,standards,internal," * string(method.nblank) * ")"
+    out  = "elements = " * string(method.elements) * "\n"
+    out *= "groups = " * string(method.groups) * "\n"
+    out *= "internal = " * string(method.internal) * "\n"
+    out *= "nblank = " * string(method.nblank) * "\n"
+    out *= "method = Cmethod(elements,groups,internal,nblank)"
     return out
 end
 
@@ -734,12 +1079,12 @@ end
 function TUIsetPAcutoff!(ctrl::AbstractDict,
                          response::AbstractString)
     cutoff = tryparse(Float64,response)
-    ctrl["method"].PAcutoff = cutoff
+    ctrl["method"].PAcutoff = ifelse(isnothing(cutoff),Inf,cutoff)
     return "xx"
 end
 
 function TUIclearPAcutoff!(ctrl::AbstractDict)
-    ctrl["method"].PAcutoff = nothing
+    ctrl["method"].PAcutoff = Inf
     return "xx"
 end
 
@@ -834,8 +1179,9 @@ function CSVhelper(samp::Sample,
                    method::Gmethod,
                    fit::Gfit)
     a = atomic(samp,method,fit;add_xy=true)
-    i = method.ions
-    out = DataFrame(i.P => a.P, i.D => a.D, i.d => a.d)
+    out = DataFrame(method.P.ion => a.P, 
+                    method.D.ion => a.D, 
+                    method.d.ion => a.d)
     if !isnothing(a.x) out.x = x end
     if !isnothing(a.y) out.y = y end
     return out

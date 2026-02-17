@@ -1,9 +1,8 @@
 function averat(run::Vector{Sample},
                 method::Gmethod,
                 fit::Gfit)
-    ions = method.fractionation.ions
-    xlab = ions.P * "/" * ions.D
-    ylab = ions.d * "/" * ions.D
+    xlab = method.P.ion * "/" * method.D.ion
+    ylab = method.d.ion * "/" * method.D.ion
     column_names = ["name", xlab, "s[" * xlab * "]", ylab, "s[" * ylab * "]", "rho"]
     ns = length(run)
     out = DataFrame(hcat(fill("",ns),zeros(ns,5)),column_names)
@@ -18,7 +17,7 @@ end
 function averat(samp::Sample,
                 method::Gmethod,
                 fit::Gfit)
-    a = Cruncher(samp,method,fit)
+    a = ACruncher(samp,method,fit)
     init = [sum(a.Phat)/sum(a.Dhat),sum(a.dhat)/sum(a.Dhat)]
     objective = (par) -> LLaverat(par[1],par[2];a...)
     optimum = Optim.optimize(objective,init)
@@ -46,9 +45,9 @@ function LLaverat(x::Real,
     return sum(@. SS/2)
 end
 
-function Cruncher(samp::Sample,
-                  method::Gmethod,
-                  fit::Gfit)
+function ACruncher(samp::Sample,
+                   method::Gmethod,
+                   fit::Gfit)
     a = atomic(samp,method,fit)
     mat = hcat(a.P,a.D,a.d)
     E = df2cov(mat)

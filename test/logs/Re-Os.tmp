@@ -1,0 +1,18 @@
+format = "Agilent"
+multifile = true
+head2name = true
+transformation = "sqrt"
+nblocks = 1
+method = Gmethod(name="Re-Os",
+                 P=Pairing(ion="Re187",proxy="Re185",channel="Re185 -> 185"),
+                 D=Pairing(ion="Os187",proxy="Os187",channel="Os187 -> 251"),
+                 d=Pairing(ion="Os188",proxy="Os189",channel="Os189 -> 253"),
+                 nblank = 2,
+                 ndrift = 2,
+                 ndown = 1,
+                 PAcutoff = Inf)
+method.groups = Dict("Qmoly" => "QMolyHill", "Nist_massbias" => "NIST610", "Nis3" => "NiS-3", "Nist_REEint" => "NIST610")
+method.bias = Calibration(num=(ion = "Os189", channel = "Os189 -> 253"), den=(ion = "Os187", channel = "Os187 -> 251"), standards=Set(["Nis3"]))
+method.standards = Set(["Qmoly"])
+method.P.interferences["Tm169 -> 185"] = REEInterference(REE="Lu175 -> 191", REEO="Ir191 -> 191", standards=Set(["Nist_REEint"]))
+method.D.interferences["Re187"] = Interference(proxy="Re185",channel="Re185 -> 249")

@@ -39,45 +39,37 @@ mutable struct BiasRefmat <: AbstractRefmat
     sy0::Float64
 end
 
-mutable struct Fractionation
-    ions::NamedTuple{(:P,:D,:d)}
-    proxies::NamedTuple{(:P,:D,:d)}
-    channels::NamedTuple{(:P,:D,:d)}
-    standards::Set{String}
-    bias::Dict{String,Vector{String}}
+@kwdef mutable struct Calibration
+    num::NamedTuple{(:ion,:channel),Tuple{String,String}} = (ion="",channel="")
+    den::NamedTuple{(:ion,:channel),Tuple{String,String}} = (ion="",channel="")
+    standards::Set{String} = Set{String}()
 end
-export Fractionation
+export Calibration
 
-mutable struct Interference
-    ions::Dict{String,Vector{String}}
-    proxies::Dict{String,String}
-    channels::Dict{String,String}
-    bias::Dict{String,Vector{String}}
+abstract type AbstractInterference end
+export AbstractInterference
+
+@kwdef mutable struct Interference <: AbstractInterference
+    proxy::String = ""
+    channel::String = ""
+    bias::Calibration = Calibration()
 end
 export Interference
 
-abstract type KJmethod end
-export KJmethod
-
-mutable struct Gmethod <: KJmethod
-    name::String
-    fractionation::Fractionation
-    interference::Interference
-    nblank::Int
-    ndrift::Int
-    ndown::Int
-    nbias::Int
-    PAcutoff::Union{Nothing,Float64}    
+@kwdef mutable struct REEInterference <: AbstractInterference
+    REE::String = ""
+    REEO::String = ""
+    standards::Set{String} = Set{String}()
 end
-export Gmethod
+export REEInterference
 
-mutable struct Cmethod <: KJmethod
-    elements::NamedTuple
-    standards::Set{String}
-    internal::Tuple
-    nblank::Int
+@kwdef mutable struct Pairing
+    ion::String = ""
+    proxy::String = ion
+    channel::String = proxy
+    interferences::Dict{String,AbstractInterference} = Dict{String,Interference}()
 end
-export Cmethod
+export Pairing
 
 abstract type AbstractAnchor end
 export AbstractAnchor
@@ -93,6 +85,50 @@ mutable struct PointAnchor <: AbstractAnchor
     y::Float64
 end
 
+mutable struct BiasAnchor <: AbstractAnchor
+    y::Float64
+end
+
+abstract type KJmethod end
+export KJmethod
+
+@kwdef mutable struct Gmethod <: KJmethod
+    name::String = "U-Pb"
+    groups::Dict{String,String} = Dict{String,String}()
+    P::Pairing = Pairing(ion=default_ions(name).P)
+    D::Pairing = Pairing(ion=default_ions(name).D)
+    d::Pairing = Pairing(ion=default_ions(name).d)
+    bias::Calibration = Calibration()
+    standards::Set{String} = Set(collect(keys(groups)))
+    nblank::Int = 2
+    ndrift::Int = 2
+    ndown::Int = 1
+    nbias::Int = 1
+    PAcutoff::Float64 = Inf
+end
+export Gmethod
+
+mutable struct Cmethod <: KJmethod
+    elements::NamedTuple
+    groups::Dict{String,String}
+    internal::Tuple
+    nblank::Int
+end
+export Cmethod
+
+abstract type AbstractBias end
+export AbstractBias
+
+mutable struct Bias <: AbstractBias
+    mass_num::Int
+    mass_den::Int
+    par::Vector{Float64}
+end
+
+mutable struct REEBias <: AbstractBias
+    par::Vector{Float64}
+end
+
 abstract type KJfit end
 export KJfit
 
@@ -102,7 +138,7 @@ mutable struct Gfit <: KJfit
     down::Vector{Float64}
     adrift::Vector{Float64}
     covmat::Matrix
-    bias::DataFrame
+    bias::Dict{String,AbstractBias}
 end
 export Gfit
 

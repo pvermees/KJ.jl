@@ -1,58 +1,35 @@
-function Gmethod(name::String;
-                 ions::NamedTuple{(:P,:D,:d)}=default_ions(name),
-                 channels::NamedTuple{(:P,:D,:d)}=ions,
-                 proxies::NamedTuple{(:P,:D,:d)}=channels2proxies(channels),
-                 standards::AbstractVector=String[],
-                 bias::AbstractDict=Dict{String,Vector{String}}(),
-                 fractionation::Fractionation=Fractionation(ions,proxies,channels,Set(standards),bias),
-                 interference::Interference=Interference(),
-                 nblank::Int=2,
-                 ndrift::Int=2,
-                 ndown::Int=1,
-                 nbias::Int=1,
-                 PAcutoff::Union{Nothing,Float64}=nothing)
-    return Gmethod(name,fractionation,interference,
-                   nblank,ndrift,ndown,nbias,PAcutoff)
-end
-
 function default_ions(name)
     m = get(_KJ["methods"],name)
     return (P=String(m.P),D=String(m.D),d=String(m.d))
 end
 
-function channels2proxies(channels::NamedTuple{(:P,:D,:d)})
-    return (P=channel2proxy(channels.P),
-            D=channel2proxy(channels.D),
-            d=channel2proxy(channels.d))
-end
 function channel2proxy(channel::AbstractString)
-    proxy = nothing
     all_elements = string.(keys(_KJ["nuclides"]))
     matching_elements = filter(x -> occursin(x, channel), all_elements)
     matching_element = argmax(length,matching_elements)
-    proxy = get_proxy_isotope(channel,matching_element)
-    return proxy
-end
-
-function get_proxy_isotope(channel::AbstractString,
-                           matching_element::AbstractString)
-    all_isotopes = string.(_KJ["nuclides"][matching_element])
-    matching_isotope = filter(x -> occursin(x, channel), all_isotopes)
-    if length(matching_isotope) == 1
-        return matching_element * matching_isotope[1]
+    matching_isotope = get_proxy_isotope(channel;element=matching_element)
+    if length(matching_isotope) > 0
+        return matching_element * string(matching_isotope)
     else
         return nothing
     end
 end
 
+function get_proxy_isotope(channel::AbstractString;
+                           element::AbstractString=channel2element(channel))
+    all_isotopes = _KJ["nuclides"][element]
+    matching_isotope = filter(x -> occursin(string(x), channel), all_isotopes)
+    return matching_isotope[1]
+end
+
 function Cmethod(run::Vector{Sample};
-                 standards::AbstractVector=String[],
+                 groups::AbstractDict=Dict{String,String}(),
                  internal::Tuple=(nothing,nothing),
                  nblank::Int=2)
     ch = getChannels(run)
     el = channel2element.(ch)
     elements = NamedTuple{Tuple(Symbol.(ch))}(Tuple(el))
-    return Cmethod(elements,Set(standards),internal,nblank)
+    return Cmethod(elements,groups,internal,nblank)
 end
 
 function getConcentrations(method::Cmethod,

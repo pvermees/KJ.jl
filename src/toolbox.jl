@@ -14,11 +14,11 @@ function formRatios(df::AbstractDataFrame;
         n = fill(findfirst(==(num),labels),length(d))
     end
     mat = Matrix(df)
-    ratios = @. (mat[:,n]+0.5)/(mat[:,d]+0.5)
+    ratios = @. mat[:,n]/mat[:,d]
     num = labels[n]
     den = labels[d]
     ratlabs = brackets ? "(".*num.*")/(".*den.*")" : num.*"/".*den
-    DataFrame(ratios,ratlabs)
+    return DataFrame(ratios,ratlabs)
 end
 
 function polyFit(t::AbstractVector,
@@ -58,11 +58,6 @@ function vandermonde(x,degree)
     return [x[i]^p for i in eachindex(x), p in 0:degree]
 end
 
-"""
-polyFac(p::AbstractVector,t::AbstractVector)
-
-Returns the exponent of the sum of p[i].*t.^(i-1) for all values of p
-"""
 function polyFac(p::AbstractVector,
                  t::AbstractVector)
     np = length(p)
@@ -78,34 +73,6 @@ function polyFac(p::AbstractVector,
     end
 end
 export polyFac
-
-"""
-summarise(run::Vector{Sample};verbose=false,n=length(run))
-
-Prints a table with the sample names in run.
-"""
-function summarise(run::Vector{Sample};
-                   verbose=false,n=length(run))
-    ns = length(run)
-    snames = getSnames(run)
-    groups = fill("sample",ns)
-    dates = fill(run[1].datetime,ns)
-    for i in eachindex(run)
-        groups[i] = run[i].group
-        dates[i] = run[i].datetime
-    end
-    out = DataFrame(name=snames,date=dates,group=groups)
-    if verbose println(first(out,n)) end
-    return out
-end
-"""
-summarize(run::Vector{Sample};verbose=false,n=length(run))
-"""
-function summarize(run::Vector{Sample};
-                   verbose=true,n=length(run))
-    summarise(run;verbose,n)
-end
-export summarise, summarize
 
 function autoBwin(t::AbstractVector,
                   on::AbstractFloat;
@@ -350,31 +317,58 @@ end
     
 function transformeer(df::AbstractDataFrame,
                       transformation::AbstractString;
+                      num::AbstractString="",
+                      den::AbstractString="",
                       offset::Number=0.0)
-    if transformation==""
-        out = df
+    if (num=="" && den=="")
+        out = df .+ offset
     else
-        out = copy(df)
-        if transformation=="log"
-            out .= ifelse.(df .<= 0, NaN, df)
-        elseif transformation=="sqrt"
-            out .= ifelse.(df .< 0, NaN, df)
-        end
-        for key in names(out)
-            out[:,key] = eval(Symbol(transformation)).(out[:,key] .+ offset)
-        end
+        out = formRatios(df .+ offset;num=num,den=den)
     end
-    return out
+    if transformation == ""
+        return out
+    else
+        return eval(Symbol(transformation)).(out)
+    end
 end
 
-function get_offset(df::AbstractDataFrame,
-                    transformation::AbstractString)
-    min_val = minimum(Matrix(df))
-    if (transformation == "log" && min_val <= 0) ||
-        (transformation == "sqrt" && min_val < 0)
-        return 10.0 - min_val
+function get_offset(df::AbstractDataFrame;
+                    transformation::AbstractString="",
+                    num::AbstractString="",
+                    den::AbstractString="")
+    smallest_two = partialsort(unique(vec(Matrix(df))),1:2)
+    ratio = (num!="" || den!="")
+    logarithmic = transformation == "log"
+    vierkantswortel = transformation == "sqrt"
+    zeromin = smallest_two[1] == 0
+    negative = smallest_two[1] < 0
+    positive = smallest_two[1] > 0
+    if (logarithmic && !positive) || (ratio && !positive) || (vierkantswortel && negative)
+        return sum(abs.(smallest_two))
+    elseif vierkantswortel && zeromin
+        return abs(smallest_two[1])
     else
         return 0.0
+     end
+end
+function get_offset(samp::Sample;
+                    method::Union{Nothing,KJmethod}=nothing,
+                    fit::Union{Nothing,KJfit}=nothing,
+                    channels::AbstractVector=getChannels(samp),
+                    transformation::AbstractString="",
+                    num::AbstractString="",
+                    den::AbstractString="")
+    meas = samp.dat[:,channels]
+    offset1 = get_offset(meas;transformation=transformation,num=num,den=den)
+    if isnothing(method) || isnothing(fit) || samp.group == "sample"
+        return offset1
+    else
+        pred = predict(samp,method,fit;generic_names=false)
+        keep = intersect(channels,names(pred))
+        offset2 = get_offset(pred[:,keep];transformation=transformation,num=num,den=den)
+        pred = predict(samp,fit.blank)
+        offset3 = get_offset(pred[:,keep];transformation=transformation,num=num,den=den)
+        return max(offset1,offset2,offset3)
     end
 end
 
@@ -454,10 +448,9 @@ function dataframe_sum(df::AbstractDataFrame)
     return total
 end
 
-function iratio(element::AbstractString,
-                nuclide1::AbstractString,
+function iratio(nuclide1::AbstractString,
                 nuclide2::AbstractString)
-    abundances = _KJ["iratio"][element]
+    abundances = merge(values(_KJ["iratio"])...)
     key1 = Symbol(nuclide1)
     key2 = Symbol(nuclide2)
     if haskey(abundances,key1) && haskey(abundances,key2)
@@ -465,13 +458,6 @@ function iratio(element::AbstractString,
     else
         return nothing
     end
-end
-function iratio(nuclide1::AbstractString,
-                nuclide2::AbstractString)
-    abundances = merge(values(_KJ["iratio"])...)
-    key1 = Symbol(nuclide1)
-    key2 = Symbol(nuclide2)
-    return abundances[key1]/abundances[key2]
 end
 export iratio
 

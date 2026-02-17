@@ -91,9 +91,9 @@ function init_glass!(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.cs
     _KJ["glass"] = init_glass(csv)
 end
 
-function init_referenceMaterials(;isochrons::AbstractString=joinpath(@__DIR__,"../settings/isochron_standards.csv"),
-                                  points::AbstractString=joinpath(@__DIR__,"../settings/point_standards.csv"),
-                                  bias::AbstractString=joinpath(@__DIR__,"../settings/bias_standards.csv"))
+function init_referenceMaterials(;isochrons::AbstractString=joinpath(@__DIR__,"../settings/standards/isochron.csv"),
+                                  points::AbstractString=joinpath(@__DIR__,"../settings/standards/point.csv"),
+                                  bias::AbstractString=joinpath(@__DIR__,"../settings/standards/bias.csv"))
     out = Dict()
     for (fname,fun) in Dict(isochrons => IsochronRefmat,
                             points => PointRefmat,
@@ -110,9 +110,9 @@ function init_referenceMaterials(;isochrons::AbstractString=joinpath(@__DIR__,".
     return out
 end
 
-function init_referenceMaterials!(;isochrons::AbstractString=joinpath(@__DIR__,"../settings/standards.csv"),
-                                   points::AbstractString=joinpath(@__DIR__,"../settings/point_standards.csv"),
-                                   bias::AbstractString=joinpath(@__DIR__,"../settings/bias_standards.csv"))
+function init_referenceMaterials!(;isochrons::AbstractString=joinpath(@__DIR__,"../settings/standards/isochron.csv"),
+                                   points::AbstractString=joinpath(@__DIR__,"../settings/standards/point.csv"),
+                                   bias::AbstractString=joinpath(@__DIR__,"../settings/standards/bias.csv"))
     _KJ["refmat"] = init_referenceMaterials(;isochrons=isochrons,
                                              points=points,
                                              bias=bias)

@@ -2,12 +2,15 @@ function process!(run::Vector{Sample},
                   method::KJmethod;
                   reject_outliers::Bool=true,
                   verbose::Bool=false)
+    setGroup!(run,method)
     if reject_outliers
-        ch = getChannels(method)
-        detect_outliers!(run;channels=ch)
+        detect_outliers!(run,method)
     end
     fit = KJfit(method)
-    fitBlanks!(fit,method,run)
+    blank!(fit,method,run)
+    if method isa Gmethod
+        fit.bias = fit_bias(run,method,fit.blank)
+    end
     fractionation!(fit,method,run;verbose=verbose)
     return fit
 end

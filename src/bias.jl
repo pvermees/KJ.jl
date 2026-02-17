@@ -1,136 +1,156 @@
-function Cruncher(samp::Sample,
-                  num_channel::AbstractString,
-                  den_channel::AbstractString,
+function fit_bias(run::Vector{Sample},
+                  method::Gmethod,
                   blank::AbstractDataFrame)
-
-    dat = swinData(samp)
-    
-    dm = dat[:,num_channel]
-    Dm = dat[:,den_channel]
-
-    t = dat.t
-
-    bdt = polyVal(blank[:,num_channel],t)
-    bDt = polyVal(blank[:,den_channel],t)
-
-    Dmb = Dm - bDt
-    dmb = dm - bdt
-
-    sig = hcat(Dmb,dmb)
-    covmat = df2cov(sig)
-    vD = covmat[1,1]
-    vd = covmat[2,2]
-    sDd = covmat[1,2]
-
-    return (Dm=Dm,dm=dm,
-            bDt=bDt,bdt=bdt,
-            Dmb=Dmb,dmb=dmb,
-            vD=vD,vd=vd,sDd=sDd,
-            t=t)
-
-end
-
-function bias_prep(F::Fractionation)
-    element = channel2element(F.ions.D)
-    standards = F.bias[element]
-    num = (ion=F.proxies.d,channel=F.channels.d)
-    den = (ion=F.proxies.D,channel=F.channels.D)
-    return (standards=standards, num=num, den=den)
-end
-
-function bias_prep(I::Interference,
-                   target_channel::AbstractString,
-                   interfering_ion::AbstractString)
-    interfering_element = channel2element(interfering_ion)
-    interference_proxy = I.proxies[interfering_ion]
-    interference_proxy_channel = I.channels[interference_proxy]
-    standards = I.bias[interfering_element]
-    num = (ion=interference_proxy,channel=interference_proxy_channel)
-    den = (ion=interfering_ion,channel=target_channel)
-    return (standards=standards, num=num, den=den)
-end
-
-function fractionation_cruncher_groups(run::Vector{Sample},
-                                       method::Gmethod,
-                                       blank::AbstractDataFrame)
-    out = Dict()
-    standards, num, den = bias_prep(method.fractionation)
-    element = channel2element(method.fractionation.ions.D)
-    out[element] = bias_cruncher_groups_helper(run,method.name,blank,standards,num,den)
+    out = Dict{String,AbstractBias}()
+    pairings = (method.P,method.D,method.d)
+    for pairing in pairings
+        for (key,interference) in pairing.interferences
+            add_bias!(out,run,method,blank,key,interference)
+        end
+    end
+    calibration = method.bias
+    if length(calibration.standards) > 0
+        bias_key = channel2element(calibration.num.ion)
+        out[bias_key] = fit_bias(run,method,calibration,blank)
+    end
     return out
 end
+function fit_bias(run::Vector{Sample},
+                  m::Gmethod,
+                  c::Calibration,
+                  blank::AbstractDataFrame)
 
-function bias_cruncher_groups_helper(run::Vector{Sample},
-                                     methodname::AbstractString,
-                                     blank::AbstractDataFrame,
-                                     standards::AbstractVector,
-                                     num::NamedTuple{(:ion,:channel)},
-                                     den::NamedTuple{(:ion,:channel)})
+    mass_num = get_proxy_isotope(c.num.ion)
+    mass_den = get_proxy_isotope(c.den.ion)
+    bd = calibration2bd(m,c)
+
     cruncher_groups = Dict()
-    for standard in standards
-        element = channel2element(num.ion)
-        y = iratio(element,num.ion,den.ion)
-        if isnothing(y)
-            y = getAnchor(methodname,standard)
-        end
-        selection = group2selection(run,standard)
+    for group in c.standards
+        standard = m.groups[group]
+        y = get_bias_truth(m,c,standard)
+        selection = group2selection(run,group)
         ns = length(selection)
         crunchers = Vector{NamedTuple}(undef,ns)
         for i in eachindex(selection)
-            crunchers[i] = Cruncher(run[selection[i]],
-                                    num.channel,den.channel,
-                                    blank)
+            samp = run[selection[i]]
+            crunchers[i] = BCruncher(samp,c,blank)
         end
-        cruncher_groups[standard] = (anchor=y,crunchers=crunchers)
+        cruncher_groups[standard] = (y=y,crunchers=crunchers)
     end
-    return cruncher_groups
+
+    init = [init_bias(cruncher_groups);fill(0.0,m.ndrift-1)]
+    objective = (par) -> SS(par,mass_num,mass_den,bd,cruncher_groups)
+    optimum = Optim.optimize(objective,init)
+    fit = Optim.minimizer(optimum)
+    return Bias(mass_num,mass_den,fit)
+end
+export fit_bias
+
+function init_bias(cruncher_groups::AbstractDict)
+    bias = 0.0
+    ncg = length(cruncher_groups)
+    for group in values(cruncher_groups)
+        ytrue = group.y
+        bmb = 0.0
+        Dmb = 0.0
+        for c in group.crunchers
+            bmb += sum(c.bmb)
+            Dmb += sum(c.Dmb)
+        end
+        ymeas = bmb/Dmb
+        bias += log(ymeas/ytrue)/ncg
+    end
+    return bias
 end
 
-function interference_cruncher_groups(run::Vector{Sample},
-                                      method::Gmethod,
-                                      blank::AbstractDataFrame)
-    out = Dict()
-    F = method.fractionation
-    Fchannels = Dict(zip(values(F.proxies),values(F.channels)))
-    I = method.interference
-    for (target,interfering_ions) in I.ions
-        target_channel = Fchannels[target]
-        for interfering_ion in interfering_ions
-            standards, num, den = bias_prep(I,target_channel,interfering_ion)
-            cruncher_groups = bias_cruncher_groups_helper(run,method.name,blank,standards,num,den)
-            interfering_element = channel2element(interfering_ion)
-            out[interfering_element] = cruncher_groups
+function add_bias!(bias::AbstractDict,
+                   run::Vector{Sample},
+                   method::Gmethod,
+                   blank::AbstractDataFrame,
+                   ion::AbstractString,
+                   interference::Interference)
+    calibration = interference.bias
+    if length(calibration.standards) > 0
+        bias_key = channel2element(calibration.num.ion)
+        bias[bias_key] = fit_bias(run,method,calibration,blank)
+    end
+end
+
+function calibration2bd(m::Gmethod,
+                        c::Calibration)
+    if c.den.ion == m.D.ion && c.num.ion != m.d.ion
+        return iratio(c.num.ion,m.d.ion)
+    elseif c.num.ion == m.D.ion && c.den.ion != m.d.ion
+        return iratio(m.d.ion,c.den.ion) # flipped
+    else
+        return 1.0
+    end
+end
+
+function get_bias_truth(m::Gmethod,
+                        c::Calibration,
+                        standard::AbstractString)
+    y = iratio(c.num.ion,c.den.ion)
+    if isnothing(y)
+        a = getAnchor(m.name,standard)
+        if m.D.proxy == c.den.ion
+            y = a.y
+        elseif m.D.proxy == c.num.ion
+            y = 1/a.y
+        else
+            @warn "The calibration isotope is not part of the method."
+            y = 1.0
         end
     end
-    return out
+    return y
 end
 
-function fractionation_bias(run::Vector{Sample},
-                            method::Gmethod,
-                            blank::AbstractDataFrame)
-    cruncher_groups = fractionation_cruncher_groups(run,method,blank)
-    return bias(cruncher_groups,method.nbias)
+function bias_correction(bias::Bias,
+                         mass_num::Int,
+                         mass_den::Int;
+                         t::AbstractVector,
+                         other...)
+    beta = log(mass_num/mass_den)/log(bias.mass_num/bias.mass_den)
+    return polyFac(bias.par,t).^beta
 end
-export fractionation_bias
+function bias_correction(bias::Bias,
+                         num::AbstractString,
+                         den::AbstractString,
+                         t::AbstractVector)
+    mass_num = get_proxy_isotope(num)
+    mass_den = get_proxy_isotope(den)
+    return bias_correction(bias,mass_num,mass_den;t=t)
+end
 
-function interference_bias(run::Vector{Sample},
-                           method::Gmethod,
-                           blank::AbstractDataFrame)
-    cruncher_groups = interference_cruncher_groups(run,method,blank)
-    return bias(cruncher_groups,method.nbias)
+function BCruncher(samp::Sample,
+                   calibration::Calibration,
+                   blank::AbstractDataFrame)
+    Dch = calibration.den.channel
+    bch = calibration.num.channel
+    return BCruncher(samp,Dch,bch,blank)
 end
-export interference_bias
 
-function bias(cruncher_groups::AbstractDict,
-              nbias::Int)
-    out = DataFrame()
-    for (element,cruncher_groups) in cruncher_groups
-        init = fill(0.0,nbias)
-        objective = (par) -> SS(par,cruncher_groups)
-        optimum = Optim.optimize(objective,init)
-        solution = Optim.minimizer(optimum)
-        out[:,element] = solution
-    end
-    return out
+function BCruncher(samp::Sample,
+                   Dch::AbstractString,
+                   bch::AbstractString,
+                   blank::AbstractDataFrame)
+    dat = swinData(samp)
+    t = dat.T
+
+    Dm = dat[:,Dch]
+    bm = dat[:,bch]
+    bDt = polyVal(blank[:,Dch],t)
+    bbt = polyVal(blank[:,bch],t)
+    Dmb = Dm - bDt
+    bmb = bm - bbt
+    b_vs_D = hcat(Dmb,bmb)
+    covmat = df2cov(b_vs_D)
+    vD = covmat[1,1]
+    vb = covmat[2,2]
+    sDb = covmat[1,2]
+
+    return (Dmb=Dmb,bmb=bmb,
+            bDt=bDt,bbt=bbt,
+            vD=vD,vb=vb,sDb=sDb,t=t)
+
 end
-export bias

@@ -24,7 +24,7 @@ function getAnchor(standard::PointRefmat;kwargs...)
     return PointAnchor(standard.x,standard.y)
 end
 function getAnchor(standard::BiasRefmat;kwargs...)
-    return standard.y0
+    return BiasAnchor(standard.y0)
 end
 export getAnchor
 

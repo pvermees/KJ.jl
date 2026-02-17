@@ -12,7 +12,6 @@ export setKJctrl!
 setKJctrl!(ctrl::AbstractDict)
 
 Set the control parameters of a TUI session
-```
 """
 function setKJctrl!(ctrl::AbstractDict)
     _KJ["ctrl"] = ctrl
@@ -32,8 +31,26 @@ end
 function getChannels(samp::Sample) :: AbstractVector
     return names(getSignals(samp))
 end
+function getChannels(interference::Interference) :: AbstractVector
+    out = [interference.channel]
+    bias = interference.bias
+    if length(bias.standards) > 0
+        push!(out,bias.num.channel,bias.den.channel)
+    end
+    return unique(out)
+end
+function getChannels(interference::REEInterference) :: AbstractVector
+    return [interference.REE,interference.REEO]
+end
 function getChannels(method::Gmethod) :: AbstractVector
-    return collect(unpack(method.fractionation.channels))
+    out = String[]
+    for pairing in [method.P, method.D, method.d]
+        push!(out,pairing.channel)
+        for interference in values(pairing.interferences)
+            append!(out,getChannels(interference))
+        end
+    end
+    return unique(out)
 end
 function getChannels(method::Cmethod) :: AbstractVector
     return collect(string.(keys(method.elements)))
@@ -68,33 +85,24 @@ function getAttr(run::Vector{Sample},
 end
 
 function setGroup!(run::Vector{Sample},
-                   selection::Vector{Int},
-                   group::AbstractString)
+                   method::KJmethod)
+    groups = collect(keys(method.groups))
+    setGroup!(run,groups)
+end
+function setGroup!(run::Vector{Sample},
+                   selection=eachindex(run),
+                   group::AbstractString="sample")
     for i in selection
         run[i].group = group
     end
 end
 function setGroup!(run::Vector{Sample},
-                   prefix::AbstractString,
-                   group::AbstractString)
+                   prefixes::Vector{String})
     snames = getSnames(run)
-    selection = findall(contains(prefix),snames)
-    setGroup!(run,selection,group)
-end
-function setGroup!(run::Vector{Sample},
-                   refmats::AbstractDict)
-    if length(refmats)>0
-        for (group,prefix) in refmats
-            setGroup!(run,prefix,group)
-        end
-    else
-        setGroup!(run,"sample")
-    end
-end
-function setGroup!(run::Vector{Sample},
-                   group::AbstractString)
-    for sample in run
-        sample.group = group
+    for prefix in prefixes
+        setGroup!(run,
+                  findall(s -> contains(s,prefix), snames),
+                  prefix)
     end
 end
 export setGroup!
@@ -200,14 +208,3 @@ function getInternal(mineral::AbstractString,
     return (channel,concentration)
 end
 export getInternal
-
-function getStandards(fractionation::Fractionation)
-    return fractionation.standards
-end
-function getStandards(bias::AbstractDict)
-    out = String[]
-    for standards in values(bias)
-        append!(out,standards)
-    end
-    return out
-end

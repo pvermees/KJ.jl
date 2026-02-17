@@ -1,3 +1,11 @@
+function blank!(fit::KJfit,
+                method::KJmethod,
+                run::Vector{Sample})
+    fit.blank = fitBlanks(run;
+                          nblank=method.nblank)
+end
+export blank!
+
 function fitBlanks(run::Vector{Sample};
                    nblank=2)
     blk = reduce(vcat, bwinData(samp) for samp in run)
@@ -12,10 +20,8 @@ function fitBlanks(run::Vector{Sample};
 end
 export fitBlanks
 
-function fitBlanks!(fit::KJfit,
-                    method::KJmethod,
-                    run::Vector{Sample})
-    fit.blank = fitBlanks(run;
-                          nblank=method.nblank)
+function init_blank(method::KJmethod)
+    channels = getChannels(method)
+    nc = length(channels)
+    return DataFrame(fill(0.0,method.nblank,nc), channels)
 end
-export fitBlanks!

@@ -1,13 +1,9 @@
-"""
-load(dname::AbstractString;
-     format::AbstractString="Agilent",
-     head2name::Bool=true)
-
-Load MS data files
-"""
 function load(dname::AbstractString;
               format::AbstractString="Agilent",
-              head2name::Bool=true)
+              head2name::Bool=true,
+              nblocks::Int=1,
+              absolute_buffer::AbstractFloat=2.0,
+              relative_buffer::AbstractFloat=0.1)
     fnames = readdir(dname)
     samples = Vector{Sample}(undef,0)
     datetimes = Vector{DateTime}(undef,0)
@@ -37,15 +33,15 @@ function load(dname::AbstractString;
         samp.dat.outlier = falses(size(samp.dat,1))
         samp.dat.t = (samp.dat[:,1] .+ runtime[i])./duration
     end
-    return sortedsamples
+    if nblocks > 1
+        return blocks(sortedsamples,nblocks;
+                      absolute_buffer=absolute_buffer,
+                      relative_buffer=relative_buffer)
+    else
+        return sortedsamples
+    end
 end
-"""
-load(dfile::AbstractString,
-     tfile::AbstractString;
-     format::AbstractString="Agilent")
 
-Load and parse an ICP-MS file using time stamps
-"""
 function load(dfile::AbstractString,
               tfile::AbstractString;
               format::AbstractString="Agilent")
@@ -103,7 +99,6 @@ end
 
 function readAgilent(fname::AbstractString,
                      head2name::Bool=true)
-
     lines = split(readuntil(fname, "Time [Sec]"), "\n")
     snamestring = head2name ? lines[1] : fname
     sname = split(split(snamestring,r"[\\/]")[end],".")[1]
@@ -114,7 +109,6 @@ function readAgilent(fname::AbstractString,
     header = 4
     skipto = 5
     footerskip = 3
-    
     return sname, datetime, header, skipto, footerskip
     
 end
@@ -188,8 +182,6 @@ function export2IsoplotR(ratios::AbstractDataFrame,
                          fname::AbstractString="KJ.json")
     json = jsonTemplate()
 
-    P, D, d = unpack(method.fractionation.ions)
-
     snames = ratios[:,1]
     PD = replace(ratios[:,2], NaN => "\"NA\"")
     sPD = replace(ratios[:,3], NaN => "\"NA\"")
@@ -198,21 +190,21 @@ function export2IsoplotR(ratios::AbstractDataFrame,
     rho = replace(ratios[:,6], NaN => "\"NA\"")
 
     datastring = "\"ierr\":1,\"data\":{"*
-    "\""* P *"/"* D *"\":["*     join(PD,",")*"],"*
-    "\"err["* P *"/"* D *"]\":["*join(sPD,",")*"],"*
-    "\""* d *"/"* D *"\":["*     join(dD,",")*"],"*
-    "\"err["* d *"/"* D *"]\":["*join(sdD,",")*"],"*
+    "\""* method.P.ion *"/"* method.D.ion *"\":["*     join(PD,",")*"],"*
+    "\"err["* method.P.ion *"/"* method.D.ion *"]\":["*join(sPD,",")*"],"*
+    "\""* method.d.ion *"/"* method.D.ion *"\":["*     join(dD,",")*"],"*
+    "\"err["* method.d.ion *"/"* method.D.ion *"]\":["*join(sdD,",")*"],"*
     "\"(rho)\":["*join(rho,",")*"],"*
     "\"(C)\":[],\"(omit)\":[],"*
     "\"(comment)\":[\""*join(snames,"\",\"")*"\"]"
 
     chronometer = method.name
-    
+
     json = replace(json,"\""*chronometer*"\":{}" =>
                    "\""*chronometer*"\":{"*datastring*"}}")
 
     
-    if chronometer in ["Lu-Hf","Rb-Sr","K-Ca"]
+    if chronometer in ["Lu-Hf","Rb-Sr","K-Ca","Re-Os"]
                         
         old = "\"geochronometer\":\"U-Pb\",\"plotdevice\":\"concordia\""
         new = "\"geochronometer\":\""*chronometer*"\",\"plotdevice\":\"isochron\""
@@ -230,3 +222,23 @@ function export2IsoplotR(ratios::AbstractDataFrame,
     
 end
 export export2IsoplotR
+
+function summarise(run::Vector{Sample};
+                   verbose=false,n=length(run))
+    ns = length(run)
+    snames = getSnames(run)
+    groups = fill("sample",ns)
+    dates = fill(run[1].datetime,ns)
+    for i in eachindex(run)
+        groups[i] = run[i].group
+        dates[i] = run[i].datetime
+    end
+    out = DataFrame(name=snames,date=dates,group=groups)
+    if verbose println(first(out,n)) end
+    return out
+end
+function summarize(run::Vector{Sample};
+                   verbose=true,n=length(run))
+    summarise(run;verbose,n)
+end
+export summarise, summarize

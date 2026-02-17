@@ -29,6 +29,17 @@ function TUIshowMethods(ctrl::AbstractDict)
     return msg
 end
 
+function TUIdirfileMessage(ctrl::AbstractDict)
+    msg = 
+    "d: Read a directory in which analysis is stored in a different file\n" *
+    "b: Set the number of blocks per analysis (current value = " * string(ctrl["nblocks"]) * ")\n" *
+    "p: Parse the data from a single file using a laser log (provide paths)\n" *
+    "P: Parse the data from a single file using a laser log (choose from list)\n" *
+    "x: Exit\n" *
+    "?: Help\n"
+    return msg
+end
+
 function TUIinternalMessage(ctrl::AbstractDict)
     msg = "Choose an internal standard from the following list of channels:\n"
     msg *= TUIlistChannels(ctrl)
@@ -43,35 +54,6 @@ function TUIlistChannels(ctrl::AbstractDict)
         msg *= string(i)*". "*channels[i]*"\n"
     end
     return msg
-end
-
-function TUIlistIsotopes(ctrl::AbstractDict)
-    msg = ""
-    ions = ctrl["method"].ions
-    nuclidelist = ions2nuclidelist(ions)
-    for i in eachindex(nuclidelist)
-        msg *= string(i) * ". " * nuclidelist[i] * "\n"
-    end
-    return msg
-end
-
-function ions2nuclidelist(ions::NamedTuple)
-    out = []
-    all_elements = string.(keys(_KJ["nuclides"]))
-    for ion in ions
-        matching_elements = filter(x -> occursin(x, ion), all_elements)
-        for matching_element in matching_elements
-            all_isotopes = string.(_KJ["nuclides"][matching_element])
-            matching_isotopes = filter(x -> occursin(x, ion), all_isotopes)
-            if length(matching_isotopes) > 0
-                for isotope in all_isotopes
-                    nuclide = matching_element * isotope
-                    push!(out,nuclide)
-                end
-            end
-        end
-    end
-    return unique(out)
 end
 
 function TUImineralMessage(ctrl::AbstractDict)
@@ -103,22 +85,105 @@ function TUIcolumnMessage(ctrl::AbstractDict)
     return msg
 end
 
+function TUIions2isotopes(ions::AbstractVector)
+    out = String[]
+    for ion in ions
+        element = channel2element(ion)
+        isotopes = _KJ["nuclides"][element]
+        for isotope in isotopes
+            push!(out,element*string(isotope))
+        end
+    end
+    return unique(out)
+end
+
+function TUIlistIsotopes(cache::AbstractDict)
+    msg = ""
+    channels = cache["channels"]
+    isotopes = TUIions2isotopes(cache["ions"])
+    nc = length(channels)
+    ni = length(isotopes)
+    n = max(nc,ni)
+    for i in 1:n
+        if i <= nc
+            msg *= string(i) * ". " * channels[i] * ", "
+        else            
+            msg *= repeat(" ",5 + maximum(length.(channels)))
+        end
+        if i <= ni
+            msg *= string(i) * ". " * isotopes[i]
+        end
+        msg *= "\n"
+    end
+    return msg
+end
+
 function TUIsetProxiesMessage(ctrl::AbstractDict)
     msg = "KJ is having trouble mapping channels to isotopes. " *
-          "Choose from the following list of isotopes:\n"
-    msg *= TUIlistIsotopes(ctrl)
-    msg *= "and select those corresponding to "*
-    "the channels that you selected earlier:\n"
-    channels = ctrl["method"].channels
-    msg *= channels.P *", "* channels.D *", "* channels.d *"\n"
-    msg *= "Specify your selection as a "*
-    "comma-separated list of numbers:"
+          "Inspect the following two lists:\n"
+    msg *= TUIlistIsotopes(ctrl["cache"])
+    msg *= "Specify your selection as a " *
+           "bracketed list of paired numbers, e.g. " *
+           "(1,2),(3,1),(2,3)"
+    return msg
+end
+
+function TUIsetInterferenceProxyMessage(ctrl::AbstractDict)
+    msg = "Choose the isotope that matches channel " *
+          ctrl["cache"]["interference"].channel * " :\n"
+    isotopes = TUIions2isotopes([ctrl["cache"]["key"]])
+    for i in eachindex(isotopes)
+        msg *= string(i) * ". " * isotopes[i] * "\n"
+    end
+    return msg
+end
+
+function TUIlistIsotopesMessage(ctrl::AbstractDict)
+    msg = "Choose the isotope that requires an interference correction:\n"
+    pairings = TUIgetPairings(ctrl)
+    for i in eachindex(pairings)
+        msg *= string(i) * ". " * pairings[i].proxy * "\n"
+    end
+    msg *= "x: Exit\n" * "?: Help"
+    return msg
+end
+
+function TUIchooseInterferenceIonMessage(ctrl::AbstractDict)
+    proxy = ctrl["cache"]["target"].proxy
+    msg = "Choose the isotope that interferes with " *
+          proxy * " from the following list:\n"
+    interferences = TUIgetInterferences(proxy)
+    for i in eachindex(interferences)
+        msg *= string(i)*". "*interferences[i]*"\n"
+    end
+    msg *= "x: Exit\n"*"?: Help"
+    return msg
+end
+
+function TUIchooseInterferenceProxyChannelMessage(ctrl::AbstractDict)
+    msg = "Choose an interference-free proxy channel for the " *
+          ctrl["cache"]["key"] * "-interference on " *
+          ctrl["cache"]["target"].channel * " from the following list:\n"
+    msg *= TUIlistChannels(ctrl)
+    msg *= "x: Exit\n"*"?: Help"
+    return msg
+end
+
+function TUIchooseREEInterferenceProxyChannelMessage(ctrl::AbstractDict)
+    msg = 
+    "Suppose that X is a REE whose oxide (XO, say) interferes with " *
+    ctrl["cache"]["target"].proxy *
+    ", then the interference correction is given by X x YO / Y, where Y is " * 
+    "a non-interfering REE with known isotopic abundance relative to X and YO is its oxide. " *
+    "Select the channels corresponding to X, Y, and YO as a comma-separated list of numbers:\n"
+    msg *= TUIlistChannels(ctrl)
+    msg *= "x: Exit\n" * "?: Help"
     return msg
 end
 
 function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg = "Choose one of the following reference materials:\n"
-    refmats = TUIgetRefmats(ctrl["method"])
+    refmats = TUIgetStandards(ctrl["method"])
     for i in eachindex(refmats.names)
         refmat = get(refmats,i)
         msg *= string(i)*": "*refmats.names[i]*TUIprintRefmatInfo(refmat)*"\n"
@@ -126,6 +191,16 @@ function TUIchooseStandardMessage(ctrl::AbstractDict)
     msg *= "x: Exit\n"*"?: Help"
     return msg
 end
+
+function TUIchooseGlassMessage(ctrl::AbstractDict)
+    msg = "Choose one of the following reference glasses:\n"
+    refmats = _KJ["glass"].names
+    for i in eachindex(refmats)
+        msg *= string(i)*": " * refmats[i] * "\n"
+    end
+    msg *= "x: Exit\n"*"?: Help"
+    return msg
+end 
 
 function TUIprintRefmatInfo(refmat::AbstractRefmat)
     return " ("*refmat.material*")"
@@ -135,27 +210,60 @@ function TUIprintRefmatInfo(refmat::DataFrameRow)
     return ""
 end
 
-function TUIgetRefmats(method::Gmethod)
-    return _KJ["refmat"][method.name]
+function TUIgetStandardsHelper(method::Gmethod;
+                               condition::Function= refmat -> return true)
+    refmats = _KJ["refmat"][method.name]
+    out = OrderedDict()
+    for i in eachindex(refmats.names)
+        refmat = get(refmats,i)
+        if condition(refmat)
+            add2od!(out,refmats.names[i],refmat)
+        end
+    end
+    return out
 end
 
-function TUIgetRefmats(method::Cmethod)
+function TUIgetStandards(method::Cmethod)
     return _KJ["glass"]
 end
 
-function TUIchooseGlassMessage(ctrl::AbstractDict)
-    error("TODO")
+function TUIgetStandards(method::Gmethod)
+    condition = refmat -> !(refmat isa BiasRefmat)
+    return TUIgetStandardsHelper(method; condition = condition)
 end
 
-function TUIaddByPrefixMessage(ctrl::AbstractDict)
-    msg = "Specify the prefix of the " * ctrl["cache"] *
-        " measurements (? for help, x to exit):"
-    return msg
+function TUIgetBiasStandards(method::Gmethod)
+    condition = refmat -> refmat isa PointRefmat || refmat isa BiasRefmat
+    return TUIgetStandardsHelper(method; condition = condition)
+end
+
+function TUIaddByPrefixMessage(ctrl::AbstractDict) 
+    msg = "Specify the prefix of the " * 
+    TUIaddPrefixMessageHelper(ctrl["cache"]) * 
+    " measurements (? for help, x to exit):" 
+    return msg 
+end 
+
+function TUIaddPrefixMessageHelper(cache::Any)
+    return cache
+end
+
+function TUIaddPrefixMessageHelper(cache::AbstractDict)
+    if haskey(cache,"glass")
+        return cache["glass"]
+    elseif haskey(cache,"standard")
+        return cache["standard"]
+    else
+        @warn "Cache does not contain a reference material. " *
+        "returning an empty string instead." 
+        return ""
+    end
 end
 
 function TUIaddByNumberMessage(ctrl::AbstractDict)
-    msg = "Select the " * ctrl["cache"] * " measurements " *
-        "with a comma-separated list of numbers " *
+    msg = "Select the " * 
+        TUIaddPrefixMessageHelper(ctrl["cache"]) * 
+        " measurements with a comma-separated list of numbers " *
         "(? for help, x to exit):"
     return msg
 end
@@ -169,6 +277,69 @@ function TUIratioMessage(ctrl::AbstractDict)
     msg *= "or\n"
     msg *= "n: No denominator. Plot the raw signals\n"
     msg *= "?: Help"
+    return msg
+end
+
+function TUIchooseBiasElementMessage(ctrl::AbstractDict) 
+    m = ctrl["method"]
+    elements = TUIgetBiasElements(m)
+    msg = "Choose the element for which you want to fit a mass bias correction :\n"
+    for i in eachindex(elements)
+        msg *= string(i) * ". " * elements[i] * "\n"
+    end
+    msg *= "x: Exit\n" * "?: Help"
+    return msg
+end
+
+function TUIgetBiasElements(m::Gmethod)
+    elements = [channel2element(m.D.proxy)]
+    for pairing in (m.P,m.D,m.d)
+        for (key,interference) in pairing.interferences
+            if interference isa Interference
+                element = channel2element(key)
+                push!(elements,element)
+            end
+        end
+    end
+    return elements
+end
+
+function TUIcalibrationMessage(ctrl::AbstractDict)
+    element = ctrl["cache"]["element"]
+    isotopes = element .* string.(_KJ["nuclides"][element])
+    channels = getChannels(ctrl["run"])
+    ni = length(isotopes)
+    nc = length(channels)
+    n = max(ni,nc)
+    msg = 
+    "Pair the isotope with the channel for the " *
+    "numerator and denominator of your bias correction:\n"
+    for i in 1:n
+        if i <= ni
+            msg *= string(i) * ". " * isotopes[i] *", "
+        else
+            msg *= repeat(" ",5 + maximum(length.(isotopes)))
+        end
+        if i <= nc
+            msg *= string(i) * ". " * channels[i]
+        end
+        msg *= "\n"
+    end
+    msg *= 
+    "For example (1,1),(2,3) would mean that " * 
+    isotopes[1] * " is paired with channel " * channels[1] * " and " *
+    isotopes[2] * " is paired with channel " * channels[3] * "."
+    return msg
+end
+
+function TUIchooseBiasStandardMessage(ctrl::AbstractDict)
+    msg = "Choose the reference material for the bias correction from the following list:\n"
+    refmats = TUIgetBiasStandards(ctrl["method"])
+    for i in eachindex(refmats.names)
+        refmat = get(refmats,i)
+        msg *= string(i)*": " * refmats.names[i] * TUIprintRefmatInfo(refmat) * "\n"
+    end
+    msg *= "x: Exit\n"*"?: Help"
     return msg
 end
 

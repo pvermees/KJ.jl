@@ -72,7 +72,7 @@ function dispatch!(ctrl::AbstractDict;
     if response == "?"
         println(help)
         next = nothing
-    elseif response in ["x","xx","xxx","xxxx"]
+    elseif count_xs(response)>0
         next = response
     elseif isa(action,Function)
         next = action(ctrl,response)
@@ -84,24 +84,12 @@ function dispatch!(ctrl::AbstractDict;
     else
         final = next
     end
-    if final == "x"
-        if length(ctrl["chain"])<1 return end
-        pop!(ctrl["chain"])
-    elseif final == "xx"
-        if length(ctrl["chain"])<2 return end
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
-    elseif final == "xxx"
-        if length(ctrl["chain"])<3 return end
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
-    elseif final == "xxxx"
-        if length(ctrl["chain"])<4 return end
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
-        pop!(ctrl["chain"])
+    nx = count_xs(final)
+    if nx > 0
+        if length(ctrl["chain"]) < nx return end
+        for i in 1:nx
+            pop!(ctrl["chain"])
+        end
     elseif isnothing(final)
         if length(ctrl["chain"])<1 return end
     else
@@ -118,6 +106,15 @@ function dispatch!(ctrl::AbstractDict;
         print(", final: "); println(final)
         println(ctrl["history"])
     end
+end
+
+function count_xs(response::Any)
+    return 0
+end
+function count_xs(response::AbstractString)
+    nx = count('x',response)
+    nc = length(response)
+    if nx == nc return nx else return 0 end
 end
 
 function KJtree!(tree::AbstractDict)
@@ -142,9 +139,9 @@ function init_KJtree()
                 "m" => "method",
                 "t" => TUItabulate,
                 "v" => TUIviewer,
-                "i" => TUItodo!, # "interferences",
+                "i" => "interferences",
                 "f" => "fractionation",
-                "b" => TUItodo!, # "bias",
+                "b" => "bias",
                 "p" => TUIprocess!,
                 "e" => "export",
                 "l" => "log",
@@ -166,20 +163,19 @@ function init_KJtree()
             action = TUIformat!
         ),
         "dir|file" => (
-            message =
-            "d: Read a directory of individual data files\n" * 
-            "p: Parse the data from a single file using a laser log (provide paths)\n" *
-            "P: Parse the data from a single file using a laser log (choose from list)\n" *
-            "(? for help, x to exit):",
+            message = TUIdirfileMessage,
             help =
-            "There are two ways to store mass spectrometer data. Each analysis " * 
-            "(spot or raster) can be saved into its own file, or all analyses can be " * 
-            "stored together in a single file. In the latter case, a laser log file is " * 
-            "needed to parse the data into individual samples. Option p requires " *
-            "the full paths of the data and log files. Option P requires the name of the " *
+            "There are three ways to store mass spectrometer data:\n" * 
+            "1. Each analysis (spot or raster) can be saved into its own file;\n" * 
+            "2. each analysis can be divided into several files (corresponding to a " * 
+            "background, signal and washout block, respectively), or\n" * 
+            "3. all analyses can be stored together in a single file, which is parsed " * 
+            "into individual samples using a laser log file. Option p requires the full " * 
+            "paths of the data and log files. Option P requires the name of the " * 
             "directory in which the data and laser log are stored.",
             action = Dict(
                 "d" => "loadICPdir",
+                "b" => TUItoggleBlocks!,
                 "p" => "loadICPfile",
                 "P" => "choosedir"
             )
@@ -257,6 +253,14 @@ function init_KJtree()
             "them as a comma-separated list of numbers.",
             action = TUIsetProxies!
         ),
+        "setInterferenceProxy" => (
+            message = TUIsetInterferenceProxyMessage,
+            help = "KJ is having trouble mapping the mass spectrometer " *
+            "channels to isotopic proxies. Please help it by identifying " *
+            "the isotopes measured by the different channels by listing " *
+            "them as a comma-separated list of numbers.",
+            action = TUIsetInterferenceProxy!
+        ),        
         "mineral" => (
             message = TUImineralMessage,
             help = nothing,
@@ -266,6 +270,79 @@ function init_KJtree()
             message = TUIstoichiometryMessage,
             help = nothing,
             action = TUIstoichiometry!
+        ),
+        "interferences" => (
+            message =
+            "a: Add an interference\n" *
+            "l: List the interferences\n" *
+            "r: Remove the interferences\n" * 
+            "x: Exit\n" * 
+            "?: Help",
+            help =
+            "Choose one or more interferences. These are used to " * 
+            "correct for isobaric interferences on the isotopic ratios. ",
+            action = Dict(
+                "a" => "addInterference",
+                "l" => TUIlistInterferences,
+                "r" => TUIremoveInterferences!
+            )
+        ),
+        "addInterference" => (
+            message = TUIlistIsotopesMessage,
+            help =
+            "For example, choose Re185 for the TmO interference on Re185, " * 
+            "or choose Os187 for the Re187 interference on Os187.",
+            action = TUIchooseInterferenceTarget!
+        ),
+        "interferenceType" => (
+            message = 
+            "Choose the type of interference:\n" *
+            "o: ordinary isobaric interference\n" *
+            "r: molecular rare earth interference\n" *
+            "x: Exit\n" *
+            "?: Help",
+            help = 
+            "An 'ordinary' interference is an isobaric interference from " * 
+            "another element (e.g., Re185 on Os185), whereas a molecular " * 
+            "rare earth interference is a molecule (e.g., TmO on Re185).",
+            action = Dict(
+                "o" => "interferenceIon",
+                "r" => "REEinterferenceProxy"
+            )
+        ),
+        "interferenceIon" => (
+            message = TUIchooseInterferenceIonMessage,
+            help =
+            "Here you choose the actual ion that interferes with " * 
+            "the chosen target isotope.",
+            action = TUIchooseInterferenceIon!
+        ),
+        "interferenceProxyChannel" => (
+            message = TUIchooseInterferenceProxyChannelMessage,
+            help =
+            "To correct the interference, you must identify a " *
+            "proxy isotope with known isotopic abundance relative " *
+            "to the interference target.",
+            action = TUIchooseInterferenceProxyChannel!
+        ),
+        "REEinterferenceProxy" => (
+            message = TUIchooseREEInterferenceProxyChannelMessage,
+            help =
+            "Suppose that the channels corresponding to X, Y and YO " * 
+            "appear as items 3, 8 and 13 of the list, then enter" * 
+            "3,8,13 here as a comma-separated list of numbers:\n",
+            action = TUIchooseREEInterferenceProxyChannels!
+        ),
+        "setInterferenceProxy" => (
+            message = TUIsetInterferenceProxyMessage,
+            help = 
+            "KJ was unable to automatically identify the " * 
+            "isotope corresponding to the channel you selected " * 
+            "for the interference correction. Please help it by " * 
+            "identifying the isotope measured by this channel " * 
+            "by listing it as a number corresponding to the list " * 
+            "of isotopes that you see on the screen.",
+            action = TUIsetInterferenceProxy!
         ),
         "fractionation" => (
             message =
@@ -282,7 +359,7 @@ function init_KJtree()
             action = Dict(
                 "a" => "chooseStandard",
                 "r" => "removeStandard",
-                "l" => TUIrefmatTab,
+                "l" => TUIstandardsTab,
                 "t" => TUItabulate
             )
         ),
@@ -355,6 +432,51 @@ function init_KJtree()
             "standards by providing a list of comma separated numbers " * 
             "(e.g., 1,2,8,9,15,16,...).",
             action = TUIremoveStandardsByNumber!
+        ),
+        "bias" => (
+            message = 
+            "a. Add a bias correction\n" *
+            "l. List the bias corrections\n" *
+            "d. Delete the bias corrections\n" *
+            "x. Exit\n" *
+            "?: Help",
+            help = 
+            "Correct the mass by choosing one or more " *
+            "reference materials with known isotopic composition. ",
+            action = Dict(
+                "a" => "chooseBiasElement",
+                "l" => TUIlistBiases,
+                "d" => TUIremoveBiases!
+            )
+        ),
+        "chooseBiasElement" => (
+            message = TUIchooseBiasElementMessage,
+            help =
+            "Choose the element for which you want to correct the mass bias." *
+            "After this step, you will be asked to select two isotopes of this element " *
+            "and a reference material to determine the mass bias correction factor.",
+            action = TUIchooseBiasElement!
+        ),
+        "calibration" => (
+            message = TUIcalibrationMessage,
+            help = 
+            "To determine the mass bias correction factor, you need to select " *
+            "two isotopes of the chosen element and a reference material with known " *
+            "isotopic composition. For example, if you choose Re as the bias element, " *
+            "then you can choose Re185 and Re187 as the two isotopes and indicate their " *
+            "channels in the format (1,2),(3,4) where 1 and 3 are the isotopes and 2 and 4 " * 
+            "are their corresponding channels. In the next step, you will be asked to select " *
+            "a reference material in which the ratio of the two selected isotopes is known.",
+            action = TUIcalibration!
+        ),
+        "biasStandards" => (
+            message = TUIchooseBiasStandardMessage,
+            help =
+            "Choose a reference material with known isotopic composition for the bias correction. " * 
+            "If you do not find your reference material in this list, then you can either specify " * 
+            "your own reference material under 'options' in the top menu, or you can email us to add " * 
+            "the material to the software.",
+            action = TUIchooseBiasStandard!
         ),
         "glass" => (
             message =
@@ -792,7 +914,7 @@ function init_KJtree()
                 "d" => "setNdrift",
                 "h" => "setNdown",
                 "p" => "PA",
-                "l" => TUIrefmatTab,
+                "l" => TUIstandardsTab,
                 "a" => "addStandard",
                 "r" => TUIglassTab,
                 "g" => "addGlass",

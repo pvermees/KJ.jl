@@ -14,9 +14,8 @@ function internoplot(samp::Sample,
         p = internoplot(x0,y0,E,Phat,Dhat,dhat;
                         legend=legend,nsigma=nsigma,plot_options...)
     else
-        Pname, Dname, dname = unpack(method.fractionation.ions)
-        xlab = Pname * "/" * Dname
-        ylab = dname * "/" * Dname
+        xlab = method.P.ion * "/" * method.D.ion
+        ylab = method.d.ion * "/" * method.D.ion
         p = internoplot(x0,y0,E,Phat,Dhat,dhat;
                         legend=legend,nsigma=nsigma,
                         xlab=xlab,ylab=ylab,plot_options...)

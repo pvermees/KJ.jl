@@ -17,7 +17,7 @@ end
 function internochron(samp::Sample,
                       method::Gmethod,
                       fit::Gfit)
-    a = Cruncher(samp,method,fit)
+    a = ACruncher(samp,method,fit)
     init = init_internochron(;a...)
     objective = (par) -> LLinternochron(par[1],par[2];a...)
     fit = Optim.optimize(objective,init)
@@ -62,9 +62,8 @@ end
 
 function x0y02t(x0y0::AbstractDataFrame,
                 method::Gmethod)
-    P, D, d = unpack(method.fractionation.channels)
-    xlab = "t(" * D * "/" * P * ")" 
-    ylab = "(" * d * "/" * D * ")₀"
+    xlab = "t(" * method.D.channel * "/" * method.P.channel * ")" 
+    ylab = "(" * method.d.channel * "/" * method.D.channel * ")₀"
     column_names = ["name", xlab, "s[" * xlab * "]", ylab, "s[" * ylab * "]", "ρ"]
     out = DataFrame(x0y0,column_names)
     for (i,row) in enumerate(eachrow(x0y0))
