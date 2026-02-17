@@ -950,11 +950,18 @@ function TUIopenTemplate!(ctrl::AbstractDict,
         ctrl["nblocks"] = nblocks
         ctrl["method"] = method
         ctrl["transformation"] = transformation
-        ctrl["priority"]["fractionation"] = (length(method.standards) == 0)
+        ctrl["priority"]["fractionation"] = TUIfractionationChecked(method)
         ctrl["priority"]["method"] = false
         ctrl["template"] = true
     end
     return "xx"
+end
+
+function TUIfractionationChecked(method::Gmethod)
+    return length(method.standards) == 0
+end
+function TUIfractionationChecked(method::Cmethod)
+    return length(method.groups) == 0
 end
 
 function TUIsaveTemplate(ctrl::AbstractDict,
@@ -996,6 +1003,15 @@ function TUImethod2text(m::Gmethod)
     return out
 end
 
+function TUImethod2text(m::Cmethod)
+    out  = "elements = (" * join(["\"" * channel * "\" => \"" * m.elements[channel] * "\"" for channel in keys(m.elements)], ",\n") * ")\n"
+    out *= "groups = Dict(" * join(["\"" * group * "\" => \"" * m.groups[group] * "\"" for group in keys(m.groups)], ",") * ")\n"
+    out *= "internal = (\"" * m.internal[1] * "\"," * string(m.internal[2]) * ")\n"
+    out *= "nblank = " * string(m.nblank) * "\n"
+    out *= "method = Cmethod(elements,groups,internal,nblank)\n"
+    return out
+end
+
 function TUIinterference2string(interference::Interference)
     bias = interference.bias
     out = 
@@ -1018,14 +1034,11 @@ function TUIinterference2string(interference::REEInterference)
 end
 
 function TUImethod2text(method::Cmethod)
-    chunks = String[]
-    for (channel,element) in pairs(method.elements)
-        push!(chunks,"\"" * channel * "\" => " * "\"" * element * "\"")
-    end
-    out  = "elements = DataFrame(" * join(chunks,",\n                     ") * ")\n"
-    out *= "standards = [" * join("\"" .* collect(method.standards) .* "\"", ", ") * "],\n"
-    out *= "internal = (\"" * method.internal[1] * "\"," * string(method.internal[2]) * ")\n"
-    out *= "method = Cmethod(elements,standards,internal," * string(method.nblank) * ")"
+    out  = "elements = " * string(method.elements) * "\n"
+    out *= "groups = " * string(method.groups) * "\n"
+    out *= "internal = " * string(method.internal) * "\n"
+    out *= "nblank = " * string(method.nblank) * "\n"
+    out *= "method = Cmethod(elements,groups,internal,nblank)"
     return out
 end
 
