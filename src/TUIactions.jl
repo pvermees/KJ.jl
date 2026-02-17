@@ -978,28 +978,44 @@ function TUIsaveTemplate(ctrl::AbstractDict,
 end
 
 function TUImethod2text(m::Gmethod)
-    out = "method = Gmethod(name=\"" * m.name * "\",\n"
+    out  = "method = Gmethod(name=\"" * m.name * "\",\n"
     out *= "                 P=Pairing(ion=\"" * m.P.ion * "\",proxy=\"" * m.P.proxy * "\",channel=\"" * m.P.channel * "\"),\n"
     out *= "                 D=Pairing(ion=\"" * m.D.ion * "\",proxy=\"" * m.D.proxy * "\",channel=\"" * m.D.channel * "\"),\n"
     out *= "                 d=Pairing(ion=\"" * m.d.ion * "\",proxy=\"" * m.d.proxy * "\",channel=\"" * m.d.channel * "\"),\n"
     out *= "                 nblank = " * string(m.nblank) * ",\n"
     out *= "                 ndrift = " * string(m.ndrift) * ",\n"
     out *= "                 ndown = " * string(m.ndown) * ",\n"
-    out *= "                 PAcutoff = " * ifelse(isfinite(m.PAcutoff),string(m.PAcutoff),"Inf") * ")\n"
-    out *= "method.groups = Dict(" * join(["\"" * group * "\" => \"" * m.groups[group] * "\"" for group in keys(m.groups)], ",") * ")\n"
-    if length(m.bias.standards) > 0
-        out *= "method.bias = Calibration(num=(ion=\"" * m.bias.num.ion * "\", channel=\"" * m.bias.num.channel * "\"),\n"
-        out *= "                          den=(ion=\"" * m.bias.den.ion * "\", channel=\"" * m.bias.den.channel * "\"),\n"
-        out *= "                          standards=Set([" * join("\"" .* m.bias.standards .* "\"", ", ") * "]))\n"
-    end
-    out *= "method.standards = Set([" * join("\"" .* m.standards .* "\"", ",") * "])\n"
+    out *= "                 PAcutoff = " * string(m.PAcutoff) * ")\n"
+    out *= "method.groups = " * string(m.groups) * "\n"
+    out *= "method.bias = " * TUIcalibration2template(m.bias) * "\n"
+    out *= "method.standards = " * string(m.standards) * "\n"
     pairings = Dict("method.P" => m.P, "method.D" => m.D, "method.d" => m.d)
     for (pairing_key,pairing) in pairings
         for (interference_key, interference) in pairing.interferences
-            out *= pairing_key * ".interferences[\"" * interference_key * "\"] = " * 
-                   TUIinterference2string(interference) * "\n"
+            out *= pairing_key * ".interferences[\"" * interference_key * "\"] = "
+            out *= TUIinterference2template(interference) * "\n"
         end
     end
+    return out
+end
+
+function TUIcalibration2template(calibration::Calibration)
+    out  = "Calibration(num=" * string(calibration.num)
+    out *= ", den=" * string(calibration.den) 
+    out *= ", standards=" * string(calibration.standards) * ")"
+    return out
+end
+
+function TUIinterference2template(interference::Interference)
+    out  = "Interference(proxy=\"" * string(interference.proxy) * "\""
+    out *= ",channel=\"" * string(interference.channel) * "\")"
+    return out
+end
+
+function TUIinterference2template(interference::REEInterference)
+    out  = "REEInterference(REE=\"" * string(interference.REE) * "\""
+    out *= ", REEO=\"" * string(interference.REEO) * "\""
+    out *= ", standards=" * string(interference.standards) * ")"
     return out
 end
 
@@ -1009,27 +1025,6 @@ function TUImethod2text(m::Cmethod)
     out *= "internal = (\"" * m.internal[1] * "\"," * string(m.internal[2]) * ")\n"
     out *= "nblank = " * string(m.nblank) * "\n"
     out *= "method = Cmethod(elements,groups,internal,nblank)\n"
-    return out
-end
-
-function TUIinterference2string(interference::Interference)
-    bias = interference.bias
-    out = 
-    "Interference(" * 
-    "proxy=\"" * interference.proxy * "\", channel=\"" * interference.channel * "\", " *
-    "bias=Calibration(num=(ion=\"" * bias.num.ion * "\", channel=\"" * bias.num.channel * "\"), " *
-    "den=(ion=\"" * bias.den.ion * "\", channel=\"" * bias.den.channel * "\"), " *
-    "standards = Set([" * join("\"" .* bias.standards .* "\"", ", ") * "])))"
-    return out
-end
-
-function TUIinterference2string(interference::REEInterference)
-    out = 
-    "REEInterference(REE=\"" * interference.REE * "\", REEO=\"" * interference.REEO * "\", "
-    if length(interference.standards) > 0
-        out *= "standards=Set([" * join("\"" .* interference.standards .* "\"", ", ") * "])"
-    end
-    out *= ")"
     return out
 end
 
