@@ -38,7 +38,7 @@ top,b
 bias,a
 chooseBiasElement,1
 calibration,"(5,12),(3,10)"
-biasStandards,1
+biasStandards,2
 addStandardGroup,p
 addStandardsByPrefix,Nis3
 chooseBiasElement,2
@@ -49,3 +49,5 @@ addGlassGroup,p
 addGlassByPrefix,Nist_massbias
 bias,l
 bias,x
+top,p
+top,x

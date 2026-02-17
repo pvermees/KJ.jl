@@ -944,13 +944,13 @@ function TUIopenTemplate!(ctrl::AbstractDict,
                           response::AbstractString)
     include(response)
     Base.invokelatest() do
-        ctrl["refmats"] = refmats
         ctrl["format"] = format
         ctrl["head2name"] = head2name
         ctrl["multifile"] = multifile
+        ctrl["nblocks"] = nblocks
         ctrl["method"] = method
         ctrl["transformation"] = transformation
-        ctrl["priority"]["fractionation"] = (length(method.fractionation.standards) == 0)
+        ctrl["priority"]["fractionation"] = (length(method.standards) == 0)
         ctrl["priority"]["method"] = false
         ctrl["template"] = true
     end
@@ -964,6 +964,7 @@ function TUIsaveTemplate(ctrl::AbstractDict,
         write(file,"multifile = " * string(ctrl["multifile"]) * "\n")
         write(file,"head2name = " * string(ctrl["head2name"]) * "\n")
         write(file,"transformation = \"" * ctrl["transformation"] * "\"\n")
+        write(file,"nblocks = " * string(ctrl["nblocks"]) * "\n")
         write(file,TUImethod2text(ctrl["method"]))
     end
     return "xx"
@@ -978,12 +979,41 @@ function TUImethod2text(m::Gmethod)
     out *= "                 ndrift = " * string(m.ndrift) * ",\n"
     out *= "                 ndown = " * string(m.ndown) * ",\n"
     out *= "                 PAcutoff = " * ifelse(isfinite(m.PAcutoff),string(m.PAcutoff),"Inf") * ")\n"
+    out *= "method.groups = Dict(" * join(["\"" * group * "\" => \"" * m.groups[group] * "\"" for group in keys(m.groups)], ",") * ")\n"
     if length(m.bias.standards) > 0
         out *= "method.bias = Calibration(num=(ion=\"" * m.bias.num.ion * "\", channel=\"" * m.bias.num.channel * "\"),\n"
         out *= "                          den=(ion=\"" * m.bias.den.ion * "\", channel=\"" * m.bias.den.channel * "\"),\n"
-        out *= "                          standards = [" * join("\"" .* m.bias.standards .* "\"", ", ") * "])\n"
+        out *= "                          standards=Set([" * join("\"" .* m.bias.standards .* "\"", ", ") * "]))\n"
     end
     out *= "method.standards = Set([" * join("\"" .* m.standards .* "\"", ",") * "])\n"
+    pairings = Dict("method.P" => m.P, "method.D" => m.D, "method.d" => m.d)
+    for (pairing_key,pairing) in pairings
+        for (interference_key, interference) in pairing.interferences
+            out *= pairing_key * ".interferences[\"" * interference_key * "\"] = " * 
+                   TUIinterference2string(interference) * "\n"
+        end
+    end
+    return out
+end
+
+function TUIinterference2string(interference::Interference)
+    bias = interference.bias
+    out = 
+    "Interference(" * 
+    "proxy=\"" * interference.proxy * "\", channel=\"" * interference.channel * "\", " *
+    "bias=Calibration(num=(ion=\"" * bias.num.ion * "\", channel=\"" * bias.num.channel * "\"), " *
+    "den=(ion=\"" * bias.den.ion * "\", channel=\"" * bias.den.channel * "\"), " *
+    "standards = Set([" * join("\"" .* bias.standards .* "\"", ", ") * "])))"
+    return out
+end
+
+function TUIinterference2string(interference::REEInterference)
+    out = 
+    "REEInterference(REE=\"" * interference.REE * "\", REEO=\"" * interference.REEO * "\", "
+    if length(interference.standards) > 0
+        out *= "standards=Set([" * join("\"" .* interference.standards .* "\"", ", ") * "])"
+    end
+    out *= ")"
     return out
 end
 

@@ -233,7 +233,7 @@ function TUIgetStandards(method::Gmethod)
 end
 
 function TUIgetBiasStandards(method::Gmethod)
-    condition = refmat -> refmat isa BiasRefmat || refmat.material == "glass"
+    condition = refmat -> refmat isa PointRefmat || refmat isa BiasRefmat
     return TUIgetStandardsHelper(method; condition = condition)
 end
 
