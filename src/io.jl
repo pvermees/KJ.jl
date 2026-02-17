@@ -1,7 +1,7 @@
 function load(dname::AbstractString;
               format::AbstractString="Agilent",
               head2name::Bool=true,
-              blocksize::Int=1,
+              nblocks::Int=1,
               absolute_buffer::AbstractFloat=2.0,
               relative_buffer::AbstractFloat=0.1)
     fnames = readdir(dname)
@@ -33,8 +33,8 @@ function load(dname::AbstractString;
         samp.dat.outlier = falses(size(samp.dat,1))
         samp.dat.t = (samp.dat[:,1] .+ runtime[i])./duration
     end
-    if blocksize > 1
-        return blocks(sortedsamples,blocksize;
+    if nblocks > 1
+        return blocks(sortedsamples,nblocks;
                       absolute_buffer=absolute_buffer,
                       relative_buffer=relative_buffer)
     else

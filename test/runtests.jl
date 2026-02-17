@@ -716,7 +716,7 @@ end
 
 function multicollector_test()
     myrun = load("data/FIN2";
-                 format="FIN2",blocksize=3)
+                 format="FIN2",nblocks=3)
     method = Gmethod(name="U-Pb",
                      groups=Dict("91500" => "91500"),
                      P=Pairing(ion="U238",channel="238U"),

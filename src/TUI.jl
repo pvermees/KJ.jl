@@ -164,7 +164,8 @@ function init_KJtree()
         ),
         "dir|file" => (
             message =
-            "d: Read a directory of individual data files\n" * 
+            "d: Read a directory in which analysis is stored in a different file\n" *
+            "b: Set the number of blocks per analysis (current value =" * string(_KJ["ctrl"]["nblocks"]) * ")\n" *
             "p: Parse the data from a single file using a laser log (provide paths)\n" *
             "P: Parse the data from a single file using a laser log (choose from list)\n" *
             "(? for help, x to exit):",
@@ -177,6 +178,7 @@ function init_KJtree()
             "directory in which the data and laser log are stored.",
             action = Dict(
                 "d" => "loadICPdir",
+                "b" => TUItoggleBlocks!,
                 "p" => "loadICPfile",
                 "P" => "choosedir"
             )

@@ -13,6 +13,7 @@ function TUIinit()
         "chain" => ["top"],
         "template" => false,
         "multifile" => true,
+        "nblocks" => 1,
         "head2name" => true,
         "format" => "",
         "ICPpath" => "",
@@ -72,7 +73,8 @@ function TUIloadICPdir!(ctrl::AbstractDict,
                         response::AbstractString)
     ctrl["run"] = load(response;
                        format=ctrl["format"],
-                       head2name=ctrl["head2name"])
+                       head2name=ctrl["head2name"],
+                       nblocks=ctrl["nblocks"])
     ctrl["priority"]["load"] = false
     ctrl["multifile"] = true
     ctrl["ICPpath"] = response
@@ -82,6 +84,16 @@ function TUIloadICPdir!(ctrl::AbstractDict,
     else
         return "xxx"
     end
+end
+
+function TUItoggleBlocks!(ctrl::AbstractDict,
+                          response::AbstractString)
+    if ctrl["nblocks"] == 1
+        ctrl["nblocks"] = 3
+    else
+        ctrl["nblocks"] = 1
+    end
+    return nothing
 end
 
 function TUIsetGroups!(ctrl::AbstractDict)
