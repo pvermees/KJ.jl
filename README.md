@@ -35,16 +35,16 @@ Here is a short example of a menu-driven KJ session:
 julia> using KJ
 julia> TUI()
 ----------
- KJ 0.8.0
+ KJ 0.8.2 
 ----------
 
 r: Read data files[*]
 m: Specify the method[*]
 t: Tabulate the samples
 v: View and adjust each sample
+i: Interferences
 f: Fractionation[*]
 b: Mass bias
-i: Interferences
 p: Process the data[*]
 e: Export the results
 l: Logs and templates
@@ -56,15 +56,19 @@ x: Exit
 ?: Help
 r
 
-a: Agilent
-t: ThermoFisher
+a: csv (Agilent)
+t: csv (ThermoFisher)
+f: FIN2
 x: Exit
 ?: Help
 a
 
-d: Read a directory of individual data files
-p: Parse the data from a single file using a laser log
-(? for help, x to exit):
+d: Read a directory in which analysis is stored in a different file
+b: Set the number of blocks per analysis (current value = 1)
+p: Parse the data from a single file using a laser log (provide paths)
+P: Parse the data from a single file using a laser log (choose from list)
+x: Exit
+?: Help
 d
 
 Enter the full path of the data directory (? for help, x to exit):
@@ -74,9 +78,9 @@ r: Read data files
 m: Specify the method[*]
 t: Tabulate the samples
 v: View and adjust each sample
+i: Interferences
 f: Fractionation[*]
 b: Mass bias
-i: Interferences
 p: Process the data[*]
 e: Export the results
 l: Logs and templates
@@ -102,13 +106,11 @@ exports all the aliquots of the "Duff" sample to a JSON file that can
 be opened in IsoplotR:
 
 ```
-myrun = load("data/carbonate",format="Agilent")
-standards = Dict("WC1_cc"=>"WC1")
-method = getmethod("U-Pb",standards)
+myrun = load("data/U-Pb";format="Agilent",head2name=false)
+method = Gmethod(name="U-Pb",groups=Dict("STDCZ" => "Plesovice"))
 fit = process!(myrun,method)
 export2IsoplotR(myrun,method,fit;
-                prefix="Duff",
-                fname="output/Duff.json")
+                fname="output/U-Pb.json")
 ```
 
 Type `?load`, `?process!`, `?export2IsoplotR` or `?KJ` at the REPL to
@@ -126,16 +128,16 @@ manipulate the contents of `ctrl` and sync it with the TUI using the
 julia> using KJ
 julia> TUI()
 ----------
- KJ 0.8.0
+ KJ 0.8.2 
 ----------
 
 r: Read data files[*]
 m: Specify the method[*]
 t: Tabulate the samples
 v: View and adjust each sample
+i: Interferences
 f: Fractionation[*]
 b: Mass bias
-i: Interferences
 p: Process the data[*]
 e: Export the results
 l: Logs and templates
@@ -147,15 +149,19 @@ x: Exit
 ?: Help
 r
 
-a: Agilent
-t: ThermoFisher
+a: csv (Agilent)
+t: csv (ThermoFisher)
+f: FIN2
 x: Exit
 ?: Help
 a
 
-d: Read a directory of individual data files
-p: Parse the data from a single file using a laser log
-(? for help, x to exit):
+d: Read a directory in which analysis is stored in a different file
+b: Set the number of blocks per analysis (current value = 1)
+p: Parse the data from a single file using a laser log (provide paths)
+P: Parse the data from a single file using a laser log (choose from list)
+x: Exit
+?: Help
 d
 
 Enter the full path of the data directory (? for help, x to exit):
@@ -164,19 +170,21 @@ data/Lu-Hf
 r: Read data files
 m: Specify the method[*]
 t: Tabulate the samples
-s: Mark mineral standards[*]
-g: Mark reference glasses[*]
 v: View and adjust each sample
+i: Interferences
+f: Fractionation[*]
+b: Mass bias
 p: Process the data[*]
 e: Export the results
 l: Logs and templates
 o: Options
 u: Update
 c: Clear
+a: Extra
 x: Exit
 ?: Help
 x
 
 julia> ctrl = getKJctrl();
-julia> plot(ctrl["run"][1])
+julia> KJ.plot(ctrl["run"][1])
 ```
