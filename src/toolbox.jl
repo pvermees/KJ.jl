@@ -32,6 +32,13 @@ end
 polyVal(p::AbstractVector,t::AbstractVector)
 
 Evaluates polynomial function with parameters p at times t.
+
+# Arguments
+- `p`: Vector of polynomial coefficients [p0, p1, p2, ...] representing p0 + p1*t + p2*t^2 + ...
+- `t`: Vector of time values at which to evaluate the polynomial
+
+# Returns
+- Vector of polynomial values at each time point
 """
 function polyVal(p::AbstractVector,
                  t::AbstractVector)
@@ -41,6 +48,15 @@ function polyVal(p::AbstractVector,
 end
 """
 polyVal(p::AbstractDataFrame,t::AbstractVector)
+
+Evaluates polynomial functions (one per column) at times t.
+
+# Arguments
+- `p`: DataFrame where each column contains polynomial coefficients
+- `t`: Vector of time values at which to evaluate polynomials
+
+# Returns
+- DataFrame with polynomial values, one column per input column
 """
 function polyVal(p::AbstractDataFrame,
                  t::AbstractVector)
@@ -58,6 +74,12 @@ function vandermonde(x,degree)
     return [x[i]^p for i in eachindex(x), p in 0:degree]
 end
 
+"""
+    polyFac(p::AbstractVector, t::AbstractVector)
+
+Evaluate exponential of polynomial with parameters p at times t.
+Returns exp(p[1] + p[2]*t + p[3]*t^2 + ...).
+"""
 function polyFac(p::AbstractVector,
                  t::AbstractVector)
     np = length(p)
@@ -448,6 +470,18 @@ function dataframe_sum(df::AbstractDataFrame)
     return total
 end
 
+"""
+    iratio(nuclide1::AbstractString, nuclide2::AbstractString)
+
+Get the isotope ratio between two nuclides.
+
+# Arguments
+- `nuclide1`: Name of the numerator nuclide (e.g., "U235")
+- `nuclide2`: Name of the denominator nuclide (e.g., "U238")
+
+# Returns
+- The isotope ratio, or `nothing` if not found in the database
+"""
 function iratio(nuclide1::AbstractString,
                 nuclide2::AbstractString)
     abundances = merge(values(_KJ["iratio"])...)

@@ -1,3 +1,22 @@
+"""
+    predict(samp::Sample, method::Union{Gmethod,Cmethod}, fit::Union{Gfit,Cfit}; generic_names=true)
+    predict(samp::Sample, blank::AbstractDataFrame)
+
+Predict signal intensities for a sample given fitted parameters.
+
+Calculates expected signal values based on fractionation model, anchor points,
+and bias corrections. Used for model checking and plotting fitted curves.
+
+# Arguments
+- `samp`: Sample to predict for
+- `method`: Method definition
+- `fit`: Fitted parameters
+- `blank`: Blank fit (for blank prediction)
+- `generic_names`: Use generic column names (P, D, d) vs specific isotopes (default: true)
+
+# Returns
+- DataFrame with predicted signals
+"""
 function predict(samp::Sample,
                  method::Gmethod,
                  fit::Gfit;

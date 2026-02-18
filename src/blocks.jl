@@ -1,3 +1,17 @@
+"""
+    blocks(run::Vector{Sample}, blocksize::Integer; absolute_buffer=2.0, relative_buffer=0.1)
+
+Split a run into blocks of a given size and merge the samples within each block.
+
+# Arguments
+- `run`: Vector of samples to divide into blocks
+- `blocksize`: Number of samples per block
+- `absolute_buffer`: Absolute time buffer for automatic window selection (default: 2.0 seconds)
+- `relative_buffer`: Relative time buffer for automatic window selection (default: 0.1)
+
+# Returns
+- Vector of merged samples, one per block
+"""
 function blocks(run::Vector{Sample},
                 blocksize::Integer;
                 absolute_buffer::AbstractFloat=2.0,

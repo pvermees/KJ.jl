@@ -1,3 +1,19 @@
+"""
+    getAnchor(methodname::AbstractString, refmat::AbstractString)
+    getAnchor(standard::AbstractRefmat; methodname::AbstractString)
+
+Get the anchor coordinates for a reference material.
+
+Anchor points represent the known composition of reference materials in
+isotope ratio space, used for fractionation correction.
+
+# Arguments
+- `methodname`: Name of geochronology method (e.g., "U-Pb", "Rb-Sr")
+- `refmat`/`standard`: Reference material name or object
+
+# Returns
+- Anchor object (IsochronAnchor, PointAnchor, or BiasAnchor)
+"""
 function getAnchor(methodname::AbstractString,
                    refmat::AbstractString)
     standard = get(_KJ["refmat"][methodname],refmat)

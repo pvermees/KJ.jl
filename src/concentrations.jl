@@ -1,3 +1,23 @@
+"""
+    concentrations(samp::Sample, method::Cmethod, fit::Cfit; internal=method.internal)
+    concentrations(run::Vector{Sample}, method::Cmethod, fit::Cfit)
+
+Calculate element concentrations from calibrated LA-ICP-MS data.
+
+For single samples, returns time-resolved concentrations for each element.
+For runs, returns summary statistics (mean ± standard error) for each sample.
+
+# Arguments
+- `samp`/`run`: Sample or vector of samples
+- `method`: Concentration method with element definitions and internal standard
+- `fit`: Fitted sensitivity factors
+- `internal`: Internal standard as (channel, concentration) tuple
+
+# Returns
+- DataFrame with concentration values. For single samples, includes time-resolved
+  data and optional x,y coordinates. For runs, includes sample names, means, and
+  standard errors.
+"""
 function concentrations(samp::Sample,
                         method::Cmethod,
                         fit::Cfit;

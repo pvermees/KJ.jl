@@ -1,17 +1,24 @@
 export getKJctrl
-""" 
-getKJctrl()
+"""
+    getKJctrl()
 
-Access the control parameters of a TUI session
+Access the control parameters of a TUI session.
+
+# Returns
+- Dictionary containing TUI control parameters
 """
 function getKJctrl()
     return _KJ["ctrl"]
 end
+
 export setKJctrl!
 """
-setKJctrl!(ctrl::AbstractDict)
+    setKJctrl!(ctrl::AbstractDict)
 
-Set the control parameters of a TUI session
+Set the control parameters of a TUI session.
+
+# Arguments
+- `ctrl`: Dictionary of control parameters to set
 """
 function setKJctrl!(ctrl::AbstractDict)
     _KJ["ctrl"] = ctrl
@@ -25,6 +32,15 @@ function getExt(format)
     end
 end
 
+"""
+    getChannels(run::Vector{Sample})
+    getChannels(samp::Sample)
+    getChannels(interference::Interference)
+    getChannels(method::Gmethod)
+    getChannels(method::Cmethod)
+
+Get the names of all channels from samples, methods, or interferences.
+"""
 function getChannels(run::Vector{Sample}) :: AbstractVector
     return getChannels(run[1])
 end
@@ -62,11 +78,21 @@ function getSnames(run::Vector{Sample})
 end
 export getSnames
 
+"""
+    getGroups(run::Vector{Sample})
+
+Get a vector of group labels from a run.
+"""
 function getGroups(run::Vector{Sample})
     return getAttr(run,:group)
 end
 export getGroups
 
+"""
+    getIndicesInGroup(run::Vector{Sample}, group::AbstractString)
+
+Find the indices of all samples in a run that belong to a specific group.
+"""
 function getIndicesInGroup(run::Vector{Sample},
                            group::AbstractString)
     return findall(getGroups(run) .== group)
@@ -84,6 +110,14 @@ function getAttr(run::Vector{Sample},
     return out
 end
 
+"""
+    setGroup!(run::Vector{Sample}, method::KJmethod)
+    setGroup!(run::Vector{Sample}, selection, group::AbstractString)
+    setGroup!(run::Vector{Sample}, prefixes::Vector{String})
+
+Set the group labels for samples in a run, either from a method definition,
+by selecting specific sample indices, or by matching prefixes in sample names.
+"""
 function setGroup!(run::Vector{Sample},
                    method::KJmethod)
     groups = collect(keys(method.groups))

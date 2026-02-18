@@ -1,3 +1,18 @@
+"""
+    averat(run::Vector{Sample}, method::Gmethod, fit::Gfit)
+    averat(samp::Sample, method::Gmethod, fit::Gfit)
+
+Calculate average ratios for samples using a weighted mean approach.
+
+# Arguments
+- `run`/`samp`: Vector of samples or single sample
+- `method`: Geochronology method definition
+- `fit`: Fitted fractionation and blank parameters
+
+# Returns
+- DataFrame with columns: name, P/D ratio, uncertainty, d/D ratio, uncertainty, ρ (for run)
+  or array of [P/D, s[P/D], d/D, s[d/D], ρ] values (for single sample)
+"""
 function averat(run::Vector{Sample},
                 method::Gmethod,
                 fit::Gfit)

@@ -1,3 +1,21 @@
+"""
+    internoplot(samp::Sample, method::Gmethod, fit::Gfit; legend=false, nsigma=2, title=..., titlefontsize=10, plot_options...)
+
+Create an isochron plot for internal isochron data from a single sample.
+
+# Arguments
+- `samp`: Sample to plot
+- `method`: Geochronology method definition
+- `fit`: Fitted fractionation and blank parameters
+- `legend`: Show legend (default: false)
+- `nsigma`: Number of standard deviations for error envelope (default: 2)
+- `title`: Plot title
+- `titlefontsize`: Font size for title (default: 10)
+- `plot_options...`: Additional plotting options
+
+# Returns
+- Plots.jl plot object
+"""
 function internoplot(samp::Sample,
                      method::Gmethod,
                      fit::Gfit;

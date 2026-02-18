@@ -1,3 +1,19 @@
+"""
+    fit_bias(run::Vector{Sample}, method::Gmethod, blank::AbstractDataFrame)
+
+Fit mass bias corrections for isotope ratios.
+
+Identifies and corrects for systematic bias in isotope ratio measurements
+using reference materials with known ratios.
+
+# Arguments
+- `run`: Vector of samples including reference materials
+- `method`: Geochronology method definition
+- `blank`: Fitted blank corrections
+
+# Returns
+- Dictionary mapping elements to Bias objects containing correction parameters
+"""
 function fit_bias(run::Vector{Sample},
                   method::Gmethod,
                   blank::AbstractDataFrame)

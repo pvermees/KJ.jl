@@ -1,3 +1,16 @@
+"""
+    blank!(fit::KJfit, method::KJmethod, run::Vector{Sample})
+
+Fit blank corrections for a run.
+
+Extracts data from blank windows and fits polynomial background models
+for each channel.
+
+# Arguments
+- `fit`: Fit object to populate with blank parameters
+- `method`: Method definition
+- `run`: Vector of samples
+"""
 function blank!(fit::KJfit,
                 method::KJmethod,
                 run::Vector{Sample})
@@ -6,6 +19,18 @@ function blank!(fit::KJfit,
 end
 export blank!
 
+"""
+    fitBlanks(run::Vector{Sample}; nblank=2)
+
+Fit polynomial blank models to blank window data.
+
+# Arguments
+- `run`: Vector of samples
+- `nblank`: Order of polynomial (default: 2 for quadratic)
+
+# Returns
+- DataFrame of polynomial coefficients for each channel
+"""
 function fitBlanks(run::Vector{Sample};
                    nblank=2)
     blk = reduce(vcat, bwinData(samp) for samp in run)

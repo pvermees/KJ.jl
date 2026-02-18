@@ -1,3 +1,19 @@
+"""
+    getP(a::IsochronAnchor, ft::AbstractVector, hT::AbstractVector; cruncher...)
+
+Calculate the parent isotope abundances for an isochron anchor.
+
+This is a low-level function used internally for geochronological calculations.
+
+# Arguments
+- `a`: Isochron anchor point
+- `ft`: Time-dependent fractionation factor
+- `hT`: Downhole fractionation factor
+- `cruncher...`: Named tuple containing measured data and covariances
+
+# Returns
+- Vector of parent isotope abundances
+"""
 function getP(a::IsochronAnchor,
               ft::AbstractVector,
               hT::AbstractVector;
@@ -224,3 +240,25 @@ function SS(par::AbstractVector,
     return out
 end
 export SS
+
+"""
+    SS(a::AbstractAnchor, ft::AbstractVector, hT::AbstractVector; cruncher...)
+    SS(par::AbstractVector, method::Gmethod, cruncher_groups::AbstractDict; verbose=false)
+    SS(bias::AbstractBias; cruncher...)
+
+Calculate the sum of squares objective function for optimization.
+
+This function computes the weighted sum of squared residuals between
+measured and predicted values, used for fitting fractionation corrections
+and bias terms.
+
+# Arguments
+- `a`/`par`: Anchor point or parameter vector
+- `ft`, `hT`: Fractionation factors (for anchor-based calls)
+- `method`: Geochronology method (for parameter-based calls)
+- `cruncher`/`cruncher_groups`: Data and covariances
+- `verbose`: Print diagnostic information
+
+# Returns
+- Sum of squared Mahalanobis distances
+"""

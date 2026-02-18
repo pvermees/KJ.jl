@@ -1,3 +1,19 @@
+"""
+    fractionation!(fit::Gfit, method::Gmethod, run::Vector{Sample}; verbose=false)
+    fractionation!(fit::Cfit, method::Cmethod, run::Vector{Sample}; kwargs...)
+
+Fit drift and downhole fractionation corrections.
+
+For geochronology methods (Gmethod), fits polynomial time-dependent drift and
+downhole corrections using reference materials. For concentration methods (Cmethod),
+fits sensitivity factors using internal standards.
+
+# Arguments
+- `fit`: Fit object to populate with fractionation parameters
+- `method`: Method definition
+- `run`: Vector of samples
+- `verbose`: Print detailed optimization information (default: false)
+"""
 function fractionation!(fit::Gfit,
                         method::Gmethod,
                         run::Vector{Sample};

@@ -1,3 +1,25 @@
+"""
+    load(dname::AbstractString; format="Agilent", head2name=true, nblocks=1, absolute_buffer=2.0, relative_buffer=0.1)
+    load(dfile::AbstractString, tfile::AbstractString; format="Agilent")
+
+Load LA-ICP-MS data from files.
+
+The first method loads all files from a directory, sorts them by acquisition time,
+and optionally merges them into blocks. The second method loads a single data file
+with associated timestamps.
+
+# Arguments
+- `dname`/`dfile`: Directory containing data files, or path to a single data file
+- `tfile`: Path to timestamp file (for second method)
+- `format`: File format - "Agilent", "ThermoFisher", or "FIN2" (default: "Agilent")
+- `head2name`: Use file header for sample name (default: true)
+- `nblocks`: Number of blocks to merge samples into (default: 1, no merging)
+- `absolute_buffer`: Absolute time buffer for automatic window selection (default: 2.0 seconds)
+- `relative_buffer`: Relative time buffer for automatic window selection (default: 0.1)
+
+# Returns
+- Vector of Sample objects
+"""
 function load(dname::AbstractString;
               format::AbstractString="Agilent",
               head2name::Bool=true,
@@ -162,6 +184,20 @@ function io_df2sample(df::AbstractDataFrame,
 end
 
 
+"""
+    export2IsoplotR(run::Vector{Sample}, method::Gmethod, fit::Gfit; prefix=nothing, fname="KJ.json")
+    export2IsoplotR(ratios::AbstractDataFrame, method::Gmethod; fname="KJ.json")
+
+Export processed data to IsoplotR JSON format.
+
+# Arguments
+- `run`: Vector of samples to export
+- `ratios`: Pre-computed ratio data frame
+- `method`: Geochronology method
+- `fit`: Fitted parameters (for first method)
+- `prefix`: Optional prefix to filter samples (default: export all)
+- `fname`: Output filename (default: "KJ.json")
+"""
 function export2IsoplotR(run::Vector{Sample},
                          method::Gmethod,
                          fit::Gfit;
@@ -223,6 +259,20 @@ function export2IsoplotR(ratios::AbstractDataFrame,
 end
 export export2IsoplotR
 
+"""
+    summarise(run::Vector{Sample}; verbose=false, n=length(run))
+    summarize(run::Vector{Sample}; verbose=true, n=length(run))
+
+Summarize a run of samples, showing name, date, and group for each sample.
+
+# Arguments
+- `run`: Vector of samples
+- `verbose`: Print summary to console (default: false for summarise, true for summarize)
+- `n`: Number of rows to display if verbose (default: all)
+
+# Returns
+- DataFrame with columns: name, date, group
+"""
 function summarise(run::Vector{Sample};
                    verbose=false,n=length(run))
     ns = length(run)
