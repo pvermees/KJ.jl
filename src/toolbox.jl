@@ -476,8 +476,8 @@ end
 Get the isotope ratio between two nuclides.
 
 # Arguments
-- `nuclide1`: Name of the numerator nuclide (e.g., "U235")
-- `nuclide2`: Name of the denominator nuclide (e.g., "U238")
+- `nuclide1`: Name of the numerator nuclide (e.g., "U238")
+- `nuclide2`: Name of the denominator nuclide (e.g., "U235")
 
 # Returns
 - The isotope ratio, or `nothing` if not found in the database

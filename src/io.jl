@@ -260,21 +260,20 @@ end
 export export2IsoplotR
 
 """
-    summarise(run::Vector{Sample}; verbose=false, n=length(run))
-    summarize(run::Vector{Sample}; verbose=true, n=length(run))
+    summarise(run::Vector{Sample}; verbose=true, n=length(run))
 
-Summarize a run of samples, showing name, date, and group for each sample.
+Create a summary DataFrame of samples with their names, acquisition dates, and group assignments.
 
 # Arguments
-- `run`: Vector of samples
-- `verbose`: Print summary to console (default: false for summarise, true for summarize)
-- `n`: Number of rows to display if verbose (default: all)
+- `run`: Vector of Sample objects to summarize
+- `verbose`: If true, print the first n rows of the summary (default: true)
+- `n`: Number of rows to display when verbose is true (default: length(run))
 
 # Returns
-- DataFrame with columns: name, date, group
+- DataFrame with columns: name, date, and group for each sample
 """
 function summarise(run::Vector{Sample};
-                   verbose=false,n=length(run))
+                   verbose=true,n=length(run))
     ns = length(run)
     snames = getSnames(run)
     groups = fill("sample",ns)
@@ -287,8 +286,48 @@ function summarise(run::Vector{Sample};
     if verbose println(first(out,n)) end
     return out
 end
+
+"""
+    summarize(run::Vector{Sample}; verbose=true, n=length(run))
+
+American spelling alias for `summarise`. See [`summarise`](@ref) for details.
+"""
 function summarize(run::Vector{Sample};
                    verbose=true,n=length(run))
-    summarise(run;verbose,n)
+    summarise(run;verbose=verbose,n=n)
+end
+
+"""
+    summarise(fit::Gfit)
+
+Print a summary of fitted parameters from a Gfit object.
+
+Displays drift corrections, down-hole fractionation factors, elemental drift corrections,
+the covariance matrix, and bias parameters for each element.
+
+# Arguments
+- `fit`: A Gfit object containing fitted calibration parameters
+
+# Returns
+- Nothing. Output is printed to stdout.
+"""
+function summarise(fit::Gfit)
+    println("Drift: ", fit.drift)
+    println("Down: ", fit.down)
+    println("Adrift: ", fit.adrift)
+    print("Covariance matrix: ")
+    display(fit.covmat)
+    for (key, bias) in fit.bias
+        println("Bias for ", key, ": ", bias.par)
+    end
+end
+
+"""
+    summarize(fit::Gfit)
+
+American spelling alias for `summarise`. See [`summarise`](@ref) for details.
+"""
+function summarize(fit::Gfit)
+    summarise(fit)
 end
 export summarise, summarize

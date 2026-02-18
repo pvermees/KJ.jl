@@ -20,6 +20,9 @@ function fit_bias(run::Vector{Sample},
 end
 
 function init_bias(crunchers::AbstractVector)
+    if length(crunchers) == 0
+        return 0.0
+    end
     Dsum = 0.0
     bsum = 0.0
     for cruncher in crunchers
