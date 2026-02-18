@@ -370,7 +370,7 @@ function histest(option="Lu-Hf";show=true)
     if show
         plot_residuals(Pm,Dm,dm,Pp,Dp,dp)
         df = DataFrame(Pm=Pm,Dm=Dm,dm=dm,Pp=Pp,Dp=Dp,dp=dp)
-        CSV.write("output/hist.csv",df)
+        CSV.write(joinpath(@__DIR__, "output", "hist.csv"),df)
     end
 end
 
@@ -407,8 +407,8 @@ function exporttest()
     for option in ["Lu-Hf","Rb-Sr","K-Ca","U-Pb"]
         ratios, method = averatest(option)
         selection = prefix2subset(ratios,prefixes[option])
-        CSV.write(joinpath("output",option * ".csv"),selection)
-        export2IsoplotR(selection,method,fname = joinpath("output",option * ".json"))
+        CSV.write(joinpath(@__DIR__, "output", option * ".csv"),selection)
+        export2IsoplotR(selection,method,fname = joinpath(@__DIR__, "output",option * ".json"))
     end
 end
 
@@ -422,7 +422,7 @@ function iCaptest(verbose=true)
                      standards = Set(["MG"]))
     fit = process!(myrun,method)
     ratios = averat(myrun,method,fit)
-    export2IsoplotR(ratios,method,fname = joinpath("output/iCap.json"))
+    export2IsoplotR(ratios,method,fname = joinpath(@__DIR__, "output", "iCap.json"))
 end
 
 function carbonatetest(verbose=false)
@@ -432,7 +432,7 @@ function carbonatetest(verbose=false)
     fit = process!(myrun,method)
     export2IsoplotR(myrun,method,fit;
                     prefix="Duff",
-                    fname="output/Duff.json")
+                    fname=joinpath(@__DIR__, "output", "Duff.json"))
     p = KJ.plot(myrun[4],method;fit=fit,
                 transformation="log")
     @test p isa Plots.Plot
@@ -810,4 +810,4 @@ Plots.closeall()
 @testset "TUI test" begin TUItest() end
 @testset "dependency test" begin dependencytest() end
 
-# TUI(;debug=true)
+TUI(;debug=true)

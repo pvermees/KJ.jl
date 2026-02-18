@@ -35,7 +35,7 @@ Here is a short example of a menu-driven KJ session:
 julia> using KJ
 julia> TUI()
 ----------
- KJ 0.8.2 
+ KJ 0.8.2
 ----------
 
 r: Read data files[*]
@@ -128,7 +128,7 @@ manipulate the contents of `ctrl` and sync it with the TUI using the
 julia> using KJ
 julia> TUI()
 ----------
- KJ 0.8.2 
+ KJ 0.8.2
 ----------
 
 r: Read data files[*]

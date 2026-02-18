@@ -36,7 +36,7 @@ function TUIdirfileMessage(ctrl::AbstractDict)
     "p: Parse the data from a single file using a laser log (provide paths)\n" *
     "P: Parse the data from a single file using a laser log (choose from list)\n" *
     "x: Exit\n" *
-    "?: Help\n"
+    "?: Help"
     return msg
 end
 
