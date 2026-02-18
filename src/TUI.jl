@@ -8,6 +8,7 @@ KJ TUI
 - `extensions...`: a comma separated list of KJ extensions
 - `logbook`: the file path to a KJ log
 - `reset`: hard reset of all inherited settings
+- `debug`: whether to print the error stack trace when an error occurs (default: false)
 
 # Examples
 ```julia

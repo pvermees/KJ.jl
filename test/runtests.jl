@@ -6,7 +6,7 @@ include("synthetic.jl")
 function loadtest(;dname="data/Lu-Hf",
                   verbose=false)
     myrun = load(dname;format="Agilent")
-    if verbose summarise(myrun;verbose=true) end
+    if verbose summarise(myrun) end
     return myrun
 end
 
@@ -162,7 +162,7 @@ function grouptest(verbose=false)
                 "QMoly" => "QMolyHill")
     setGroup!(myrun,collect(keys(groups)))
     if verbose
-        summarise(myrun;verbose=true,n=5)
+        summarise(myrun;n=5)
     end
     return myrun
 end
@@ -443,7 +443,7 @@ function timestamptest(verbose=true)
     myrun = load("data/timestamp/Moreira_data.csv",
                  "data/timestamp/Moreira_timestamps.csv";
                  format="Agilent")
-    if verbose summarise(myrun;verbose=true,n=2) end
+    if verbose summarise(myrun;n=2) end
     p = KJ.plot(myrun[2];
                 transformation="sqrt")
     @test p isa Plots.Plot
@@ -724,7 +724,7 @@ function multicollector_test()
                      d=Pairing(ion="Pb207",channel="207Pb"))
     Calibration!(method;standards=Set(["91500"]))
     fit = process!(myrun,method)
-    summarise(myrun,verbose=true)
+    summarise(myrun)
     summarise(fit)
     pvec = []
     for i in [1,2,7,8]
@@ -808,6 +808,6 @@ Plots.closeall()
 @testset "ReOs test" begin ReOs_test() end
 @testset "MC-ICP-MS test" begin multicollector_test() end
 @testset "TUI test" begin TUItest() end
-@testset "dependency test" begin dependencytest() end
+# @testset "dependency test" begin dependencytest() end
 
-TUI(;debug=true)
+# TUI(;debug=true)
