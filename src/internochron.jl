@@ -1,3 +1,22 @@
+"""
+    internochron(run::Vector{Sample}, method::Gmethod, fit::Gfit)
+    internochron(samp::Sample, method::Gmethod, fit::Gfit)
+
+Calculate internal isochron ("internochron") coordinates for samples.
+
+For geochronology methods, this fits an isochron through the time-resolved
+data of each sample, returning the intercept coordinates (x0, y0) along
+with their uncertainties and correlation.
+
+# Arguments
+- `run`/`samp`: Vector of samples or single sample
+- `method`: Geochronology method definition
+- `fit`: Fitted fractionation and blank parameters
+
+# Returns
+- DataFrame with columns: name, x0, s[x0], y0, s[y0], ρ (for run)
+  or array of [x0, s[x0], y0, s[y0], ρ] values (for single sample)
+"""
 function internochron(run::Vector{Sample},
                       method::Gmethod,
                       fit::Gfit)

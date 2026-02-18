@@ -1,3 +1,19 @@
+"""
+    detect_outliers(vec::AbstractVector; b=2)
+    detect_outliers(mat::Matrix; b=2)
+
+Detect outliers in time-series data using a moving median approach.
+
+For vectors, uses interquartile range (IQR) criterion on deviations from moving median.
+For matrices, uses Mahalanobis distance and minimum covariance determinant (MCD).
+
+# Arguments
+- `vec`/`mat`: Time-series data as vector or matrix
+- `b`: Bandwidth for moving median (default: 2)
+
+# Returns
+- Vector of indices where outliers are detected
+"""
 function detect_outliers(vec::AbstractVector;
                          b::Int=2)
     n = length(vec)
@@ -27,6 +43,19 @@ function detect_outliers(mat::Matrix;
 end
 export detect_outliers
 
+"""
+    detect_outliers!(run::Vector{Sample}; channels=getChannels(run), include_samples=false)
+    detect_outliers!(run::Vector{Sample}, method::KJmethod; include_samples=false)
+
+Detect and flag outliers in a run of samples (in-place modification).
+
+Sets the `outlier` column in each sample's data frame to true for detected outliers.
+
+# Arguments
+- `run`: Vector of samples to process
+- `channels`/`method`: Channels to use for outlier detection, or method from which to extract channels
+- `include_samples`: If true, also detect outliers in samples (not just standards)
+"""
 function detect_outliers!(run::Vector{Sample};
                           channels::AbstractVector=getChannels(run),
                           include_samples::Bool=false)
@@ -66,6 +95,18 @@ function win2outliers!(samp::Sample,
     samp.dat.outlier[i[outliers]] .= true
 end
 
+"""
+    moving_median_indices(n::Int; b=2)
+
+Generate index matrix for moving median calculation.
+
+# Arguments
+- `n`: Length of the time series
+- `b`: Bandwidth (default: 2)
+
+# Returns
+- Matrix of indices where each row contains the indices for computing the moving median at that position
+"""
 function moving_median_indices(n::Int;b::Int=2)
     offset = [collect(-b:-1);collect(1:b)]
     i = collect(1:n)

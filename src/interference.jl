@@ -1,3 +1,19 @@
+"""
+    interference_correction(dat::AbstractDataFrame, interferences::AbstractDict; bias=Dict(), blank=DataFrame())
+    interference_correction(dat::AbstractDataFrame, ion::AbstractString, interference::Interference; bias=Dict(), blank=DataFrame())
+    interference_correction(dat::AbstractDataFrame, proxy_channel::AbstractString, interference::REEInterference; bias=Dict(), blank=DataFrame())
+
+Apply interference corrections to measured data.
+
+# Arguments
+- `dat`: DataFrame containing measured data with a time column
+- `interferences`: Dictionary of interferences to correct for, or a single ion/channel and interference
+- `bias`: Optional dictionary of bias corrections
+- `blank`: Optional DataFrame with blank corrections
+
+# Returns
+- Vector of interference-corrected values
+"""
 function interference_correction(dat::AbstractDataFrame,
                                  interferences::AbstractDict;
                                  bias::AbstractDict=Dict(),

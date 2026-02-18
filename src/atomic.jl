@@ -1,3 +1,21 @@
+"""
+    atomic(samp::Sample, method::Gmethod, fit::Gfit; add_xy=false)
+
+Calculate atomic abundances (P, D, d) from measured signals.
+
+Applies all corrections (blank, interference, bias, fractionation) to convert
+raw signal intensities to corrected atomic abundances.
+
+# Arguments
+- `samp`: Sample to process
+- `method`: Geochronology method definition
+- `fit`: Fitted correction parameters
+- `add_xy`: Include x,y spatial coordinates if available (default: false)
+
+# Returns
+- Named tuple with fields P (parent), D (daughter), d (sister/normalizing isotope),
+  and optionally x, y coordinates
+"""
 function atomic(samp::Sample,
                 method::Gmethod,
                 fit::Gfit;

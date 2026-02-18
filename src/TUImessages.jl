@@ -211,7 +211,7 @@ function TUIprintRefmatInfo(refmat::DataFrameRow)
 end
 
 function TUIgetStandardsHelper(method::Gmethod;
-                               condition::Function= refmat -> return true)
+                               condition::Function= refmat -> true)
     refmats = _KJ["refmat"][method.name]
     out = OrderedDict()
     for i in eachindex(refmats.names)

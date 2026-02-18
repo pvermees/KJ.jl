@@ -117,11 +117,27 @@ function count_xs(response::AbstractString)
     if nx == nc return nx else return 0 end
 end
 
+"""
+    KJtree!(tree::AbstractDict)
+
+Set the KJ menu tree for the text user interface.
+
+# Arguments
+- `tree`: Dictionary defining the TUI menu structure
+"""
 function KJtree!(tree::AbstractDict)
     _KJ["tree"] = tree
 end
 export KJtree!
 
+"""
+    KJtree()
+
+Get the current KJ menu tree.
+
+# Returns
+- Dictionary containing the TUI menu structure
+"""
 function KJtree()
     return _KJ["tree"]
 end

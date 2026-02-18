@@ -1,3 +1,29 @@
+"""
+    plot(samp::Sample, method::KJmethod; channels=getChannels(method), fit=nothing, num="", den="", transformation="", ...)
+    plot(samp::Sample; channels=getChannels(samp), num="", den="", transformation="", offset=..., ...)
+
+Plot time-resolved LA-ICP-MS data for a sample.
+
+Displays signal intensities vs time with blank and signal windows marked.
+Optionally overlays fitted corrections if a fit object is provided.
+
+# Arguments
+- `samp`: Sample to plot
+- `method`: Method definition (optional, for determining channels and fit)
+- `channels`: Channels to display
+- `fit`: Fitted corrections to overlay (optional)
+- `num`, `den`: Numerator/denominator for ratio plots (default: plot raw signals)
+- `transformation`: Apply transformation ("log", "sqrt", or "")
+- `xlim`, `ylim`: Plot limits
+- `title`: Plot title
+- `legend`: Legend position
+- `cpalette`: Color palette
+- `ms`, `ma`: Marker size and alpha
+- Additional plotting options
+
+# Returns
+- Plots.jl plot object
+"""
 function plot(samp::Sample,
               method::KJmethod;
               channels::AbstractVector=getChannels(method),
@@ -38,7 +64,7 @@ function plot(samp::Sample,
                         linestyle=linestyle)
         end
         plotFittedBlank!(p,samp,method,fit;
-                         channels=channels,num,den=den,
+                         channels=channels,num=num,den=den,
                          transformation=transformation,offset=offset,
                          linecolor=linecolor,linestyle=linestyle)
     end
@@ -118,6 +144,21 @@ function get_ylim(dat::AbstractDataFrame,
     return (miny-buffer,maxy+buffer)
 end
 
+"""
+    prep_plot(samp::Sample, channels; offset=0.0, num="", den="", transformation="")
+
+Prepare data for plotting by extracting signals and applying transformations.
+
+# Arguments
+- `samp`: Sample to extract data from
+- `channels`: Channels to include
+- `offset`: Offset to add before transformation
+- `num`, `den`: For ratio plots
+- `transformation`: Transformation to apply
+
+# Returns
+- Tuple of (x, y, xlab, ylab) where x is time, y is DataFrame of processed signals
+"""
 function prep_plot(samp::Sample,
                    channels::AbstractVector;
                    offset::Number=0.0,
@@ -140,6 +181,22 @@ function prep_plot(samp::Sample,
     return x, y, xlab, ylab
 end
 export prep_plot
+
+"""
+    prep_plot(samp::Sample, channels; offset=0.0, num="", den="", transformation="")
+
+Prepare data for plotting by extracting signals and applying transformations.
+
+# Arguments
+- `samp`: Sample to extract data from
+- `channels`: Channels to include
+- `offset`: Offset to add before transformation
+- `num`, `den`: For ratio plots
+- `transformation`: Transformation to apply
+
+# Returns
+- Tuple of (x, y, xlab, ylab) where x is time, y is DataFrame of processed signals
+"""
 
 function plotFitted!(p,
                      samp::Sample,
@@ -183,6 +240,19 @@ function plotFitted!(p,
 end
 export plotFitted!
 
+"""
+    plotFitted!(p, samp::Sample, method::KJmethod, fit::KJfit; channels=..., num="", den="", transformation="", offset=0.0, linecolor=:black, linestyle=:solid)
+
+Overlay fitted signal predictions on an existing plot.
+
+# Arguments
+- `p`: Existing plot to overlay on
+- `samp`: Sample being plotted
+- `method`: Method definition
+- `fit`: Fit object with correction parameters
+- Additional arguments control what is plotted and how it appears
+"""
+
 function plotFittedBlank!(p,
                           samp::Sample,
                           method::KJmethod,
@@ -201,6 +271,19 @@ function plotFittedBlank!(p,
                 linecolor=linecolor,linestyle=linestyle)
 end
 export plotFittedBlank!
+
+"""
+    plotFittedBlank!(p, samp::Sample, method::KJmethod, fit::KJfit; channels=..., num="", den="", transformation="", offset=0.0, linecolor=:black, linestyle=:solid)
+
+Overlay fitted blank predictions on an existing plot.
+
+# Arguments
+- `p`: Existing plot to overlay on
+- `samp`: Sample being plotted
+- `method`: Method definition
+- `fit`: Fit object with blank parameters
+- Additional arguments control what is plotted and how it appears
+"""
 
 function plotMap(df::AbstractDataFrame,
                  column::AbstractString;
@@ -242,3 +325,25 @@ function plotMap(df::AbstractDataFrame,
     end
 end
 export plotMap
+
+"""
+    plotMap(df::AbstractDataFrame, column::AbstractString; clims=(), markersize=2, markershape=:square, colorbar_scale=:log10, aspect_ratio=:equal, color=:viridis, ignore_negative=false)
+
+Create a spatial map visualization of a data column.
+
+Requires that the DataFrame contains x and y coordinate columns.
+
+# Arguments
+- `df`: DataFrame containing data with x, y coordinates
+- `column`: Column name to visualize
+- `clims`: Color scale limits (optional)
+- `markersize`: Size of map points (default: 2)
+- `markershape`: Shape of markers (default: :square)
+- `colorbar_scale`: Scale for colorbar, typically :log10 or :identity (default: :log10)
+- `aspect_ratio`: Plot aspect ratio (default: :equal)
+- `color`: Color palette (default: :viridis)
+- `ignore_negative`: Exclude negative values from plot (default: false)
+
+# Returns
+- Plots.jl plot object, or nothing if x,y coordinates are missing
+"""

@@ -1019,15 +1019,6 @@ function TUIinterference2template(interference::REEInterference)
     return out
 end
 
-function TUImethod2text(m::Cmethod)
-    out  = "elements = (" * join(["\"" * channel * "\" => \"" * m.elements[channel] * "\"" for channel in keys(m.elements)], ",\n") * ")\n"
-    out *= "groups = Dict(" * join(["\"" * group * "\" => \"" * m.groups[group] * "\"" for group in keys(m.groups)], ",") * ")\n"
-    out *= "internal = (\"" * m.internal[1] * "\"," * string(m.internal[2]) * ")\n"
-    out *= "nblank = " * string(m.nblank) * "\n"
-    out *= "method = Cmethod(elements,groups,internal,nblank)\n"
-    return out
-end
-
 function TUImethod2text(method::Cmethod)
     out  = "elements = " * string(method.elements) * "\n"
     out *= "groups = " * string(method.groups) * "\n"

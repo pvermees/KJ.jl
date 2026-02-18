@@ -1,3 +1,19 @@
+"""
+    setBwin!(run::Vector{Sample}, bwin::AbstractVector; seconds=false)
+    setBwin!(samp::Sample, bwin::AbstractVector; seconds=false)
+    setBwin!(run::Vector{Sample})
+    setBwin!(samp::Sample)
+
+Set the blank window (bwin) for one or more samples.
+
+If `bwin` is provided, it is directly set (as indices or time in seconds if `seconds=true`).
+If no `bwin` is provided, an automatic blank window is calculated.
+
+# Arguments
+- `run`/`samp`: Vector of samples or single sample
+- `bwin`: Window specification (optional)
+- `seconds`: If true, interpret window as time in seconds; otherwise as indices
+"""
 function setBwin!(run::Vector{Sample},
                   bwin::AbstractVector;
                   seconds::Bool=false)
@@ -24,6 +40,22 @@ function setBwin!(samp::Sample)
 end
 export setBwin!
 
+"""
+    setSwin!(run::Vector{Sample}, swin::AbstractVector; seconds=false)
+    setSwin!(samp::Sample, swin::AbstractVector; seconds=false)
+    setSwin!(run::Vector{Sample})
+    setSwin!(samp::Sample)
+
+Set the signal window (swin) for one or more samples.
+
+If `swin` is provided, it is directly set (as indices or time in seconds if `seconds=true`).
+If no `swin` is provided, an automatic signal window is calculated.
+
+# Arguments
+- `run`/`samp`: Vector of samples or single sample
+- `swin`: Window specification (optional)
+- `seconds`: If true, interpret window as time in seconds; otherwise as indices
+"""
 function setSwin!(run::Vector{Sample},
                   swin::AbstractVector;
                   seconds::Bool=false)
@@ -50,6 +82,15 @@ function setSwin!(samp::Sample)
 end
 export setSwin!
 
+"""
+    shift_windows!(run::Vector{Sample}, shift::Number=0.0)
+
+Shift both blank and signal windows for all samples in a run by a given time offset.
+
+# Arguments
+- `run`: Vector of samples
+- `shift`: Time shift in seconds (default: 0.0)
+"""
 function shift_windows!(run::Vector{Sample},
                         shift::Number=0.0)
     for samp in run
@@ -74,6 +115,18 @@ function shift_windows!(run::Vector{Sample},
 end
 export shift_windows!
 
+"""
+    bwinData(samp::Sample; add_xy=false)
+
+Extract data from the blank window of a sample.
+
+# Arguments
+- `samp`: Sample to extract data from
+- `add_xy`: If true, include x,y coordinates if available
+
+# Returns
+- DataFrame containing the windowed data
+"""
 function bwinData(samp::Sample;
                   add_xy::Bool=false)
     windows = samp.bwin
@@ -83,6 +136,21 @@ function bwinData(samp::Sample;
 end
 export bwinData
 
+"""
+    swinData(samp::Sample; add_xy=false)
+
+Extract data from the signal window of a sample.
+
+The returned data includes a `T` column with relative time in minutes from t0.
+If x,y coordinates are available and `add_xy=true`, they are also included.
+
+# Arguments
+- `samp`: Sample to extract data from
+- `add_xy`: If true, include x,y coordinates if available
+
+# Returns
+- DataFrame containing the windowed data with time column `T` in minutes
+"""
 function swinData(samp::Sample;
                   add_xy::Bool=false)
     windows = samp.swin
