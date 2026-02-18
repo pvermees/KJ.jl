@@ -3,10 +3,15 @@ using Documenter, KJ
 makedocs(
     ;
     modules = [KJ],
-    sitename="KJ.jl",
+    sitename = "KJ.jl",
     pages = [
         "Home" => "index.md",
     ],
+    # Ensure source links resolve even if the module is not loaded from a git checkout.
+    remotes = Dict(
+        joinpath(@__DIR__, "..") => Documenter.Remotes.GitHub("pvermees", "KJ.jl"),
+    ),
+    format = Documenter.HTML(edit_link = "beta"),
 )
 
 deploydocs(
