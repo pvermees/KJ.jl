@@ -153,6 +153,27 @@ function mahalanobis(mf::AbstractVector,
     return @. (bmb-D*bd*mf*y)*((vD*(bmb-D*bd*mf*y))/(vD*vb-sDb^2)-((Dmb-D)*sDb)/(vD*vb-sDb^2))+(Dmb-D)*(((Dmb-D)*vb)/(vD*vb-sDb^2)-(sDb*(bmb-D*bd*mf*y))/(vD*vb-sDb^2))
 end
 
+"""
+    SS(a::AbstractAnchor, ft::AbstractVector, hT::AbstractVector; cruncher...)
+    SS(par::AbstractVector, method::Gmethod, cruncher_groups::AbstractDict; verbose=false)
+    SS(bias::AbstractBias; cruncher...)
+
+Calculate the sum of squares objective function for optimization.
+
+This function computes the weighted sum of squared residuals between
+measured and predicted values, used for fitting fractionation corrections
+and bias terms.
+
+# Arguments
+- `a`/`par`: Anchor point or parameter vector
+- `ft`, `hT`: Fractionation factors (for anchor-based calls)
+- `method`: Geochronology method (for parameter-based calls)
+- `cruncher`/`cruncher_groups`: Data and covariances
+- `verbose`: Print diagnostic information
+
+# Returns
+- Sum of squared Mahalanobis distances
+"""
 function SS(a::IsochronAnchor,
             ft::AbstractVector,
             hT::AbstractVector;
@@ -240,25 +261,3 @@ function SS(par::AbstractVector,
     return out
 end
 export SS
-
-"""
-    SS(a::AbstractAnchor, ft::AbstractVector, hT::AbstractVector; cruncher...)
-    SS(par::AbstractVector, method::Gmethod, cruncher_groups::AbstractDict; verbose=false)
-    SS(bias::AbstractBias; cruncher...)
-
-Calculate the sum of squares objective function for optimization.
-
-This function computes the weighted sum of squared residuals between
-measured and predicted values, used for fitting fractionation corrections
-and bias terms.
-
-# Arguments
-- `a`/`par`: Anchor point or parameter vector
-- `ft`, `hT`: Fractionation factors (for anchor-based calls)
-- `method`: Geochronology method (for parameter-based calls)
-- `cruncher`/`cruncher_groups`: Data and covariances
-- `verbose`: Print diagnostic information
-
-# Returns
-- Sum of squared Mahalanobis distances
-"""

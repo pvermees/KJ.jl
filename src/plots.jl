@@ -183,21 +183,17 @@ end
 export prep_plot
 
 """
-    prep_plot(samp::Sample, channels; offset=0.0, num="", den="", transformation="")
+    plotFitted!(p, samp::Sample, method::KJmethod, fit::KJfit; channels=..., num="", den="", transformation="", offset=0.0, linecolor=:black, linestyle=:solid)
 
-Prepare data for plotting by extracting signals and applying transformations.
+Overlay fitted signal predictions on an existing plot.
 
 # Arguments
-- `samp`: Sample to extract data from
-- `channels`: Channels to include
-- `offset`: Offset to add before transformation
-- `num`, `den`: For ratio plots
-- `transformation`: Transformation to apply
-
-# Returns
-- Tuple of (x, y, xlab, ylab) where x is time, y is DataFrame of processed signals
+- `p`: Existing plot to overlay on
+- `samp`: Sample being plotted
+- `method`: Method definition
+- `fit`: Fit object with correction parameters
+- Additional arguments control what is plotted and how it appears
 """
-
 function plotFitted!(p,
                      samp::Sample,
                      method::KJmethod,
@@ -241,18 +237,17 @@ end
 export plotFitted!
 
 """
-    plotFitted!(p, samp::Sample, method::KJmethod, fit::KJfit; channels=..., num="", den="", transformation="", offset=0.0, linecolor=:black, linestyle=:solid)
+    plotFittedBlank!(p, samp::Sample, method::KJmethod, fit::KJfit; channels=..., num="", den="", transformation="", offset=0.0, linecolor=:black, linestyle=:solid)
 
-Overlay fitted signal predictions on an existing plot.
+Overlay fitted blank predictions on an existing plot.
 
 # Arguments
 - `p`: Existing plot to overlay on
 - `samp`: Sample being plotted
 - `method`: Method definition
-- `fit`: Fit object with correction parameters
+- `fit`: Fit object with blank parameters
 - Additional arguments control what is plotted and how it appears
 """
-
 function plotFittedBlank!(p,
                           samp::Sample,
                           method::KJmethod,
@@ -273,18 +268,26 @@ end
 export plotFittedBlank!
 
 """
-    plotFittedBlank!(p, samp::Sample, method::KJmethod, fit::KJfit; channels=..., num="", den="", transformation="", offset=0.0, linecolor=:black, linestyle=:solid)
+    plotMap(df::AbstractDataFrame, column::AbstractString; clims=(), markersize=2, markershape=:square, colorbar_scale=:log10, aspect_ratio=:equal, color=:viridis, ignore_negative=false)
 
-Overlay fitted blank predictions on an existing plot.
+Create a spatial map visualization of a data column.
+
+Requires that the DataFrame contains x and y coordinate columns.
 
 # Arguments
-- `p`: Existing plot to overlay on
-- `samp`: Sample being plotted
-- `method`: Method definition
-- `fit`: Fit object with blank parameters
-- Additional arguments control what is plotted and how it appears
-"""
+- `df`: DataFrame containing data with x, y coordinates
+- `column`: Column name to visualize
+- `clims`: Color scale limits (optional)
+- `markersize`: Size of map points (default: 2)
+- `markershape`: Shape of markers (default: :square)
+- `colorbar_scale`: Scale for colorbar, typically :log10 or :identity (default: :log10)
+- `aspect_ratio`: Plot aspect ratio (default: :equal)
+- `color`: Color palette (default: :viridis)
+- `ignore_negative`: Exclude negative values from plot (default: false)
 
+# Returns
+- Plots.jl plot object, or nothing if x,y coordinates are missing
+"""
 function plotMap(df::AbstractDataFrame,
                  column::AbstractString;
                  clims::Tuple=(),
@@ -325,25 +328,3 @@ function plotMap(df::AbstractDataFrame,
     end
 end
 export plotMap
-
-"""
-    plotMap(df::AbstractDataFrame, column::AbstractString; clims=(), markersize=2, markershape=:square, colorbar_scale=:log10, aspect_ratio=:equal, color=:viridis, ignore_negative=false)
-
-Create a spatial map visualization of a data column.
-
-Requires that the DataFrame contains x and y coordinate columns.
-
-# Arguments
-- `df`: DataFrame containing data with x, y coordinates
-- `column`: Column name to visualize
-- `clims`: Color scale limits (optional)
-- `markersize`: Size of map points (default: 2)
-- `markershape`: Shape of markers (default: :square)
-- `colorbar_scale`: Scale for colorbar, typically :log10 or :identity (default: :log10)
-- `aspect_ratio`: Plot aspect ratio (default: :equal)
-- `color`: Color palette (default: :viridis)
-- `ignore_negative`: Exclude negative values from plot (default: false)
-
-# Returns
-- Plots.jl plot object, or nothing if x,y coordinates are missing
-"""
