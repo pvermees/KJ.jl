@@ -505,7 +505,7 @@ function internochronUPbtest(show=true)
 end
 
 function maptest()
-    myrun = load("data/timestamp/NHM_cropped.csv",
+    myrun = load("data/timestamp/NHM_data.csv",
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
     method = Cmethod(myrun;
@@ -522,7 +522,7 @@ function maptest()
 end
 
 function map_dating_test()
-    myrun = load("data/timestamp/NHM_cropped.csv",
+    myrun = load("data/timestamp/NHM_data.csv",
                  "data/timestamp/NHM_timestamps.csv";
                  format="Agilent")
     method = Gmethod(name="U-Pb",groups=Dict("91500"=>"91500"))
