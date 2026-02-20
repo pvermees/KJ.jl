@@ -13,14 +13,12 @@ makedocs(
     remotes = Dict(
         joinpath(@__DIR__, "..") => Documenter.Remotes.GitHub("pvermees", "KJ.jl"),
     ),
-    format = Documenter.HTML(edit_link = "beta"),
+    format = Documenter.HTML(edit_link = "main"),
 )
 
 deploydocs(
     ;
-    repo = "github.com/pvermees/KJ.jl",
-    devbranch = "beta",
-    # Only push previews if all the relevant environment variables are non-empty. This is an
-    # attempt to work around https://github.com/JuliaDocs/Documenter.jl/issues/2048.
-    push_preview = all(!isempty, (get(ENV, "GITHUB_TOKEN", ""), get(ENV, "DOCUMENTER_KEY", ""))),
+    repo = "github.com/pvermees/KJ.jl.git",
+    devbranch = "main",
+    push_preview = false,
 )

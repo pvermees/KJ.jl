@@ -2,6 +2,8 @@
 
 ## Julia package for LA-ICP-MS data reduction
 
+📖 **Documentation:** <https://pvermees.github.io/KJ.jl/>
+
 KJ ("Kasper Julia") is still in development and has not yet been added
 to the [Julia](https://julialang.org/) package repository. However, if
 you want to play around with the current functionality, then you can
@@ -188,3 +190,12 @@ x
 julia> ctrl = getKJctrl();
 julia> KJ.plot(ctrl["run"][1])
 ```
+
+## Building the Documentation Locally
+
+```
+julia --project=docs -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+julia --project=docs docs/make.jl
+```
+
+The generated site will be placed in `docs/build/`.
