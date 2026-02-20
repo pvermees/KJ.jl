@@ -95,7 +95,7 @@ x: Exit
 v
 ```
 
-<img src="./img/plot.png" width="480px">
+<img src="./docs/src/assets/plot.png" width="480px">
 
 ## REPL (command-line interface)
 

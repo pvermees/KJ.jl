@@ -697,12 +697,19 @@ function TUItitle(ctrl::AbstractDict)
 end
 
 function TUIplotter(ctrl::AbstractDict)
-    p = plot(ctrl["run"][ctrl["i"]],
-             ctrl["method"];
-             fit=ctrl["fit"],
-             den=ctrl["den"],
-             transformation=ctrl["transformation"],
-             title=TUItitle(ctrl))
+    if isnothing(ctrl["method"])
+        p = plot(ctrl["run"][ctrl["i"]];
+                 den=ctrl["den"],
+                 transformation=ctrl["transformation"],
+                 title=TUItitle(ctrl))
+    else 
+        p = plot(ctrl["run"][ctrl["i"]],
+                 ctrl["method"];
+                 fit=ctrl["fit"],
+                 den=ctrl["den"],
+                 transformation=ctrl["transformation"],
+                 title=TUItitle(ctrl))
+    end
     if ctrl["method"] isa Gmethod && isfinite(ctrl["method"].PAcutoff)
         TUIaddPAline!(p,ctrl["method"].PAcutoff)
     end
