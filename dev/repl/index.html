@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>REPL · KJ.jl</title><meta name="title" content="REPL · KJ.jl"/><meta property="og:title" content="REPL · KJ.jl"/><meta property="twitter:title" content="REPL · KJ.jl"/><meta name="description" content="Documentation for KJ.jl."/><meta property="og:description" content="Documentation for KJ.jl."/><meta property="twitter:description" content="Documentation for KJ.jl."/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.svg" alt="KJ.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">KJ.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>REPL</a><ul class="internal"><li><a class="tocitem" href="#Loading-Data"><span>Loading Data</span></a></li><li><a class="tocitem" href="#Defining-Analysis-Methods"><span>Defining Analysis Methods</span></a></li><li><a class="tocitem" href="#Setting-Groups-and-Standards"><span>Setting Groups and Standards</span></a></li><li><a class="tocitem" href="#Processing-Data"><span>Processing Data</span></a></li><li><a class="tocitem" href="#Visualization"><span>Visualization</span></a></li><li><a class="tocitem" href="#Outlier-Detection"><span>Outlier Detection</span></a></li><li><a class="tocitem" href="#Data-Analysis-and-Statistics"><span>Data Analysis and Statistics</span></a></li><li><a class="tocitem" href="#Exporting-Results"><span>Exporting Results</span></a></li></ul></li><li><a class="tocitem" href="../tui/">TUI</a></li><li><a class="tocitem" href="../api/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>REPL</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>REPL</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/pvermees/KJ.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/pvermees/KJ.jl/blob/main/docs/src/repl.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Command-line-interface-(REPL)"><a class="docs-heading-anchor" href="#Command-line-interface-(REPL)">Command-line interface (REPL)</a><a id="Command-line-interface-(REPL)-1"></a><a class="docs-heading-anchor-permalink" href="#Command-line-interface-(REPL)" title="Permalink"></a></h1><p>Advanced users can interact directly with KJ via the Julia REPL (&quot;read-eval-print loop&quot;) for maximum flexibility and control over data processing pipelines.</p><h2 id="Loading-Data"><a class="docs-heading-anchor" href="#Loading-Data">Loading Data</a><a id="Loading-Data-1"></a><a class="docs-heading-anchor-permalink" href="#Loading-Data" title="Permalink"></a></h2><p>Load LA-ICP-MS data from a directory:</p><pre><code class="language-julia hljs">using KJ
+
+# Load data in Agilent format
+myrun = load(&quot;data/Lu-Hf&quot;; format=&quot;Agilent&quot;)
+
+# Load data in ThermoFisher format
+myrun = load(&quot;data/iCap&quot;; format=&quot;ThermoFisher&quot;)
+
+# Load data with timestamps from separate file
+myrun = load(&quot;data/timestamp/Moreira_data.csv&quot;,
+             &quot;data/timestamp/Moreira_timestamps.csv&quot;;
+             format=&quot;Agilent&quot;)
+
+# View a summary of the loaded data
+summarise(myrun)</code></pre><h2 id="Defining-Analysis-Methods"><a class="docs-heading-anchor" href="#Defining-Analysis-Methods">Defining Analysis Methods</a><a id="Defining-Analysis-Methods-1"></a><a class="docs-heading-anchor-permalink" href="#Defining-Analysis-Methods" title="Permalink"></a></h2><h3 id="Simple-Method-Definition"><a class="docs-heading-anchor" href="#Simple-Method-Definition">Simple Method Definition</a><a id="Simple-Method-Definition-1"></a><a class="docs-heading-anchor-permalink" href="#Simple-Method-Definition" title="Permalink"></a></h3><p>Create a method for standard isotopic ratio measurements:</p><pre><code class="language-julia hljs"># U-Pb dating method
+method = Gmethod(name=&quot;U-Pb&quot;, groups=Dict(&quot;STDCZ&quot; =&gt; &quot;Plesovice&quot;))
+
+# Lu-Hf method with custom pairings
+method = Gmethod(name=&quot;Lu-Hf&quot;,
+                 groups=Dict(&quot;hogsbo&quot; =&gt; &quot;Hogsbo&quot;, &quot;NIST612p&quot; =&gt; &quot;NIST612&quot;),
+                 P=Pairing(ion=&quot;Lu176&quot;, proxy=&quot;Lu175&quot;, channel=&quot;Lu175 -&gt; 175&quot;),
+                 D=Pairing(ion=&quot;Hf176&quot;, channel=&quot;Hf176 -&gt; 258&quot;),
+                 d=Pairing(ion=&quot;Hf177&quot;, proxy=&quot;Hf178&quot;, channel=&quot;Hf178 -&gt; 260&quot;),
+                 standards=Set([&quot;hogsbo&quot;]))</code></pre><h3 id="Advanced-Method-Configuration"><a class="docs-heading-anchor" href="#Advanced-Method-Configuration">Advanced Method Configuration</a><a id="Advanced-Method-Configuration-1"></a><a class="docs-heading-anchor-permalink" href="#Advanced-Method-Configuration" title="Permalink"></a></h3><p>Add calibrations and interference corrections:</p><pre><code class="language-julia hljs"># Add mass bias calibration
+Calibration!(method; standards=Set([&quot;NIST612p&quot;]))
+
+# Define interference for a particular ion
+method.D.interferences[&quot;Lu176&quot;] = Interference(proxy=&quot;Lu175&quot;, channel=&quot;Lu175 -&gt; 257&quot;)
+
+# Re-Os example with complex interferences
+method = Gmethod(name=&quot;Re-Os&quot;,
+                 groups=Dict(&quot;Nis3&quot; =&gt; &quot;NiS-3&quot;,
+                             &quot;Nist_massbias&quot; =&gt; &quot;NIST610&quot;,
+                             &quot;Nist_REEint&quot; =&gt; &quot;NIST610&quot;,
+                             &quot;Qmoly&quot; =&gt; &quot;QMolyHill&quot;),
+                 P=Pairing(ion=&quot;Re187&quot;, proxy=&quot;Re185&quot;, channel=&quot;Re185 -&gt; 185&quot;),
+                 D=Pairing(ion=&quot;Os187&quot;, channel=&quot;Os187 -&gt; 251&quot;),
+                 d=Pairing(ion=&quot;Os188&quot;, proxy=&quot;Os189&quot;, channel=&quot;Os189 -&gt; 253&quot;),
+                 standards=Set([&quot;Qmoly&quot;]))
+
+# Add REE interference correction
+method.P.interferences[&quot;Tm169 -&gt; 185&quot;] = REEInterference(REE=&quot;Lu175 -&gt; 191&quot;,
+                                                        REEO=&quot;Ir191 -&gt; 191&quot;,
+                                                        standards=Set([&quot;Nist_REEint&quot;]))</code></pre><h3 id="Concentration-Method"><a class="docs-heading-anchor" href="#Concentration-Method">Concentration Method</a><a id="Concentration-Method-1"></a><a class="docs-heading-anchor-permalink" href="#Concentration-Method" title="Permalink"></a></h3><p>For elemental concentration determinations:</p><pre><code class="language-julia hljs"># Define an internal standard-based method
+method = Cmethod(myrun;
+                 groups=Dict(&quot;NIST612p&quot; =&gt; &quot;NIST612&quot;),
+                 internal=(&quot;Al27 -&gt; 27&quot;, 1.2e5))</code></pre><h2 id="Setting-Groups-and-Standards"><a class="docs-heading-anchor" href="#Setting-Groups-and-Standards">Setting Groups and Standards</a><a id="Setting-Groups-and-Standards-1"></a><a class="docs-heading-anchor-permalink" href="#Setting-Groups-and-Standards" title="Permalink"></a></h2><p>Assign reference material group classifications to samples:</p><pre><code class="language-julia hljs"># Set groups based on filename patterns
+groups = Dict(&quot;Nis3&quot; =&gt; &quot;NiS-3&quot;,
+              &quot;Nist_massbias&quot; =&gt; &quot;NIST610&quot;,
+              &quot;Qmoly&quot; =&gt; &quot;QMolyHill&quot;)
+setGroup!(myrun, collect(keys(groups)))
+
+# Or set directly via method
+setGroup!(myrun, method)</code></pre><h2 id="Processing-Data"><a class="docs-heading-anchor" href="#Processing-Data">Processing Data</a><a id="Processing-Data-1"></a><a class="docs-heading-anchor-permalink" href="#Processing-Data" title="Permalink"></a></h2><h3 id="Window-Setting"><a class="docs-heading-anchor" href="#Window-Setting">Window Setting</a><a id="Window-Setting-1"></a><a class="docs-heading-anchor-permalink" href="#Window-Setting" title="Permalink"></a></h3><p>Define background and signal windows:</p><pre><code class="language-julia hljs"># Set automatic windows based on data features
+setBwin!(myrun)  # Background windows
+setSwin!(myrun)  # Signal windows
+
+# Manually override for specific sample
+sample_index = 2
+setSwin!(myrun[sample_index], [(70,90), (100,140)])
+setBwin!(myrun[sample_index], [(0,22)]; seconds=true)
+
+# Visualize windows
+p = KJ.plot(myrun[sample_index];
+            channels=[&quot;Hf176 -&gt; 258&quot;, &quot;Hf178 -&gt; 260&quot;])
+display(p)</code></pre><h3 id="Basic-Processing"><a class="docs-heading-anchor" href="#Basic-Processing">Basic Processing</a><a id="Basic-Processing-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Processing" title="Permalink"></a></h3><p>Process the entire dataset with a single command:</p><pre><code class="language-julia hljs"># Define method and process
+method = Gmethod(name=&quot;U-Pb&quot;, groups=Dict(&quot;STDCZ&quot; =&gt; &quot;Plesovice&quot;, &quot;91500&quot; =&gt; &quot;91500&quot;))
+fit = process!(myrun, method)
+
+# Access drift and downhole fractionation parameters
+println(&quot;Drift: &quot;, fit.drift, &quot;, Downhole: &quot;, fit.down)</code></pre><h2 id="Visualization"><a class="docs-heading-anchor" href="#Visualization">Visualization</a><a id="Visualization-1"></a><a class="docs-heading-anchor-permalink" href="#Visualization" title="Permalink"></a></h2><h3 id="Basic-Plotting"><a class="docs-heading-anchor" href="#Basic-Plotting">Basic Plotting</a><a id="Basic-Plotting-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Plotting" title="Permalink"></a></h3><p>View individual analyses:</p><pre><code class="language-julia hljs"># Plot a sample with specified channels
+p = KJ.plot(myrun[1]; channels=[&quot;Hf176 -&gt; 258&quot;, &quot;Hf178 -&gt; 260&quot;])
+display(p)
+
+# Plot with log transformation
+p = KJ.plot(myrun[1];
+            channels=[&quot;Lu175 -&gt; 175&quot;, &quot;Hf176 -&gt; 258&quot;, &quot;Hf178 -&gt; 260&quot;],
+            den=&quot;Hf178 -&gt; 260&quot;,
+            transformation=&quot;log&quot;)
+display(p)</code></pre><h3 id="Processing-Results"><a class="docs-heading-anchor" href="#Processing-Results">Processing Results</a><a id="Processing-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Processing-Results" title="Permalink"></a></h3><p>Visualize fitted results:</p><pre><code class="language-julia hljs"># Plot a standard with fitted results
+p = KJ.plot(myrun[2], method; fit=fit,
+            transformation=&quot;log&quot;,
+            den=method.D.channel)
+display(p)
+
+# Plot predicted isochron
+p = KJ.plot(samp, method; fit=fit,
+            den=method.D.channel,
+            transformation=&quot;log&quot;,
+            return_offset=true)</code></pre><h3 id="Specialized-Plots"><a class="docs-heading-anchor" href="#Specialized-Plots">Specialized Plots</a><a id="Specialized-Plots-1"></a><a class="docs-heading-anchor-permalink" href="#Specialized-Plots" title="Permalink"></a></h3><p>Plot various data features:</p><pre><code class="language-julia hljs"># Plot internal isochron
+p = internoplot(myrun[7], method, fit)
+display(p)
+
+# Plot elemental concentration map
+p = plotMap(conc, &quot;ppm[U] from U238&quot;; clims=(0, 500))
+display(p)</code></pre><h2 id="Outlier-Detection"><a class="docs-heading-anchor" href="#Outlier-Detection">Outlier Detection</a><a id="Outlier-Detection-1"></a><a class="docs-heading-anchor-permalink" href="#Outlier-Detection" title="Permalink"></a></h2><p>Detect and flag anomalies:</p><pre><code class="language-julia hljs"># Detect outliers in specified channels
+channels = [&quot;K39 -&gt; 39&quot;, &quot;Ca40 -&gt; 59&quot;, &quot;Ca44 -&gt; 63&quot;]
+detect_outliers!(myrun; include_samples=true, channels=channels)
+
+# Visualize outliers
+p = KJ.plot(myrun[1]; channels=channels, transformation=&quot;log&quot;)
+display(p)</code></pre><h2 id="Data-Analysis-and-Statistics"><a class="docs-heading-anchor" href="#Data-Analysis-and-Statistics">Data Analysis and Statistics</a><a id="Data-Analysis-and-Statistics-1"></a><a class="docs-heading-anchor-permalink" href="#Data-Analysis-and-Statistics" title="Permalink"></a></h2><h3 id="Extract-Isotopic-Ratios"><a class="docs-heading-anchor" href="#Extract-Isotopic-Ratios">Extract Isotopic Ratios</a><a id="Extract-Isotopic-Ratios-1"></a><a class="docs-heading-anchor-permalink" href="#Extract-Isotopic-Ratios" title="Permalink"></a></h3><p>Compute mean isotopic ratios for all samples:</p><pre><code class="language-julia hljs"># Average ratios across all measurements
+ratios = averat(myrun, method, fit)
+
+# Filter by sample prefix and export
+selection = prefix2subset(ratios, &quot;hogsbo&quot;)</code></pre><h3 id="Atomic-scale-Analysis"><a class="docs-heading-anchor" href="#Atomic-scale-Analysis">Atomic-scale Analysis</a><a id="Atomic-scale-Analysis-1"></a><a class="docs-heading-anchor-permalink" href="#Atomic-scale-Analysis" title="Permalink"></a></h3><p>Compute spatial variations of isotopic ratios:</p><pre><code class="language-julia hljs"># Get position-dependent isotopic data
+a = atomic(myrun[2], method, fit)
+
+# Add x-y position information (for maps)
+a = atomic(myrun[10], method, fit; add_xy=true)
+
+# Convert to DataFrame for further analysis
+df = DataFrame(a)</code></pre><h3 id="Internal-Isochron-Calculation"><a class="docs-heading-anchor" href="#Internal-Isochron-Calculation">Internal Isochron Calculation</a><a id="Internal-Isochron-Calculation-1"></a><a class="docs-heading-anchor-permalink" href="#Internal-Isochron-Calculation" title="Permalink"></a></h3><p>Compute internal (within-grain) isochrons:</p><pre><code class="language-julia hljs"># Calculate internal isochron from line transect
+isochron = internochron(myrun, method, fit)
+
+# Save to CSV
+CSV.write(&quot;output/isochron.csv&quot;, isochron)</code></pre><h2 id="Exporting-Results"><a class="docs-heading-anchor" href="#Exporting-Results">Exporting Results</a><a id="Exporting-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Exporting-Results" title="Permalink"></a></h2><h3 id="IsoplotR-Format"><a class="docs-heading-anchor" href="#IsoplotR-Format">IsoplotR Format</a><a id="IsoplotR-Format-1"></a><a class="docs-heading-anchor-permalink" href="#IsoplotR-Format" title="Permalink"></a></h3><p>Export results for use in IsoplotR:</p><pre><code class="language-julia hljs"># Export all samples
+export2IsoplotR(myrun, method, fit; fname=&quot;output/U-Pb.json&quot;)
+
+# Export with prefix filter
+export2IsoplotR(myrun, method, fit;
+                prefix=&quot;Duff&quot;,
+                fname=&quot;output/Duff.json&quot;)
+
+# Export pre-computed ratios
+export2IsoplotR(ratios, method; fname=&quot;output/Lu-Hf.json&quot;)</code></pre><h3 id="CSV-Export"><a class="docs-heading-anchor" href="#CSV-Export">CSV Export</a><a id="CSV-Export-1"></a><a class="docs-heading-anchor-permalink" href="#CSV-Export" title="Permalink"></a></h3><p>Save ratio tables to CSV:</p><pre><code class="language-julia hljs">using CSV
+
+# Export averaged ratios
+CSV.write(&quot;output/Lu-Hf.csv&quot;, selection)
+
+# Export concentrations
+conc = concentrations(myrun, method, fit)
+CSV.write(&quot;output/concentrations.csv&quot;, conc)</code></pre><p>For detailed function documentation, see the <a href="../api/">API reference</a>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../tui/">TUI »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Friday 20 February 2026 14:47">Friday 20 February 2026</span>. Using Julia version 1.12.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
