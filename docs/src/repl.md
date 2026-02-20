@@ -223,6 +223,7 @@ a = atomic(myrun[2], method, fit)
 a = atomic(myrun[10], method, fit; add_xy=true)
 
 # Convert to DataFrame for further analysis
+using DataFrames
 df = DataFrame(a)
 ```
 
