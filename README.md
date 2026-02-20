@@ -20,7 +20,7 @@ To save yourself some time when you run `KJ` later on, it is useful
 (but not strictly necessary) to *precompile* the package now:
 
 ```
-Pkg.build("KJ")
+Pkg.precompile("KJ")
 ```
 
 There are four ways to interact with KJ:

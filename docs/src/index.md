@@ -13,7 +13,7 @@ import Pkg; Pkg.add(url="https://github.com/pvermees/KJ.jl.git")
 Optionally, precompile the package for faster startup:
 
 ```julia
-Pkg.build("KJ")
+Pkg.precompile("KJ")
 ```
 
 ## Ways to Interact with KJ
@@ -33,8 +33,6 @@ This launches an interactive menu where you can:
 - View and adjust samples
 - Set interferences and fractionation corrections
 - Process data and export results
-
-The TUI provides options for reading data files, specifying methods, adjusting samples, handling interferences, applying fractionation and mass bias corrections, processing data, and exporting results.
 
 ### 2. REPL (Command-Line Interface)
 
@@ -78,6 +76,6 @@ You can also synchronize changes made in the REPL back to the TUI:
 julia> setKJctrl!(ctrl)
 julia> TUI()  # Resume with updated settings
 ```
-Seamlessly switch between the TUI and REPL. Store TUI settings into a variable and manipulate them programmatically using `getKJctrl()` and `setKJctrl()` functions.
+Seamlessly switch between the TUI and REPL. Store TUI settings into a variable and manipulate them programmatically using `getKJctrl()` and `setKJctrl!()` functions.
 
 See the [API documentation](api.md) for complete function reference.
