@@ -75,7 +75,7 @@ function init_stoichiometry(csv::AbstractString=joinpath(@__DIR__,"../settings/s
 end
 
 function init_stoichiometry!(csv::AbstractString=joinpath(@__DIR__,"../settings/stoichiometry.csv"))
-    _KJ["stoichiometry"] = init_stoichiometry(csv)
+    _KJ[]["stoichiometry"] = init_stoichiometry(csv)
 end
 
 function init_glass(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv"))
@@ -88,7 +88,7 @@ function init_glass(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv
 end
 
 function init_glass!(csv::AbstractString=joinpath(@__DIR__,"../settings/glass.csv"))
-    _KJ["glass"] = init_glass(csv)
+    _KJ[]["glass"] = init_glass(csv)
 end
 
 function init_referenceMaterials(;isochrons::AbstractString=joinpath(@__DIR__,"../settings/standards/isochron.csv"),
@@ -113,7 +113,7 @@ end
 function init_referenceMaterials!(;isochrons::AbstractString=joinpath(@__DIR__,"../settings/standards/isochron.csv"),
                                    points::AbstractString=joinpath(@__DIR__,"../settings/standards/point.csv"),
                                    bias::AbstractString=joinpath(@__DIR__,"../settings/standards/bias.csv"))
-    _KJ["refmat"] = init_referenceMaterials(;isochrons=isochrons,
+    _KJ[]["refmat"] = init_referenceMaterials(;isochrons=isochrons,
                                              points=points,
                                              bias=bias)
 end

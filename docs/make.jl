@@ -6,6 +6,8 @@ makedocs(
     sitename = "KJ.jl",
     pages = [
         "Home" => "index.md",
+        "TUI" => "tui.md",
+        "API" => "api.md",
     ],
     # Ensure source links resolve even if the module is not loaded from a git checkout.
     remotes = Dict(
