@@ -1,6 +1,6 @@
 # KJ.jl
 
-KJ ("Kasper Julia") is a Julia package for **LA-ICP-MS data reduction** (Laser Ablation Inductively Coupled Plasma Mass Spectrometry). The package is still in development and currently available via GitHub.
+KJ ("Kasper Julia") is a Julia package for **LA-ICP-MS data reduction** (Laser Ablation Inductively Coupled Plasma Mass Spectrometry).
 
 ## Installation
 
@@ -19,30 +19,32 @@ Pkg.build("KJ")
 ## Ways to Interact with KJ
 
 ### 1. TUI (Text-Based User Interface)
-An interactive menu-driven interface for performing analyses:
 
+KJ provides an interactive text-based user interface for data processing workflows.
+
+```julia
+using KJ
+TUI()
 ```
-julia> using KJ
-julia> TUI()
-```
+
+This launches an interactive menu where you can:
+- Load LA-ICP-MS data files
+- Specify analysis methods
+- View and adjust samples
+- Set interferences and fractionation corrections
+- Process data and export results
 
 The TUI provides options for reading data files, specifying methods, adjusting samples, handling interferences, applying fractionation and mass bias corrections, processing data, and exporting results.
 
 ### 2. REPL (Command-Line Interface)
-Advanced users can use Julia's command-line interface for direct scripting and analysis control (see Quick Start below).
 
-### 3. Hybrid: TUI + REPL
-Seamlessly switch between the TUI and REPL. Store TUI settings into a variable and manipulate them programmatically using `getKJctrl()` and `setKJctrl()` functions.
-
-## Quick Start
-
-Load and process data using the REPL:
+Advanced users can use Julia's command-line interface for direct scripting and analysis control. Here is a simple example of a U-Pb data processing session using test data that is packaged with `KJ`:
 
 ```julia
 using KJ
 
 # Load LA-ICP-MS data
-myrun = load("data/U-Pb"; format="Agilent")
+myrun = load("data/U-Pb"; format="Agilent", head2name=false)
 
 # Define the analysis method
 method = Gmethod(name="U-Pb", groups=Dict("STDCZ" => "Plesovice"))
@@ -55,5 +57,27 @@ export2IsoplotR(myrun, method, fit; fname="output/U-Pb.json")
 ```
 
 Type `?load`, `?process!`, `?export2IsoplotR`, or `?KJ` at the REPL for detailed documentation.
+
+### 3. Hybrid: TUI + REPL
+
+You can seamlessly switch between the TUI and REPL. From the TUI, press `x` twice to exit and return to the Julia REPL:
+
+```julia
+julia> TUI()
+# ... use TUI ...
+# press 'x' to exit
+
+julia> ctrl = getKJctrl()
+julia> samp = ctrl["run"][1]
+julia> plot(samp)
+```
+
+You can also synchronize changes made in the REPL back to the TUI:
+
+```julia
+julia> setKJctrl!(ctrl)
+julia> TUI()  # Resume with updated settings
+```
+Seamlessly switch between the TUI and REPL. Store TUI settings into a variable and manipulate them programmatically using `getKJctrl()` and `setKJctrl()` functions.
 
 See the [API documentation](api.md) for complete function reference.
