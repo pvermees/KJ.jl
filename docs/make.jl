@@ -6,6 +6,7 @@ makedocs(
     sitename = "KJ.jl",
     pages = [
         "Home" => "index.md",
+        "REPL" => "repl.md",
         "TUI" => "tui.md",
         "API" => "api.md",
     ],
