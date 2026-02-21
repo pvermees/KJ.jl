@@ -34,6 +34,8 @@ This launches an interactive menu where you can:
 - Set interferences and fractionation corrections
 - Process data and export results
 
+Further details about the TUI are provided [HERE](tui.md).
+
 ### 2. REPL (Command-Line Interface)
 
 Advanced users can use Julia's command-line interface for direct scripting and analysis control. Here is a simple example of a U-Pb data processing session using test data that is packaged with `KJ`:
@@ -56,6 +58,8 @@ export2IsoplotR(myrun, method, fit; fname="output/U-Pb.json")
 
 Type `?load`, `?process!`, `?export2IsoplotR`, or `?KJ` at the REPL for detailed documentation.
 
+Further CLI examples are provided [HERE](repl.md).
+
 ### 3. Hybrid: TUI + REPL
 
 You can seamlessly switch between the TUI and REPL. From the TUI, press `x` twice to exit and return to the Julia REPL:
@@ -77,5 +81,7 @@ julia> setKJctrl!(ctrl)
 julia> TUI()  # Resume with updated settings
 ```
 Seamlessly switch between the TUI and REPL. Store TUI settings into a variable and manipulate them programmatically using `getKJctrl()` and `setKJctrl!()` functions.
+
+Further information about `KJ`'s software architecture are provided [HERE](developers.md).
 
 See the [API documentation](api.md) for complete function reference.
