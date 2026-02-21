@@ -23,7 +23,7 @@ To save yourself some time when you run `KJ` later on, it is useful
 Pkg.precompile("KJ")
 ```
 
-There are four ways to interact with KJ:
+There are three ways to interact with KJ:
 
 1. [TUI](#tui-text-based-user-interface): an interactive text-based user interface
 2. [REPL](#repl-command-line-interface): the command-line interface
@@ -31,9 +31,9 @@ There are four ways to interact with KJ:
 
 ## TUI (text-based user interface)
 
-Here is a short example of a menu-driven KJ session:
+The `TUI()` function starts a menu-driven KJ session:
 
-```
+```julia
 julia> using KJ
 julia> TUI()
 ----------
@@ -56,46 +56,10 @@ c: Clear
 a: Extra
 x: Exit
 ?: Help
-r
 
-a: csv (Agilent)
-t: csv (ThermoFisher)
-f: FIN2
-x: Exit
-?: Help
-a
-
-d: Read a directory in which analysis is stored in a different file
-b: Set the number of blocks per analysis (current value = 1)
-p: Parse the data from a single file using a laser log (provide paths)
-P: Parse the data from a single file using a laser log (choose from list)
-x: Exit
-?: Help
-d
-
-Enter the full path of the data directory (? for help, x to exit):
-data/Lu-Hf
-
-r: Read data files
-m: Specify the method[*]
-t: Tabulate the samples
-v: View and adjust each sample
-i: Interferences
-f: Fractionation[*]
-b: Mass bias
-p: Process the data[*]
-e: Export the results
-l: Logs and templates
-o: Options
-u: Update
-c: Clear
-a: Extra
-x: Exit
-?: Help
-v
 ```
 
-<img src="./docs/src/assets/plot.png" width="480px">
+The workflow goes from the top to the bottom, with asterisks marking compulsory steps. To read ICP-MS data files, type `r` and proceed.
 
 ## REPL (command-line interface)
 
@@ -105,14 +69,14 @@ U-Pb data reduction using WC-1 for time-dependent elemental
 fractionation correction between U and Pb and NIST-612 for
 mass-dependent fractionation correction of the Pb-isotopes. The script
 exports all the aliquots of the "Duff" sample to a JSON file that can
-be opened in IsoplotR:
+be opened in [IsoplotR](https://isoplotr.es.ucl.ac.uk):
 
-```
-myrun = load("data/U-Pb";format="Agilent",head2name=false)
-method = Gmethod(name="U-Pb",groups=Dict("STDCZ" => "Plesovice"))
-fit = process!(myrun,method)
-export2IsoplotR(myrun,method,fit;
-                fname="output/U-Pb.json")
+```julia
+myrun = load("data/carbonate", format="Agilent")
+method = Gmethod(name="U-Pb", groups=Dict("WC1"=>"WC1"))
+fit = process!(myrun, method)
+export2IsoplotR(myrun, method, fit;
+                prefix="Duff", fname="output/Duff.json")
 ```
 
 Type `?load`, `?process!`, `?export2IsoplotR` or `?KJ` at the REPL to
@@ -124,68 +88,13 @@ You can seamlessly switch from the TUI to the REPL and back. The
 following example stores the TUI settings into a variable called
 `ctrl` (type `ctrl` at the REPL to view its contents). You can
 manipulate the contents of `ctrl` and sync it with the TUI using the
-`setKJctrl()` function.
+`setKJctrl!()` function.
 
-```
+```julia
 julia> using KJ
 julia> TUI()
-----------
- KJ 0.8.2
-----------
-
-r: Read data files[*]
-m: Specify the method[*]
-t: Tabulate the samples
-v: View and adjust each sample
-i: Interferences
-f: Fractionation[*]
-b: Mass bias
-p: Process the data[*]
-e: Export the results
-l: Logs and templates
-o: Options
-u: Update
-c: Clear
-a: Extra
-x: Exit
-?: Help
-r
-
-a: csv (Agilent)
-t: csv (ThermoFisher)
-f: FIN2
-x: Exit
-?: Help
-a
-
-d: Read a directory in which analysis is stored in a different file
-b: Set the number of blocks per analysis (current value = 1)
-p: Parse the data from a single file using a laser log (provide paths)
-P: Parse the data from a single file using a laser log (choose from list)
-x: Exit
-?: Help
-d
-
-Enter the full path of the data directory (? for help, x to exit):
-data/Lu-Hf
-
-r: Read data files
-m: Specify the method[*]
-t: Tabulate the samples
-v: View and adjust each sample
-i: Interferences
-f: Fractionation[*]
-b: Mass bias
-p: Process the data[*]
-e: Export the results
-l: Logs and templates
-o: Options
-u: Update
-c: Clear
-a: Extra
-x: Exit
-?: Help
-x
+# ... use TUI ...
+# press 'x' to exit
 
 julia> ctrl = getKJctrl();
 julia> KJ.plot(ctrl["run"][1])
