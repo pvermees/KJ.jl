@@ -15,10 +15,7 @@ makedocs(
     remotes = Dict(
         joinpath(@__DIR__, "..") => Documenter.Remotes.GitHub("pvermees", "KJ.jl"),
     ),
-    format = Documenter.HTML(
-        edit_link = "main",
-        collapselevel = 3,
-        ),
+    format = Documenter.HTML(edit_link = "main"),
 )
 
 deploydocs(

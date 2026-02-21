@@ -147,7 +147,7 @@ To apply a template during a session:
 ## Extensions
 
 The TUI uses a decision tree that is saved as a Dict. Extensions are Julia packages that modify this Dict to alter the default behaviour of the TUI. Extensions can be used to add or remove branches of TUI tree, or to swap out functions. `KJgui` is a proof-of-concept example of a simple extension, which adds GUI elements to the TUI, including interactive file choosers. This extension can be obtained from [https://github.com/pvermees/KJgui.jl](https://github.com/pvermees/KJgui.jl) and used as follows:
-```
+```julia
 julia> using KJ, KJgui
 julia> TUI(KJgui)
 ```

@@ -16,11 +16,11 @@ Optionally, precompile the package for faster startup:
 Pkg.precompile("KJ")
 ```
 
-## Ways to Interact with KJ
+There are two main ways to interact with `KJ`: a text-based user interface (TUI) and a "read-eval-print loop" (REPL).
 
-### 1. TUI (Text-Based User Interface)
+## Text-Based User Interface (TUI)
 
-KJ provides an interactive text-based user interface for data processing workflows.
+`KJ` provides an interactive text-based user interface for data processing workflows.
 
 ```julia
 using KJ
@@ -34,9 +34,9 @@ This launches an interactive menu where you can:
 - Set interferences and fractionation corrections
 - Process data and export results
 
-Further details about the TUI are provided [HERE](tui.md).
+See the [TUI documentation](tui.md) for further details.
 
-### 2. REPL (Command-Line Interface)
+## Command-Line Interface (REPL)
 
 Advanced users can use Julia's command-line interface for direct scripting and analysis control. Here is a simple example of a U-Pb data processing session using test data that is packaged with `KJ`:
 
@@ -58,9 +58,9 @@ export2IsoplotR(myrun, method, fit; fname="output/U-Pb.json")
 
 Type `?load`, `?process!`, `?export2IsoplotR`, or `?KJ` at the REPL for detailed documentation.
 
-Further CLI examples are provided [HERE](repl.md).
+Further examples are provided in the [REPL documentation](repl.md).
 
-### 3. Hybrid: TUI + REPL
+## Hybrid: TUI + REPL
 
 You can seamlessly switch between the TUI and REPL. From the TUI, press `x` twice to exit and return to the Julia REPL:
 
@@ -82,6 +82,6 @@ julia> TUI()  # Resume with updated settings
 ```
 Seamlessly switch between the TUI and REPL. Store TUI settings into a variable and manipulate them programmatically using `getKJctrl()` and `setKJctrl!()` functions.
 
-Further information about `KJ`'s software architecture are provided [HERE](developers.md).
+Further information about `KJ`'s software architecture is provided in the [Developer section](developers.md) of this document.
 
 See the [API documentation](api.md) for complete function reference.
