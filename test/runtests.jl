@@ -756,6 +756,7 @@ end
 
 function TUItest()
     TUI(;logbook="logs/Lu-Hf.log",reset=true)
+    TUI(;logbook="logs/Re-Os.log",reset=true)
 end
 
 function dependencytest()

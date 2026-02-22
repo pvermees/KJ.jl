@@ -652,7 +652,7 @@ function TUIchooseBiasElement!(ctrl::AbstractDict,
                                response::AbstractString)
     i = parse(Int,response)
     m = ctrl["method"]
-    elements = TUIgetBiasElements(m)
+    elements, channels = TUIgetBiasElementsChannels(m)
     ctrl["cache"] = BiasCache(element = elements[i])
     return "calibration"
 end
@@ -1025,7 +1025,8 @@ end
 
 function TUIinterference2template(interference::Interference)
     out  = "Interference(proxy=\"" * string(interference.proxy) * "\""
-    out *= ",channel=\"" * string(interference.channel) * "\")"
+    out *= ", channel=\"" * string(interference.channel) * "\""
+    out *= ", bias=" * string(interference.bias) * ")"
     return out
 end
 
