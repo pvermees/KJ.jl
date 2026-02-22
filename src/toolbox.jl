@@ -382,15 +382,20 @@ function get_offset(samp::Sample;
                     den::AbstractString="")
     meas = samp.dat[:,channels]
     offset1 = get_offset(meas;transformation=transformation,num=num,den=den)
-    if isnothing(method) || isnothing(fit) || samp.group == "sample"
+    if isnothing(fit)
         return offset1
     else
-        pred = predict(samp,method,fit;generic_names=false)
+        pred = predict(samp,fit.blank)
         keep = intersect(channels,names(pred))
         offset2 = get_offset(pred[:,keep];transformation=transformation,num=num,den=den)
-        pred = predict(samp,fit.blank)
-        offset3 = get_offset(pred[:,keep];transformation=transformation,num=num,den=den)
-        return max(offset1,offset2,offset3)
+        if isnothing(method) || samp.group == "sample"
+            return max(offset1,offset2)
+        else
+            pred = predict(samp,method,fit;generic_names=false)
+            keep = intersect(channels,names(pred))
+            offset3 = get_offset(pred[:,keep];transformation=transformation,num=num,den=den)
+            return max(offset1,offset2,offset3)
+        end
     end
 end
 

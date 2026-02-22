@@ -22,9 +22,12 @@ This function performs the full data reduction workflow:
 """
 function process!(run::Vector{Sample},
                   method::KJmethod;
+                  setGroup::Bool=true,
                   reject_outliers::Bool=true,
                   verbose::Bool=false)
-    setGroup!(run,method)
+    if setGroup
+        setGroup!(run,method)
+    end
     if reject_outliers
         detect_outliers!(run,method)
     end

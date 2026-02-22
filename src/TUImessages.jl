@@ -97,21 +97,19 @@ function TUIions2isotopes(ions::AbstractVector)
     return unique(out)
 end
 
-function TUIlistIsotopes(cache::AbstractDict)
+function TUIlistIsotopes(cache::ProxySelectionCache)
     msg = ""
-    channels = cache["channels"]
-    isotopes = TUIions2isotopes(cache["ions"])
-    nc = length(channels)
-    ni = length(isotopes)
+    nc = length(cache.channels)
+    ni = length(cache.isotopes)
     n = max(nc,ni)
     for i in 1:n
         if i <= nc
-            msg *= string(i) * ". " * channels[i] * ", "
+            msg *= string(i) * ". " * cache.channels[i] * ", "
         else            
-            msg *= repeat(" ",5 + maximum(length.(channels)))
+            msg *= repeat(" ",5 + maximum(length.(cache.channels)))
         end
         if i <= ni
-            msg *= string(i) * ". " * isotopes[i]
+            msg *= string(i) * ". " * cache.isotopes[i]
         end
         msg *= "\n"
     end
@@ -130,8 +128,8 @@ end
 
 function TUIsetInterferenceProxyMessage(ctrl::AbstractDict)
     msg = "Choose the isotope that matches channel " *
-          ctrl["cache"]["interference"].channel * " :\n"
-    isotopes = TUIions2isotopes([ctrl["cache"]["key"]])
+          ctrl["cache"].interference.channel * " :\n"
+    isotopes = TUIions2isotopes([ctrl["cache"].key])
     for i in eachindex(isotopes)
         msg *= string(i) * ". " * isotopes[i] * "\n"
     end
@@ -149,7 +147,7 @@ function TUIlistIsotopesMessage(ctrl::AbstractDict)
 end
 
 function TUIchooseInterferenceIonMessage(ctrl::AbstractDict)
-    proxy = ctrl["cache"]["target"].proxy
+    proxy = ctrl["cache"].target.proxy
     msg = "Choose the isotope that interferes with " *
           proxy * " from the following list:\n"
     interferences = TUIgetInterferences(proxy)
@@ -162,8 +160,8 @@ end
 
 function TUIchooseInterferenceProxyChannelMessage(ctrl::AbstractDict)
     msg = "Choose an interference-free proxy channel for the " *
-          ctrl["cache"]["key"] * "-interference on " *
-          ctrl["cache"]["target"].channel * " from the following list:\n"
+          ctrl["cache"].key * "-interference on " *
+          ctrl["cache"].target.channel * " from the following list:\n"
     msg *= TUIlistChannels(ctrl)
     msg *= "x: Exit\n"*"?: Help"
     return msg
@@ -172,7 +170,7 @@ end
 function TUIchooseREEInterferenceProxyChannelMessage(ctrl::AbstractDict)
     msg = 
     "Suppose that X is a REE whose oxide (XO, say) interferes with " *
-    ctrl["cache"]["target"].proxy *
+    ctrl["cache"].target.proxy *
     ", then the interference correction is given by X x YO / Y, where Y is " * 
     "a non-interfering REE with known isotopic abundance relative to X and YO is its oxide. " *
     "Select the channels corresponding to X, Y, and YO as a comma-separated list of numbers:\n"
@@ -237,32 +235,16 @@ function TUIgetBiasStandards(method::Gmethod)
     return TUIgetStandardsHelper(method; condition = condition)
 end
 
-function TUIaddByPrefixMessage(ctrl::AbstractDict) 
+function TUIaddByPrefixMessage(ctrl::AbstractDict)
     msg = "Specify the prefix of the " * 
-    TUIaddPrefixMessageHelper(ctrl["cache"]) * 
+    get_refmat_from_cache(ctrl["cache"]) * 
     " measurements (? for help, x to exit):" 
     return msg 
 end 
 
-function TUIaddPrefixMessageHelper(cache::Any)
-    return cache
-end
-
-function TUIaddPrefixMessageHelper(cache::AbstractDict)
-    if haskey(cache,"glass")
-        return cache["glass"]
-    elseif haskey(cache,"standard")
-        return cache["standard"]
-    else
-        @warn "Cache does not contain a reference material. " *
-        "returning an empty string instead." 
-        return ""
-    end
-end
-
 function TUIaddByNumberMessage(ctrl::AbstractDict)
     msg = "Select the " * 
-        TUIaddPrefixMessageHelper(ctrl["cache"]) * 
+        get_refmat_from_cache(ctrl["cache"]) * 
         " measurements with a comma-separated list of numbers " *
         "(? for help, x to exit):"
     return msg
@@ -305,7 +287,7 @@ function TUIgetBiasElements(m::Gmethod)
 end
 
 function TUIcalibrationMessage(ctrl::AbstractDict)
-    element = ctrl["cache"]["element"]
+    element = ctrl["cache"].element
     isotopes = element .* string.(_KJ["nuclides"][element])
     channels = getChannels(ctrl["run"])
     ni = length(isotopes)
