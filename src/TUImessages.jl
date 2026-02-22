@@ -3,9 +3,11 @@ function TUIwelcomeMessage(ctrl::AbstractDict)
     "m: Specify the method"*TUIcheck(ctrl,"method")*"\n"*
     "t: Tabulate the samples\n"*
     "v: View and adjust each sample\n"*
-    "i: Interferences\n"*
-    "f: Fractionation"*TUIcheck(ctrl,"fractionation")*"\n"*
-    "b: Mass bias\n"*
+    TUImethodSwitch(ctrl["method"],"i: Interferences\n","")*
+    TUImethodSwitch(ctrl["method"],
+                    "f: Fractionation",
+                    "g: Glass")*TUIcheck(ctrl,"fractionation")*"\n"*
+    TUImethodSwitch(ctrl["method"],"b: Mass bias\n","")*
     "p: Process the data"*TUIcheck(ctrl,"process")*"\n"*
     "e: Export the results\n"*
     "l: Logs and templates\n"*
@@ -16,6 +18,16 @@ function TUIwelcomeMessage(ctrl::AbstractDict)
     "x: Exit\n"*
     "?: Help"
     return msg
+end
+
+function TUImethodSwitch(method::Nothing,ifG::String,ifC::String)
+    return ifG
+end
+function TUImethodSwitch(method::Gmethod,ifG::String,ifC::String)
+    return ifG
+end
+function TUImethodSwitch(method::Cmethod,ifG::String,ifC::String)
+    return ifC
 end
 
 function TUIshowMethods(ctrl::AbstractDict)
@@ -245,7 +257,7 @@ end
 function TUIaddByNumberMessage(ctrl::AbstractDict)
     msg = "Select the " * 
         get_refmat_from_cache(ctrl["cache"]) * 
-        " measurements with a comma-separated list of numbers " *
+        " measurements as a comma-separated list of numbers " *
         "(? for help, x to exit):"
     return msg
 end

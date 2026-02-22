@@ -379,10 +379,25 @@ function TUIprintInterference(pairing::Pairing,
 end
 
 function TUIremoveInterferences!(ctrl::AbstractDict)
+    biasgroups = String[]
     for pairing in TUIgetPairings(ctrl)
+        for interference in values(pairing.interferences)
+            append!(biasgroups,TUIgetInterferenceStandards(interference))
+        end
         pairing.interferences = Dict{String,AbstractInterference}()
     end
+    groups = getGroups(ctrl["run"])
+    selection = findall(in(biasgroups), groups)
+    setGroup!(ctrl["run"],selection,"sample")
+    TUIclearMissingGroups!(ctrl)
     return "x"
+end
+
+function TUIgetInterferenceStandards(interference::Interference)
+    return collect(interference.bias.standards)
+end
+function TUIgetInterferenceStandards(interference::REEInterference)
+    return collect(interference.standards)
 end
 
 function TUIchooseStandard!(ctrl::AbstractDict,
@@ -504,7 +519,7 @@ function TUIchooseGlass!(ctrl::AbstractDict,
                          response::AbstractString)
     i = parse(Int,response)
     glass = _KJ["glass"].names[i]
-    add_glass_to_cache!(ctrl["cache"],glass)
+    ctrl["cache"] = add_glass_to_cache(ctrl["cache"],glass)
     return "addGlassGroup"
 end
 
@@ -512,24 +527,38 @@ function TUIaddGlassByPrefix!(ctrl::AbstractDict,
                               response::AbstractString)
     setGroup!(ctrl["run"],[response])
     ctrl["method"].groups[response] = get_glass_from_cache(ctrl["cache"])
-    push_glass_to_cache!(ctrl["cache"],response;ctrl=ctrl)
-    return "xxxxxx"
+    if ctrl["method"] isa Cmethod
+        ctrl["priority"]["fractionation"] = false
+        ctrl["cache"] = response
+        return "xxx"
+    else
+        push_glass_to_cache!(ctrl["cache"],response;ctrl=ctrl)
+        return "xxxxxx"
+    end
 end
 
 function TUIaddGlassByNumber!(ctrl::AbstractDict,
                               response::AbstractString)
     selection = parse.(Int,split(response,","))
     setGroup!(ctrl["run"],selection,ctrl["cache"])
-    return "xxx"
+    push_glass_to_cache!(ctrl["cache"],ctrl["cache"];ctrl=ctrl)
+    if ctrl["method"] isa Cmethod
+        ctrl["priority"]["fractionation"] = false
+        return "xxx"
+    else
+        return "xxxx"
+    end
 end
 
 function TUIremoveAllGlass!(ctrl::AbstractDict)
-    glassnames = keys(ctrl["method"].glass)
-    for samp in ctrl["run"]
-        if samp.group in glassnames
-            setGroup!(samp,"sample")
-        end
+    groups = getGroups(ctrl["run"])
+    glasses = _KJ["glass"].names
+    selection = findall(in(glasses), groups)
+    setGroup!(ctrl["run"],selection,"sample")
+    if ctrl["method"] isa Cmethod
+        ctrl["priority"]["fractionation"] = true
     end
+    TUIclearMissingGroups!(ctrl)
     return "x"
 end
 
@@ -537,7 +566,21 @@ function TUIremoveGlassByNumber!(ctrl::AbstractDict,
                                  response::AbstractString)
     selection = parse.(Int,split(response,","))
     setGroup!(ctrl["run"],selection,"sample")
-    return "xxx"
+    TUIclearMissingGroups!(ctrl)
+    return "xx"
+end
+
+function TUIclearMissingGroups!(ctrl::AbstractDict)
+    groups = unique(getGroups(ctrl["run"]))
+    for group in keys(ctrl["method"].groups)
+        if !in(group,groups)
+            delete!(ctrl["method"].groups,group)
+        end
+    end
+    glasses = _KJ["glass"].names
+    if (length(intersect(glasses,groups)) == 0) && ctrl["method"] isa Cmethod
+        ctrl["priority"]["fractionation"] = true
+    end
 end
 
 function TUIglassTab(ctrl::AbstractDict)

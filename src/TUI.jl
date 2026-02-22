@@ -158,6 +158,7 @@ function init_KJtree()
                 "v" => TUIviewer,
                 "i" => "interferences",
                 "f" => "fractionation",
+                "g" => "glass",
                 "b" => "bias",
                 "p" => TUIprocess!,
                 "e" => "export",
@@ -557,7 +558,7 @@ function init_KJtree()
             action = TUIaddGlassByPrefix!
         ),
         "addGlassByNumber" => (
-            message = TUIaddByPrefixMessage,
+            message = TUIaddByNumberMessage,
             help =
             "For example, suppose that the analyses are labelled as " * 
             "G001, G002, ..., then it is not possible to identify " * 

@@ -24,17 +24,19 @@ end
     standard::String = ""
 end
 
-function add_glass_to_cache!(cache::Any,
-                             glass::String)
-    cache = glass
+function add_glass_to_cache(cache::Any,
+                            glass::String)
+    return glass
 end
-function add_glass_to_cache!(cache::InterferenceCache,
-                             glass::String)
+function add_glass_to_cache(cache::InterferenceCache,
+                            glass::String)
     cache.glass = glass
+    return cache
 end
-function add_glass_to_cache!(cache::BiasCache,
-                             glass::String)
+function add_glass_to_cache(cache::BiasCache,
+                            glass::String)
     cache.standard = glass
+    return cache
 end
 
 function get_glass_from_cache(cache::Any)
@@ -60,19 +62,22 @@ function get_refmat_from_cache(cache::BiasCache)
     return cache.standard
 end
 
+function push_glass_to_cache!(cache::Any,
+                              response::String;
+                              ctrl::AbstractDict)
+    ctrl["method"].groups[response] = cache
+end
 function push_glass_to_cache!(cache::InterferenceCache,
                               response::String;
                               other...)
-    interference = cache.interference
-    push!(interference.standards,response)
+    push!(cache.interference.standards,response)
     interferences = cache.target.interferences
-    interferences[cache.key] = interference
+    interferences[cache.key] = cache.interference
 end
 function push_glass_to_cache!(cache::BiasCache,
                               response::String;
                               ctrl::AbstractDict)
-    bias = cache.bias
-    push!(bias.standards,response)
+    push!(cache.bias.standards,response)
     TUIaddBias2method!(ctrl)
 end
 
