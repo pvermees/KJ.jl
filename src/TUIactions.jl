@@ -379,18 +379,23 @@ function TUIprintInterference(pairing::Pairing,
 end
 
 function TUIremoveInterferences!(ctrl::AbstractDict)
-    biasgroups = String[]
+    interference_groups = String[]
     for pairing in TUIgetPairings(ctrl)
         for interference in values(pairing.interferences)
-            append!(biasgroups,TUIgetInterferenceStandards(interference))
+            groups = TUIgetInterferenceStandards(interference)
+            append!(interference_groups,groups)
         end
         pairing.interferences = Dict{String,AbstractInterference}()
     end
-    groups = getGroups(ctrl["run"])
-    selection = findall(in(biasgroups), groups)
-    setGroup!(ctrl["run"],selection,"sample")
+    TUIremoveGroups!(ctrl,interference_groups)
     TUIclearMissingGroups!(ctrl)
     return "x"
+end
+
+function TUIremoveGroups!(ctrl::AbstractDict,
+                          groups::AbstractVector)
+    selection = findall(in(groups), getGroups(ctrl["run"]))
+    setGroup!(ctrl["run"],selection,"sample")
 end
 
 function TUIgetInterferenceStandards(interference::Interference)
@@ -625,16 +630,21 @@ function TUIlistBiases(ctrl::AbstractDict)
 end
 
 function TUIremoveBiases!(ctrl::AbstractDict)
+    biasgroups = String[]
     for pairing in TUIgetPairings(ctrl)
         for interference in values(pairing.interferences)
             if interference isa Interference
+                append!(biasgroups,TUIgetInterferenceStandards(interference))
                 interference.bias = Calibration()
             end
         end
     end
     if ctrl["method"] isa Gmethod
+        append!(biasgroups,ctrl["method"].bias.standards)
         ctrl["method"].bias = Calibration()
     end
+    TUIremoveGroups!(ctrl,biasgroups)
+    TUIclearMissingGroups!(ctrl)
     return nothing
 end
 

@@ -84,9 +84,17 @@ end
 function push_standard_to_cache!(cache::BiasCache,
                                  response::String,
                                  ctrl::AbstractDict)
-    standard = cache.standard
+    setGroup!(ctrl["run"],[response])
     push!(cache.bias.standards,response)
-    ctrl["method"].groups[response] = standard
+    ctrl["method"].groups[response] = cache.standard
+    return TUIaddBias2method!(ctrl)
+end
+function push_standard_to_cache!(cache::BiasCache,
+                                 selection::AbstractVector,
+                                 ctrl::AbstractDict)
+    standard = cache.standard
+    setGroup!(ctrl["run"],selection,standard)
+    ctrl["method"].groups[standard] = standard
     return TUIaddBias2method!(ctrl)
 end
 function push_standard_to_cache!(cache::Any,
