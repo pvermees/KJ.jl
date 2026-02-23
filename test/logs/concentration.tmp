@@ -1,10 +1,10 @@
 format = "Agilent"
-multifile = false
+multifile = true
 head2name = true
 transformation = "sqrt"
 nblocks = 1
-elements = (Si29 = "Si", La139 = "La", Pb206 = "Pb", Pb207 = "Pb", Pb208 = "Pb", Th232 = "Th", U238 = "U")
-groups = Dict("NIST610" => "NIST610", "NIST612" => "NIST612")
-internal = ("Si29", 1.476e6)
+elements = (Cl35 = "Cl", Ca43 = "Ca", Y89 = "Y", Pb206 = "Pb", Pb207 = "Pb", Pb208 = "Pb", Th232 = "Th", U235 = "U", U238 = "U")
+groups = Dict("GLASS" => "NIST612")
+internal = ("Ca43", 3.936e6)
 nblank = 2
 method = Cmethod(elements,groups,internal,nblank)

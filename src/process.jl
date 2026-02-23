@@ -1,24 +1,25 @@
 """
-    process!(run::Vector{Sample}, method::KJmethod; reject_outliers=true, verbose=false)
+    process!(run::Vector{Sample}, method::KJmethod; setGroup=true, reject_outliers=true, verbose=false)
 
 Process a complete run of LA-ICP-MS data.
 
 This function performs the full data reduction workflow:
-1. Assign group labels to samples based on the method
+1. Assign group labels to samples based on the method (if setGroup=true)
 2. Detect and flag outliers (if reject_outliers=true)
-3. Initialize fit object
+3. Initialize a `KJfit` object
 4. Fit blank corrections
-5. Fit bias corrections (for Gmethod)
+5. Fit bias corrections (for `Gmethod`)
 6. Fit drift and downhole fractionation corrections
 
 # Arguments
 - `run`: Vector of samples to process
 - `method`: Geochronology or concentration method definition
+- `setGroup`: Whether to assign group labels before fitting (default: true)
 - `reject_outliers`: Whether to automatically detect and flag outliers (default: true)
 - `verbose`: Print detailed diagnostic information (default: false)
 
 # Returns
-- Fitted KJfit object containing all correction parameters
+- Fitted `KJfit` object containing all correction parameters
 """
 function process!(run::Vector{Sample},
                   method::KJmethod;

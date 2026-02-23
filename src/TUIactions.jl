@@ -545,8 +545,9 @@ end
 function TUIaddGlassByNumber!(ctrl::AbstractDict,
                               response::AbstractString)
     selection = parse.(Int,split(response,","))
-    setGroup!(ctrl["run"],selection,ctrl["cache"])
-    push_glass_to_cache!(ctrl["cache"],ctrl["cache"];ctrl=ctrl)
+    glass = get_glass_from_cache(ctrl["cache"])
+    setGroup!(ctrl["run"],selection,glass)
+    push_glass_to_cache!(ctrl["cache"],glass;ctrl=ctrl)
     if ctrl["method"] isa Cmethod
         ctrl["priority"]["fractionation"] = false
         return "xxx"
@@ -577,9 +578,9 @@ end
 
 function TUIclearMissingGroups!(ctrl::AbstractDict)
     groups = unique(getGroups(ctrl["run"]))
-    for group in keys(ctrl["method"].groups)
+    for group in collect(keys(ctrl["method"].groups))
         if !in(group,groups)
-            delete!(ctrl["method"].groups,group)
+            delete!(ctrl["method"].groups, group)
         end
     end
     glasses = _KJ["glass"].names
