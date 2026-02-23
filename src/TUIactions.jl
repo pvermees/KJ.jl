@@ -941,7 +941,7 @@ function TUIimportLog!(ctrl::AbstractDict,
     for row in eachrow(history)
         try
             if verbose println(row) end
-            dispatch!(ctrl;key=row[1],response=row[2],verbose=verbose)
+            dispatch!(ctrl;key=String(row[1]),response=String(row[2]),verbose=verbose)
         catch e
             println(e)
         end

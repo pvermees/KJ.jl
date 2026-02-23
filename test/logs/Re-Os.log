@@ -19,7 +19,6 @@ addInterference,2
 interferenceType,o
 interferenceIon,1
 interferenceProxyChannel,8
-interferences,l
 interferences,x
 top,f
 fractionation,a
@@ -43,6 +42,4 @@ addGlassByPrefix,Nist_mass
 bias,l
 bias,x
 top,p
-top,v
-view,x
 top,x

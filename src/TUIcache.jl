@@ -25,16 +25,16 @@ end
 end
 
 function add_glass_to_cache(cache::Any,
-                            glass::String)
+                            glass::AbstractString)
     return glass
 end
 function add_glass_to_cache(cache::InterferenceCache,
-                            glass::String)
+                            glass::AbstractString)
     cache.glass = glass
     return cache
 end
 function add_glass_to_cache(cache::BiasCache,
-                            glass::String)
+                            glass::AbstractString)
     cache.standard = glass
     return cache
 end
@@ -52,7 +52,7 @@ end
 function get_refmat_from_cache(cache::Any)
     return ""
 end
-function get_refmat_from_cache(cache::String)
+function get_refmat_from_cache(cache::AbstractString)
     return cache
 end
 function get_refmat_from_cache(cache::InterferenceCache)
@@ -63,26 +63,26 @@ function get_refmat_from_cache(cache::BiasCache)
 end
 
 function push_glass_to_cache!(cache::Any,
-                              response::String;
+                              response::AbstractString;
                               ctrl::AbstractDict)
     ctrl["method"].groups[response] = cache
 end
 function push_glass_to_cache!(cache::InterferenceCache,
-                              response::String;
+                              response::AbstractString;
                               other...)
     push!(cache.interference.standards,response)
     interferences = cache.target.interferences
     interferences[cache.key] = cache.interference
 end
 function push_glass_to_cache!(cache::BiasCache,
-                              response::String;
+                              response::AbstractString;
                               ctrl::AbstractDict)
     push!(cache.bias.standards,response)
     TUIaddBias2method!(ctrl)
 end
 
 function push_standard_to_cache!(cache::BiasCache,
-                                 response::String,
+                                 response::AbstractString,
                                  ctrl::AbstractDict)
     setGroup!(ctrl["run"],[response])
     push!(cache.bias.standards,response)
@@ -98,7 +98,7 @@ function push_standard_to_cache!(cache::BiasCache,
     return TUIaddBias2method!(ctrl)
 end
 function push_standard_to_cache!(cache::Any,
-                                 response::String,
+                                 response::AbstractString,
                                  ctrl::AbstractDict)
     if ctrl["method"] isa Gmethod
         push!(ctrl["method"].standards,response)
@@ -108,7 +108,7 @@ function push_standard_to_cache!(cache::Any,
     ctrl["priority"]["fractionation"] = false
     return "xxx"
 end
-function push_standard_to_cache!(cache::String,
+function push_standard_to_cache!(cache::AbstractString,
                                  selection::AbstractVector,
                                  ctrl::AbstractDict)
     setGroup!(ctrl["run"],selection,cache)

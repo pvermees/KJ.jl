@@ -57,9 +57,7 @@ function dispatch!(ctrl::AbstractDict;
                    response = nothing,
                    verbose::Bool=false)
     if verbose
-        println(ctrl["chain"])
-        print("key: " * key)
-        println(", response: " * response)
+        println("chain: " * string(ctrl["chain"]))
     end
     (message,help,action) = _KJ["tree"][key]
     if isa(message,Function)
@@ -101,10 +99,6 @@ function dispatch!(ctrl::AbstractDict;
         push!(ctrl["history"],[key,response])
     end
     if verbose
-        print("key: " * key)
-        print(", response: " * response)
-        print(", next: "); print(next)
-        print(", final: "); println(final)
         println(ctrl["history"])
     end
 end
