@@ -57,9 +57,7 @@ function dispatch!(ctrl::AbstractDict;
                    response = nothing,
                    verbose::Bool=false)
     if verbose
-        println(ctrl["chain"])
-        print("key: " * key)
-        println(", response: " * response)
+        println("chain: " * string(ctrl["chain"]))
     end
     (message,help,action) = _KJ["tree"][key]
     if isa(message,Function)
@@ -101,10 +99,6 @@ function dispatch!(ctrl::AbstractDict;
         push!(ctrl["history"],[key,response])
     end
     if verbose
-        print("key: " * key)
-        print(", response: " * response)
-        print(", next: "); print(next)
-        print(", final: "); println(final)
         println(ctrl["history"])
     end
 end
@@ -158,6 +152,7 @@ function init_KJtree()
                 "v" => TUIviewer,
                 "i" => "interferences",
                 "f" => "fractionation",
+                "g" => "glass",
                 "b" => "bias",
                 "p" => TUIprocess!,
                 "e" => "export",
@@ -557,7 +552,7 @@ function init_KJtree()
             action = TUIaddGlassByPrefix!
         ),
         "addGlassByNumber" => (
-            message = TUIaddByPrefixMessage,
+            message = TUIaddByNumberMessage,
             help =
             "For example, suppose that the analyses are labelled as " * 
             "G001, G002, ..., then it is not possible to identify " * 

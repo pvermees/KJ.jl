@@ -756,6 +756,7 @@ end
 
 function TUItest()
     TUI(;logbook="logs/Lu-Hf.log",reset=true)
+    TUI(;logbook="logs/Re-Os.log",reset=true)
 end
 
 function dependencytest()
@@ -808,6 +809,6 @@ Plots.closeall()
 @testset "ReOs test" begin ReOs_test() end
 @testset "MC-ICP-MS test" begin multicollector_test() end
 @testset "TUI test" begin TUItest() end
-# @testset "dependency test" begin dependencytest() end
+@testset "dependency test" begin dependencytest() end
 
 # TUI(;debug=true)

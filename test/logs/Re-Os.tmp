@@ -11,8 +11,8 @@ method = Gmethod(name="Re-Os",
                  ndrift = 2,
                  ndown = 1,
                  PAcutoff = Inf)
-method.groups = Dict("Qmoly" => "QMolyHill", "Nist_massbias" => "NIST610", "Nis3" => "NiS-3", "Nist_REEint" => "NIST610")
+method.groups = Dict("Qmoly" => "QMolyHill", "Nis3" => "NiS-3", "Nist_mass" => "NIST610", "Nist_REEint" => "NIST610")
 method.bias = Calibration(num=(ion = "Os189", channel = "Os189 -> 253"), den=(ion = "Os187", channel = "Os187 -> 251"), standards=Set(["Nis3"]))
 method.standards = Set(["Qmoly"])
 method.P.interferences["Tm169 -> 185"] = REEInterference(REE="Lu175 -> 191", REEO="Ir191 -> 191", standards=Set(["Nist_REEint"]))
-method.D.interferences["Re187"] = Interference(proxy="Re185",channel="Re185 -> 249")
+method.D.interferences["Re187"] = Interference(proxy="Re185",channel="Re185 -> 249", bias=Calibration((ion = "Re187", channel = "Os187 -> 251"), (ion = "Re185", channel = "Re185 -> 249"), Set(["Nist_mass"])))
