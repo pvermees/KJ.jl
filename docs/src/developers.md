@@ -79,7 +79,7 @@ Most of the settings are loaded from CSV files stored in the `settings/` folder:
 
 - **`stoichiometry`**: Stoichiometric compositions of common minerals (e.g., apatite, zircon, calcite) used for internal standardization in concentration calculations. Loaded from `settings/stoichiometry.csv`.
 
-- **`tree`**: The KJ tree structure used by the Text User Interface (TUI) for navigation and data organization. Initialized programmatically via `init_KJtree()`.
+- **`tree`**: The KJ tree structure used by the text-based user interface (TUI) for navigation and data organization. Initialized programmatically via `init_KJtree()`.
 
 - **`ctrl`**: Control structure for the TUI state management (initialized as `nothing`).
 
@@ -108,7 +108,7 @@ Set blank (background) windows for one or more samples. Can be set automatically
 #### `setSwin!`
 Set signal windows for one or more samples. Can be set automatically or manually specified. The signal windows define which data points contain the ablation signal of interest.
 
-#### `sett0`
+#### `sett0!`
 Set "time zero" (the onset of laser ablation) for samples. Can be determined automatically by detecting the signal increase or set manually. Used to properly align blank and signal windows.
 
 ### Data Processing
