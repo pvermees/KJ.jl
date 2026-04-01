@@ -205,9 +205,11 @@ function TUIsetChannels!(ctrl::AbstractDict,
     m.P.channel = channels[1]
     m.D.channel = channels[2]
     m.d.channel = channels[3]
-    proxies = channel2proxy.(channels)
-    if any(isnothing(proxies))
-        ions = [m.P.ion,m.D.ion,m.d.ion]
+    ions = [m.P.ion,m.D.ion,m.d.ion]
+    elements = unique(channel2element.(ions))
+    proxies = channel2proxy.(channels;
+                             elements=elements)
+    if any(isnothing.(proxies))
         ctrl["cache"] = ProxySelectionCache(ions=ions,channels=channels)
         return "setProxies"
     else
@@ -666,7 +668,7 @@ function TUIcalibration!(ctrl::AbstractDict,
         return nothing
     end
     element = ctrl["cache"].element
-    isotopes = element .* string.(_KJ["nuclides"][element])
+    isotopes = getIsotopes(element)
     channels = getChannels(ctrl["run"])
     i1 = parse(Int,parts[2])
     i2 = parse(Int,parts[3])

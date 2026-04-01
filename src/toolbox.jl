@@ -437,6 +437,18 @@ function channel2element(channel::AbstractString)
     end
 end
 
+function getIsotopes(element::AbstractString)
+    return element .* string.(_KJ["nuclides"][element])
+end
+
+function getIsotopes(channels::AbstractVector)
+    isotopes = String[]
+    for channel in channels
+        append!(isotopes, getIsotopes(channel2element(channel)))
+    end
+    return unique(isotopes)
+end
+
 # elements = 1-row dataframe of elements with channels as column names
 # SRM = the name of a glass
 # returns a 1-row dataframe with the concentrations

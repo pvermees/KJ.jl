@@ -7,7 +7,7 @@ end
 
 function ProxySelectionCache(;ions::Vector{String}=String[], 
                               channels::Vector{String}=String[],
-                              isotopes::Vector{String}=channel2proxy.(ions))
+                              isotopes::Vector{String}=getIsotopes(channel2element.(ions)))
     return ProxySelectionCache(isotopes, channels)
 end
 

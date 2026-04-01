@@ -117,12 +117,12 @@ end
 function methodtest(;option="all")
     if option in ("all","Lu-Hf")
         method = Gmethod(name="Lu-Hf",
-                        groups=Dict("hogsbo" => "Hogsbo",
-                                    "NIST612p" => "NIST612"),
-                        P=Pairing(ion="Lu176",proxy="Lu175",channel="Lu175 -> 175"),
-                        D=Pairing(ion="Hf176",channel="Hf176 -> 258"),
-                        d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260"),
-                        standards=Set(["hogsbo"]))
+                         groups=Dict("hogsbo" => "Hogsbo",
+                                     "NIST612p" => "NIST612"),
+                         P=Pairing(ion="Lu176",proxy="Lu175",channel="Lu175 -> 175"),
+                         D=Pairing(ion="Hf176",channel="Hf176 -> 258"),
+                         d=Pairing(ion="Hf177",proxy="Hf178",channel="Hf178 -> 260"),
+                         standards=Set(["hogsbo"]))
         Calibration!(method;standards=Set(["NIST612p"]))
         method.D.interferences["Lu176"] = Interference(proxy="Lu175",channel="Lu175 -> 257")
 
