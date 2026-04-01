@@ -3,9 +3,12 @@ function default_ions(name)
     return (P=String(m.P),D=String(m.D),d=String(m.d))
 end
 
-function channel2proxy(channel::AbstractString)
-    all_elements = string.(keys(_KJ["nuclides"]))
-    matching_elements = filter(x -> occursin(x, channel), all_elements)
+function channel2proxy(channel::AbstractString;
+                       elements::AbstractVector = string.(keys(_KJ["nuclides"])))
+    matching_elements = filter(x -> occursin(x, channel), elements)
+    if length(matching_elements) < 1
+        return nothing
+    end
     matching_element = argmax(length,matching_elements)
     matching_isotope = get_proxy_isotope(channel;element=matching_element)
     if isnothing(matching_isotope)
