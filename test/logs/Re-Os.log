@@ -10,7 +10,7 @@ top,i
 interferences,a
 addInterference,1
 interferenceType,r
-REEinterferenceProxy,"3,5,13"
+monoInterferenceProxy,"3,5,13"
 glass,a
 chooseGlass,1
 addGlassGroup,p

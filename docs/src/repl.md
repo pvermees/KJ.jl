@@ -111,9 +111,9 @@ Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
 ReOs_method.D.interferences["Re187"] = Interference(proxy="Re185",
                                                     channel="Re185 -> 249",
                                                     bias=Re_bias)
-ReOs_method.P.interferences["Tm169 -> 185"] = REEInterference(REE="Lu175 -> 191",
-                                                              REEO="Ir191 -> 191",
-                                                              standards=Set(["Nist_REEint"]))
+ReOs_method.P.interferences["Tm169 -> 185"] = monoInterference(metal="Lu175 -> 191",
+                                                               oxide="Ir191 -> 191",
+                                                               standards=Set(["Nist_REEint"]))
 ```
 
 ### Concentrations

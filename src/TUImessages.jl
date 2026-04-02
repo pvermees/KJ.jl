@@ -179,9 +179,9 @@ function TUIchooseInterferenceProxyChannelMessage(ctrl::AbstractDict)
     return msg
 end
 
-function TUIchooseREEInterferenceProxyChannelMessage(ctrl::AbstractDict)
+function TUIchooseMonoInterferenceProxyChannelMessage(ctrl::AbstractDict)
     msg = 
-    "Suppose that X is a REE whose oxide (XO, say) interferes with " *
+    "Suppose that X is a monoisotopic Rare Earth element whose oxide (XO, say) interferes with " *
     ctrl["cache"].target.proxy *
     ", then the interference correction is given by X x YO / Y, where Y is " * 
     "a non-interfering REE with known isotopic abundance relative to X and YO is its oxide. " *

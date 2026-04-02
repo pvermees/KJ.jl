@@ -83,7 +83,7 @@ export Calibration
 Abstract base type for interference correction specifications.
 
 Subtypes include `Interference` for general isobaric interferences and
-`REEInterference` for rare earth element oxide interferences.
+`monoInterference` for monoisotopic rare earth element oxide interferences.
 """
 abstract type AbstractInterference end
 export AbstractInterference
@@ -91,7 +91,7 @@ export AbstractInterference
 """
     Interference <: AbstractInterference
 
-Interference correction specification for isobaric interferences.
+Interference correction specification for poly-isotopic isobaric interferences.
 
 # Fields
 - `proxy`: Proxy isotope used to estimate the interference
@@ -106,21 +106,21 @@ end
 export Interference
 
 """
-    REEInterference <: AbstractInterference
+    monoInterference <: AbstractInterference
 
-Rare Earth Element (REE) oxide interference correction specification.
+Mono isotope interference correction specification.
 
 # Fields
-- `REE`: REE element channel
-- `REEO`: REE oxide channel
+- `metal`: Metal ion channel
+- `oxide`: Oxide ion channel
 - `standards`: Set of reference materials used for calibration
 """
-@kwdef mutable struct REEInterference <: AbstractInterference
-    REE::String = ""
-    REEO::String = ""
+@kwdef mutable struct monoInterference <: AbstractInterference
+    metal::String = ""
+    oxide::String = ""
     standards::Set{String} = Set{String}()
 end
-export REEInterference
+export monoInterference
 
 """
     Pairing
@@ -237,7 +237,7 @@ export Cmethod
 
 Abstract base type for mass bias correction parameters.
 
-Subtypes include `Bias` for standard isotope ratio bias and `REEBias`
+Subtypes include `Bias` for standard isotope ratio bias and `monoBias`
 for rare earth element oxide bias corrections.
 """
 abstract type AbstractBias end
@@ -260,14 +260,14 @@ mutable struct Bias <: AbstractBias
 end
 
 """
-    REEBias <: AbstractBias
+    monoBias <: AbstractBias
 
-Rare Earth Element oxide bias correction parameters.
+Polynomial correction for mono-isotopic Rare Earth Element interference corrections.
 
 # Fields
 - `par`: Vector of polynomial coefficients for bias correction
 """
-mutable struct REEBias <: AbstractBias
+mutable struct monoBias <: AbstractBias
     par::Vector{Float64}
 end
 
