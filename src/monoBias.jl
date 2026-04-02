@@ -1,6 +1,6 @@
 function fit_bias(run::Vector{Sample},
                   method::Gmethod,
-                  interference::REEInterference,
+                  interference::monoInterference,
                   blank::AbstractDataFrame)
     crunchers = NamedTuple[]
     for group in interference.standards
@@ -16,7 +16,7 @@ function fit_bias(run::Vector{Sample},
     objective = (par) -> SS(par,crunchers)
     optimum = Optim.optimize(objective,init)
     fit = Optim.minimizer(optimum)
-    return REEBias(fit)
+    return monoBias(fit)
 end
 
 function init_bias(crunchers::AbstractVector)
@@ -37,20 +37,20 @@ function add_bias!(bias::AbstractDict,
                    method::Gmethod,
                    blank::AbstractDataFrame,
                    bias_key::AbstractString,
-                   interference::REEInterference)
+                   interference::monoInterference)
     bias[bias_key] = fit_bias(run,method,interference,blank)
 end
 
-function bias_correction(bias::REEBias;
+function bias_correction(bias::monoBias;
                          t::AbstractVector,
                          other...)
     return polyFac(bias.par,t)
 end
 
 function BCruncher(samp::Sample,
-                   interference::REEInterference,
+                   interference::monoInterference,
                    blank::AbstractDataFrame)
-    Dch = interference.REE
-    bch = interference.REEO
+    Dch = interference.metal
+    bch = interference.oxide
     return BCruncher(samp,Dch,bch,blank)
 end

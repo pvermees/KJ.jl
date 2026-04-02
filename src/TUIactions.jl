@@ -328,8 +328,8 @@ function TUIchooseInterferenceProxyChannel!(ctrl::AbstractDict,
     end
 end
 
-function TUIchooseREEInterferenceProxyChannels!(ctrl::AbstractDict,
-                                                response::AbstractString)
+function TUIchooseMonoInterferenceProxyChannels!(ctrl::AbstractDict,
+                                                 response::AbstractString)
     selection = parse.(Int,split(response,","))
     channels = getChannels(ctrl["run"])
     key = channels[selection[1]]
@@ -337,8 +337,8 @@ function TUIchooseREEInterferenceProxyChannels!(ctrl::AbstractDict,
     if haskey(interferences,key)
         interference = interferences[key]
     else
-        interference = REEInterference(;REE=channels[selection[2]],
-                                        REEO=channels[selection[3]])
+        interference = monoInterference(;metal=channels[selection[2]],
+                                        oxide=channels[selection[3]])
     end
     ctrl["cache"].key = key
     ctrl["cache"].interference  = interference
@@ -372,11 +372,11 @@ end
 
 function TUIprintInterference(pairing::Pairing,
                               proxy_channel::AbstractString,
-                              interference::REEInterference)
+                              interference::monoInterference)
     return ". target=" * pairing.proxy * 
            "; proxy=\"" * proxy_channel * "\"" * 
-           "; REE=\"" * interference.REE * "\"" *
-           "; REEO=\"" * interference.REEO * "\"" *
+           "; metal=\"" * interference.metal * "\"" *
+           "; oxide=\"" * interference.oxide * "\"" *
            "; standards=[" * join(interference.standards,",") * "]"
 end
 
@@ -403,7 +403,7 @@ end
 function TUIgetInterferenceStandards(interference::Interference)
     return collect(interference.bias.standards)
 end
-function TUIgetInterferenceStandards(interference::REEInterference)
+function TUIgetInterferenceStandards(interference::monoInterference)
     return collect(interference.standards)
 end
 
@@ -1033,9 +1033,9 @@ function TUIinterference2template(interference::Interference)
     return out
 end
 
-function TUIinterference2template(interference::REEInterference)
-    out  = "REEInterference(REE=\"" * string(interference.REE) * "\""
-    out *= ", REEO=\"" * string(interference.REEO) * "\""
+function TUIinterference2template(interference::monoInterference)
+    out  = ",monoInterference(metal=\"" * string(interference.metal) * "\""
+    out *= ", oxide=\"" * string(interference.oxide) * "\""
     out *= ", standards=" * string(interference.standards) * ")"
     return out
 end

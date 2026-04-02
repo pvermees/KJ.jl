@@ -309,17 +309,18 @@ function init_KJtree()
         "interferenceType" => (
             message = 
             "Choose the type of interference:\n" *
-            "o: ordinary isobaric interference\n" *
-            "r: molecular rare earth interference\n" *
+            "p: poly-isotopic\n" *
+            "m: mono-isotopic\n" *
             "x: Exit\n" *
             "?: Help",
             help = 
-            "An 'ordinary' interference is an isobaric interference from " * 
-            "another element (e.g., Re185 on Os185), whereas a molecular " * 
-            "rare earth interference is a molecule (e.g., TmO on Re185).",
+            "A poly-isotopic interference can be corrected via a proxy isotope " * 
+            "(e.g., Lu175 for the Lu176 interference on Hf176), " * 
+            "whereas a mono-isotopic interference must be corrected via another element " * 
+            "(e.g., using LuO/Lu to correct the TmO interference on Re185).",
             action = Dict(
-                "o" => "interferenceIon",
-                "r" => "REEinterferenceProxy"
+                "p" => "interferenceIon",
+                "m" => "monoInterferenceProxy"
             )
         ),
         "interferenceIon" => (
@@ -337,13 +338,14 @@ function init_KJtree()
             "to the interference target.",
             action = TUIchooseInterferenceProxyChannel!
         ),
-        "REEinterferenceProxy" => (
-            message = TUIchooseREEInterferenceProxyChannelMessage,
+        "monoInterferenceProxy" => (
+            message = TUIchooseMonoInterferenceProxyChannelMessage,
             help =
-            "Suppose that the channels corresponding to X, Y and YO " * 
+            "Suppose XO interferes with the target isotope, and " * 
+            "that the channels corresponding to X, Y and YO " * 
             "appear as items 3, 8 and 13 of the list, then enter" * 
             "3,8,13 here as a comma-separated list of numbers:\n",
-            action = TUIchooseREEInterferenceProxyChannels!
+            action = TUIchooseMonoInterferenceProxyChannels!
         ),
         "setInterferenceProxy" => (
             message = TUIsetInterferenceProxyMessage,
