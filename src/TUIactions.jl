@@ -337,7 +337,7 @@ function TUIchooseMonoInterferenceProxyChannels!(ctrl::AbstractDict,
     if haskey(interferences,key)
         interference = interferences[key]
     else
-        interference = monoInterference(;metal=channels[selection[2]],
+        interference = MonoInterference(;metal=channels[selection[2]],
                                         oxide=channels[selection[3]])
     end
     ctrl["cache"].key = key
@@ -372,7 +372,7 @@ end
 
 function TUIprintInterference(pairing::Pairing,
                               proxy_channel::AbstractString,
-                              interference::monoInterference)
+                              interference::MonoInterference)
     return ". target=" * pairing.proxy * 
            "; proxy=\"" * proxy_channel * "\"" * 
            "; metal=\"" * interference.metal * "\"" *
@@ -403,7 +403,7 @@ end
 function TUIgetInterferenceStandards(interference::Interference)
     return collect(interference.bias.standards)
 end
-function TUIgetInterferenceStandards(interference::monoInterference)
+function TUIgetInterferenceStandards(interference::MonoInterference)
     return collect(interference.standards)
 end
 
@@ -1033,8 +1033,8 @@ function TUIinterference2template(interference::Interference)
     return out
 end
 
-function TUIinterference2template(interference::monoInterference)
-    out  = ",monoInterference(metal=\"" * string(interference.metal) * "\""
+function TUIinterference2template(interference::MonoInterference)
+    out  = "MonoInterference(metal=\"" * string(interference.metal) * "\""
     out *= ", oxide=\"" * string(interference.oxide) * "\""
     out *= ", standards=" * string(interference.standards) * ")"
     return out

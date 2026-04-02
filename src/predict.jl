@@ -85,7 +85,7 @@ function predict(samp::Sample,
 end
 function predict(samp::Sample,
                  proxy_channel::AbstractString,
-                 interference::monoInterference,
+                 interference::MonoInterference,
                  fit::Gfit;
                  generic_names::Bool=true)
     if samp.group in interference.standards
@@ -250,7 +250,7 @@ function generic_to_specific_pred_names!(df::AbstractDataFrame,
                :D => Symbol(calibration.den.channel))
 end
 function generic_to_specific_pred_names!(df::AbstractDataFrame,
-                                         interference::monoInterference)
+                                         interference::MonoInterference)
     rename!(df,:d => Symbol(interference.oxide),
                :D => Symbol(interference.metal))
 end
