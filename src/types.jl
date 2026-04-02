@@ -83,7 +83,7 @@ export Calibration
 Abstract base type for interference correction specifications.
 
 Subtypes include `Interference` for general isobaric interferences and
-`monoInterference` for monoisotopic rare earth element oxide interferences.
+`MonoInterference` for mono-isotopic rare earth element oxide interferences.
 """
 abstract type AbstractInterference end
 export AbstractInterference
@@ -106,21 +106,21 @@ end
 export Interference
 
 """
-    monoInterference <: AbstractInterference
+    MonoInterference <: AbstractInterference
 
-Mono isotope interference correction specification.
+Mono-isotopic interference correction specification.
 
 # Fields
 - `metal`: Metal ion channel
 - `oxide`: Oxide ion channel
 - `standards`: Set of reference materials used for calibration
 """
-@kwdef mutable struct monoInterference <: AbstractInterference
+@kwdef mutable struct MonoInterference <: AbstractInterference
     metal::String = ""
     oxide::String = ""
     standards::Set{String} = Set{String}()
 end
-export monoInterference
+export MonoInterference
 
 """
     Pairing
@@ -237,7 +237,7 @@ export Cmethod
 
 Abstract base type for mass bias correction parameters.
 
-Subtypes include `Bias` for standard isotope ratio bias and `monoBias`
+Subtypes include `Bias` for standard isotope ratio bias and `MonoBias`
 for rare earth element oxide bias corrections.
 """
 abstract type AbstractBias end
@@ -260,14 +260,14 @@ mutable struct Bias <: AbstractBias
 end
 
 """
-    monoBias <: AbstractBias
+    MonoBias <: AbstractBias
 
 Polynomial correction for mono-isotopic Rare Earth Element interference corrections.
 
 # Fields
 - `par`: Vector of polynomial coefficients for bias correction
 """
-mutable struct monoBias <: AbstractBias
+mutable struct MonoBias <: AbstractBias
     par::Vector{Float64}
 end
 

@@ -143,7 +143,7 @@ function methodtest(;option="all")
         Re_bias = Calibration(num=(ion="Re187",channel="Os187 -> 251"),
                               den=(ion="Re185",channel="Re185 -> 249"),
                               standards=Set(["Nist_massbias"]))
-        method.P.interferences["Tm169 -> 185"] = monoInterference(metal="Lu175 -> 191",
+        method.P.interferences["Tm169 -> 185"] = MonoInterference(metal="Lu175 -> 191",
                                                                   oxide="Ir191 -> 191",
                                                                   standards=Set(["Nist_REEint"]))
         method.D.interferences["Re187"] = Interference(proxy="Re185",

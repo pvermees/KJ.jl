@@ -221,7 +221,7 @@ function SS(bias::Bias,
     maha = mahalanobis(mf,y,bd,D;cruncher...)
     return sum(@. maha )
 end
-function SS(bias::monoBias;
+function SS(bias::MonoBias;
             cruncher...)
     mf = bias_correction(bias;cruncher...)
     D = getD(mf,1.0,1.0;cruncher...)
@@ -251,7 +251,7 @@ function SS(par::AbstractVector,
             crunchers::AbstractVector;
             verbose::Bool=false)
     out = 0.0
-    bias = monoBias(par)
+    bias = MonoBias(par)
     for cruncher in crunchers
         out += SS(bias;cruncher...)
     end

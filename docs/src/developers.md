@@ -20,7 +20,7 @@ Isotope pairing specification that links ions, proxies, and channels. Each pairi
 Abstract base type for interference correction specifications. Concrete subtypes include:
 
 - **`Interference`**: General isobaric interference correction with a proxy isotope, corrected channel, and associated bias correction settings
-- **`monoInterference`**: Mono-isotopic rare earth element oxide interference correction with metal channel, oxide channel, and reference material standards
+- **`MonoInterference`**: Mono-isotopic rare earth element oxide interference correction with metal channel, oxide channel, and reference material standards
 
 ### `Calibration`
 Settings for mass bias correction. Specifies numerator and denominator isotopes (with ion and channel names) and the set of reference materials used for calibration.
@@ -43,7 +43,7 @@ Abstract base type for anchor point definitions in isotope ratio space. Anchor p
 Abstract base type for mass bias correction parameters. Concrete subtypes include:
 
 - **`Bias`**: Standard isotope ratio bias with numerator mass, denominator mass, and polynomial correction coefficients
-- **`monoBias`**: Bias-like correction for mono-isotopic interference corrections 
+- **`MonoBias`**: Bias-like correction for mono-isotopic interference corrections 
 
 ### `KJfit`
 Abstract base type for fitted LA-ICP-MS correction parameters. Concrete subtypes include:
@@ -128,7 +128,7 @@ Initialize mass bias calibration for a geochronology method. Sets up the calibra
 #### `Interference`
 Define an isobaric interference correction. Specifies the proxy isotope used to estimate the interference, the channel being corrected, and optional bias correction settings.
 
-#### `monoInterference`
+#### `MonoInterference`
 Define a mono-isotopic rare earth element oxide interference correction. Specifies the metal channel, oxide channel, and reference materials used for calibration.
 
 #### `getAnchor`
