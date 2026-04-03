@@ -55,7 +55,7 @@ function getChannels(interference::Interference) :: AbstractVector
     end
     return unique(out)
 end
-function getChannels(interference::monoInterference) :: AbstractVector
+function getChannels(interference::MonoInterference) :: AbstractVector
     return [interference.metal,interference.oxide]
 end
 function getChannels(method::Gmethod) :: AbstractVector

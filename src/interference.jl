@@ -1,7 +1,7 @@
 """
     interference_correction(dat::AbstractDataFrame, interferences::AbstractDict; bias=Dict(), blank=DataFrame())
     interference_correction(dat::AbstractDataFrame, ion::AbstractString, interference::Interference; bias=Dict(), blank=DataFrame())
-    interference_correction(dat::AbstractDataFrame, proxy_channel::AbstractString, interference::monoInterference; bias=Dict(), blank=DataFrame())
+    interference_correction(dat::AbstractDataFrame, proxy_channel::AbstractString, interference::MonoInterference; bias=Dict(), blank=DataFrame())
 
 Apply interference corrections to measured data.
 
@@ -39,7 +39,7 @@ function interference_correction(dat::AbstractDataFrame,
 end
 function interference_correction(dat::AbstractDataFrame,
                                  proxy_channel::AbstractString,
-                                 interference::monoInterference;
+                                 interference::MonoInterference;
                                  bias::AbstractDict=Dict(),
                                  blank::AbstractDataFrame=DataFrame())
     meas = dat[:,proxy_channel]

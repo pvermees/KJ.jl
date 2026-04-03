@@ -1,6 +1,6 @@
-D:\Data_here\Pieter_Vermeesch\20150930plasmatrace.b\009SMPL.d,,,,,,,,,,
-Intensity Vs Time,CPS,,,,,,,,,
-Acquired      : 9/30/2015 1:45:45 PM using Batch 20150930plasmatrace.b,,,,,,,,,,
+D:\Data_here\Pieter_Vermeesch\20150930plasmatrace.b\STDCZ-9
+Intensity Vs Time,CPS
+Acquired      : 9/30/2015 1:45:45 PM using Batch 20150930plasmatrace.b
 Time [Sec],Si29,Zr91,Zr96,Hf178,Pb204,Pb206,Pb207,Pb208,Th232,U238
 0.518,72940.03,200,0,0,5150.81,0,0,0,40,0
 1.026,78662.86,600.01,0,0,4610.65,0,0,20,0,40
