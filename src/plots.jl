@@ -100,13 +100,22 @@ function plot(samp::Sample;
     p = Plots.plot(xlimits=xlim,ylimits=ylim,legend=legend)
     channels = names(y)
     cols = Plots.palette(cpalette,length(channels))
-    marker = fill(:circle,length(x))
-    marker[samp.dat.outlier] .= :xcross
+    outlier = samp.dat.outlier
+    good = .!outlier
+    has_outlier = any(outlier)
     for i in eachindex(channels)
-        Plots.scatter!(p,x,y[:,channels[i]];
-                       ms=ms,ma=ma,marker=marker,
+        # Draw labeled non-outliers with circles so the legend always uses circles.
+        Plots.scatter!(p,x[good],y[good,channels[i]];
+                       ms=ms,ma=ma,marker=:circle,
                        label=String(channels[i]),
                        markercolor=cols[i])
+        # Draw outliers as crosses without legend labels.
+        if has_outlier
+            Plots.scatter!(p,x[outlier],y[outlier,channels[i]];
+                           ms=ms,ma=ma,marker=:xcross,
+                           label="",
+                           markercolor=cols[i])
+        end
     end
     Plots.xlabel!(xlab)
     Plots.ylabel!(ylab)
@@ -126,7 +135,6 @@ function plot(samp::Sample;
                         linecolor=:black,linestyle=:dot,label="")
         end
     end
-    
     if return_offset
         return p, offset
     else
