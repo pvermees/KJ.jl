@@ -19,7 +19,7 @@ function LADR2KJ(ifile::AbstractString;
     df = CSV.read(ifile, DataFrame)
     Join = findall(df[:,"Join"] .== 1)
     multi = sort(unique([Join; Join.-1]))
-    out = ""
+    out = "top,v\n"
     nr = nrow(df)
     rnum = 1
     snum = 1
@@ -46,6 +46,7 @@ function LADR2KJ(ifile::AbstractString;
         end
         snum += 1
     end
+    out *= "view,x\n"
     write(ofile, out)
 end
 export LADR2KJ
