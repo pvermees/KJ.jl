@@ -741,8 +741,8 @@ function multicollector_test()
 end
 
 function LADR2KJtest()
-    LADR2KJ("data/timestamp/timewindows_ladr.csv";
-            ofile="output/LADR.log")
+    ifname = "data/timestamp/timewindows_ladr.csv"
+    LADR2KJ(ifname;ofile="output/LADR.log")
 end
 
 module test
