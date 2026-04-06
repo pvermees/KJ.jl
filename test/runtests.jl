@@ -740,6 +740,11 @@ function multicollector_test()
     display(p)
 end
 
+function LADR2KJtest()
+    LADR2KJ("data/timestamp/timewindows_ladr.csv";
+            ofile="output/LADR.log")
+end
+
 module test
 function extend!(_KJ::AbstractDict)
     old = _KJ["tree"]["top"]
@@ -809,6 +814,7 @@ Plots.closeall()
 @testset "bias test" begin biastest("Re-Os") end
 @testset "ReOs test" begin ReOs_test() end
 @testset "MC-ICP-MS test" begin multicollector_test() end
+@testset "LADR2KJ test" begin LADR2KJtest() end
 @testset "TUI test" begin TUItest() end
 @testset "dependency test" begin dependencytest() end
 
