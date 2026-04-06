@@ -548,7 +548,7 @@ end
 function glass_only_test()
     myrun = load("data/U-Pb",format="Agilent",head2name=false)
     method = Gmethod(name="U-Pb",
-                     groups=Dict("610" => "NIST610", "612" => "NIST612"))
+                     groups=Dict("GLASS" => "NIST612"))
     fit = process!(myrun,method)
     export2IsoplotR(myrun,method,fit;
                     fname="output/UPb_with_glass.json")
