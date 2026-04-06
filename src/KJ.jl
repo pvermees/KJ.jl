@@ -44,6 +44,7 @@ include("TUIcache.jl")
 include("TUImessages.jl")
 include("TUIactions.jl")
 include("TUI.jl")
+include("LADR2KJ.jl")
 
 init_KJ!()
 
