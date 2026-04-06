@@ -17,8 +17,6 @@ function LADR2KJ(ifile::AbstractString;
                  ofile::AbstractString=joinpath(pwd(), "windows.log"))
     
     df = CSV.read(ifile, DataFrame)
-    Join = findall(df[:,"Join"] .== 1)
-    multi = sort(unique([Join; Join.-1]))
     out = "top,v\n"
     nr = nrow(df)
     rnum = 1
@@ -27,15 +25,18 @@ function LADR2KJ(ifile::AbstractString;
         out *= "view,g\n" *
                "goto," * string(snum) * "\n" *
                "view,s\n"
-        if rnum in multi
+        if (df[rnum,"Join"] == 0 && rnum < nr && df[rnum+1,"Join"] == 1)
             out *= "Swin,m\n" *
                    "oneMultiSignalWindow,\""
             windows = String[]
-            while rnum in multi
+            while true
                 window = "(" * string(df[rnum,"Start"]) * 
                          "," * string(df[rnum,"End"]) * ")"
                 push!(windows, window)
                 rnum += 1
+                if df[rnum,"Join"] == 0 || rnum == nr
+                    break
+                end
             end
             out *= join(windows, ",") * "\"\n"
         else

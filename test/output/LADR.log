@@ -1,3 +1,4 @@
+top,v
 view,g
 goto,1
 view,s
@@ -108,3 +109,4 @@ view,g
 goto,27
 view,s
 oneSingleSignalWindow,"35.87332886,70.47680537"
+view,x
