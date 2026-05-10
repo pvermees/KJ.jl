@@ -239,7 +239,6 @@ function export2IsoplotR(ratios::AbstractDataFrame,
     json = replace(json,"\""*chronometer*"\":{}" =>
                    "\""*chronometer*"\":{"*datastring*"}}")
 
-    
     if chronometer in ["Lu-Hf","Rb-Sr","K-Ca","Re-Os"]
                         
         old = "\"geochronometer\":\"U-Pb\",\"plotdevice\":\"concordia\""

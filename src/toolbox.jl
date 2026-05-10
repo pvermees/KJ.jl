@@ -358,7 +358,11 @@ function get_offset(df::AbstractDataFrame;
                     transformation::AbstractString="",
                     num::AbstractString="",
                     den::AbstractString="")
-    smallest_two = partialsort(unique(vec(Matrix(df))),1:2)
+    uniquevals = unique(vec(Matrix(df)))
+    if (length(uniquevals)<2)
+        return uniquevals[1] > 0 ? 0.0 : abs(uniquevals[1]) + 1.0
+    end
+    smallest_two = partialsort(uniquevals,1:2)
     ratio = (num!="" || den!="")
     logarithmic = transformation == "log"
     vierkantswortel = transformation == "sqrt"
