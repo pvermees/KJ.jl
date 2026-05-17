@@ -77,12 +77,30 @@ function load(dfile::AbstractString,
     end
     try
         timestamps = CSV.read(tfile, DataFrame)
+        patch_time!(timestamps)
     catch e
         println("Failed to read "*tfile)
     end
     return parser_main(dat,timestamps)
 end
 export load
+
+function patch_time!(timestamps::AbstractDataFrame)
+    if count(':',timestamps.Timestamp[1]) == 1
+        timestamps.Timestamp = String.(timestamps.Timestamp)
+        YYMMDD = string(today())
+        H = 0
+        min = 0
+        for i in eachindex(timestamps[:,1])
+            M = parse(Int,split(timestamps.Timestamp[i], ':')[1])
+            if M < min
+                H += 1
+            end
+            min = M
+            timestamps.Timestamp[i] = YYMMDD * " " * string(H) * ":" * timestamps.Timestamp[i]
+        end
+    end
+end
 
 function readFile(fname::AbstractString;
                   format::AbstractString="Agilent",
