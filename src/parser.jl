@@ -3,13 +3,10 @@ function parser_main(ICP_data::AbstractDataFrame,
     lag, sweep = parser_lag_sweep(ICP_data,timestamps)
     LA_start_of_spot_indices = findall(.!ismissing.(timestamps[:,3])) # SubPoint
     LA_times = time_difference.(timestamps[1,1],timestamps[:,1])
-    LA_start_of_spot_times = LA_times[LA_start_of_spot_indices]
-    ICP_start_of_spot_indices = parser_LAtime2ICPindex(LA_start_of_spot_times,lag,sweep)
     nspot = length(LA_start_of_spot_indices)
     run = Vector{Sample}(undef,nspot)
     for i in eachindex(run)
         LA_start_of_spot_index = LA_start_of_spot_indices[i]
-        ICP_start_of_spot_index = ICP_start_of_spot_indices[i]
         if i == 1
             ICP_start_of_blank_index = 1
         else
@@ -34,9 +31,7 @@ function parser_main(ICP_data::AbstractDataFrame,
 end
 
 function parser_df2sample(selected_ICP_data::AbstractDataFrame,
-                          selected_timestamps::AbstractDataFrame;
-                          absolute_buffer::AbstractFloat=2.0,
-                          relative_buffer::AbstractFloat=0.1)
+                          selected_timestamps::AbstractDataFrame)
     sname = selected_timestamps[1,5] # Comment
     datetime = automatic_datetime(selected_timestamps[1,1])
     LA_on_off_indices = parser_on_off_indices(selected_timestamps)
