@@ -53,9 +53,30 @@ end
 
 function plot(blk::AbstractDataFrame,
               run::Vector{Sample})
-    df = reduce(vcat, bwinData(samp) for samp in run)
-    t = df.t
-    y = polyVal(blk,t)
-    Y = sum.(eachrow(y))
-    return Plots.plot(t,Y)
+    ns = length(run)
+    t = fill(0.0,ns)
+    y = fill(0.0,ns)
+    yf = fill(0.0,ns)
+    y025 = fill(0.0,ns)
+    y975 = fill(0.0,ns)
+    for i in eachindex(run)
+        df = bwinData(run[i])
+        sig = getSignals(df)
+        fit = polyVal(blk,df.t)
+        t[i] = Statistics.median(df.t)
+        y[i] = Statistics.mean(sum.(eachrow(sig)))
+        y025[i] = Statistics.quantile(sum.(eachrow(sig)), 0.025)
+        y975[i] = Statistics.quantile(sum.(eachrow(sig)), 0.975)
+        yf[i] = Statistics.mean(sum.(eachrow(fit)))
+    end
+    p = Plots.scatter(t,y, yerror=(y-y025, y975-y), marker=:circle, label=false)
+    Plots.plot!(t,yf, label=false)
+    p_top = twiny(p)
+    plot!(
+        p_top,
+        xlims = xlims(p),
+        xticks = (t,1:ns),
+        label = false
+    )
+    return p
 end
