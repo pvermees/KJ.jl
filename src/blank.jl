@@ -50,3 +50,12 @@ function init_blank(method::KJmethod)
     nc = length(channels)
     return DataFrame(fill(0.0,method.nblank,nc), channels)
 end
+
+function plot(blk::AbstractDataFrame,
+              run::Vector{Sample})
+    df = reduce(vcat, bwinData(samp) for samp in run)
+    t = df.t
+    y = polyVal(blk,t)
+    Y = sum.(eachrow(y))
+    return Plots.plot(t,Y)
+end
