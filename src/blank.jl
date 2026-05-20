@@ -32,7 +32,28 @@ Fit polynomial blank models to blank window data.
 - DataFrame of polynomial coefficients for each channel
 """
 function fitBlanks(run::Vector{Sample};
-                   nblank=2)
+                   nblank::Int = 2)
+    if nblank < 1
+        return fitPiecewiseBlanks(run)
+    else
+        return fitPolyBlanks(run, nblank)
+    end
+end
+export fitBlanks
+
+function fitPiecewiseBlanks(run::Vector{Sample})
+    ns = length(run)
+    channels = getChannels(run)
+    out = DataFrame([name => zeros(ns) for name in channels])
+    for i in eachindex(run)
+        samp = run[i]
+        blk = bwinData(samp)
+        out[i,channels] = Statistics.mean.(eachcol(blk[:,channels]))
+    end
+    return out
+end
+
+function fitPolyBlanks(run::Vector{Sample},nblank::Int)
     blk = reduce(vcat, bwinData(samp) for samp in run)
     channels = getChannels(run)
     nc = length(channels)
@@ -43,7 +64,6 @@ function fitBlanks(run::Vector{Sample};
     end
     return bpar
 end
-export fitBlanks
 
 function init_blank(method::KJmethod)
     channels = getChannels(method)
@@ -57,19 +77,24 @@ function plot(blk::AbstractDataFrame,
     t = fill(0.0,ns)
     y = fill(0.0,ns)
     yf = fill(0.0,ns)
-    y025 = fill(0.0,ns)
-    y975 = fill(0.0,ns)
+    yl = fill(0.0,ns)
+    yu = fill(0.0,ns)
+    polyBlank = nrow(blk) .!= length(run)
     for i in eachindex(run)
         df = bwinData(run[i])
         sig = getSignals(df)
-        fit = polyVal(blk,df.t)
+        if polyBlank
+            fit = polyVal(blk,df.t)
+            yf[i] = Statistics.mean(sum.(eachrow(fit)))
+        else
+            yf[i] = sum(blk[i,:])
+        end
         t[i] = Statistics.median(df.t)
         y[i] = Statistics.mean(sum.(eachrow(sig)))
-        y025[i] = Statistics.quantile(sum.(eachrow(sig)), 0.025)
-        y975[i] = Statistics.quantile(sum.(eachrow(sig)), 0.975)
-        yf[i] = Statistics.mean(sum.(eachrow(fit)))
+        yl[i] = Statistics.quantile(sum.(eachrow(sig)), 0.025)
+        yu[i] = Statistics.quantile(sum.(eachrow(sig)), 0.975)
     end
-    p = Plots.scatter(t,y, yerror=(y-y025, y975-y), marker=:circle, label=false)
+    p = Plots.scatter(t,y, yerror=(y-yl, yu-y), marker=:circle, label=false)
     Plots.plot!(t,yf, label=false)
     p_top = twiny(p)
     plot!(

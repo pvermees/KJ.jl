@@ -116,21 +116,19 @@ end
 export shift_windows!
 
 """
-    bwinData(samp::Sample; add_xy=false)
+    bwinData(samp::Sample)
 
 Extract data from the blank window of a sample.
 
 # Arguments
 - `samp`: Sample to extract data from
-- `add_xy`: If true, include x,y coordinates if available
 
 # Returns
 - DataFrame containing the windowed data
 """
-function bwinData(samp::Sample;
-                  add_xy::Bool=false)
+function bwinData(samp::Sample)
     windows = samp.bwin
-    selection, x, y = windows2selection(windows;add_xy=add_xy)
+    selection, x, y = windows2selection(windows)
     selected_dat =  samp.dat[selection,:]
     return selected_dat
 end
