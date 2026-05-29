@@ -138,9 +138,16 @@ function FCruncher(samp::Sample,
     t = dat.t
     T = dat.T
 
-    bpt = polyVal(fit.blank[:,method.P.channel],t)
-    bDt = polyVal(fit.blank[:,method.D.channel],t)
-    bbt = polyVal(fit.blank[:,method.d.channel],t)
+    if method.nblank>0
+        bpt = polyVal(fit.blank[:,method.P.channel], t)
+        bDt = polyVal(fit.blank[:,method.D.channel], t)
+        bbt = polyVal(fit.blank[:,method.d.channel], t)
+    else
+        i = findfirst(==(samp.sname), fit.blank[:, :sample])
+        bpt = fill(fit.blank[i, method.P.channel], length(t))
+        bDt = fill(fit.blank[i, method.D.channel], length(t))
+        bbt = fill(fit.blank[i, method.d.channel], length(t))
+    end
 
     pmb = pm - bpt
     Dmb = Dm - bDt

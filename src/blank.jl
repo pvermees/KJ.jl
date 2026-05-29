@@ -44,10 +44,12 @@ export fitBlanks
 function fitPiecewiseBlanks(run::Vector{Sample})
     ns = length(run)
     channels = getChannels(run)
-    out = DataFrame([name => zeros(ns) for name in channels])
+    out = hcat(DataFrame(:sample => fill("",ns)),
+               DataFrame([name => zeros(ns) for name in channels]))
     for i in eachindex(run)
         samp = run[i]
         blk = bwinData(samp)
+        out[i,:sample] = samp.sname
         out[i,channels] = Statistics.mean.(eachcol(blk[:,channels]))
     end
     return out
@@ -63,6 +65,10 @@ function fitPolyBlanks(run::Vector{Sample},nblank::Int)
         bpar[:,channel] = polyFit(blk.t[good],blk[good,channel],nblank)
     end
     return bpar
+end
+
+function isPolyBlank(blank::AbstractDataFrame)
+    return names(blank)[1] !== "sample"
 end
 
 function init_blank(method::KJmethod)
@@ -83,7 +89,7 @@ function plot(blk::AbstractDataFrame,
             fit = polyVal(blk,df.t)
             yf[i] = Statistics.mean(sum.(eachrow(fit)))
         else
-            yf[i] = sum(blk[i,:])
+            yf[i] = sum(blk[i,Not(:sample)])
         end
         t[i] = Statistics.median(df.t)
         y[i] = Statistics.mean(sum.(eachrow(sig)))

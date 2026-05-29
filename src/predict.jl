@@ -221,7 +221,14 @@ end
 function predict(samp::Sample,
                  blank::AbstractDataFrame)
     dat = bwinData(samp)
-    return polyVal(blank,dat.t)
+    if isPolyBlank(blank)
+        return polyVal(blank,dat.t)
+    else
+        i = findfirst(==(samp.sname), blank[:, :sample])
+        nt = length(dat.t)
+        row = blank[i,Not(:sample)]
+        return repeat(DataFrame(row), nt)
+    end
 end
 export predict
 
