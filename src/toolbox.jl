@@ -96,63 +96,6 @@ function polyFac(p::AbstractVector,
 end
 export polyFac
 
-function autoBwin(t::AbstractVector,
-                  on::AbstractFloat;
-                  start::AbstractFloat=t[1],
-                  stop::AbstractFloat=t[end],
-                  off::AbstractFloat=stop,
-                  absolute_buffer::AbstractFloat=2.0,
-                  relative_buffer::AbstractFloat=0.1)
-    selection = (t.>=start .&& t.<=stop)
-    if (on-start) > absolute_buffer
-        t2 = on - absolute_buffer
-    else
-        t2 = on - (on - start)*(1 - relative_buffer)
-    end
-    i1 = 1
-    i2 = findall(t[selection] .< t2)[end]
-    return [(i1,i2)]
-end
-function autoSwin(t::AbstractVector,
-                  on::AbstractFloat;
-                  start::AbstractFloat=t[1],
-                  stop::AbstractFloat=t[end],
-                  off::AbstractFloat=stop,
-                  absolute_buffer::AbstractFloat=2.0,
-                  relative_buffer::AbstractFloat=0.1)
-    selection = (t.>=start .&& t.<=stop)
-    duration = off - on 
-    if duration > 2*absolute_buffer
-        t1 = on + absolute_buffer
-        t2 = off - absolute_buffer
-    else
-        t1 = on + duration*(1 - relative_buffer)
-        t2 = off - duration*(1 - relative_buffer)
-    end
-    i1 = findall(t[selection] .< t1)[end]
-    i2 = findall(t[selection] .< t2)[end]
-    return [(i1,i2)]
-end
-function autoWindow(t::AbstractVector,
-                    t0::AbstractFloat;
-                    blank::Bool=false,
-                    absolute_buffer::AbstractFloat=2.0,
-                    relative_buffer::AbstractFloat=0.1)
-    if blank
-        return autoBwin(t,t0;
-                        absolute_buffer=absolute_buffer,
-                        relative_buffer=relative_buffer)
-    else
-        return autoSwin(t,t0;
-                        absolute_buffer=absolute_buffer,
-                        relative_buffer=relative_buffer)
-    end
-end
-function autoWindow(samp::Sample;
-                    blank=false)
-    return autoWindow(samp.dat[:,1],samp.t0;blank=blank)
-end
-
 function group2selection(run::Vector{Sample},
                          group::AbstractString="")
     if group==""
