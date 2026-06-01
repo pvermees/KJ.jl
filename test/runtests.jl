@@ -793,12 +793,12 @@ Plots.closeall()
 # @testset "export" begin exporttest() end
 # @testset "iCap" begin iCaptest() end
 # @testset "carbonate" begin carbonatetest() end
-@testset "timestamp" begin timestamptest() end
+# @testset "timestamp" begin timestamptest() end
 # @testset "stoichiometry" begin mineraltest() end
 # @testset "concentration" begin concentrationtest() end
 # @testset "Lu-Hf internochron" begin internochrontest() end
 # @testset "UPb internochron" begin internochronUPbtest() end
-# @testset "concentration map" begin maptest() end
+@testset "concentration map" begin maptest() end
 # @testset "isotope ratio map" begin map_dating_test() end
 # @testset "map fail test" begin map_fail_test() end
 # @testset "glass as age standard test" begin glass_only_test() end

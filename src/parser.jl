@@ -6,29 +6,15 @@ function parser_main(ICP_data::AbstractDataFrame,
     nspot = length(LA_start_of_spot_indices)
     run = Vector{Sample}(undef,nspot)
     for i in eachindex(run)
-        LA_start_of_spot_index = LA_start_of_spot_indices[i] - 1
-        start_with_on = timestamps[LA_start_of_spot_indices[i],11] == "on"
-        delay = start_with_on ? -1 : 0
-        LA_start_of_spot_index = LA_start_of_spot_indices[i] + delay
-        if i == 1
-            ICP_start_of_blank_index = 1
-        else
-            LA_start_of_blank_time = LA_times[LA_start_of_spot_index-1-delay]
-            ICP_start_of_blank_index = parser_LAtime2ICPindex(LA_start_of_blank_time,
-                                                              lag,sweep)
-        end
-        if i == nspot
-            LA_end_of_spot_index = length(LA_times)
-        else
-            LA_end_of_spot_index = LA_start_of_spot_indices[i+1] - 1
-        end
+        LA_start_of_blank_index = max(LA_start_of_spot_indices[i]-1, 1)
+        LA_start_of_blank_time = LA_times[LA_start_of_blank_index]
+        ICP_start_of_blank_index = i > 1 ? parser_LAtime2ICPindex(LA_start_of_blank_time,lag,sweep) : 1
+        LA_end_of_spot_index = i < nspot ? LA_start_of_spot_indices[i+1] - 1 : length(LA_times)
         LA_end_of_spot_time = LA_times[LA_end_of_spot_index]
-        ICP_end_of_spot_index = parser_LAtime2ICPindex(LA_end_of_spot_time,
-                                                       lag,sweep)
+        ICP_end_of_spot_index = parser_LAtime2ICPindex(LA_end_of_spot_time,lag,sweep)
         selected_ICP_data = ICP_data[ICP_start_of_blank_index:ICP_end_of_spot_index,:]
-        selected_timestamps = timestamps[LA_start_of_spot_index:LA_end_of_spot_index,:]
-        run[i] = parser_df2sample(selected_ICP_data,
-                                  selected_timestamps)
+        selected_timestamps = timestamps[LA_start_of_blank_index:LA_end_of_spot_index,:]
+        run[i] = parser_df2sample(selected_ICP_data,selected_timestamps)
     end
     return run
 end
@@ -47,8 +33,7 @@ function parser_df2sample(selected_ICP_data::AbstractDataFrame,
     nsweep = length(ICP_times)
     sweep = ICP_times[end]/nsweep
     lag = round(Int,nsweep*(1-LA_on_off_times[end]/ICP_times[end]))
-    ICP_on_off_indices = parser_LAtime2ICPindex(LA_on_off_times,
-                                               lag,sweep)
+    ICP_on_off_indices = parser_LAtime2ICPindex(LA_on_off_times,lag,sweep)
     i0 = ICP_on_off_indices[1]
     t0 = ICP_times[i0]
     bwin = parser_bwin(i0,ICP_times)
