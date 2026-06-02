@@ -240,7 +240,7 @@ Get a tuple with the channel and its reference concentration
 function getInternal(mineral::AbstractString,
                      channel::AbstractString)
     element = channel2element(channel)
-    concentration = get(_KJ["stoichiometry"],mineral)[element] * 1e5
+    concentration = get(_KJ["stoichiometry"],mineral)[element] * 1e4
     return (channel,concentration)
 end
 export getInternal
