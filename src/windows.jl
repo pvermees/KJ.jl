@@ -1,38 +1,33 @@
 function autoBwin(t::AbstractVector,
-                  on::AbstractFloat;
-                  start::AbstractFloat=t[1],
-                  stop::AbstractFloat=t[end],
-                  off::AbstractFloat=stop,
+                  t0::AbstractFloat;
                   absolute_buffer::AbstractFloat=2.0,
-                  relative_buffer::AbstractFloat=0.1)
-    selection = (t.>=start .&& t.<=stop)
-    if (on-start) > absolute_buffer
-        t2 = on - absolute_buffer
+                  relative_buffer::AbstractFloat=0.1,
+                  len::AbstractFloat=t0-t[1]-absolute_buffer)
+    duration = t0 - t[1]
+    if duration > absolute_buffer
+        t2 = t0 - absolute_buffer
     else
-        t2 = on - (on - start)*(1 - relative_buffer)
+        t2 = t0 - duration*(1 - relative_buffer)
     end
-    i1 = 1
-    i2 = findall(t[selection] .< t2)[end]
+    t1 = max(0.0, t2 - len)
+    i1 = findall(t .>= t1)[1]
+    i2 = findall(t .< t2)[end]
     return [(i1,i2)]
 end
 function autoSwin(t::AbstractVector,
-                  on::AbstractFloat;
-                  start::AbstractFloat=t[1],
-                  stop::AbstractFloat=t[end],
-                  off::AbstractFloat=stop,
+                  t0::AbstractFloat;
                   absolute_buffer::AbstractFloat=2.0,
                   relative_buffer::AbstractFloat=0.1)
-    selection = (t.>=start .&& t.<=stop)
-    duration = off - on 
+    duration = t[end] - t0 
     if duration > 2*absolute_buffer
-        t1 = on + absolute_buffer
-        t2 = off - absolute_buffer
+        t1 = t0 + absolute_buffer
+        t2 = t[end] - absolute_buffer
     else
-        t1 = on + duration*(1 - relative_buffer)
-        t2 = off - duration*(1 - relative_buffer)
+        t1 = t0 + duration*(1 - relative_buffer)
+        t2 = t[end] - duration*(1 - relative_buffer)
     end
-    i1 = findall(t[selection] .< t1)[end]
-    i2 = findall(t[selection] .< t2)[end]
+    i1 = findall(t .> t1)[1]
+    i2 = findall(t .< t2)[end]
     return [(i1,i2)]
 end
 function autoWindow(t::AbstractVector,
@@ -228,7 +223,8 @@ function windows2selection(windows::AbstractVector;
         x = Float64[]
         y = Float64[]
     else
-        x = y = nothing
+        x = nothing
+        y = nothing
     end
     for w in windows
         append!(selection, w[1]:w[2])
