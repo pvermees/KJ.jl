@@ -24,8 +24,8 @@ function concentrations(samp::Sample,
                         internal::Tuple=method.internal)
     dat = swinData(samp;add_xy=true)
     sig = getSignals(dat)
-    bt = polyVal(fit.blank,dat.t)
-    X = getSignals(dat) .- bt
+    bt = predict(samp,fit.blank;t=dat.t)
+    X = sig .- bt
     Cs = internal[2]
     Xs = X[:,internal[1]]
     out = (X .* Cs) ./ (Xs .* fit.par)

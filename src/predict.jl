@@ -109,7 +109,7 @@ function predict(samp::Sample,
         standard = method.groups[samp.group]
         internal = method.internal[1]
         dat = swinData(samp)
-        bt = polyVal(fit.blank,dat.t)
+        bt = predict(samp,fit.blank;t=dat.t)
         S = getSignals(dat)[:,internal] .- bt[:,internal]
         C = getConcentrations(method,standard)
         Cs = C[1,internal]
@@ -219,17 +219,22 @@ function predict(samp::Sample,
 end
 
 function predict(samp::Sample,
-                 blank::AbstractDataFrame)
+                 blank::AbstractDataFrame;
+                 t=nothing)
     dat = bwinData(samp)
+    if isnothing(t)
+        t = dat.t
+    end
     if isPolyBlank(blank)
-        return polyVal(blank,dat.t)
+        return polyVal(blank,t)
     else
         i = findfirst(==(samp.sname), blank[:, :sample])
-        nt = length(dat.t)
+        nt = length(t)
         row = blank[i,Not(:sample)]
         return repeat(DataFrame(row), nt)
     end
 end
+
 export predict
 
 function ft_hT(f::Gfit,

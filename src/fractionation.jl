@@ -98,13 +98,15 @@ function fractionation!(fit::Cfit,
     internal = method.internal[1]
     for (group,standard) in method.groups
         selection = getIndicesInGroup(run,group)
-        dats = [swinData(samp) for samp in run[selection]]
-        for dat in dats
-            bt = polyVal(fit.blank,dat.t)
+        for samp in run[selection]
+            dat = swinData(samp)
+            bt = predict(samp,fit.blank;t=dat.t)
             X = getSignals(dat) .- bt
+            S = X[:,internal]
             C = getConcentrations(method,standard)
-            num[1,:] = Vector(num[1,:]) + sum.(eachcol(C[1,internal].*X.*X[:,internal]))
-            den[1,:] = Vector(den[1,:]) + sum.(eachcol(C.*(X[:,internal].^2)))
+            Cs = C[1,internal]
+            num[1,:] = Vector(num[1,:]) + sum.(eachcol(Cs.*X.*S))
+            den[1,:] = Vector(den[1,:]) + sum.(eachcol(C.*(S.^2)))
         end
     end
     fit.par = num./den
@@ -138,16 +140,10 @@ function FCruncher(samp::Sample,
     t = dat.t
     T = dat.T
 
-    if method.nblank>0
-        bpt = polyVal(fit.blank[:,method.P.channel], t)
-        bDt = polyVal(fit.blank[:,method.D.channel], t)
-        bbt = polyVal(fit.blank[:,method.d.channel], t)
-    else
-        i = findfirst(==(samp.sname), fit.blank[:, :sample])
-        bpt = fill(fit.blank[i, method.P.channel], length(t))
-        bDt = fill(fit.blank[i, method.D.channel], length(t))
-        bbt = fill(fit.blank[i, method.d.channel], length(t))
-    end
+    blk = predict(samp,fit.blank;t=t)
+    bpt = blk[:,method.P.channel]
+    bDt = blk[:,method.D.channel]
+    bbt = blk[:,method.d.channel]
 
     pmb = pm - bpt
     Dmb = Dm - bDt
