@@ -1,3 +1,10 @@
+function autoBwin(samp::Sample;
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1)
+    return autoBwin(samp.dat[:,1],samp.t0;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
+end
 function autoBwin(t::AbstractVector,
                   t0::AbstractFloat;
                   absolute_buffer::AbstractFloat=2.0,
@@ -14,6 +21,13 @@ function autoBwin(t::AbstractVector,
     i2 = findall(t .< t2)[end]
     return [(i1,i2)]
 end
+function autoSwin(samp::Sample;
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1)
+    return autoSwin(samp.dat[:,1],samp.t0;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
+end
 function autoSwin(t::AbstractVector,
                   t0::AbstractFloat;
                   absolute_buffer::AbstractFloat=2.0,
@@ -29,25 +43,6 @@ function autoSwin(t::AbstractVector,
     i1 = findall(t .> t1)[1]
     i2 = findall(t .< t2)[end]
     return [(i1,i2)]
-end
-function autoWindow(t::AbstractVector,
-                    t0::AbstractFloat;
-                    blank::Bool=false,
-                    absolute_buffer::AbstractFloat=2.0,
-                    relative_buffer::AbstractFloat=0.1)
-    if blank
-        return autoBwin(t,t0;
-                        absolute_buffer=absolute_buffer,
-                        relative_buffer=relative_buffer)
-    else
-        return autoSwin(t,t0;
-                        absolute_buffer=absolute_buffer,
-                        relative_buffer=relative_buffer)
-    end
-end
-function autoWindow(samp::Sample;
-                    blank=false)
-    return autoWindow(samp.dat[:,1],samp.t0;blank=blank)
 end
 
 """
@@ -87,7 +82,7 @@ function setBwin!(run::Vector{Sample})
 end
 
 function setBwin!(samp::Sample)
-    bwin = autoWindow(samp,blank=true)
+    bwin = autoBwin(samp)
     setBwin!(samp,bwin)
 end
 export setBwin!
@@ -129,7 +124,7 @@ function setSwin!(run::Vector{Sample})
 end
 
 function setSwin!(samp::Sample)
-    swin = autoWindow(samp,blank=false)
+    swin = autoSwin(samp)
     setSwin!(samp,swin)
 end
 export setSwin!

@@ -199,12 +199,12 @@ function io_df2sample(df::AbstractDataFrame,
     t = df[:,1]
     i0 = geti0(df[:,2:end])
     t0 = df[i0,1]
-    bwin = autoWindow(t,t0;blank=true,
-                      absolute_buffer=absolute_buffer,
-                      relative_buffer=relative_buffer)
-    swin = autoWindow(t,t0;blank=false,
-                      absolute_buffer=absolute_buffer,
-                      relative_buffer=relative_buffer)
+    bwin = autoBwin(t,t0;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
+    swin = autoSwin(t,t0;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
     return Sample(sname,datetime,df,t0,bwin,swin,"sample")
 end
 
