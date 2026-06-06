@@ -297,6 +297,10 @@ function transformeer(df::AbstractDataFrame,
     end
 end
 
+function emptyFit(fit::Union{Nothing,KJfit})
+    return isnothing(fit) || size(fit.blank,2) == 0
+end
+
 function get_offset(df::AbstractDataFrame;
                     transformation::AbstractString="",
                     num::AbstractString="",
@@ -329,7 +333,7 @@ function get_offset(samp::Sample;
                     den::AbstractString="")
     meas = samp.dat[:,channels]
     offset1 = get_offset(meas;transformation=transformation,num=num,den=den)
-    if isnothing(fit)
+    if emptyFit(fit)
         return offset1
     else
         pred = predict(samp,fit.blank)

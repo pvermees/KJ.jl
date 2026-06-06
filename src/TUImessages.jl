@@ -356,7 +356,7 @@ function TUIexportFormatMessage(method::Cmethod)
 end
 
 function TUIsetNblankMessage(ctrl::AbstractDict)
-    msg = "Enter a non-negative integer (current value = " *
+    msg = "Enter an integer (current value = " *
     string(ctrl["method"].nblank) * ", ? for help, x to exit):"
     return msg
 end

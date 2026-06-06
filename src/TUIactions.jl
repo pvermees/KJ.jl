@@ -861,6 +861,14 @@ function TUIoneMultiSignalWindow!(ctrl::AbstractDict,
                                   response::AbstractString)
     TUIwindowHandler!(ctrl;response=response,all=false,single=false,blank=false)
 end
+function TUIfixOneBlankLength!(ctrl::AbstractDict,
+                               response::AbstractString)
+    TUIwindowHandler!(ctrl;len=parse(Float64,response),all=false,blank=true)
+end
+function TUIfixAllBlankLengths!(ctrl::AbstractDict,
+                                response::AbstractString)
+    TUIwindowHandler!(ctrl;len=parse(Float64,response),all=true,blank=true)
+end
 function TUIallSingleSignalWindows!(ctrl::AbstractDict,
                                     response::AbstractString)
     TUIwindowHandler!(ctrl;response=response,all=true,single=true,blank=false)
@@ -871,18 +879,21 @@ function TUIallMultiSignalWindows!(ctrl::AbstractDict,
 end
 function TUIwindowHandler!(ctrl::AbstractDict;
                            response::AbstractString="",
+                           len::Float64=-1.0,
                            all::Bool=false,
                            single::Bool=false,
                            blank::Bool=false)
     target = ifelse(all,ctrl["run"],ctrl["run"][ctrl["i"]])
     fun! = ifelse(blank,setBwin!,setSwin!)
-    if response==""
+    next = "xx"
+    if len > 0
+        fun!(target;len=len)
+    elseif response==""
         fun!(target)
         next = "x"
     else
         win = string2windows(target,response,single)
         fun!(target,win)
-        next = "xx"
     end
     TUIplotter(ctrl)
     return next

@@ -55,7 +55,7 @@ function plot(samp::Sample,
              title=title,legend=legend,cpalette=cpalette,
              titlefontsize=titlefontsize)
 
-    if !isnothing(fit)
+    if !emptyFit(fit)
         if samp.group !== "sample"
             plotFitted!(p,samp,method,fit;
                         channels=channels,num=num,den=den,

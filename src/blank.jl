@@ -14,8 +14,7 @@ for each channel.
 function blank!(fit::KJfit,
                 method::KJmethod,
                 run::Vector{Sample})
-    fit.blank = fitBlanks(run;
-                          nblank=method.nblank)
+    fit.blank = fitBlanks(run;nblank=method.nblank)
 end
 export blank!
 
@@ -26,14 +25,15 @@ Fit polynomial blank models to blank window data.
 
 # Arguments
 - `run`: Vector of samples
-- `nblank`: Order of polynomial (default: 2 for quadratic)
+- `nblank`: Order of polynomial (default: 2 for quadratic). 
+            Negative values indicate piecewise constant blanks.
 
 # Returns
 - DataFrame of polynomial coefficients for each channel
 """
 function fitBlanks(run::Vector{Sample};
                    nblank::Int = 2)
-    if nblank < 1
+    if nblank < 0
         return fitPiecewiseBlanks(run)
     else
         return fitPolyBlanks(run, nblank)
