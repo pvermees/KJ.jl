@@ -1,3 +1,21 @@
+function add_concordia_line!(p::Plots.Plot)
+    xmax = Plots.xlims(p)[2]
+    ymax = Plots.ylims(p)[2]
+    L5, L8, U58 = UPb_helper()
+    tmin = log(1+1/xmax)/L8
+    function Pb76misfit(par)
+        t = par[1]
+        ypred = U58*(exp(L5*t)-1)/(exp(L8*t)-1)
+        return (ymax - ypred)^2
+    end
+    Pb76fit = Optim.optimize(Pb76misfit,[4000.0])
+    tmax = Optim.minimizer(Pb76fit)[1]
+    t = range(tmin[1],tmax;step=50)
+    x = @. 1/(exp(L8*t)-1)
+    y = @. U58*(exp(L5*t)-1)/(exp(L8*t)-1)
+    Plots.scatter!(p,x,y,linewidth=1.5,linecolor=:black)
+end
+
 """
     internoplot(samp::Sample, method::Gmethod, fit::Gfit; legend=false, nsigma=2, title=..., titlefontsize=10, plot_options...)
 
@@ -47,9 +65,7 @@ function internoplot(samp::Sample,
                         Plots.ylims(p)[2],
                         Plots.text(tstring,:right,titlefontsize))
         if method=="U-Pb"
-            xmax = Plots.xlims(p)[2]
-            ymax = Plots.ylims(p)[2]
-            add_concordia_line(xmax,ymax)
+            add_concordia_line!(p)
         end
     end
     Plots.title!(title;titlefontsize=titlefontsize)
@@ -78,26 +94,10 @@ function internoplot(x0::AbstractFloat,
     covmat = J * E * transpose(J)
     sy = sqrt.(diag(covmat))
     p = Plots.plot(x,y,ribbon=nsigma*sy;legend=legend,xlim=xlim,ylim=ylim,plot_options...)
-    Plots.plot!([0,x0],[y0,0];seriescolor=:black,legend=legend)
-    Plots.plot!(Phat./Dhat,dhat./Dhat;seriestype=:scatter,legend=legend,plot_options...)
+    Plots.plot!(p,[0,x0],[y0,0];seriescolor=:black,legend=legend)
+    Plots.scatter!(p,Phat./Dhat,dhat./Dhat;legend=legend,plot_options...)
     Plots.xlabel!(xlab)
     Plots.ylabel!(ylab)
     return p
 end
 export internoplot
-
-function add_concordia_line(xmax,ymax)
-    L5, L8, U58 = UPb_helper()
-    tmin = log(1+1/xmax)/L8
-    function Pb76misfit(par)
-        t = par[1]
-        ypred = U58*(exp(L5*t)-1)/(exp(L8*t)-1)
-        return (ymax - ypred)^2
-    end
-    Pb76fit = Optim.optimize(Pb76misfit,[4000.0])
-    tmax = Optim.minimizer(Pb76fit)[1]
-    t = range(tmin[1],tmax;step=50)
-    x = @. 1/(exp(L8*t)-1)
-    y = @. U58*(exp(L5*t)-1)/(exp(L8*t)-1)
-    Plots.plot!(x,y,linewidth=1.5,linecolor=:black)
-end

@@ -99,7 +99,7 @@ function plot(samp::Sample;
     elseif ylim == :swin
         ylim = get_ylim(y,samp.swin)
     end
-    p = Plots.plot(xlimits=xlim,ylimits=ylim,legend=legend)
+    p = Plots.plot(xlims=xlim,ylims=ylim,legend=legend)
     channels = names(y)
     cols = Plots.palette(cpalette,length(channels))
     outlier = samp.dat.outlier

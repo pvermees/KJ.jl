@@ -78,10 +78,11 @@ function init_blank(method::KJmethod)
 end
 
 function plot(blk::AbstractDataFrame,
-              run::Vector{Sample})
+              run::Vector{Sample};
+              plot_options...)
     ns = length(run)
     t, y, yf, yl, yu = zeros(ns), zeros(ns), zeros(ns), zeros(ns), zeros(ns)
-    polyBlank = nrow(blk) .!= length(run)
+    polyBlank = isPolyBlank(blk)
     for i in eachindex(run)
         df = bwinData(run[i])
         sig = getSignals(df)
@@ -96,8 +97,9 @@ function plot(blk::AbstractDataFrame,
         yl[i] = Statistics.quantile(sum.(eachrow(sig)), 0.025)
         yu[i] = Statistics.quantile(sum.(eachrow(sig)), 0.975)
     end
-    p = Plots.scatter(t,y, yerror=(y-yl, yu-y), marker=:circle, label=false)
+    p = Plots.scatter(t, y, yerror=(y-yl, yu-y), marker=:circle, label=false; plot_options...)
     o = detect_outliers(y)
     annotate!(p, t[o], yu[o], text.(o,7,:center,:bottom))
+    Plots.plot!(p, t, yf, label=nothing, color=:red)
     return p
 end
