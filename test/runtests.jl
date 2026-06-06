@@ -774,7 +774,7 @@ Plots.closeall()
 # @testset "load" begin loadtest(;verbose=true) end
 # @testset "plot raw data" begin plottest(2) end
 # @testset "set selection window" begin windowtest() end
-@testset "set method and blanks" begin blanktest(;doplot=true) end
+# @testset "set method and blanks" begin blanktest(;doplot=true) end
 # @testset "moving median test" begin mmediantest() end
 # @testset "outlier detection" begin outliertest_synthetic() end
 # @testset "outlier detection" begin outliertest_sample() end
@@ -818,4 +818,4 @@ Plots.closeall()
 # @testset "TUI test" begin TUItest() end
 # @testset "dependency test" begin dependencytest() end
 
-# TUI(;debug=true)
+TUI(;debug=true)

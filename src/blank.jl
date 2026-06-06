@@ -97,7 +97,11 @@ function plot(blk::AbstractDataFrame,
         yl[i] = Statistics.quantile(sum.(eachrow(sig)), 0.025)
         yu[i] = Statistics.quantile(sum.(eachrow(sig)), 0.975)
     end
-    p = Plots.scatter(t, y, yerror=(y-yl, yu-y), marker=:circle, label=false; plot_options...)
+    p = Plots.scatter(t, y, yerror=(y-yl, yu-y), 
+                      marker=:circle, label=false; 
+                      plot_options...)
+    xlabel!("Normalised time")
+    ylabel!("Total signal")
     o = detect_outliers(y)
     annotate!(p, t[o], yu[o], text.(o,7,:center,:bottom))
     Plots.plot!(p, t, yf, label=nothing, color=:red)

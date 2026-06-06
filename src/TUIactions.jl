@@ -152,11 +152,13 @@ function TUImethod!(ctrl::AbstractDict,
                     response::AbstractString)
     if response=="c"
         ctrl["method"] = Cmethod(ctrl["run"])
+        ctrl["fit"] = Cfit()
         return "internal"
     else
         i = parse(Int,response)
         methodname = _KJ["methods"].names[i]
         ctrl["method"] = Gmethod(name=methodname)
+        ctrl["fit"] = Gfit(ctrl["method"])
         return "columns"
     end
 end
@@ -697,6 +699,12 @@ function TUIchooseBiasStandard!(ctrl::AbstractDict,
     refmats = TUIgetBiasStandards(m)
     ctrl["cache"].standard = refmats.names[i]
     return "addStandardGroup"
+end
+
+function TUIviewBlanks!(ctrl::AbstractDict)
+    p = plot(ctrl["fit"].blank,ctrl["run"])
+    display(p)
+    return "x"
 end
 
 function TUIviewer(ctrl::AbstractDict)

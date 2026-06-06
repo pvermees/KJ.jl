@@ -1036,6 +1036,7 @@ function init_KJtree()
         ),
         "extra" => (
             message =
+            "b: Plot the blanks\n" *
             "i: Internal isochrons\n" *
             "t: Time-resolved estimates\n" *
             "m: Maps\n" *
@@ -1045,6 +1046,7 @@ function init_KJtree()
             "If you supplied any extensions when starting KJ, " *
             "they will tend to put their options in this menu",
             action = Dict(
+                "b" => TUIviewBlanks!,
                 "i" => "internochron",
                 "t" => "timeresolved",
                 "m" => TUImapper
