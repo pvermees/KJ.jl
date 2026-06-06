@@ -1,9 +1,16 @@
 function autoBwin(samp::Sample;
                   absolute_buffer::AbstractFloat=2.0,
-                  relative_buffer::AbstractFloat=0.1)
-    return autoBwin(samp.dat[:,1],samp.t0;
+                  relative_buffer::AbstractFloat=0.1,
+                  len::Union{AbstractFloat,Nothing}=nothing)
+    t = samp.dat[:,1]
+    t0 = samp.t0
+    if isnothing(len)
+        len = t0 - t[1] - absolute_buffer
+    end
+    return autoBwin(t,t0;
                     absolute_buffer=absolute_buffer,
-                    relative_buffer=relative_buffer)
+                    relative_buffer=relative_buffer,
+                    len=len)
 end
 function autoBwin(t::AbstractVector,
                   t0::AbstractFloat;
@@ -65,7 +72,8 @@ function setBwin!(run::Vector{Sample},
                   bwin::AbstractVector;
                   seconds::Bool=false)
     for i in eachindex(run)
-        setBwin!(run[i],bwin;seconds=seconds)
+        setBwin!(run[i],bwin;
+                 seconds=seconds)
     end
 end
 
@@ -75,14 +83,26 @@ function setBwin!(samp::Sample,
     samp.bwin = seconds ? time2window(samp,bwin) : bwin
 end
 
-function setBwin!(run::Vector{Sample})
+function setBwin!(run::Vector{Sample};
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1,
+                  len::Union{AbstractFloat,Nothing}=nothing)
     for i in eachindex(run)
-        setBwin!(run[i])
+        setBwin!(run[i];
+                 absolute_buffer=absolute_buffer,
+                 relative_buffer=relative_buffer,
+                 len=len)
     end
 end
 
-function setBwin!(samp::Sample)
-    bwin = autoBwin(samp)
+function setBwin!(samp::Sample;
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1,
+                  len::Union{AbstractFloat,Nothing}=nothing)
+    bwin = autoBwin(samp;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer,
+                    len=len)
     setBwin!(samp,bwin)
 end
 export setBwin!
@@ -117,14 +137,22 @@ function setSwin!(samp::Sample,
     samp.swin = seconds ? time2window(samp,swin) : swin
 end
 
-function setSwin!(run::Vector{Sample})
+function setSwin!(run::Vector{Sample};
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1)
     for samp in run
-        setSwin!(samp)
+        setSwin!(samp;
+                 absolute_buffer=absolute_buffer,
+                 relative_buffer=relative_buffer)
     end
 end
 
-function setSwin!(samp::Sample)
-    swin = autoSwin(samp)
+function setSwin!(samp::Sample;
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1)
+    swin = autoSwin(samp;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
     setSwin!(samp,swin)
 end
 export setSwin!
