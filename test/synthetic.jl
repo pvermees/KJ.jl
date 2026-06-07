@@ -79,6 +79,8 @@ function synthetic!(method::Gmethod;
     a = getAnchor(method.name,collect(method.standards)[1])
     y0_std = a.y0
     fit = Gfit(method;drift=drift,down=down)
+    channels = getChannels(method)
+    fit.blank = DataFrame(zeros(method.nblank,length(channels)), channels)
     fit.blank[:,:] .= D./1000
     run = [
         random_sample(method,fit;i=1,n=4,

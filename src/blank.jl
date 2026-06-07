@@ -71,12 +71,6 @@ function isPolyBlank(blank::AbstractDataFrame)
     return names(blank)[1] !== "sample"
 end
 
-function init_blank(method::KJmethod)
-    channels = getChannels(method)
-    nc = length(channels)
-    return DataFrame(zeros(method.nblank,nc), channels)
-end
-
 function plot(blk::AbstractDataFrame,
               run::Vector{Sample};
               plot_options...)
