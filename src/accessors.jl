@@ -96,6 +96,7 @@ Get a vector of group labels from a run.
 function getGroups(run::Vector{Sample})
     return getAttr(run,:group)
 end
+export getGroups
 
 """
     getIndicesInGroup(run::Vector{Sample}, group::AbstractString)

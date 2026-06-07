@@ -24,6 +24,11 @@ function init_methods(csv::AbstractString=joinpath(@__DIR__,"../settings/methods
     return out
 end
 
+function init_methods!(csv::AbstractString=joinpath(@__DIR__,"../settings/methods.csv"))
+    _KJ["methods"] = init_methods(csv)
+end
+
+
 function init_lambdas(csv::AbstractString=joinpath(@__DIR__,"../settings/lambda.csv"))
     tab = CSV.read(csv, DataFrame)
     out = Dict()
