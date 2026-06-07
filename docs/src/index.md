@@ -80,7 +80,6 @@ You can also synchronize changes made in the REPL back to the TUI:
 julia> setKJctrl!(ctrl)
 julia> TUI()  # Resume with updated settings
 ```
-Seamlessly switch between the TUI and REPL. Store TUI settings into a variable and manipulate them programmatically using `getKJctrl()` and `setKJctrl!()` functions.
 
 Further information about `KJ`'s software architecture is provided in the [Developer section](developers.md) of this document.
 

@@ -703,8 +703,12 @@ function TUIchooseBiasStandard!(ctrl::AbstractDict,
 end
 
 function TUIviewBlanks!(ctrl::AbstractDict)
-    p = plot(ctrl["fit"].blank,ctrl["run"])
-    display(p)
+    if emptyFit(ctrl["fit"])
+        println("No blank data available.")
+    else
+        p = plot(ctrl["fit"].blank,ctrl["run"])
+        display(p)
+    end
     return "x"
 end
 

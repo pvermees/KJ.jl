@@ -1,3 +1,11 @@
+"""
+    fit_bias(run::Vector{Sample}, method::Gmethod, interference::MonoInterference, blank::AbstractDataFrame)
+
+Fit mono-interference bias parameters from standards in `run`.
+
+# Returns
+- `MonoBias` object with polynomial bias parameters.
+"""
 function fit_bias(run::Vector{Sample},
                   method::Gmethod,
                   interference::MonoInterference,

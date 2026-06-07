@@ -75,6 +75,14 @@ function getChannels(method::Cmethod) :: AbstractVector
 end
 export getChannels
 
+"""
+    getSnames(run::Vector{Sample})
+
+Get sample names for all entries in a run.
+
+# Returns
+- Vector of sample names in run order.
+"""
 function getSnames(run::Vector{Sample})
     return getAttr(run,:sname)
 end
@@ -88,10 +96,10 @@ Get a vector of group labels from a run.
 function getGroups(run::Vector{Sample})
     return getAttr(run,:group)
 end
-export getGroups
 
 """
     getIndicesInGroup(run::Vector{Sample}, group::AbstractString)
+
 
 Find the indices of all samples in a run that belong to a specific group.
 """
