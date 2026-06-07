@@ -818,4 +818,4 @@ Plots.closeall()
 @testset "TUI test" begin TUItest() end
 @testset "dependency test" begin dependencytest() end
 
-TUI(;debug=true)
+# TUI(;debug=true)
