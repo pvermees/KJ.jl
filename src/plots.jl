@@ -14,7 +14,7 @@ Optionally overlays fitted corrections if a fit object is provided.
 - `fit`: Fitted corrections to overlay (optional)
 - `num`, `den`: Numerator/denominator for ratio plots (default: plot raw signals)
 - `transformation`: Apply transformation ("log", "sqrt", or "")
-- `xlim`, `ylim`: Plot limits
+- `xlim`, `ylim`: Plot limits (set `ylim` to :swin to auto-limit to signal window)
 - `title`: Plot title
 - `legend`: Legend position
 - `cpalette`: Color palette
@@ -55,7 +55,7 @@ function plot(samp::Sample,
              title=title,legend=legend,cpalette=cpalette,
              titlefontsize=titlefontsize)
 
-    if !isnothing(fit)
+    if !emptyFit(fit)
         if samp.group !== "sample"
             plotFitted!(p,samp,method,fit;
                         channels=channels,num=num,den=den,
@@ -95,9 +95,11 @@ function plot(samp::Sample;
                                  offset=offset,num=num,den=den,
                                  transformation=transformation)
     if ylim == :auto
+        ylim = get_ylim(y,[samp.bwin;samp.swin])
+    elseif ylim == :swin
         ylim = get_ylim(y,samp.swin)
     end
-    p = Plots.plot(xlimits=xlim,ylimits=ylim,legend=legend)
+    p = Plots.plot(xlims=xlim,ylims=ylim,legend=legend)
     channels = names(y)
     cols = Plots.palette(cpalette,length(channels))
     outlier = samp.dat.outlier
@@ -311,7 +313,7 @@ function plotMap(df::AbstractDataFrame,
         if ignore_negative
             selection = df[:,column] .> 0
         else
-            selection = fill(true,size(df,1))
+            selection = trues(size(df,1))
         end
         z = df[selection,column]
         if length(clims) == 0

@@ -34,12 +34,12 @@ function fractionation!(fit::Gfit,
     end
 
     # initialise the parameters
-    init = fill(0.0,method.ndrift)
+    init = zeros(method.ndrift)
     if (method.ndown>0)
-        init = vcat(init,fill(0.0,method.ndown))
+        init = vcat(init,zeros(method.ndown))
     end
     if isfinite(method.PAcutoff)
-        init = vcat(init,fill(0.0,method.ndrift))
+        init = vcat(init,zeros(method.ndrift))
     end
 
     # define the objective function
@@ -93,18 +93,21 @@ function fractionation!(fit::Cfit,
                         method::Cmethod,
                         run::Vector{Sample};
                         kwargs...)
-    num = fit.blank[1:1,:] .* 0.0
-    den = copy(num)
+    channels = getChannels(run)
+    init = DataFrame(zeros(1, length(channels)), channels)
+    num, den = init, init
     internal = method.internal[1]
     for (group,standard) in method.groups
         selection = getIndicesInGroup(run,group)
-        dats = [swinData(samp) for samp in run[selection]]
-        for dat in dats
-            bt = polyVal(fit.blank,dat.t)
+        for samp in run[selection]
+            dat = swinData(samp)
+            bt = predict(samp,fit.blank;t=dat.t)
             X = getSignals(dat) .- bt
+            S = X[:,internal]
             C = getConcentrations(method,standard)
-            num[1,:] = Vector(num[1,:]) + sum.(eachcol(C[1,internal].*X.*X[:,internal]))
-            den[1,:] = Vector(den[1,:]) + sum.(eachcol(C.*(X[:,internal].^2)))
+            Cs = C[1,internal]
+            num[1,:] = Vector(num[1,:]) + sum.(eachcol(Cs.*X.*S))
+            den[1,:] = Vector(den[1,:]) + sum.(eachcol(C.*(S.^2)))
         end
     end
     fit.par = num./den
@@ -138,9 +141,10 @@ function FCruncher(samp::Sample,
     t = dat.t
     T = dat.T
 
-    bpt = polyVal(fit.blank[:,method.P.channel],t)
-    bDt = polyVal(fit.blank[:,method.D.channel],t)
-    bbt = polyVal(fit.blank[:,method.d.channel],t)
+    blk = predict(samp,fit.blank;t=t)
+    bpt = blk[:,method.P.channel]
+    bDt = blk[:,method.D.channel]
+    bbt = blk[:,method.d.channel]
 
     pmb = pm - bpt
     Dmb = Dm - bDt
@@ -158,7 +162,7 @@ function FCruncher(samp::Sample,
         mf = bias_correction(fit.bias[Delement],
                              method.d.ion,method.D.ion,t)
     else
-        mf = fill(1.0,length(t))
+        mf = ones(length(t))
     end
     sig = hcat(pmb,Dmb,bmb)
     covmat = df2cov(sig)

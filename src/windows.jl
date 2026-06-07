@@ -1,3 +1,57 @@
+function autoBwin(samp::Sample;
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1,
+                  len::Union{AbstractFloat,Nothing}=nothing)
+    t = samp.dat[:,1]
+    t0 = samp.t0
+    if isnothing(len)
+        len = t0 - t[1] - absolute_buffer
+    end
+    return autoBwin(t,t0;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer,
+                    len=len)
+end
+function autoBwin(t::AbstractVector,
+                  t0::AbstractFloat;
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1,
+                  len::AbstractFloat=t0-t[1]-absolute_buffer)
+    duration = t0 - t[1]
+    if duration > absolute_buffer
+        t2 = t0 - absolute_buffer
+    else
+        t2 = t0 - duration*(1 - relative_buffer)
+    end
+    t1 = max(0.0, t2 - len)
+    i1 = findall(t .>= t1)[1]
+    i2 = findall(t .< t2)[end]
+    return [(i1,i2)]
+end
+function autoSwin(samp::Sample;
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1)
+    return autoSwin(samp.dat[:,1],samp.t0;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
+end
+function autoSwin(t::AbstractVector,
+                  t0::AbstractFloat;
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1)
+    duration = t[end] - t0 
+    if duration > 2*absolute_buffer
+        t1 = t0 + absolute_buffer
+        t2 = t[end] - absolute_buffer
+    else
+        t1 = t0 + duration*(1 - relative_buffer)
+        t2 = t[end] - duration*(1 - relative_buffer)
+    end
+    i1 = findall(t .> t1)[1]
+    i2 = findall(t .< t2)[end]
+    return [(i1,i2)]
+end
+
 """
     setBwin!(run::Vector{Sample}, bwin::AbstractVector; seconds=false)
     setBwin!(samp::Sample, bwin::AbstractVector; seconds=false)
@@ -18,7 +72,8 @@ function setBwin!(run::Vector{Sample},
                   bwin::AbstractVector;
                   seconds::Bool=false)
     for i in eachindex(run)
-        setBwin!(run[i],bwin;seconds=seconds)
+        setBwin!(run[i],bwin;
+                 seconds=seconds)
     end
 end
 
@@ -28,14 +83,26 @@ function setBwin!(samp::Sample,
     samp.bwin = seconds ? time2window(samp,bwin) : bwin
 end
 
-function setBwin!(run::Vector{Sample})
+function setBwin!(run::Vector{Sample};
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1,
+                  len::Union{AbstractFloat,Nothing}=nothing)
     for i in eachindex(run)
-        setBwin!(run[i])
+        setBwin!(run[i];
+                 absolute_buffer=absolute_buffer,
+                 relative_buffer=relative_buffer,
+                 len=len)
     end
 end
 
-function setBwin!(samp::Sample)
-    bwin = autoWindow(samp,blank=true)
+function setBwin!(samp::Sample;
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1,
+                  len::Union{AbstractFloat,Nothing}=nothing)
+    bwin = autoBwin(samp;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer,
+                    len=len)
     setBwin!(samp,bwin)
 end
 export setBwin!
@@ -70,14 +137,22 @@ function setSwin!(samp::Sample,
     samp.swin = seconds ? time2window(samp,swin) : swin
 end
 
-function setSwin!(run::Vector{Sample})
+function setSwin!(run::Vector{Sample};
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1)
     for samp in run
-        setSwin!(samp)
+        setSwin!(samp;
+                 absolute_buffer=absolute_buffer,
+                 relative_buffer=relative_buffer)
     end
 end
 
-function setSwin!(samp::Sample)
-    swin = autoWindow(samp,blank=false)
+function setSwin!(samp::Sample;
+                  absolute_buffer::AbstractFloat=2.0,
+                  relative_buffer::AbstractFloat=0.1)
+    swin = autoSwin(samp;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
     setSwin!(samp,swin)
 end
 export setSwin!
@@ -116,21 +191,19 @@ end
 export shift_windows!
 
 """
-    bwinData(samp::Sample; add_xy=false)
+    bwinData(samp::Sample)
 
 Extract data from the blank window of a sample.
 
 # Arguments
 - `samp`: Sample to extract data from
-- `add_xy`: If true, include x,y coordinates if available
 
 # Returns
 - DataFrame containing the windowed data
 """
-function bwinData(samp::Sample;
-                  add_xy::Bool=false)
+function bwinData(samp::Sample)
     windows = samp.bwin
-    selection, x, y = windows2selection(windows;add_xy=add_xy)
+    selection, x, y = windows2selection(windows)
     selected_dat =  samp.dat[selection,:]
     return selected_dat
 end
@@ -173,7 +246,8 @@ function windows2selection(windows::AbstractVector;
         x = Float64[]
         y = Float64[]
     else
-        x = y = nothing
+        x = nothing
+        y = nothing
     end
     for w in windows
         append!(selection, w[1]:w[2])

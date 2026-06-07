@@ -62,7 +62,7 @@ function polyVal(p::AbstractDataFrame,
                  t::AbstractVector)
     nc = size(p,2)
     nr = length(t)
-    out = DataFrame(fill(0.0,(nr,nc)),names(p))
+    out = DataFrame(zeros((nr,nc)),names(p))
     for col in names(p)
         out[:,col] = polyVal(p[:,col],t)
     end
@@ -85,73 +85,16 @@ function polyFac(p::AbstractVector,
     np = length(p)
     nt = length(t)
     if np>0
-        out = fill(0.0,nt)
+        out = zeros(nt)
         for i in 1:np
             out .+= p[i].*t.^(i-1)
         end
         return exp.(out)
     else
-        return fill(1.0,nt)
+        return ones(nt)
     end
 end
 export polyFac
-
-function autoBwin(t::AbstractVector,
-                  on::AbstractFloat;
-                  start::AbstractFloat=t[1],
-                  stop::AbstractFloat=t[end],
-                  off::AbstractFloat=stop,
-                  absolute_buffer::AbstractFloat=2.0,
-                  relative_buffer::AbstractFloat=0.1)
-    selection = (t.>=start .&& t.<=stop)
-    if (on-start) > absolute_buffer
-        t2 = on - absolute_buffer
-    else
-        t2 = on - (on - start)*(1 - relative_buffer)
-    end
-    i1 = 1
-    i2 = findall(t[selection] .< t2)[end]
-    return [(i1,i2)]
-end
-function autoSwin(t::AbstractVector,
-                  on::AbstractFloat;
-                  start::AbstractFloat=t[1],
-                  stop::AbstractFloat=t[end],
-                  off::AbstractFloat=stop,
-                  absolute_buffer::AbstractFloat=2.0,
-                  relative_buffer::AbstractFloat=0.1)
-    selection = (t.>=start .&& t.<=stop)
-    duration = off - on 
-    if duration > 2*absolute_buffer
-        t1 = on + absolute_buffer
-        t2 = off - absolute_buffer
-    else
-        t1 = on + duration*(1 - relative_buffer)
-        t2 = off - duration*(1 - relative_buffer)
-    end
-    i1 = findall(t[selection] .< t1)[end]
-    i2 = findall(t[selection] .< t2)[end]
-    return [(i1,i2)]
-end
-function autoWindow(t::AbstractVector,
-                    t0::AbstractFloat;
-                    blank::Bool=false,
-                    absolute_buffer::AbstractFloat=2.0,
-                    relative_buffer::AbstractFloat=0.1)
-    if blank
-        return autoBwin(t,t0;
-                        absolute_buffer=absolute_buffer,
-                        relative_buffer=relative_buffer)
-    else
-        return autoSwin(t,t0;
-                        absolute_buffer=absolute_buffer,
-                        relative_buffer=relative_buffer)
-    end
-end
-function autoWindow(samp::Sample;
-                    blank=false)
-    return autoWindow(samp.dat[:,1],samp.t0;blank=blank)
-end
 
 function group2selection(run::Vector{Sample},
                          group::AbstractString="")
@@ -354,11 +297,19 @@ function transformeer(df::AbstractDataFrame,
     end
 end
 
+function emptyFit(fit::Union{Nothing,KJfit})
+    return isnothing(fit) || size(fit.blank,2) == 0
+end
+
 function get_offset(df::AbstractDataFrame;
                     transformation::AbstractString="",
                     num::AbstractString="",
                     den::AbstractString="")
-    smallest_two = partialsort(unique(vec(Matrix(df))),1:2)
+    uniquevals = unique(vec(Matrix(df)))
+    if (length(uniquevals)<2)
+        return uniquevals[1] > 0 ? 0.0 : abs(uniquevals[1]) + 1.0
+    end
+    smallest_two = partialsort(uniquevals,1:2)
     ratio = (num!="" || den!="")
     logarithmic = transformation == "log"
     vierkantswortel = transformation == "sqrt"
@@ -382,7 +333,7 @@ function get_offset(samp::Sample;
                     den::AbstractString="")
     meas = samp.dat[:,channels]
     offset1 = get_offset(meas;transformation=transformation,num=num,den=den)
-    if isnothing(fit)
+    if emptyFit(fit)
         return offset1
     else
         pred = predict(samp,fit.blank)

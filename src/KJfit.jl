@@ -7,9 +7,9 @@ function KJfit(method::Cmethod)
 end
 
 function Gfit(method::Gmethod;
-              blank::AbstractDataFrame = init_blank(method),
-              drift::AbstractVector = fill(0.0,method.ndrift),
-              down::AbstractVector = fill(0.0,method.ndown),
+              blank::AbstractDataFrame = DataFrame(),
+              drift::AbstractVector = zeros(method.ndrift),
+              down::AbstractVector = zeros(method.ndown),
               adrift::AbstractVector = drift,
               covmat::AbstractMatrix = zeros(length([drift,down]),
                                              length([drift,down])),

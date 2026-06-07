@@ -54,7 +54,7 @@ function fit_bias(run::Vector{Sample},
         cruncher_groups[standard] = (y=y,crunchers=crunchers)
     end
 
-    init = [init_bias(cruncher_groups);fill(0.0,m.ndrift-1)]
+    init = [init_bias(cruncher_groups);zeros(m.ndrift-1)]
     objective = (par) -> SS(par,mass_num,mass_den,bd,cruncher_groups)
     optimum = Optim.optimize(objective,init)
     fit = Optim.minimizer(optimum)

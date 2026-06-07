@@ -18,7 +18,7 @@ function interference_correction(dat::AbstractDataFrame,
                                  interferences::AbstractDict;
                                  bias::AbstractDict=Dict(),
                                  blank::AbstractDataFrame=DataFrame())
-    out = fill(0.0,size(dat,1))
+    out = zeros(size(dat,1))
     for (key,interference) in interferences
         out .+= interference_correction(dat,key,interference;
                                         bias=bias,blank=blank)
@@ -58,7 +58,7 @@ function bias4interference(dat::AbstractDataFrame,
         mf = bias_correction(bias[element],ion,
                              interference.proxy,dat.t)
     else
-        mf = fill(1.0,size(dat,1))
+        mf = ones(size(dat,1))
     end
     return mf
 end

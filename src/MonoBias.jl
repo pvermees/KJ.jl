@@ -12,7 +12,7 @@ function fit_bias(run::Vector{Sample},
         end
     end
 
-    init = [init_bias(crunchers);fill(0.0,method.nbias-1)]
+    init = [init_bias(crunchers);zeros(method.nbias-1)]
     objective = (par) -> SS(par,crunchers)
     optimum = Optim.optimize(objective,init)
     fit = Optim.minimizer(optimum)

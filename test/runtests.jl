@@ -45,17 +45,17 @@ function windowtest(show=true)
 end
 
 function blanktest(;myrun=loadtest(),
-                   doplot=false,
-                   ylim=:auto,
-                   transformation=nothing)
-    blk = fitBlanks(myrun;nblank=2)
+                   doplot::Bool=false)
+    blk0 = fitBlanks(myrun;nblank=0)
+    blk2 = fitBlanks(myrun;nblank=2)
     if doplot
-        p = KJ.plot(myrun[1];ylim=ylim,transformation=transformation)
-        plotFittedBlank!(p,myrun[1],blk,transformation=transformation)
+        p0 = KJ.plot(blk0,myrun;title="piecewise")
+        p2 = KJ.plot(blk2,myrun;title="polynomial")
+        p = Plots.plot(p0,p2;layout=(1,2))
         display(p)
         @test p isa Plots.Plot
     end
-    return blk
+    return blk2
 end
 
 function mmediantest()
@@ -74,7 +74,7 @@ function outliertest_synthetic()
     random_values = rand(Distributions.Normal(0,1), n)
     random_values[50] = rand(Distributions.Normal(0,10),1)[1]
     outliers = detect_outliers(random_values)
-    col = fill(1,n)
+    col = ones(n)
     col[outliers] .= 0
     p1 = Plots.scatter(1:n,random_values;
                        label=nothing,
@@ -86,7 +86,7 @@ function outliertest_synthetic()
     random_matrix = Matrix(rand(mvn, n)')
     random_matrix[50,1] = rand(Distributions.Normal(3,10),1)[1]
     outliers_2 = detect_outliers(random_matrix)
-    col = fill(1,n)
+    col = ones(n)
     col[outliers_2] .= 0
     p2 = Plots.scatter(random_matrix[:,1],
                        random_matrix[:,2];
@@ -452,14 +452,14 @@ end
 
 function mineraltest()
     internal = getInternal("zircon","Si29")
-    @test internal[2] == 1.476e6
+    @test internal[2] == 147600
 end
 
 function concentrationtest()
     myrun = load("data/Lu-Hf",format="Agilent")
     method = Cmethod(myrun;
                      groups=Dict("NIST612p" => "NIST612"),
-                     internal=("Al27 -> 27",1.2e5))
+                     internal=("Al27 -> 27",11167))
     fit = process!(myrun,method)
     conc = concentrations(myrun,method,fit)
     p = KJ.plot(myrun[4],method;fit=fit,
@@ -594,7 +594,7 @@ end
 function SStest()
     myrun, method, truefit = synthetictest(;drift=[0.0],down=[0.0,0.0])
     nstep = 50
-    driftss = fill(0.0,nstep)
+    driftss = zeros(nstep)
     driftfit = deepcopy(truefit)
     dd = range(start=truefit.drift[1]-1.0,stop=truefit.drift[1]+1.0,length=nstep)
     for i in eachindex(dd)
@@ -603,7 +603,7 @@ function SStest()
     end
     p = Plots.plot(dd,driftss,seriestype=:line,label="drift")
     dwn = range(start=truefit.down[2]-1.0,stop=truefit.down[2]+1.0,length=nstep)
-    downss = fill(0.0,nstep)
+    downss = zeros(nstep)
     downfit = deepcopy(truefit)
     for i in eachindex(dwn)
         downfit.down[2] = dwn[i]
@@ -774,7 +774,7 @@ Plots.closeall()
 @testset "load" begin loadtest(;verbose=true) end
 @testset "plot raw data" begin plottest(2) end
 @testset "set selection window" begin windowtest() end
-@testset "set method and blanks" begin blanktest() end
+@testset "set method and blanks" begin blanktest(;doplot=true) end
 @testset "moving median test" begin mmediantest() end
 @testset "outlier detection" begin outliertest_synthetic() end
 @testset "outlier detection" begin outliertest_sample() end

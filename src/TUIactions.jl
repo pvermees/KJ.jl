@@ -152,11 +152,13 @@ function TUImethod!(ctrl::AbstractDict,
                     response::AbstractString)
     if response=="c"
         ctrl["method"] = Cmethod(ctrl["run"])
+        ctrl["fit"] = Cfit()
         return "internal"
     else
         i = parse(Int,response)
         methodname = _KJ["methods"].names[i]
         ctrl["method"] = Gmethod(name=methodname)
+        ctrl["fit"] = Gfit(ctrl["method"])
         return "columns"
     end
 end
@@ -559,12 +561,13 @@ function TUIaddGlassByNumber!(ctrl::AbstractDict,
 end
 
 function TUIremoveAllGlass!(ctrl::AbstractDict)
-    groups = getGroups(ctrl["run"])
-    glasses = _KJ["glass"].names
-    selection = findall(in(glasses), groups)
-    setGroup!(ctrl["run"],selection,"sample")
-    if ctrl["method"] isa Cmethod
-        ctrl["priority"]["fractionation"] = true
+    SRMs = _KJ["glass"].names
+    for (key,value) in ctrl["method"].groups
+        if in(value,SRMs)
+            selection = getIndicesInGroup(ctrl["run"],key)
+            setGroup!(ctrl["run"],selection,"sample")
+            delete!(ctrl["method"].groups,key)
+        end
     end
     TUIclearMissingGroups!(ctrl)
     return "x"
@@ -697,6 +700,12 @@ function TUIchooseBiasStandard!(ctrl::AbstractDict,
     refmats = TUIgetBiasStandards(m)
     ctrl["cache"].standard = refmats.names[i]
     return "addStandardGroup"
+end
+
+function TUIviewBlanks!(ctrl::AbstractDict)
+    p = plot(ctrl["fit"].blank,ctrl["run"])
+    display(p)
+    return "x"
 end
 
 function TUIviewer(ctrl::AbstractDict)
@@ -853,6 +862,14 @@ function TUIoneMultiSignalWindow!(ctrl::AbstractDict,
                                   response::AbstractString)
     TUIwindowHandler!(ctrl;response=response,all=false,single=false,blank=false)
 end
+function TUIfixOneBlankLength!(ctrl::AbstractDict,
+                               response::AbstractString)
+    TUIwindowHandler!(ctrl;len=parse(Float64,response),all=false,blank=true)
+end
+function TUIfixAllBlankLengths!(ctrl::AbstractDict,
+                                response::AbstractString)
+    TUIwindowHandler!(ctrl;len=parse(Float64,response),all=true,blank=true)
+end
 function TUIallSingleSignalWindows!(ctrl::AbstractDict,
                                     response::AbstractString)
     TUIwindowHandler!(ctrl;response=response,all=true,single=true,blank=false)
@@ -863,18 +880,21 @@ function TUIallMultiSignalWindows!(ctrl::AbstractDict,
 end
 function TUIwindowHandler!(ctrl::AbstractDict;
                            response::AbstractString="",
+                           len::Float64=-1.0,
                            all::Bool=false,
                            single::Bool=false,
                            blank::Bool=false)
     target = ifelse(all,ctrl["run"],ctrl["run"][ctrl["i"]])
     fun! = ifelse(blank,setBwin!,setSwin!)
-    if response==""
+    next = "xx"
+    if len > 0
+        fun!(target;len=len)
+    elseif response==""
         fun!(target)
         next = "x"
     else
         win = string2windows(target,response,single)
         fun!(target,win)
-        next = "xx"
     end
     TUIplotter(ctrl)
     return next

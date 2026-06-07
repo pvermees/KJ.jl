@@ -13,6 +13,7 @@ with associated timestamps.
 - `tfile`: Path to timestamp file (for second method)
 - `format`: File format - "Agilent", "ThermoFisher", or "FIN2" (default: "Agilent")
 - `head2name`: Use file header for sample name (default: true)
+- `normalizenames`: Normalise the column names of input data (e.g. "Sr86 -> 103" becomes :Sr86_103) (default: false)
 - `nblocks`: Number of blocks to merge samples into (default: 1, no merging)
 - `absolute_buffer`: Absolute time buffer for automatic window selection (default: 2.0 seconds)
 - `relative_buffer`: Relative time buffer for automatic window selection (default: 0.1)
@@ -23,6 +24,7 @@ with associated timestamps.
 function load(dname::AbstractString;
               format::AbstractString="Agilent",
               head2name::Bool=true,
+              normalizenames::Bool=false,
               nblocks::Int=1,
               absolute_buffer::AbstractFloat=2.0,
               relative_buffer::AbstractFloat=0.1)
@@ -36,7 +38,8 @@ function load(dname::AbstractString;
                 pname = joinpath(dname,fname)
                 samp = readFile(pname;
                                 format=format,
-                                head2name=head2name)
+                                head2name=head2name,
+                                normalizenames=normalizenames)
                 push!(samples,samp)
                 push!(datetimes,samp.datetime)
             catch e
@@ -77,6 +80,7 @@ function load(dfile::AbstractString,
     end
     try
         timestamps = CSV.read(tfile, DataFrame)
+        patch_time!(timestamps)
     catch e
         println("Failed to read "*tfile)
     end
@@ -84,23 +88,43 @@ function load(dfile::AbstractString,
 end
 export load
 
+function patch_time!(timestamps::AbstractDataFrame)
+    if count(':',timestamps.Timestamp[1]) == 1
+        timestamps.Timestamp = String.(timestamps.Timestamp)
+        YYMMDD = string(today())
+        H = 0
+        min = 0
+        for i in eachindex(timestamps[:,1])
+            M = parse(Int,split(timestamps.Timestamp[i], ':')[1])
+            if M < min
+                H += 1
+            end
+            min = M
+            timestamps.Timestamp[i] = YYMMDD * " " * string(H) * ":" * timestamps.Timestamp[i]
+        end
+    end
+end
+
 function readFile(fname::AbstractString;
                   format::AbstractString="Agilent",
-                  head2name::Bool=true)
-    dat, sname, datetime = readDat(fname,format,head2name)
+                  head2name::Bool=true,
+                  normalizenames::Bool=false)
+    dat, sname, datetime = readDat(fname,format,head2name, normalizenames)
     return io_df2sample(dat,sname,datetime)
 end
 
 function readDat(fname::AbstractString,
                  format::AbstractString="Agilent",
-                 head2name::Bool=true)
-    if format=="Agilent"
+                 head2name::Bool=true,
+                 normalizenames::Bool=false,
+                 )
+    if contains(lowercase.(format), "agile")
         sname, datetime, header, skipto, footerskip =
             readAgilent(fname,head2name)
-    elseif format=="FIN2"
+    elseif contains(lowercase.(format), "fin")
         sname, datetime, header, skipto, footerskip =
             readFIN(fname,head2name)
-    elseif format=="ThermoFisher"
+    elseif contains(lowercase.(format), "thermo")
         sname, datetime, header, skipto, footerskip =
             readThermoFisher(fname,head2name)
     else
@@ -114,6 +138,7 @@ function readDat(fname::AbstractString,
         footerskip = footerskip,
         ignoreemptyrows = true,
         delim = ',',
+        normalizenames=normalizenames
     )
     select!(dat, [k for (k,v) in pairs(eachcol(dat)) if !all(ismissing, v)])
     return dat, sname, datetime
@@ -132,7 +157,7 @@ function readAgilent(fname::AbstractString,
     skipto = 5
     footerskip = 3
     return sname, datetime, header, skipto, footerskip
-    
+
 end
 
 function readThermoFisher(fname::AbstractString,
@@ -148,9 +173,9 @@ function readThermoFisher(fname::AbstractString,
     header = 14
     skipto = 16
     footerskip = 0
-    
+
     return sname, datetime, header, skipto, footerskip
-    
+
 end
 
 function readFIN(fname::AbstractString,
@@ -163,7 +188,7 @@ function readFIN(fname::AbstractString,
     skipto = 9
     footerskip = 0
     return sname, datetime, header, skipto, footerskip
-    
+
 end
 
 function io_df2sample(df::AbstractDataFrame,
@@ -174,12 +199,12 @@ function io_df2sample(df::AbstractDataFrame,
     t = df[:,1]
     i0 = geti0(df[:,2:end])
     t0 = df[i0,1]
-    bwin = autoWindow(t,t0;blank=true,
-                      absolute_buffer=absolute_buffer,
-                      relative_buffer=relative_buffer)
-    swin = autoWindow(t,t0;blank=false,
-                      absolute_buffer=absolute_buffer,
-                      relative_buffer=relative_buffer)
+    bwin = autoBwin(t,t0;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
+    swin = autoSwin(t,t0;
+                    absolute_buffer=absolute_buffer,
+                    relative_buffer=relative_buffer)
     return Sample(sname,datetime,df,t0,bwin,swin,"sample")
 end
 
@@ -239,23 +264,22 @@ function export2IsoplotR(ratios::AbstractDataFrame,
     json = replace(json,"\""*chronometer*"\":{}" =>
                    "\""*chronometer*"\":{"*datastring*"}}")
 
-    
     if chronometer in ["Lu-Hf","Rb-Sr","K-Ca","Re-Os"]
-                        
+
         old = "\"geochronometer\":\"U-Pb\",\"plotdevice\":\"concordia\""
         new = "\"geochronometer\":\""*chronometer*"\",\"plotdevice\":\"isochron\""
         json = replace(json, old => new)
-        
+
         old = "\""*chronometer*"\":{\"format\":1,\"i2i\":true,\"projerr\":false,\"inverse\":false}"
         new = "\""*chronometer*"\":{\"format\":2,\"i2i\":true,\"projerr\":false,\"inverse\":true}"
         json = replace(json, old => new)
-        
+
     end
-    
+
     file = open(fname,"w")
     write(file,json)
     close(file)
-    
+
 end
 export export2IsoplotR
 
@@ -331,3 +355,55 @@ function summarize(fit::Gfit)
     summarise(fit)
 end
 export summarise, summarize
+
+"""
+    export2csv(run::Vector{Sample}, method::Gmethod, fit::Gfit; prefix=nothing, fname="KJ.csv")
+
+Export processed ratios to CSV format.
+
+# Arguments
+- `run`: Vector of samples to export
+- `method`: Geochronology method
+- `fit`: Fitted parameters (for first method)
+- `prefix`: Optional prefix to filter samples (default: export all)
+- `fname`: Output filename (default: "KJ.csv")
+"""
+function export2csv(
+    run::Vector{Sample},
+    method::Gmethod,
+    fit::Gfit;
+    prefix=nothing,
+    fname::String="KJ_export.csv",
+)
+    ratios =
+        averat(run, method, fit)
+    if isnothing(prefix)
+        CSV.write(fname, ratios)
+    else
+        CSV.write(fname, prefix2subset(ratios, prefix))
+    end
+end
+
+"""
+    export2csv(ratios::DataFrame; prefix=nothing, fname="KJ.csv")
+
+Export processed ratios to CSV format.
+
+# Arguments
+- `ratios`: Pre-computed ratio data frame
+- `prefix`: Optional prefix to filter samples (default: export all)
+- `fname`: Output filename (default: "KJ.csv")
+"""
+function export2csv(
+    ratios::DataFrame;
+    prefix=nothing,
+    fname::String="KJ_export.csv",
+)
+    if isnothing(prefix)
+        CSV.write(fname, ratios)
+    else
+        CSV.write(fname, prefix2subset(ratios, prefix))
+    end
+end
+
+export export2csv

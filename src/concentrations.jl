@@ -24,8 +24,8 @@ function concentrations(samp::Sample,
                         internal::Tuple=method.internal)
     dat = swinData(samp;add_xy=true)
     sig = getSignals(dat)
-    bt = polyVal(fit.blank,dat.t)
-    X = getSignals(dat) .- bt
+    bt = predict(samp,fit.blank;t=dat.t)
+    X = sig .- bt
     Cs = internal[2]
     Xs = X[:,internal[1]]
     out = (X .* Cs) ./ (Xs .* fit.par)
@@ -44,7 +44,7 @@ function concentrations(run::Vector{Sample},
     nr = length(run)
     ne = length(method.elements)
     nc = 2*ne
-    mat = fill(0.0,nr,nc)
+    mat = zeros(nr,nc)
     conc = nothing
     for i in eachindex(run)
         samp = run[i]
@@ -67,7 +67,7 @@ function concentrations(run::Vector{Sample},
     nms = fill("",nc)
     nms[1:2:nc-1] .= names(conc)
     nms[2:2:nc] .= "s[" .* names(conc) .* "]"
-    out = hcat(DataFrame(sample=getSnames(run)),DataFrame(mat,Symbol.(nms)))
+    out = hcat(DataFrame(name=getSnames(run)),DataFrame(mat,Symbol.(nms)))
     return out
 end
 export concentrations

@@ -672,9 +672,11 @@ function init_KJtree()
             "a: Automatic (current sample)\n" * 
             "s: Manually set a one-part window (current sample)\n" * 
             "m: Manually set a multi-part window (current sample)\n" * 
+            "l: Fix the length of the blank window (current sample)\n" *
             "A: Automatic (all samples)\n" * 
             "S: Manually set a one-part window (all samples)\n" * 
             "M: Manually set a multi-part window (all samples)\n" * 
+            "L: Fix the length of the blank window (all samples)\n" *
             "x: Exit\n" * 
             "?: Help",
             help =
@@ -687,9 +689,11 @@ function init_KJtree()
                 "a" => TUIoneAutoBlankWindow!,
                 "s" => "oneSingleBlankWindow",
                 "m" => "oneMultiBlankWindow",
+                "l" => "fixOneBlankLength",
                 "A" => TUIallAutoBlankWindows!,
                 "S" => "allSingleBlankWindows",
-                "M" => "allMultiBlankWindows"
+                "M" => "allMultiBlankWindows",
+                "L" => "fixAllBlankLengths"
             )
         ),
         "oneSingleBlankWindow" => (
@@ -714,6 +718,16 @@ function init_KJtree()
             "selection window from 0 to 20s, and from 25 to 30s.",
             action = TUIoneMultiBlankWindow!
         ),
+        "fixOneBlankLength" => (
+            message =
+            "Enter the length of the blank window (in seconds). " *
+            "Type '?' for help and 'x' to exit.",
+            help =
+            "Specify the length of the blank window as a positive number. " * 
+            "For example: 10 marks a blank window of 10 seconds. " *
+            "Enter a non-positive number to switch back to variable lengths.",
+            action = TUIfixOneBlankLength!
+        ),
         "allSingleBlankWindows" => (
             message =
             "Enter the start and end point of the selection window " * 
@@ -735,6 +749,16 @@ function init_KJtree()
             " of numbers. For example: (0,20),(25,30) marks a two-part " * 
             "selection window from 0 to 20s, and from 25 to 30s.",
             action = TUIallMultiBlankWindows!
+        ),
+        "fixAllBlankLengths" => (
+            message =
+            "Enter the length of the blank window (in seconds). " *
+            "Type '?' for help and 'x' to exit.",
+            help =
+            "Specify the length of the blank window as a positive number. " * 
+            "For example: 10 marks a blank window of 10 seconds. " *
+            "Enter a non-positive number to switch back to variable lengths.",
+            action = TUIfixAllBlankLengths!
         ),
         "Swin" => (
             message =
@@ -940,7 +964,8 @@ function init_KJtree()
             help =
             "The blank is fitted by the following equation: " * 
             "b = a[1] + a[2]*t[1] + ... + a[n]*t^(n-1). " *
-            "Here you can specify the value of n.",
+            "Here you can specify the value of n. " * 
+            "Use a negative value for piecewise linear blank correction (e.g., -1).",
             action = TUIsetNblank!
         ),
         "setNdrift" => (
@@ -1036,6 +1061,7 @@ function init_KJtree()
         ),
         "extra" => (
             message =
+            "b: Plot the blanks\n" *
             "i: Internal isochrons\n" *
             "t: Time-resolved estimates\n" *
             "m: Maps\n" *
@@ -1045,6 +1071,7 @@ function init_KJtree()
             "If you supplied any extensions when starting KJ, " *
             "they will tend to put their options in this menu",
             action = Dict(
+                "b" => TUIviewBlanks!,
                 "i" => "internochron",
                 "t" => "timeresolved",
                 "m" => TUImapper
