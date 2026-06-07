@@ -29,6 +29,12 @@ function get_proxy_isotope(channel::AbstractString;
     end
 end
 
+"""
+    Cmethod(run::Vector{Sample}; groups=Dict{String,String}(), internal=(nothing, nothing), nblank=2)
+
+Build a concentration method from sample channels by inferring the element
+for each channel, then delegating to the typed `Cmethod` constructor.
+"""
 function Cmethod(run::Vector{Sample};
                  groups::AbstractDict=Dict{String,String}(),
                  internal::Tuple=(nothing,nothing),

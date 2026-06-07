@@ -15,7 +15,7 @@ TUI()
 julia> using KJ
 julia> TUI()
 ----------
- KJ 0.8.2
+ KJ 0.8.5
 ----------
 
 r: Read data files[*]

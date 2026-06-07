@@ -85,7 +85,7 @@ Most of the settings are loaded from CSV files stored in the `settings/` folder:
 
 - **`extensions`**: Extension system for additional functionality (initialized as `nothing`).
 
-Individual settings can be reloaded from custom CSV files using functions like `init_methods!()`, `init_referenceMaterials!()`, `init_glass!()`, and `init_stoichiometry!()`, allowing users to customize the package configuration without modifying the source code.
+Individual settings can be reloaded from custom CSV files using functions like `init_methods()`, `init_referenceMaterials!()`, `init_glass!()`, and `init_stoichiometry!()`, allowing users to customize package configuration without modifying source code.
 
 ## Key functions
 

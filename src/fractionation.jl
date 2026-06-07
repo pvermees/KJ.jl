@@ -94,8 +94,8 @@ function fractionation!(fit::Cfit,
                         run::Vector{Sample};
                         kwargs...)
     channels = getChannels(run)
-    init = DataFrame(zeros(1, length(channels)), channels)
-    num, den = init, init
+    num = DataFrame(zeros(1, length(channels)), channels)
+    den = DataFrame(zeros(1, length(channels)), channels)
     internal = method.internal[1]
     for (group,standard) in method.groups
         selection = getIndicesInGroup(run,group)
@@ -128,6 +128,16 @@ function par2fit(par::AbstractVector,
     return fit
 end
 
+"""
+    FCruncher(samp::Sample, method::Gmethod, fit::Gfit)
+
+Prepare per-sample arrays and covariance terms used by fractionation and
+prediction routines.
+
+# Returns
+- Named tuple containing blank-corrected intensities, covariance terms,
+  interference corrections, and time vectors.
+"""
 function FCruncher(samp::Sample,
                    method::Gmethod,
                    fit::Gfit)

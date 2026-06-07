@@ -10,7 +10,7 @@ function add_concordia_line!(p::Plots.Plot)
     end
     Pb76fit = Optim.optimize(Pb76misfit,[4000.0])
     tmax = Optim.minimizer(Pb76fit)[1]
-    t = range(tmin[1],tmax;step=50)
+    t = range(tmin,tmax;step=50)
     x = @. 1/(exp(L8*t)-1)
     y = @. U58*(exp(L5*t)-1)/(exp(L8*t)-1)
     Plots.scatter!(p,x,y,linewidth=1.5,linecolor=:black)
