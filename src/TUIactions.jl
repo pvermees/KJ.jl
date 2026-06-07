@@ -561,12 +561,13 @@ function TUIaddGlassByNumber!(ctrl::AbstractDict,
 end
 
 function TUIremoveAllGlass!(ctrl::AbstractDict)
-    groups = getGroups(ctrl["run"])
-    glasses = _KJ["glass"].names
-    selection = findall(in(glasses), groups)
-    setGroup!(ctrl["run"],selection,"sample")
-    if ctrl["method"] isa Cmethod
-        ctrl["priority"]["fractionation"] = true
+    SRMs = _KJ["glass"].names
+    for (key,value) in ctrl["method"].groups
+        if in(value,SRMs)
+            selection = getIndicesInGroup(ctrl["run"],key)
+            setGroup!(ctrl["run"],selection,"sample")
+            delete!(ctrl["method"].groups,key)
+        end
     end
     TUIclearMissingGroups!(ctrl)
     return "x"
