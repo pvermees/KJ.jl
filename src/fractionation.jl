@@ -93,8 +93,9 @@ function fractionation!(fit::Cfit,
                         method::Cmethod,
                         run::Vector{Sample};
                         kwargs...)
-    num = fit.blank[1:1,:] .* 0.0
-    den = copy(num)
+    channels = getChannels(run)
+    init = DataFrame(zeros(1, length(channels)), channels)
+    num, den = init, init
     internal = method.internal[1]
     for (group,standard) in method.groups
         selection = getIndicesInGroup(run,group)

@@ -964,7 +964,8 @@ function init_KJtree()
             help =
             "The blank is fitted by the following equation: " * 
             "b = a[1] + a[2]*t[1] + ... + a[n]*t^(n-1). " *
-            "Here you can specify the value of n.",
+            "Here you can specify the value of n. " * 
+            "Use a negative value for piecewise linear blank correction (e.g., -1).",
             action = TUIsetNblank!
         ),
         "setNdrift" => (
