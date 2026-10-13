@@ -107,7 +107,7 @@ function predict(samp::Sample,
                  other...)
     if haskey(method.groups,samp.group)
         standard = method.groups[samp.group]
-        internal = method.internal[1]
+        internal = get_internal(samp, method.internal)[1]
         dat = swinData(samp)
         bt = predict(samp,fit.blank;t=dat.t)
         S = getSignals(dat)[:,internal] .- bt[:,internal]
