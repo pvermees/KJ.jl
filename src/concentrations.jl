@@ -45,7 +45,7 @@ function concentrations(run::Vector{Sample},
     ne = length(method.elements)
     nc = 2*ne
     mat = zeros(nr, nc)
-    conc = nothing
+    col_names = nothing
     for (key, refmat) in method.groups
         if !haskey(method.internal, key)
             isname, _ = get_internal("default", method.internal)
@@ -54,8 +54,10 @@ function concentrations(run::Vector{Sample},
         end
     end
     Threads.@threads for i in eachindex(run)
-        # this structure enables multithreading and reduces processing time by about 6x
         conc = concentrations(run[i], method, fit)[:, 1:ne]
+        if i == firstindex(run)
+            col_names = names(conc)
+        end
         conc_mat = Matrix(conc)
 
         mu = vec(Statistics.mean(conc_mat, dims=1))
@@ -66,8 +68,8 @@ function concentrations(run::Vector{Sample},
         mat[i, 2:2:nc] .= sigma ./ sqrt(nt)
     end
     nms = fill("", nc)
-    nms[1:2:(nc-1)] .= names(conc)
-    nms[2:2:nc] .= "s[" .* names(conc) .* "]"
+    nms[1:2:(nc-1)] .= col_names
+    nms[2:2:nc] .= "s[" .* col_names .* "]"
     out = hcat(DataFrame(name=getSnames(run)), DataFrame(mat, Symbol.(nms)))
     return out
 end
