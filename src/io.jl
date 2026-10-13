@@ -71,10 +71,14 @@ end
 
 function load(dfile::AbstractString,
               tfile::AbstractString;
-              format::AbstractString="Agilent")
-    dat = timestamps = DataFrame()
+              format::AbstractString="Agilent",
+              normalizenames::Bool=false,
+              day_first::Bool=false)
+    dat = DataFrame()
+    timestamps = DataFrame()
     try
-        dat = readDat(dfile,format,false)[1]
+        dat = readDat(dfile, format, false, normalizenames,
+            day_first)[1]
         dat.outlier = falses(size(dat,1))
         dat.t = dat[:,1] ./ dat[end,1]
     catch e
@@ -86,7 +90,7 @@ function load(dfile::AbstractString,
     catch e
         println("Failed to read "*tfile)
     end
-    return parser_main(dat,timestamps)
+    return parser_main(dat, timestamps; day_first=day_first)
 end
 export load
 

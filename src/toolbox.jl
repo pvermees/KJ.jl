@@ -1,30 +1,30 @@
 function formRatios(df::AbstractDataFrame;
-                    num::AbstractString="",
-                    den::AbstractString="",
-                    brackets::Bool=false)
+    num::AbstractString="",
+    den::AbstractString="",
+    brackets::Bool=false)
     labels = names(df)
-    nc = size(labels,1)
+    nc = size(labels, 1)
     if (num=="" && den=="")
         return df
     elseif num==""
-        n = findall(!=(den),labels)
-        d = fill(findfirst(==(den),labels),length(n))
+        n = findall(!=(den), labels)
+        d = fill(findfirst(==(den), labels), length(n))
     elseif den==""
-        d = findall(!=(num),labels)
-        n = fill(findfirst(==(num),labels),length(d))
+        d = findall(!=(num), labels)
+        n = fill(findfirst(==(num), labels), length(d))
     end
     mat = Matrix(df)
-    ratios = @. mat[:,n]/mat[:,d]
+    ratios = @. mat[:, n]/mat[:, d]
     num = labels[n]
     den = labels[d]
-    ratlabs = brackets ? "(".*num.*")/(".*den.*")" : num.*"/".*den
-    return DataFrame(ratios,ratlabs)
+    ratlabs = brackets ? "(" .* num .* ")/(" .* den .* ")" : num .* "/" .* den
+    return DataFrame(ratios, ratlabs)
 end
 
 function polyFit(t::AbstractVector,
-                 y::AbstractVector,
-                 n::Integer)
-    V = vandermonde(t,n-1)
+    y::AbstractVector,
+    n::Integer)
+    V = vandermonde(t, n-1)
     return (V' * V) \ (V' * y)
 end
 
@@ -41,9 +41,9 @@ Evaluates polynomial function with parameters p at times t.
 - Vector of polynomial values at each time point
 """
 function polyVal(p::AbstractVector,
-                 t::AbstractVector)
+    t::AbstractVector)
     n = length(p)
-    V = vandermonde(t,n-1)
+    V = vandermonde(t, n-1)
     return V * p
 end
 """
@@ -59,18 +59,18 @@ Evaluates polynomial functions (one per column) at times t.
 - DataFrame with polynomial values, one column per input column
 """
 function polyVal(p::AbstractDataFrame,
-                 t::AbstractVector)
-    nc = size(p,2)
+    t::AbstractVector)
+    nc = size(p, 2)
     nr = length(t)
-    out = DataFrame(zeros((nr,nc)),names(p))
+    out = DataFrame(zeros((nr, nc)), names(p))
     for col in names(p)
-        out[:,col] = polyVal(p[:,col],t)
+        out[:, col] = polyVal(p[:, col], t)
     end
     return out
 end
 export polyVal
 
-function vandermonde(x,degree)
+function vandermonde(x, degree)
     return [x[i]^p for i in eachindex(x), p in 0:degree]
 end
 
@@ -81,13 +81,13 @@ Evaluate exponential of polynomial with parameters p at times t.
 Returns exp(p[1] + p[2]*t + p[3]*t^2 + ...).
 """
 function polyFac(p::AbstractVector,
-                 t::AbstractVector)
+    t::AbstractVector)
     np = length(p)
     nt = length(t)
     if np>0
         out = zeros(nt)
         for i in 1:np
-            out .+= p[i].*t.^(i-1)
+            out .+= p[i] .* t .^ (i-1)
         end
         return exp.(out)
     else
@@ -97,12 +97,12 @@ end
 export polyFac
 
 function group2selection(run::Vector{Sample},
-                         group::AbstractString="")
+    group::AbstractString="")
     if group==""
         selection = 1:length(run)
     else
         groups = getGroups(run)
-        selection = findall(contains(group),groups)
+        selection = findall(contains(group), groups)
     end
     return selection
 end
@@ -114,8 +114,8 @@ Estimate the covariance matrix of mat's columns
 from its differenced rows.
 """
 function df2cov(mat::Matrix)
-    d = diff(mat,dims=1)
-    return Statistics.cov(d)./2
+    d = diff(mat, dims=1)
+    return Statistics.cov(d) ./ 2
 end
 """
 function df2cov(df::AbstractDataFrame)
@@ -132,8 +132,8 @@ Estimate the variance of the differenced vector cps.
 Returns a vector of replicate values.
 """
 function var_timeseries(cps::AbstractVector)
-    var = Statistics.var(diff(cps))./2
-    return fill(var,length(cps))
+    var = Statistics.var(diff(cps)) ./ 2
+    return fill(var, length(cps))
 end
 export var_timeseries
 
@@ -142,9 +142,9 @@ t2i(samp::Sample,t::Number)
 
 Returns the index of time t in sample samp.
 """
-function t2i(samp::Sample,t::Number)
-    nt = size(samp.dat,1)
-    maxt = samp.dat[end,1]
+function t2i(samp::Sample, t::Number)
+    nt = size(samp.dat, 1)
+    maxt = samp.dat[end, 1]
     return Int(round(nt*t/maxt))
 end
 export t2i
@@ -154,9 +154,9 @@ i2t(samp::Sample,i::Integer)
 
 Returns the time at index t
 """
-function i2t(samp::Sample,i::Integer)
-    ni = size(samp.dat,1)
-    maxt = samp.dat[end,1]
+function i2t(samp::Sample, i::Integer)
+    ni = size(samp.dat, 1)
+    maxt = samp.dat[end, 1]
     return maxt*i/ni
 end
 export i2t
@@ -167,19 +167,19 @@ time2window(samp::Sample,start::Number,finish::Number)
 Returns a tuple or a vector of tuples with the indices
 corresponding to the start and finish times.
 """
-function time2window(samp::Sample,start::Number,finish::Number)
-    ni = size(samp.dat,1)
-    from = max(1,t2i(samp,start))
-    to = min(ni,t2i(samp,finish))
-    return (from,to)
+function time2window(samp::Sample, start::Number, finish::Number)
+    ni = size(samp.dat, 1)
+    from = max(1, t2i(samp, start))
+    to = min(ni, t2i(samp, finish))
+    return (from, to)
 end
 """
 time2window(samp::Sample,twin::AbstractVector)
 """
-function time2window(samp::Sample,twin::AbstractVector)
+function time2window(samp::Sample, twin::AbstractVector)
     out = Tuple[]
     for win in twin
-        push!(out,time2window(samp,win[1],win[2]))
+        push!(out, time2window(samp, win[1], win[2]))
     end
     return out
 end
@@ -191,16 +191,16 @@ prefix2subset(run::Vector{Sample},prefix::AbstractString)
 Subset selected samples from run.
 """
 function prefix2subset(run::Vector{Sample},
-                       prefix::AbstractString)
-    selection = findall(contains(prefix),getSnames(run))
+    prefix::AbstractString)
+    selection = findall(contains(prefix), getSnames(run))
     return run[selection]
 end
 """
 prefix2subset(ratios::AbstractDataFrame,prefix::AbstractString)
 """
 function prefix2subset(ratios::AbstractDataFrame,
-                       prefix::AbstractString)
-    return ratios[findall(contains(prefix),ratios[:,1]),:]
+    prefix::AbstractString)
+    return ratios[findall(contains(prefix), ratios[:, 1]), :]
 end
 export prefix2subset
 
@@ -237,15 +237,31 @@ function automatic_datetime(datetime_string::AbstractString; day_first::Bool=fal
     return datetime
 end
 
-function time_difference(start::AbstractString,
-                         stop::AbstractString)
-    t1 = automatic_datetime(start)
-    t2 = automatic_datetime(stop)
+function automatic_datetime(timestamp::Durations.Timestamp; day_first::Bool=false)
+    return timestamp
+end
+
+function time_difference(
+    start::Union{AbstractString},
+    stop::Union{AbstractString};
+    day_first::Bool=false
+)
+    t1 = automatic_datetime(start; day_first=day_first)
+    t2 = automatic_datetime(stop; day_first=day_first)
     if isnothing(t1) || isnothing(t2)
         return nothing
     else
         return Millisecond(t2-t1).value / 1000
     end
+end
+
+function time_difference(
+    start::Union{Durations.Timestamp},
+    stop::Union{Durations.Timestamp};
+    day_first::Bool=false
+)
+    return Millisecond(stop - start).value / 1000
+
 end
 
 """
@@ -259,7 +275,7 @@ function rle(v::AbstractVector{T}) where T
     n = length(v)
     vals = T[]
     lens = Int[]
-    n>0 || return (vals,lens)
+    n>0 || return (vals, lens)
     cv = v[1]
     cl = 1
     i = 2
@@ -281,14 +297,14 @@ function rle(v::AbstractVector{T}) where T
 end
 
 function transformeer(df::AbstractDataFrame,
-                      transformation::AbstractString;
-                      num::AbstractString="",
-                      den::AbstractString="",
-                      offset::Number=0.0)
+    transformation::AbstractString;
+    num::AbstractString="",
+    den::AbstractString="",
+    offset::Number=0.0)
     if (num=="" && den=="")
         out = df .+ offset
     else
-        out = formRatios(df .+ offset;num=num,den=den)
+        out = formRatios(df .+ offset; num=num, den=den)
     end
     if transformation == ""
         return out
@@ -298,18 +314,18 @@ function transformeer(df::AbstractDataFrame,
 end
 
 function emptyFit(fit::Union{Nothing,KJfit})
-    return isnothing(fit) || size(fit.blank,2) == 0
+    return isnothing(fit) || size(fit.blank, 2) == 0
 end
 
 function get_offset(df::AbstractDataFrame;
-                    transformation::AbstractString="",
-                    num::AbstractString="",
-                    den::AbstractString="")
+    transformation::AbstractString="",
+    num::AbstractString="",
+    den::AbstractString="")
     uniquevals = unique(vec(Matrix(df)))
     if (length(uniquevals)<2)
         return uniquevals[1] > 0 ? 0.0 : abs(uniquevals[1]) + 1.0
     end
-    smallest_two = partialsort(uniquevals,1:2)
+    smallest_two = partialsort(uniquevals, 1:2)
     ratio = (num!="" || den!="")
     logarithmic = transformation == "log"
     vierkantswortel = transformation == "sqrt"
@@ -322,30 +338,30 @@ function get_offset(df::AbstractDataFrame;
         return abs(smallest_two[1])
     else
         return 0.0
-     end
+    end
 end
 function get_offset(samp::Sample;
-                    method::Union{Nothing,KJmethod}=nothing,
-                    fit::Union{Nothing,KJfit}=nothing,
-                    channels::AbstractVector=getChannels(samp),
-                    transformation::AbstractString="",
-                    num::AbstractString="",
-                    den::AbstractString="")
-    meas = samp.dat[:,channels]
-    offset1 = get_offset(meas;transformation=transformation,num=num,den=den)
+    method::Union{Nothing,KJmethod}=nothing,
+    fit::Union{Nothing,KJfit}=nothing,
+    channels::AbstractVector=getChannels(samp),
+    transformation::AbstractString="",
+    num::AbstractString="",
+    den::AbstractString="")
+    meas = samp.dat[:, channels]
+    offset1 = get_offset(meas; transformation=transformation, num=num, den=den)
     if emptyFit(fit)
         return offset1
     else
-        pred = predict(samp,fit.blank)
-        keep = intersect(channels,names(pred))
-        offset2 = get_offset(pred[:,keep];transformation=transformation,num=num,den=den)
+        pred = predict(samp, fit.blank)
+        keep = intersect(channels, names(pred))
+        offset2 = get_offset(pred[:, keep]; transformation=transformation, num=num, den=den)
         if isnothing(method) || samp.group == "sample"
-            return max(offset1,offset2)
+            return max(offset1, offset2)
         else
-            pred = predict(samp,method,fit;generic_names=false)
-            keep = intersect(channels,names(pred))
-            offset3 = get_offset(pred[:,keep];transformation=transformation,num=num,den=den)
-            return max(offset1,offset2,offset3)
+            pred = predict(samp, method, fit; generic_names=false)
+            keep = intersect(channels, names(pred))
+            offset3 = get_offset(pred[:, keep]; transformation=transformation, num=num, den=den)
+            return max(offset1, offset2, offset3)
         end
     end
 end
@@ -355,7 +371,7 @@ function dict2string(dict::AbstractDict)
     v = collect(values(dict))
     out = "Dict("
     for i in eachindex(k)
-        q = isa(v[i],AbstractString) ? '"' : ""
+        q = isa(v[i], AbstractString) ? '"' : ""
         if i>1 out *= ',' end
         out *= '"' * k[i] * '"' * " => " * q * string(v[i]) * q
     end
@@ -364,7 +380,7 @@ function dict2string(dict::AbstractDict)
 end
 
 function vec2string(v::AbstractVector)
-    return "[\"" * join(v .* "\",\"")[1:end-3] * "\"]"
+    return "[\"" * join(v .* "\",\"")[1:(end-3)] * "\"]"
 end
 
 function channels2elements(samp::Sample)
@@ -378,7 +394,7 @@ end
 function channel2element(channel::AbstractString)
     nuclides = _KJ["nuclides"]
     elements = String.(keys(nuclides))
-    matches = findall(occursin.(elements,channel))
+    matches = findall(occursin.(elements, channel))
     if length(matches) > 0
         nchar = length.(elements[matches]) # e.g. "B" and "Be"
         longestmatch = matches[argmax(nchar)]
@@ -404,24 +420,24 @@ end
 # SRM = the name of a glass
 # returns a 1-row dataframe with the concentrations
 function elements2concs(elements::AbstractDataFrame,
-                        SRM::AbstractString)
-    refconc = get(_KJ["glass"],SRM)
+    SRM::AbstractString)
+    refconc = get(_KJ["glass"], SRM)
     out = copy(elements)
     for col in names(elements)
-        element = elements[1,col]
-        out[!,col] = DataFrame(refconc)[:,element]
+        element = elements[1, col]
+        out[!, col] = DataFrame(refconc)[:, element]
     end
     return out
 end
 
 # requires that length(pars) == 2
 function hessian2xyerr(H::Matrix,
-                       pars::AbstractVector)
+    pars::AbstractVector)
     try
         E = LinearAlgebra.inv(H)
-        s1 = E[1,1]>0 ? sqrt(E[1,1]) : NaN
-        s2 = E[2,2]>0 ? sqrt(E[2,2]) : NaN
-        rho = E[1,2]/(s1*s2)
+        s1 = E[1, 1]>0 ? sqrt(E[1, 1]) : NaN
+        s2 = E[2, 2]>0 ? sqrt(E[2, 2]) : NaN
+        rho = E[1, 2]/(s1*s2)
         return [pars[1] s1 pars[2] s2 rho]
     catch
         return [pars[1] NaN pars[2] NaN NaN]
@@ -451,11 +467,11 @@ Get the isotope ratio between two nuclides.
 - The isotope ratio, or `nothing` if not found in the database
 """
 function iratio(nuclide1::AbstractString,
-                nuclide2::AbstractString)
+    nuclide2::AbstractString)
     abundances = merge(values(_KJ["iratio"])...)
     key1 = Symbol(nuclide1)
     key2 = Symbol(nuclide2)
-    if haskey(abundances,key1) && haskey(abundances,key2)
+    if haskey(abundances, key1) && haskey(abundances, key2)
         return abundances[key1]/abundances[key2]
     else
         return nothing
