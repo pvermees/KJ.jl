@@ -37,8 +37,8 @@ for each channel, then delegating to the typed `Cmethod` constructor.
 """
 function Cmethod(run::Vector{Sample};
     groups::AbstractDict=Dict{String,String}(),
-    internal::Dict{String,Tuple{String,N}}=Dict{String,Tuple{String,N}}(),
-    nblank::Int=2) where {N<:Real}
+    internal::Dict{String,Tuple{String,Real}}=Dict{String,Tuple{String,Real}}(),
+    nblank::Int=2)
     ch = getChannels(run)
     el = channel2element.(ch)
     elements = NamedTuple{Tuple(Symbol.(ch))}(Tuple(el))

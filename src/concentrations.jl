@@ -21,7 +21,8 @@ For runs, returns summary statistics (mean ± standard error) for each sample.
 function concentrations(samp::Sample,
     method::Cmethod,
     fit::Cfit;
-    internal::Dict{String,Tuple{String,N}}=method.internal) where {N<:Real}
+    internal::Dict{String,Tuple{String,Real}}=method.internal
+)
     dat = swinData(samp; add_xy=true)
     sig = getSignals(dat)
     bt = predict(samp, fit.blank; t=dat.t)
