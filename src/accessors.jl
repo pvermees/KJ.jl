@@ -250,6 +250,6 @@ function getInternal(mineral::AbstractString,
                      channel::AbstractString)
     element = channel2element(channel)
     concentration = get(_KJ["stoichiometry"],mineral)[element] * 1e4
-    return (channel,concentration)
+    return Dict("default" => (channel,concentration))
 end
 export getInternal
