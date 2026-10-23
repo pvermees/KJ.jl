@@ -181,8 +181,17 @@ end
 function readFIN(fname::AbstractString,
                  head2name::Bool=true)
     lines = split(readuntil(fname, "Time"), "\r\n")
-    snamestring = head2name ? lines[3] : fname
-    sname = split(split(snamestring,r"[\\/]")[end],".FIN")[1]
+    # The FIN2 header (lines[3]) holds the run/sequence name, which is the same
+    # for every spot acquired in one session. The per-sample identifier is
+    # carried in the file name instead, so prefer it and fall back to the
+    # header only when no usable file name is available.
+    fnamebase = split(split(fname,r"[\\/]")[end],".FIN")[1]
+    if head2name && isempty(fnamebase)
+        snamestring = lines[3]
+        sname = split(split(snamestring,r"[\\/]")[end],".FIN")[1]
+    else
+        sname = fnamebase
+    end
     datetime = Dates.DateTime(lines[2],"EEEE, U dd, yyyy HH:MM:SS")
     header = 8
     skipto = 9
