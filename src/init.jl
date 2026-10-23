@@ -33,7 +33,7 @@ function init_lambdas(csv::AbstractString=joinpath(@__DIR__,"../settings/lambda.
     tab = CSV.read(csv, DataFrame)
     out = Dict()
     for row in eachrow(tab)
-        out[row.method] = (row["lambda"],row["err"])
+        out[row.method] = (row["lambda"],row["err"],row["bratio"])
     end
     return out
 end

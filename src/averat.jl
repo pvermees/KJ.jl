@@ -1,6 +1,6 @@
 """
-    averat(run::Vector{Sample}, method::Gmethod, fit::Gfit)
-    averat(samp::Sample, method::Gmethod, fit::Gfit)
+    averat(run::Vector{Sample}, method::Gmethod, fit::Gfit; reject_outliers=false)
+    averat(samp::Sample, method::Gmethod, fit::Gfit; reject_outliers=false)
 
 Calculate average ratios for samples using a weighted mean approach.
 
@@ -8,14 +8,18 @@ Calculate average ratios for samples using a weighted mean approach.
 - `run`/`samp`: Vector of samples or single sample
 - `method`: Geochronology method definition
 - `fit`: Fitted fractionation and blank parameters
+- `reject_outliers`: Exclude detected outliers from each sample's calculation
+    (default: false)
 
 # Returns
-- DataFrame with columns: name, P/D ratio, uncertainty, d/D ratio, uncertainty, ρ (for run)
-  or array of [P/D, s[P/D], d/D, s[d/D], ρ] values (for single sample)
+- DataFrame with columns: name, P/D ratio, uncertainty, d/D ratio, uncertainty,
+    and rho (for a run), or a 1-by-5 matrix `[P/D, s[P/D], d/D, s[d/D], rho]`
+    (for a single sample)
 """
 function averat(run::Vector{Sample},
                 method::Gmethod,
-                fit::Gfit)
+                fit::Gfit;
+                reject_outliers::Bool=false)
     xlab = method.P.ion * "/" * method.D.ion
     ylab = method.d.ion * "/" * method.D.ion
     column_names = ["name", xlab, "s[" * xlab * "]", ylab, "s[" * ylab * "]", "rho"]
@@ -24,15 +28,18 @@ function averat(run::Vector{Sample},
     for i in 1:ns
         samp = run[i]
         out[i,:name] = samp.sname
-        out[i,2:end] = averat(samp,method,fit)
+        out[i,2:end] = averat(samp,method,fit;
+                              reject_outliers=reject_outliers)
     end
     return out
 end
 
 function averat(samp::Sample,
                 method::Gmethod,
-                fit::Gfit)
-    a = ACruncher(samp,method,fit)
+                fit::Gfit;
+                reject_outliers::Bool=false)
+    a = ACruncher(samp,method,fit;
+                  reject_outliers=reject_outliers)
     init = [sum(a.Phat)/sum(a.Dhat),sum(a.dhat)/sum(a.Dhat)]
     objective = (par) -> LLaverat(par[1],par[2];a...)
     optimum = Optim.optimize(objective,init)
@@ -62,10 +69,14 @@ end
 
 function ACruncher(samp::Sample,
                    method::Gmethod,
-                   fit::Gfit)
+                   fit::Gfit;
+                   reject_outliers::Bool=false)
     a = atomic(samp,method,fit)
-    mat = hcat(a.P,a.D,a.d)
-    E = df2cov(mat)
+    if reject_outliers
+        outliers = detect_outliers(Matrix(a))
+        deleteat!(a,outliers)
+    end
+    E = df2cov(a[:,[:P,:D,:d]])
     return (Phat=a.P,Dhat=a.D,dhat=a.d,
             vP=E[1,1],vD=E[2,2],vd=E[3,3],
             sPD=E[1,2],sPd=E[1,3],sDd=E[2,3])

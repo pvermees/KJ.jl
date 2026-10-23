@@ -1,6 +1,6 @@
 """
     plot(samp::Sample, method::KJmethod; channels=getChannels(method), fit=nothing, num="", den="", transformation="", ...)
-    plot(samp::Sample; channels=getChannels(samp), num="", den="", transformation="", offset=..., ...)
+    plot(samp::Sample; channels=getChannels(samp), num="", den="", transformation="", offset=get_offset(...), padding=0.1, ...)
 
 Plot time-resolved LA-ICP-MS data for a sample.
 
@@ -9,7 +9,7 @@ Optionally overlays fitted corrections if a fit object is provided.
 
 # Arguments
 - `samp`: Sample to plot
-- `method`: Method definition (optional, for determining channels and fit)
+- `method`: Method definition required by the first overload
 - `channels`: Channels to display
 - `fit`: Fitted corrections to overlay (optional)
 - `num`, `den`: Numerator/denominator for ratio plots (default: plot raw signals)
@@ -19,10 +19,19 @@ Optionally overlays fitted corrections if a fit object is provided.
 - `legend`: Legend position
 - `cpalette`: Color palette
 - `ms`, `ma`: Marker size and alpha
-- Additional plotting options
+- `linecolor`, `linestyle`: Style for fitted curves (first overload only)
+- `offset`: Signal offset (second overload only; defaults to an automatic value)
+- `titlefontsize`: Title font size
+- `return_offset`: If true, also return the offset used (default: false)
+- `padding`: Accepted by the overload without a method (default: 0.1), but not
+    currently used when calculating automatic y limits
+
+The overload without a method does not accept a `fit` keyword. Both overloads
+accept only the documented keywords; arbitrary plotting keywords are not
+forwarded to Plots.jl.
 
 # Returns
-- Plots.jl plot object
+- Plots.jl plot object, or `(plot, offset)` when `return_offset=true`
 """
 function plot(samp::Sample,
               method::KJmethod;

@@ -12,7 +12,8 @@ using reference materials with known ratios.
 - `blank`: Fitted blank corrections
 
 # Returns
-- Dictionary mapping elements to Bias objects containing correction parameters
+- Dictionary of fitted corrections. Isotope-ratio bias entries are keyed by
+    element name; mono-interference bias entries are keyed by proxy channel.
 """
 function fit_bias(run::Vector{Sample},
                   method::Gmethod,

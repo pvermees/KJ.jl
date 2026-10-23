@@ -1,5 +1,6 @@
 """
-    predict(samp::Sample, method::Union{Gmethod,Cmethod}, fit::Union{Gfit,Cfit}; generic_names=true)
+    predict(samp::Sample, method::Gmethod, fit::Gfit; generic_names=true)
+    predict(samp::Sample, method::Cmethod, fit::Cfit)
     predict(samp::Sample, blank::AbstractDataFrame)
 
 Predict signal intensities for a sample given fitted parameters.
@@ -12,10 +13,12 @@ and bias corrections. Used for model checking and plotting fitted curves.
 - `method`: Method definition
 - `fit`: Fitted parameters
 - `blank`: Blank fit (for blank prediction)
-- `generic_names`: Use generic column names (P, D, d) vs specific isotopes (default: true)
+- `generic_names`: For geochronology predictions, use generic column names
+    (P, D, d) instead of specific channels (default: true)
 
 # Returns
-- DataFrame with predicted signals
+- DataFrame with predicted signals, or `nothing` when a geochronology sample's
+    group does not match a standard or configured interference calibration
 """
 function predict(samp::Sample,
                  method::Gmethod,

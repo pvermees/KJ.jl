@@ -2,11 +2,12 @@
     internochron(run::Vector{Sample}, method::Gmethod, fit::Gfit)
     internochron(samp::Sample, method::Gmethod, fit::Gfit)
 
-Calculate internal isochron ("internochron") coordinates for samples.
+Calculate internal isochron ("internochron") coordinates for a sample or run.
 
 For geochronology methods, this fits an isochron through the time-resolved
-data of each sample, returning the intercept coordinates (x0, y0) along
-with their uncertainties and correlation.
+data of each sample. The single-sample method returns fitted intercept
+coordinates `(x0, y0)` with their uncertainties and correlation. The run method
+converts those coordinates to age and initial-ratio coordinates.
 
 # Arguments
 - `run`/`samp`: Vector of samples or single sample
@@ -14,8 +15,9 @@ with their uncertainties and correlation.
 - `fit`: Fitted fractionation and blank parameters
 
 # Returns
-- DataFrame with columns: name, x0, s[x0], y0, s[y0], ρ (for run)
-  or array of [x0, s[x0], y0, s[y0], ρ] values (for single sample)
+- DataFrame with sample names, age and initial-ratio estimates, uncertainties,
+    and correlation (for a run), or a 1-by-5 matrix
+    `[x0, s[x0], y0, s[y0], ρ]` (for a single sample)
 """
 function internochron(run::Vector{Sample},
                       method::Gmethod,
@@ -111,8 +113,9 @@ function x0y02t(x0::AbstractFloat,
         dtdy0 = -dfdy0/dfdt
     else
         lambda = _KJ["lambda"][method][1]
-        t = log(1+1/x0)/lambda
-        dtdx0 = -1/(lambda*x0*(1+x0))
+        bratio = _KJ["lambda"][method][3]
+        t = log(1+1/(bratio*x0))/lambda
+        dtdx0 = -1/(lambda*x0*(1+bratio*x0))
         dtdy0 = 0.0
     end
     dy0dx0 = 0.0

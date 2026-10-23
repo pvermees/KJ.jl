@@ -30,7 +30,9 @@ function getAnchor(standard::IsochronRefmat;
         y1 = U58*(exp(L5*t)-1)/(exp(L8*t)-1)
     else
         L = _KJ["lambda"][methodname][1]
-        x0 = 1/(exp(L*t)-1)
+        bratio = _KJ["lambda"][methodname][3]
+        DP = bratio*(exp(L*t)-1)
+        x0 = 1/DP
         y1 = 0.0
     end
     y0 = standard.y0

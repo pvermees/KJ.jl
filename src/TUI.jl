@@ -1,11 +1,11 @@
 """
-KJ(extensions...;logbook::AbstractString="",reset=false)
+TUI(extensions...; logbook="", reset=false, debug=false)
 
 KJ TUI
 
 # Arguments
 
-- `extensions...`: a comma separated list of KJ extensions
+- `extensions...`: KJ extension modules/objects passed as positional arguments
 - `logbook`: the file path to a KJ log
 - `reset`: hard reset of all inherited settings
 - `debug`: whether to print the error stack trace when an error occurs (default: false)

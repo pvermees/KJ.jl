@@ -8,11 +8,12 @@ Apply interference corrections to measured data.
 # Arguments
 - `dat`: DataFrame containing measured data with a time column
 - `interferences`: Dictionary of interferences to correct for, or a single ion/channel and interference
-- `bias`: Optional dictionary of bias corrections
-- `blank`: Optional DataFrame with blank corrections
+- `bias`: Dictionary of bias corrections; required for mono-interference
+    corrections and must contain the proxy-channel entry
+- `blank`: Blank-fit DataFrame containing the relevant channel columns
 
 # Returns
-- Vector of interference-corrected values
+- Vector of interference contributions; the dictionary overload returns their sum
 """
 function interference_correction(dat::AbstractDataFrame,
                                  interferences::AbstractDict;

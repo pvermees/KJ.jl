@@ -47,9 +47,12 @@ export detect_outliers
     detect_outliers!(run::Vector{Sample}; channels=getChannels(run), include_samples=false)
     detect_outliers!(run::Vector{Sample}, method::KJmethod; include_samples=false)
 
-Detect and flag outliers in a run of samples (in-place modification).
+Detect and flag outliers in a run of samples (in-place modification). By
+default, detection is performed only for samples whose group is not `"sample"`;
+set `include_samples=true` to include those samples too.
 
-Sets the `outlier` column in each sample's data frame to true for detected outliers.
+Resets the `outlier` column in every sample's data frame, then marks detections
+in the blank and signal windows of the selected samples.
 
 # Arguments
 - `run`: Vector of samples to process
