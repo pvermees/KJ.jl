@@ -158,7 +158,9 @@ geti0(signals::AbstractDataFrame)
 Get the index of 'time zero', i.e. the onset of laser ablation.
 """
 function geti0(signals::AbstractDataFrame)
-    total = sum.(eachrow(signals))
+    rowSums = sum.(eachrow(signals))
+    m = minimum(rowSums[rowSums .> 0])
+    total = log.(m .+ rowSums)
     q = Statistics.quantile(total,[0.05,0.95])
     mid = (q[2]+q[1])/2
     (lovals,lens) = rle(total.<mid)
