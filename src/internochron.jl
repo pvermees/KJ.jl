@@ -111,8 +111,9 @@ function x0y02t(x0::AbstractFloat,
         dtdy0 = -dfdy0/dfdt
     else
         lambda = _KJ["lambda"][method][1]
-        t = log(1+1/x0)/lambda
-        dtdx0 = -1/(lambda*x0*(1+x0))
+        bratio = _KJ["lambda"][method][3]
+        t = log(1+1/(bratio*x0))/lambda
+        dtdx0 = -1/(lambda*x0*(1+bratio*x0))
         dtdy0 = 0.0
     end
     dy0dx0 = 0.0
