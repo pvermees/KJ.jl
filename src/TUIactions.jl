@@ -5,7 +5,7 @@ end
 
 function TUIinit()
     return Dict(
-        "priority" => Dict("load" => true, 
+        "priority" => Dict("load" => true,
                            "method" => true,
                            "fractionation" => true,
                            "process" => true),
@@ -179,7 +179,7 @@ function TUIstoichiometry!(ctrl::AbstractDict,
                            response::AbstractString)
     channel = ctrl["cache"]
     concentration = parse(Float64,response)
-    ctrl["method"].internal = (channel,concentration)
+    ctrl["method"].internal = Dict("default" => (channel,concentration))
     ctrl["priority"]["method"] = false
     return "xxxx"
 end
@@ -363,11 +363,11 @@ function TUIlistInterferences(ctrl::AbstractDict)
     return nothing
 end
 
-function TUIprintInterference(pairing::Pairing, 
+function TUIprintInterference(pairing::Pairing,
                               ion::AbstractString,
                               interference::Interference)
-    return ". target=" * pairing.proxy * 
-           "; interference=" * ion * 
+    return ". target=" * pairing.proxy *
+           "; interference=" * ion *
            "; proxy=" * interference.proxy *
            "; channel=\"" * interference.channel * "\""
 end
@@ -375,8 +375,8 @@ end
 function TUIprintInterference(pairing::Pairing,
                               proxy_channel::AbstractString,
                               interference::MonoInterference)
-    return ". target=" * pairing.proxy * 
-           "; proxy=\"" * proxy_channel * "\"" * 
+    return ". target=" * pairing.proxy *
+           "; proxy=\"" * proxy_channel * "\"" *
            "; metal=\"" * interference.metal * "\"" *
            "; oxide=\"" * interference.oxide * "\"" *
            "; standards=[" * join(interference.standards,",") * "]"
@@ -601,7 +601,7 @@ function TUIglassTab(ctrl::AbstractDict)
     return nothing
 end
 
-function TUIprintBias(ctrl::AbstractDict, 
+function TUIprintBias(ctrl::AbstractDict,
                       calibration::Calibration)
     msg = "num = " * calibration.num.ion * " (" * calibration.num.channel * ")"
     msg *= "; den = " * calibration.den.ion * " (" * calibration.den.channel * ")"
@@ -728,7 +728,7 @@ function TUIplotter(ctrl::AbstractDict)
                  den=ctrl["den"],
                  transformation=ctrl["transformation"],
                  title=TUItitle(ctrl))
-    else 
+    else
         p = plot(ctrl["run"][ctrl["i"]],
                  ctrl["method"];
                  fit=ctrl["fit"],
@@ -1045,7 +1045,7 @@ end
 
 function TUIcalibration2template(calibration::Calibration)
     out  = "Calibration(num=" * string(calibration.num)
-    out *= ", den=" * string(calibration.den) 
+    out *= ", den=" * string(calibration.den)
     out *= ", standards=" * string(calibration.standards) * ")"
     return out
 end
@@ -1091,13 +1091,13 @@ end
 function TUIsetNdrift!(ctrl::AbstractDict,
                        response::AbstractString)
     ctrl["method"].ndrift = parse(Int,response)
-    return "x"    
+    return "x"
 end
 
 function TUIsetNdown!(ctrl::AbstractDict,
                       response::AbstractString)
     ctrl["method"].ndown = parse(Int,response)
-    return "x"    
+    return "x"
 end
 
 function TUIPAlist(ctrl::AbstractDict)
@@ -1215,8 +1215,8 @@ function CSVhelper(samp::Sample,
                    method::Gmethod,
                    fit::Gfit)
     a = atomic(samp,method,fit;add_xy=true)
-    out = DataFrame(method.P.ion => a.P, 
-                    method.D.ion => a.D, 
+    out = DataFrame(method.P.ion => a.P,
+                    method.D.ion => a.D,
                     method.d.ion => a.d)
     if !isnothing(a.x) out.x = x end
     if !isnothing(a.y) out.y = y end
@@ -1294,8 +1294,8 @@ function TUIchooseClims!(ctrl::AbstractDict,
 end
 
 function TUItodo!(ctrl::AbstractDict)
-    println("This function has not yet been implemented, " * 
-            "because KJ is still in development. " * 
+    println("This function has not yet been implemented, " *
+            "because KJ is still in development. " *
             "Please check again later.")
     return nothing
 end

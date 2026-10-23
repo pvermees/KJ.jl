@@ -25,6 +25,7 @@ function load(dname::AbstractString;
               format::AbstractString="Agilent",
               head2name::Bool=true,
               normalizenames::Bool=false,
+              day_first::Bool=false,
               nblocks::Int=1,
               absolute_buffer::AbstractFloat=2.0,
               relative_buffer::AbstractFloat=0.1)
@@ -39,7 +40,8 @@ function load(dname::AbstractString;
                 samp = readFile(pname;
                                 format=format,
                                 head2name=head2name,
-                                normalizenames=normalizenames)
+                                normalizenames=normalizenames,
+                                day_first=day_first)
                 push!(samples,samp)
                 push!(datetimes,samp.datetime)
             catch e
@@ -69,10 +71,14 @@ end
 
 function load(dfile::AbstractString,
               tfile::AbstractString;
-              format::AbstractString="Agilent")
-    dat = timestamps = DataFrame()
+              format::AbstractString="Agilent",
+              normalizenames::Bool=false,
+              day_first::Bool=false)
+    dat = DataFrame()
+    timestamps = DataFrame()
     try
-        dat = readDat(dfile,format,false)[1]
+        dat = readDat(dfile, format, false, normalizenames,
+            day_first)[1]
         dat.outlier = falses(size(dat,1))
         dat.t = dat[:,1] ./ dat[end,1]
     catch e
@@ -84,7 +90,7 @@ function load(dfile::AbstractString,
     catch e
         println("Failed to read "*tfile)
     end
-    return parser_main(dat,timestamps)
+    return parser_main(dat, timestamps; day_first=day_first)
 end
 export load
 
@@ -108,8 +114,10 @@ end
 function readFile(fname::AbstractString;
                   format::AbstractString="Agilent",
                   head2name::Bool=true,
-                  normalizenames::Bool=false)
-    dat, sname, datetime = readDat(fname,format,head2name, normalizenames)
+                  normalizenames::Bool=false,
+                  day_first)
+    dat, sname, datetime = readDat(fname,format,head2name, normalizenames,
+    day_first)
     return io_df2sample(dat,sname,datetime)
 end
 
@@ -117,16 +125,17 @@ function readDat(fname::AbstractString,
                  format::AbstractString="Agilent",
                  head2name::Bool=true,
                  normalizenames::Bool=false,
+                 day_first::Bool=false
                  )
     if contains(lowercase.(format), "agile")
         sname, datetime, header, skipto, footerskip =
-            readAgilent(fname,head2name)
+            readAgilent(fname,head2name; day_first=day_first)
     elseif contains(lowercase.(format), "fin")
         sname, datetime, header, skipto, footerskip =
             readFIN(fname,head2name)
     elseif contains(lowercase.(format), "thermo")
         sname, datetime, header, skipto, footerskip =
-            readThermoFisher(fname,head2name)
+            readThermoFisher(fname,head2name; day_first=day_first)
     else
         KJerror("unknownFormat")
     end
@@ -145,14 +154,14 @@ function readDat(fname::AbstractString,
 end
 
 function readAgilent(fname::AbstractString,
-                     head2name::Bool=true)
+                     head2name::Bool=true; day_first::Bool=false)
     lines = split(readuntil(fname, "Time [Sec]"), "\n")
     snamestring = head2name ? lines[1] : fname
     sname = split(split(snamestring,r"[\\/]")[end],".")[1]
     datetimeline = lines[3]
     from = findfirst(":",datetimeline)[1]+2
     to = findfirst("using",datetimeline)[1]-2
-    datetime = automatic_datetime(datetimeline[from:to])
+    datetime = automatic_datetime(datetimeline[from:to]; day_first = day_first)
     header = 4
     skipto = 5
     footerskip = 3
@@ -161,7 +170,7 @@ function readAgilent(fname::AbstractString,
 end
 
 function readThermoFisher(fname::AbstractString,
-                          head2name::Bool=true)
+                          head2name::Bool=true; day_first::Bool=false)
 
     lines = split(readuntil(fname, "Time"), "\n")
     snamestring = head2name ? split(lines[1],":")[1] : fname
@@ -169,7 +178,7 @@ function readThermoFisher(fname::AbstractString,
     datetimeline = lines[1]
     from = findfirst(":",datetimeline)[1]+1
     to = findfirst(";",datetimeline)[1]-1
-    datetime = automatic_datetime(datetimeline[from:to])
+    datetime = automatic_datetime(datetimeline[from:to]; day_first = day_first)
     header = 14
     skipto = 16
     footerskip = 0

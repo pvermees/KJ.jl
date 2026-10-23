@@ -227,7 +227,7 @@ Concentration method definition for quantitative element analysis.
 mutable struct Cmethod <: KJmethod
     elements::NamedTuple
     groups::Dict{String,String}
-    internal::Tuple
+    internal::Dict{String, Tuple{String,Real}}
     nblank::Int
 end
 export Cmethod

@@ -96,16 +96,16 @@ function fractionation!(fit::Cfit,
     channels = getChannels(run)
     num = DataFrame(zeros(1, length(channels)), channels)
     den = DataFrame(zeros(1, length(channels)), channels)
-    internal = method.internal[1]
     for (group,standard) in method.groups
         selection = getIndicesInGroup(run,group)
         for samp in run[selection]
+            isname, _ = get_internal(samp, method.internal)
             dat = swinData(samp)
             bt = predict(samp,fit.blank;t=dat.t)
             X = getSignals(dat) .- bt
-            S = X[:,internal]
+            S = X[:, isname]
             C = getConcentrations(method,standard)
-            Cs = C[1,internal]
+            Cs = C[1, isname]
             num[1,:] = Vector(num[1,:]) + sum.(eachcol(Cs.*X.*S))
             den[1,:] = Vector(den[1,:]) + sum.(eachcol(C.*(S.^2)))
         end
@@ -143,7 +143,7 @@ function FCruncher(samp::Sample,
                    fit::Gfit)
 
     dat = swinData(samp)
-    
+
     pm = dat[:,method.P.channel]
     Dm = dat[:,method.D.channel]
     bm = dat[:,method.d.channel]
@@ -182,7 +182,7 @@ function FCruncher(samp::Sample,
     spD = covmat[1,2]
     spb = covmat[1,3]
     sDb = covmat[2,3]
-    
+
     bd = iratio(method.d.proxy,method.d.ion)
     if isnothing(bd)
         bd = 1.0
@@ -194,6 +194,6 @@ function FCruncher(samp::Sample,
             spD=spD,spb=spb,sDb=sDb,
             Ip=Ip,ID=ID,Ib=Ib,
             mf=mf,bd=bd,t=t,T=T)
-    
+
 end
 export FCruncher

@@ -7,7 +7,7 @@ module KJ
 
 using Infiltrator, DataFrames, Dates, LinearAlgebra, Printf, Plots
 
-import Statistics, Distributions, Optim, CSV, ForwardDiff, FiniteDiff
+import Statistics, Distributions, Optim, CSV, ForwardDiff, FiniteDiff, Durations
 
 include("init.jl")
 include("errors.jl")
