@@ -152,7 +152,7 @@ export t2i
 """
 i2t(samp::Sample,i::Integer)
 
-Returns the time at index t
+Returns the time in seconds at index `i` in sample `samp`.
 """
 function i2t(samp::Sample,i::Integer)
     ni = size(samp.dat,1)
@@ -186,9 +186,10 @@ end
 export time2window
 
 """
-prefix2subset(run::Vector{Sample},prefix::AbstractString)
+prefix2subset(run::Vector{Sample}, prefix::AbstractString)
 
-Subset selected samples from run.
+Select samples whose names contain `prefix` as a substring; this does not
+require the match to occur at the beginning of a name.
 """
 function prefix2subset(run::Vector{Sample},
                        prefix::AbstractString)
@@ -196,7 +197,9 @@ function prefix2subset(run::Vector{Sample},
     return run[selection]
 end
 """
-prefix2subset(ratios::AbstractDataFrame,prefix::AbstractString)
+prefix2subset(ratios::AbstractDataFrame, prefix::AbstractString)
+
+Select rows whose first-column sample name contains `prefix` as a substring.
 """
 function prefix2subset(ratios::AbstractDataFrame,
                        prefix::AbstractString)

@@ -5,7 +5,7 @@ Process a complete run of LA-ICP-MS data.
 
 This function performs the full data reduction workflow:
 1. Assign group labels to samples based on the method (if setGroup=true)
-2. Detect and flag outliers (if reject_outliers=true)
+2. Detect and flag outliers in reference-material groups (if reject_outliers=true)
 3. Initialize a `KJfit` object
 4. Fit blank corrections
 5. Fit bias corrections (for `Gmethod`)
@@ -15,7 +15,9 @@ This function performs the full data reduction workflow:
 - `run`: Vector of samples to process
 - `method`: Geochronology or concentration method definition
 - `setGroup`: Whether to assign group labels before fitting (default: true)
-- `reject_outliers`: Whether to automatically detect and flag outliers (default: true)
+- `reject_outliers`: Whether to automatically detect and flag outliers in
+    reference-material groups (default: true; samples in the `"sample"` group are
+    excluded)
 - `verbose`: Print detailed diagnostic information (default: false)
 
 # Returns

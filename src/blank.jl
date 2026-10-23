@@ -25,8 +25,8 @@ Fit polynomial blank models to blank window data.
 
 # Arguments
 - `run`: Vector of samples
-- `nblank`: Order of polynomial (default: 2 for quadratic). 
-            Negative values indicate piecewise constant blanks.
+- `nblank`: Number of polynomial coefficients to fit (default: 2, giving a
+            linear model). Negative values indicate piecewise-constant blanks.
 
 # Returns
 - DataFrame of polynomial coefficients for each channel

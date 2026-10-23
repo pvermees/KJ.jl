@@ -394,9 +394,28 @@ end
 
 function averatest(option="Lu-Hf",verbose=false)
     myrun, method, fit = processtest(option;show=false)
-    ratios = averat(myrun,method,fit)
-    if verbose println(ratios) end
-    return ratios, method
+    a = atomic(myrun[1],method,fit)
+    outliers = detect_outliers(Matrix(a))
+    keep = trues(size(a,1))
+    keep[outliers] .= false
+    PD = a.P./a.D
+    dD = a.d./a.D
+    p = Plots.scatter(PD[keep],dD[keep];
+                      label="",xlabel="P/D",ylabel="d/D",
+                      xaxis=:log,yaxis=:log,legend=:topleft)
+    Plots.scatter!(p,PD[.!keep],dD[.!keep];label="",marker=:xcross)
+    ratios_all = averat(myrun,method,fit;reject_outliers=false)
+    ratios_cleaned = averat(myrun,method,fit;reject_outliers=true)
+    Plots.scatter!(p,[ratios_all[1,2]],[ratios_all[1,4]];
+                   label="averat (without outlier rejection)",
+                   marker=:square,ms=5,color=:red)
+    Plots.scatter!(p,[ratios_cleaned[1,2]],[ratios_cleaned[1,4]];
+                   label="averat (with outlier rejection)",
+                   marker=:star5,color=:yellow,ms=10)
+    display(p)
+    if verbose println(ratios_cleaned) end
+    @test p isa Plots.Plot
+    return ratios_cleaned, method
 end
 
 function exporttest()
@@ -536,8 +555,7 @@ end
 
 function map_fail_test()
     myrun, method, fit = processtest()
-    P, D, d, x, y = atomic(myrun[2],method,fit)
-    df = DataFrame(P=P,D=D,d=d,x=x,y=y)
+    df = atomic(myrun[2],method,fit)
     p = plotMap(df,"P")
     @test isnothing(p)
     conc = concentrationtest()

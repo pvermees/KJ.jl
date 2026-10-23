@@ -1,7 +1,10 @@
 """
     blocks(run::Vector{Sample}, blocksize::Integer; absolute_buffer=2.0, relative_buffer=0.1)
 
-Split a run into blocks of a given size and merge the samples within each block.
+Split a run into contiguous blocks of `blocksize` samples and merge the samples
+within each block. The number of blocks is computed by rounding
+`length(run) / blocksize`; therefore, use a block size that divides the run
+length to avoid dropping trailing samples or indexing past the end of the run.
 
 # Arguments
 - `run`: Vector of samples to divide into blocks

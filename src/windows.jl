@@ -55,13 +55,15 @@ end
 """
     setBwin!(run::Vector{Sample}, bwin::AbstractVector; seconds=false)
     setBwin!(samp::Sample, bwin::AbstractVector; seconds=false)
-    setBwin!(run::Vector{Sample})
-    setBwin!(samp::Sample)
+    setBwin!(run::Vector{Sample}; absolute_buffer=2.0, relative_buffer=0.1, len=nothing)
+    setBwin!(samp::Sample; absolute_buffer=2.0, relative_buffer=0.1, len=nothing)
 
 Set the blank window (bwin) for one or more samples.
 
 If `bwin` is provided, it is directly set (as indices or time in seconds if `seconds=true`).
-If no `bwin` is provided, an automatic blank window is calculated.
+If no `bwin` is provided, an automatic blank window is calculated. The automatic
+methods accept `absolute_buffer` and `relative_buffer`; `len` optionally sets the
+blank-window length and is available for a single sample or run.
 
 # Arguments
 - `run`/`samp`: Vector of samples or single sample
@@ -110,13 +112,14 @@ export setBwin!
 """
     setSwin!(run::Vector{Sample}, swin::AbstractVector; seconds=false)
     setSwin!(samp::Sample, swin::AbstractVector; seconds=false)
-    setSwin!(run::Vector{Sample})
-    setSwin!(samp::Sample)
+    setSwin!(run::Vector{Sample}; absolute_buffer=2.0, relative_buffer=0.1)
+    setSwin!(samp::Sample; absolute_buffer=2.0, relative_buffer=0.1)
 
 Set the signal window (swin) for one or more samples.
 
 If `swin` is provided, it is directly set (as indices or time in seconds if `seconds=true`).
-If no `swin` is provided, an automatic signal window is calculated.
+If no `swin` is provided, an automatic signal window is calculated. The automatic
+methods accept `absolute_buffer` and `relative_buffer` to control its margins.
 
 # Arguments
 - `run`/`samp`: Vector of samples or single sample

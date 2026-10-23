@@ -8,6 +8,9 @@ The first method loads all files from a directory, sorts them by acquisition tim
 and optionally merges them into blocks. The second method loads a single data file
 with associated timestamps.
 
+`absolute_buffer` and `relative_buffer` affect automatic window selection when
+samples are merged into blocks (`nblocks > 1`).
+
 # Arguments
 - `dname`/`dfile`: Directory containing data files, or path to a single data file
 - `tfile`: Path to timestamp file (for second method)
@@ -229,7 +232,7 @@ Export processed data to IsoplotR JSON format.
 - `ratios`: Pre-computed ratio data frame
 - `method`: Geochronology method
 - `fit`: Fitted parameters (for first method)
-- `prefix`: Optional prefix to filter samples (default: export all)
+- `prefix`: Optional substring used to filter sample names (default: export all)
 - `fname`: Output filename (default: "KJ.json")
 """
 function export2IsoplotR(run::Vector{Sample},
@@ -366,7 +369,7 @@ end
 export summarise, summarize
 
 """
-    export2csv(run::Vector{Sample}, method::Gmethod, fit::Gfit; prefix=nothing, fname="KJ.csv")
+    export2csv(run::Vector{Sample}, method::Gmethod, fit::Gfit; prefix=nothing, fname="KJ_export.csv")
 
 Export processed ratios to CSV format.
 
@@ -374,8 +377,8 @@ Export processed ratios to CSV format.
 - `run`: Vector of samples to export
 - `method`: Geochronology method
 - `fit`: Fitted parameters (for first method)
-- `prefix`: Optional prefix to filter samples (default: export all)
-- `fname`: Output filename (default: "KJ.csv")
+- `prefix`: Optional substring used to filter sample names (default: export all)
+- `fname`: Output filename (default: "KJ_export.csv")
 """
 function export2csv(
     run::Vector{Sample},
@@ -394,14 +397,14 @@ function export2csv(
 end
 
 """
-    export2csv(ratios::DataFrame; prefix=nothing, fname="KJ.csv")
+    export2csv(ratios::DataFrame; prefix=nothing, fname="KJ_export.csv")
 
 Export processed ratios to CSV format.
 
 # Arguments
 - `ratios`: Pre-computed ratio data frame
-- `prefix`: Optional prefix to filter samples (default: export all)
-- `fname`: Output filename (default: "KJ.csv")
+- `prefix`: Optional substring used to filter sample names (default: export all)
+- `fname`: Output filename (default: "KJ_export.csv")
 """
 function export2csv(
     ratios::DataFrame;

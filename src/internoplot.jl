@@ -42,17 +42,17 @@ function internoplot(samp::Sample,
                      title = samp.sname*" ["*samp.group*"]",
                      titlefontsize::Integer=10,
                      plot_options...)
-    Phat, Dhat, dhat = atomic(samp,method,fit)
+    a = atomic(samp,method,fit)
     x0, sx0, y0, sy0, rx0y0 = internochron(samp,method,fit)
     E = [ [sx0^2 rx0y0*sx0*sy0 ]
           [rx0y0*sx0*sy0 sy0^2 ] ]
     if isnothing(method)
-        p = internoplot(x0,y0,E,Phat,Dhat,dhat;
+        p = internoplot(x0,y0,E,a.P,a.D,a.d;
                         legend=legend,nsigma=nsigma,plot_options...)
     else
         xlab = method.P.ion * "/" * method.D.ion
         ylab = method.d.ion * "/" * method.D.ion
-        p = internoplot(x0,y0,E,Phat,Dhat,dhat;
+        p = internoplot(x0,y0,E,a.P,a.D,a.d;
                         legend=legend,nsigma=nsigma,
                         xlab=xlab,ylab=ylab,plot_options...)
         ty0 = x0y02t(x0,y0,E,method.name)

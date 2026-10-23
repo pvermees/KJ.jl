@@ -41,7 +41,8 @@ end
     getChannels(method::Gmethod)
     getChannels(method::Cmethod)
 
-Get the names of all channels from samples, methods, or interferences.
+Get channel names from a sample, the first sample in a run, a method, or an
+interference. Samples in a run are expected to have the same channels.
 """
 function getChannels(run::Vector{Sample}) :: AbstractVector
     return getChannels(run[1])

@@ -154,9 +154,10 @@ function mahalanobis(mf::AbstractVector,
 end
 
 """
-    SS(a::AbstractAnchor, ft::AbstractVector, hT::AbstractVector; cruncher...)
+    SS(a::Union{IsochronAnchor,PointAnchor}, ft::AbstractVector, hT::AbstractVector; cruncher...)
     SS(par::AbstractVector, method::Gmethod, cruncher_groups::AbstractDict; verbose=false)
-    SS(bias::AbstractBias; cruncher...)
+    SS(bias::Bias, y::AbstractFloat, bd::AbstractFloat; cruncher...)
+    SS(bias::MonoBias; cruncher...)
 
 Calculate the sum of squares objective function for optimization.
 
@@ -165,7 +166,7 @@ measured and predicted values, used for fitting fractionation corrections
 and bias terms.
 
 # Arguments
-- `a`/`par`: Anchor point or parameter vector
+- `a`/`par`/`bias`: Anchor, parameter vector, or bias model, depending on the overload
 - `ft`, `hT`: Fractionation factors (for anchor-based calls)
 - `method`: Geochronology method (for parameter-based calls)
 - `cruncher`/`cruncher_groups`: Data and covariances
