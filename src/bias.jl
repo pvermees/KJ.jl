@@ -152,7 +152,7 @@ function BCruncher(samp::Sample,
                    bch::AbstractString,
                    blank::AbstractDataFrame)
     dat = swinData(samp)
-    t = dat.T
+    t = dat.t
 
     Dm = dat[:,Dch]
     bm = dat[:,bch]

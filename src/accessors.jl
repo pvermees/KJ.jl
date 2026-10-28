@@ -143,12 +143,20 @@ function setGroup!(run::Vector{Sample},
     end
 end
 function setGroup!(run::Vector{Sample},
-                   prefixes::Vector{String})
+                   prefixes::Vector{String},
+                   option::Symbol = :startswith)
+    finder = if option === :startswith
+        startswith
+    elseif option === :contains
+        contains
+    else
+        throw(ArgumentError("setGroup! accepts options :startswith or :contains"))
+    end
     snames = getSnames(run)
     for prefix in prefixes
         setGroup!(run,
-                  findall(s -> contains(s,prefix), snames),
-                  prefix)
+                findall(s -> finder(s,prefix), snames),
+                prefix)
     end
 end
 export setGroup!
